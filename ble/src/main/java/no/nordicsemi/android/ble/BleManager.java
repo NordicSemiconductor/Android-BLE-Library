@@ -535,6 +535,37 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	/**
+	 * Enables notifications on given characteristic.
+	 *
+	 * @return true is the request has been enqueued
+	 */
+	protected final boolean disableNotifications(final BluetoothGattCharacteristic characteristic) {
+		return enqueue(Request.newDisableNotificationsRequest(characteristic));
+	}
+
+	private boolean internalDisableNotifications(final BluetoothGattCharacteristic characteristic) {
+		final BluetoothGatt gatt = mBluetoothGatt;
+		if (gatt == null || characteristic == null)
+			return false;
+
+		// Check characteristic property
+		final int properties = characteristic.getProperties();
+		if ((properties & BluetoothGattCharacteristic.PROPERTY_NOTIFY) == 0)
+			return false;
+
+		Logger.d(mLogSession, "gatt.setCharacteristicNotification(" + characteristic.getUuid() + ", false)");
+		gatt.setCharacteristicNotification(characteristic, false);
+		final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID);
+		if (descriptor != null) {
+			descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+			Logger.v(mLogSession, "Disabling notifications for " + characteristic.getUuid());
+			Logger.d(mLogSession, "gatt.writeDescriptor(" + CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID + ", value=0x00-00)");
+			return internalWriteDescriptorWorkaround(descriptor);
+		}
+		return false;
+	}
+
+	/**
 	 * Enables indications on given characteristic.
 	 *
 	 * @return true is the request has been enqueued
@@ -565,7 +596,21 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		return false;
 	}
 
-	/**
+    /**
+     * Enables indications on given characteristic.
+     *
+     * @return true is the request has been enqueued
+     */
+    protected final boolean disableIndications(final BluetoothGattCharacteristic characteristic) {
+        return enqueue(Request.newDisableIndicationsRequest(characteristic));
+    }
+
+    private boolean internalDisableIndications(final BluetoothGattCharacteristic characteristic) {
+        // This writes exactly the same settings so do not duplicate code
+        return internalDisableNotifications(characteristic);
+    }
+
+    /**
 	 * Sends the read request to the given characteristic.
 	 *
 	 * @param characteristic the characteristic to read
@@ -861,6 +906,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			READ_DESCRIPTOR,
 			ENABLE_NOTIFICATIONS,
 			ENABLE_INDICATIONS,
+            DISABLE_NOTIFICATIONS,
+            DISABLE_INDICATIONS,
 			READ_BATTERY_LEVEL,
 			ENABLE_BATTERY_LEVEL_NOTIFICATIONS,
 			DISABLE_BATTERY_LEVEL_NOTIFICATIONS,
@@ -1061,6 +1108,16 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			return new Request(Type.ENABLE_NOTIFICATIONS, characteristic);
 		}
 
+        /**
+         * Creates new Disable Notification request. The request will not be executed if given characteristic
+         * is null, does not have NOTIFY property or the CCCD. After the operation is complete a proper callback will be invoked.
+         * @param characteristic characteristic to have notifications enabled
+         * @return the new request that can be enqueued using {@link #enqueue(Request)} method.
+         */
+        public static Request newDisableNotificationsRequest(final BluetoothGattCharacteristic characteristic) {
+            return new Request(Type.DISABLE_NOTIFICATIONS, characteristic);
+        }
+
 		/**
 		 * Creates new Enable Indications request. The request will not be executed if given characteristic
 		 * is null, does not have INDICATE property or the CCCD. After the operation is complete a proper callback will be invoked.
@@ -1071,6 +1128,16 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		public static Request newEnableIndicationsRequest(final BluetoothGattCharacteristic characteristic) {
 			return new Request(Type.ENABLE_INDICATIONS, characteristic);
 		}
+
+        /**
+         * Creates new Disable Indications request. The request will not be executed if given characteristic
+         * is null, does not have INDICATE property or the CCCD. After the operation is complete a proper callback will be invoked.
+         * @param characteristic characteristic to have indications enabled
+         * @return the new request that can be enqueued using {@link #enqueue(Request)} method.
+         */
+        public static Request newDisableIndicationsRequest(final BluetoothGattCharacteristic characteristic) {
+            return new Request(Type.DISABLE_INDICATIONS, characteristic);
+        }
 
 		/**
 		 * Reads the first found Battery Level characteristic value from the first found Battery Service.
@@ -1710,6 +1777,14 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					result = internalEnableIndications(request.characteristic);
 					break;
 				}
+                case DISABLE_NOTIFICATIONS: {
+                    result = internalDisableNotifications(request.characteristic);
+                    break;
+                }
+                case DISABLE_INDICATIONS: {
+                    result = internalDisableIndications(request.characteristic);
+                    break;
+                }
 				case READ_BATTERY_LEVEL: {
 					result = internalReadBatteryLevel();
 					break;
