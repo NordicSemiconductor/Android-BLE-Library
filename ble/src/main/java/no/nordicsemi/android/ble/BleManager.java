@@ -815,7 +815,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 *
 	 * @return true if request has been enqueued
 	 */
-	public final boolean requestMtu(final int mtu) {
+	protected final boolean requestMtu(final int mtu) {
 		return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && enqueue(Request.newMtuRequest(mtu));
 	}
 
@@ -868,7 +868,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 *                 {@link BluetoothGatt#CONNECTION_PRIORITY_LOW_POWER}.
 	 * @return true if request has been enqueued
 	 */
-	public final boolean requestConnectionPriority(final int priority) {
+	protected final boolean requestConnectionPriority(final int priority) {
 		return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && enqueue(Request.newConnectionPriorityRequest(priority));
 	}
 
