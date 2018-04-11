@@ -22,6 +22,8 @@ public final class Request {
 		READ_DESCRIPTOR,
 		ENABLE_NOTIFICATIONS,
 		ENABLE_INDICATIONS,
+		DISABLE_NOTIFICATIONS,
+		DISABLE_INDICATIONS,
 		READ_BATTERY_LEVEL,
 		ENABLE_BATTERY_LEVEL_NOTIFICATIONS,
 		DISABLE_BATTERY_LEVEL_NOTIFICATIONS,
@@ -223,6 +225,16 @@ public final class Request {
 	}
 
 	/**
+	 * Creates new Disable Notification request. The request will not be executed if given characteristic
+	 * is null, does not have NOTIFY property or the CCCD. After the operation is complete a proper callback will be invoked.
+	 * @param characteristic characteristic to have notifications enabled
+	 * @return the new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 */
+	public static Request newDisableNotificationsRequest(final BluetoothGattCharacteristic characteristic) {
+		return new Request(Type.DISABLE_NOTIFICATIONS, characteristic);
+	}
+
+	/**
 	 * Creates new Enable Indications request. The request will not be executed if given characteristic
 	 * is null, does not have INDICATE property or the CCCD. After the operation is complete a proper callback will be invoked.
 	 *
@@ -232,6 +244,16 @@ public final class Request {
 	public static Request newEnableIndicationsRequest(final BluetoothGattCharacteristic characteristic) {
 		return new Request(Type.ENABLE_INDICATIONS, characteristic);
 	}
+
+	/**
+	 * Creates new Disable Indications request. The request will not be executed if given characteristic
+	 * is null, does not have INDICATE property or the CCCD. After the operation is complete a proper callback will be invoked.
+	 * @param characteristic characteristic to have indications enabled
+	 * @return the new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 */
+	public static Request newDisableIndicationsRequest(final BluetoothGattCharacteristic characteristic) {
+		return new Request(Type.DISABLE_INDICATIONS, characteristic);
+     }
 
 	/**
 	 * Reads the first found Battery Level characteristic value from the first found Battery Service.
