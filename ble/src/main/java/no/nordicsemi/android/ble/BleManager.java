@@ -909,7 +909,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return true if request has been enqueued, false if the {@link #connect(BluetoothDevice)} method was not called before,
 	 * or the manager was closed using {@link #close()}.
 	 */
-	public boolean enqueue(final Request request) {
+	protected boolean enqueue(final Request request) {
 		if (mGattCallback != null) {
 			// Add the new task to the end of the queue
 			mGattCallback.mTaskQueue.add(request);
