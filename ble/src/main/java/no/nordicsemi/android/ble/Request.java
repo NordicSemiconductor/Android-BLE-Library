@@ -42,71 +42,23 @@ public class Request {
 	final BluetoothGattDescriptor descriptor;
 	SuccessCallback successCallback;
 	FailCallback failCallback;
-	final byte[] data;
-	final int writeType;
-	final int value;
 
 	Request(final @NonNull Type type) {
 		this.type = type;
 		this.characteristic = null;
 		this.descriptor = null;
-		this.data = null;
-		this.writeType = 0;
-		this.value = 0;
-	}
-
-	Request(final @NonNull Type type, final int value) {
-		this.type = type;
-		this.characteristic = null;
-		this.descriptor = null;
-		this.data = null;
-		this.writeType = 0;
-		this.value = value;
 	}
 
 	Request(final @NonNull Type type, final @NonNull BluetoothGattCharacteristic characteristic) {
 		this.type = type;
 		this.characteristic = characteristic;
 		this.descriptor = null;
-		this.data = null;
-		this.writeType = 0;
-		this.value = 0;
-	}
-
-	Request(final @NonNull Type type, final @NonNull BluetoothGattCharacteristic characteristic, final int writeType, final @NonNull byte[] data, final int offset, final int length) {
-		this.type = type;
-		this.characteristic = characteristic;
-		this.descriptor = null;
-		this.data = copy(data, offset, length);
-		this.writeType = writeType;
-		this.value = 0;
 	}
 
 	Request(final @NonNull Type type, final @NonNull BluetoothGattDescriptor descriptor) {
 		this.type = type;
 		this.characteristic = null;
 		this.descriptor = descriptor;
-		this.data = null;
-		this.writeType = 0;
-		this.value = 0;
-	}
-
-	Request(final @NonNull Type type, final @NonNull BluetoothGattDescriptor descriptor, final @NonNull byte[] data, final int offset, final int length) {
-		this.type = type;
-		this.characteristic = null;
-		this.descriptor = descriptor;
-		this.data = copy(data, offset, length);
-		this.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
-		this.value = 0;
-	}
-
-	private static byte[] copy(final @NonNull byte[] value, final int offset, final int length) {
-		if (value == null || offset > value.length)
-			return null;
-		final int maxLength = Math.min(value.length - offset, length);
-		final byte[] copy = new byte[maxLength];
-		System.arraycopy(value, offset, copy, 0, maxLength);
-		return copy;
 	}
 
 	/**
@@ -141,7 +93,7 @@ public class Request {
 	 */
 	@NonNull
 	public static WriteRequest newWriteRequest(final @NonNull BluetoothGattCharacteristic characteristic, final @NonNull byte[] value) {
-		return new WriteRequest(Type.WRITE, characteristic, characteristic.getWriteType(), value, 0, value != null ? value.length : 0);
+		return new WriteRequest(Type.WRITE, characteristic, value, 0, value != null ? value.length : 0, characteristic.getWriteType());
 	}
 
 	/**
@@ -155,7 +107,7 @@ public class Request {
 	 */
 	@NonNull
 	public static WriteRequest newWriteRequest(final @NonNull BluetoothGattCharacteristic characteristic, final @NonNull byte[] value, final int writeType) {
-		return new WriteRequest(Type.WRITE, characteristic, writeType, value, 0, value != null ? value.length : 0);
+		return new WriteRequest(Type.WRITE, characteristic, value, 0, value != null ? value.length : 0, writeType);
 	}
 
 	/**
@@ -170,7 +122,7 @@ public class Request {
 	 */
 	@NonNull
 	public static WriteRequest newWriteRequest(final @NonNull BluetoothGattCharacteristic characteristic, final @NonNull byte[] value, final int offset, final int length) {
-		return new WriteRequest(Type.WRITE, characteristic, characteristic.getWriteType(), value, offset, length);
+		return new WriteRequest(Type.WRITE, characteristic, value, offset, length, characteristic.getWriteType());
 	}
 
 	/**
@@ -186,7 +138,7 @@ public class Request {
 	 */
 	@NonNull
 	public static WriteRequest newWriteRequest(final @NonNull BluetoothGattCharacteristic characteristic, @NonNull final byte[] value, final int offset, final int length, final int writeType) {
-		return new WriteRequest(Type.WRITE, characteristic, writeType, value, offset, length);
+		return new WriteRequest(Type.WRITE, characteristic, value, offset, length, writeType);
 	}
 
 	/**
@@ -328,11 +280,7 @@ public class Request {
 	 * @return the new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	public static MtuRequest newMtuRequest(int mtu) {
-		if (mtu < 23)
-			mtu = 23;
-		if (mtu > 517)
-			mtu = 517;
+	public static MtuRequest newMtuRequest(final int mtu) {
 		return new MtuRequest(Type.REQUEST_MTU, mtu);
 	}
 
@@ -349,9 +297,7 @@ public class Request {
 	 * @return the new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	public static ConnectionPriorityRequest newConnectionPriorityRequest(int priority) {
-		if (priority < 0 || priority > 2)
-			priority = 0; // Balanced
+	public static ConnectionPriorityRequest newConnectionPriorityRequest(final int priority) {
 		return new ConnectionPriorityRequest(Type.REQUEST_CONNECTION_PRIORITY, priority);
 	}
 
@@ -362,7 +308,7 @@ public class Request {
 	 * @return the request
 	 */
 	@NonNull
-	public Request done(final @Nullable SuccessCallback callback) {
+	public Request done(final @NonNull SuccessCallback callback) {
 		this.successCallback = callback;
 		return this;
 	}
@@ -373,17 +319,17 @@ public class Request {
 	 * @return the request
 	 */
 	@NonNull
-	public Request fail(final @Nullable FailCallback callback) {
+	public Request fail(final @NonNull FailCallback callback) {
 		this.failCallback = callback;
 		return this;
 	}
 
-	void success() {
+	void notifySuccess() {
 		if (successCallback != null)
 			successCallback.onRequestCompleted();
 	}
 
-	void fail(final int status) {
+	void notifyFail(final int status) {
 		if (failCallback != null)
 			failCallback.onRequestFailed(status);
 	}

@@ -42,7 +42,9 @@ import android.util.Log;
 
 import java.lang.reflect.Method;
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.LinkedList;
+import java.util.Objects;
 import java.util.Queue;
 import java.util.UUID;
 
@@ -79,6 +81,7 @@ import no.nordicsemi.android.log.Logger;
  *
  * @param <E> The profile callbacks type
  */
+@SuppressWarnings({"WeakerAccess", "unused"})
 public abstract class BleManager<E extends BleManagerCallbacks> implements ILogger {
 	private final static String TAG = "BleManager";
 
@@ -129,6 +132,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * Currently performed request or null.
 	 */
 	private Request mRequest;
+	private BatteryLevelRequest mBatteryLevelRequest;
+	private HashMap<BluetoothGattCharacteristic, ReadRequest> mNotificationRequests;
 
 	private final BroadcastReceiver mBluetoothStateBroadcastReceiver = new BroadcastReceiver() {
 		@Override
@@ -187,7 +192,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					if (previousBondState == BluetoothDevice.BOND_BONDING) {
 						mCallbacks.onBondingFailed(device);
 						if (mRequest != null)
-							mRequest.completed(false);
+							mRequest.notifyFail(FailCallback.REASON_REQUEST_FAILED);
 					}
 				case BluetoothDevice.BOND_BONDING:
 					mCallbacks.onBondingRequired(device);
@@ -196,7 +201,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					Logger.i(mLogSession, "Device bonded");
 					mCallbacks.onBonded(device);
 					if (mRequest != null)
-						mRequest.completed(true);
+						mRequest.notifySuccess();
 					break;
 			}
 			if (mGattCallback != null)
@@ -485,7 +490,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
 			Logger.v(mLogSession, "Creating bond request on already bonded device...");
 			Logger.i(mLogSession, "Device bonded");
-			mRequest.completed(true);
+			mRequest.notifySuccess();
 			return false;
 		}
 
@@ -512,7 +517,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 		if (!result) {
 			Log.w(TAG, "Creating bond failed");
-			mRequest.completed(false);
+			mRequest.notifyFail(FailCallback.REASON_REQUEST_FAILED);
 		}
 		return result;
 	}
@@ -571,6 +576,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		if (descriptor != null) {
 			descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
 			Logger.v(mLogSession, "Enabling notifications for " + characteristic.getUuid());
+			mNotificationRequests.put(characteristic, (ReadRequest) mRequest);
 			Logger.d(mLogSession, "gatt.writeDescriptor(" + CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID + ", value=0x01-00)");
 			return internalWriteDescriptorWorkaround(descriptor);
 		}
@@ -633,6 +639,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		if (descriptor != null) {
 			descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
 			Logger.v(mLogSession, "Enabling indications for " + characteristic.getUuid());
+			mNotificationRequests.put(characteristic, (ReadRequest) mRequest);
 			Logger.d(mLogSession, "gatt.writeDescriptor(" + CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID + ", value=0x02-00)");
 			return internalWriteDescriptorWorkaround(descriptor);
 		}
@@ -749,7 +756,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return the request
 	 */
 	public final BatteryLevelRequest readBatteryLevel() {
-		return enqueue(Request.newReadBatteryLevelRequest());
+		return enqueue(mBatteryLevelRequest = Request.newReadBatteryLevelRequest());
 	}
 
 	private boolean internalReadBatteryLevel() {
@@ -780,7 +787,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return the request
 	 */
 	public final BatteryLevelRequest enableBatteryLevelNotifications() {
-		return enqueue(Request.newEnableBatteryLevelNotificationsRequest());
+		return enqueue(mBatteryLevelRequest = Request.newEnableBatteryLevelNotificationsRequest());
 	}
 
 	/**
@@ -789,7 +796,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return the request
 	 */
 	public final Request disableBatteryLevelNotifications() {
-			return enqueue(Request.newDisableBatteryLevelNotificationsRequest());
+		return enqueue(Request.newDisableBatteryLevelNotificationsRequest());
 	}
 
 	private boolean internalSetBatteryNotifications(final boolean enable) {
@@ -955,7 +962,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return the request to allow chaining
 	 * @throws IllegalStateException if the device hasn't been connected (the BluetoothGattCallback is null)
 	 */
-	protected <R extends Request> R enqueue(final R request) {
+	protected <T extends Request> T enqueue(final T request) {
 		if (mGattCallback != null) {
 			// Add the new task to the end of the queue
 			mGattCallback.mTaskQueue.add(request);
@@ -965,6 +972,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		throw new IllegalStateException("Device not connected");
 	}
 
+	@SuppressWarnings({"WeakerAccess", "DeprecatedIsStillUsed"})
 	protected abstract class BleManagerGattCallback extends BluetoothGattCallback {
 		private final static String ERROR_CONNECTION_STATE_CHANGE = "Error on connection state change";
 		private final static String ERROR_DISCOVERY_SERVICE = "Error on discovering services";
@@ -976,7 +984,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		private final static String ERROR_MTU_REQUEST = "Error on mtu request";
 		private final static String ERROR_CONNECTION_PRIORITY_REQUEST = "Error on connection priority request";
 
-		private final Queue<Request> mTaskQueue = new LinkedList<>();
+		private final Deque<Request> mTaskQueue = new LinkedList<>();
 		private Deque<Request> mInitQueue;
 		private boolean mInitInProgress;
 		private boolean mOperationInProgress = true; // Initially true to block operations before services are discovered.
@@ -1302,6 +1310,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				} else {
 					// The value has been read. Notify the manager and proceed with the initialization queue.
 					onCharacteristicRead(gatt, characteristic);
+					((ReadRequest) mRequest).notifyValueChanged(characteristic.getValue());
+					if (((ReadRequest) mRequest).hasMore())
+						enqueueFirst(mRequest);
+					else
+						mRequest.notifySuccess();
 				}
 			} else if (status == BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION) {
 				if (gatt.getDevice().getBondState() != BluetoothDevice.BOND_NONE) {
@@ -1311,9 +1324,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				}
 			} else {
 				Log.e(TAG, "onCharacteristicRead error " + status);
+				mRequest.notifyFail(status);
 				onError(gatt.getDevice(), ERROR_READ_CHARACTERISTIC, status);
 			}
-			mRequest.completed(status == BluetoothGatt.GATT_SUCCESS);
 			mOperationInProgress = false;
 			nextRequest();
 		}
@@ -1324,6 +1337,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				Logger.i(mLogSession, "Data written to " + characteristic.getUuid() + ", value: " + ParserUtils.parse(characteristic));
 				// The value has been written. Notify the manager and proceed with the initialization queue.
 				onCharacteristicWrite(gatt, characteristic);
+				if (((WriteRequest) mRequest).hasMore()) {
+					enqueueFirst(mRequest);
+				} else {
+					mRequest.notifySuccess();
+				}
 			} else if (status == BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION) {
 				if (gatt.getDevice().getBondState() != BluetoothDevice.BOND_NONE) {
 					// This should never happen but it used to: http://stackoverflow.com/a/20093695/2115352
@@ -1332,9 +1350,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				}
 			} else {
 				Log.e(TAG, "onCharacteristicWrite error " + status);
+				mRequest.notifyFail(status);
 				onError(gatt.getDevice(), ERROR_WRITE_CHARACTERISTIC, status);
 			}
-			mRequest.completed(status == BluetoothGatt.GATT_SUCCESS);
 			mOperationInProgress = false;
 			nextRequest();
 		}
@@ -1346,6 +1364,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 				// The value has been read. Notify the manager and proceed with the initialization queue.
 				onDescriptorRead(gatt, descriptor);
+				((ReadRequest) mRequest).notifyValueChanged(descriptor.getValue());
+				if (((ReadRequest) mRequest).hasMore())
+					enqueueFirst(mRequest);
+				else
+					mRequest.notifySuccess();
 			} else if (status == BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION) {
 				if (gatt.getDevice().getBondState() != BluetoothDevice.BOND_NONE) {
 					// This should never happen but it used to: http://stackoverflow.com/a/20093695/2115352
@@ -1354,9 +1377,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				}
 			} else {
 				Log.e(TAG, "onDescriptorRead error " + status);
+				mRequest.notifyFail(status);
 				onError(gatt.getDevice(), ERROR_READ_DESCRIPTOR, status);
 			}
-			mRequest.completed(status == BluetoothGatt.GATT_SUCCESS);
 			mOperationInProgress = false;
 			nextRequest();
 		}
@@ -1375,6 +1398,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 							Logger.a(mLogSession, "Battery Level notifications enabled");
 						} else {
 							Logger.a(mLogSession, "Battery Level notifications disabled");
+							mBatteryLevelRequest = null;
 						}
 					} else {
 						onDescriptorWrite(gatt, descriptor);
@@ -1399,6 +1423,12 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				} else {
 					onDescriptorWrite(gatt, descriptor);
 				}
+				// mRequest may be either WriteRequest or ReadRequest, in case of enableNotifications/Indications requests
+				if (mRequest instanceof WriteRequest && ((WriteRequest) mRequest).hasMore()) {
+					enqueueFirst(mRequest);
+				} else {
+					mRequest.notifySuccess();
+				}
 			} else if (status == BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION) {
 				if (gatt.getDevice().getBondState() != BluetoothDevice.BOND_NONE) {
 					// This should never happen but it used to: http://stackoverflow.com/a/20093695/2115352
@@ -1407,9 +1437,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				}
 			} else {
 				Log.e(TAG, "onDescriptorWrite error " + status);
+				mRequest.notifyFail(status);
 				onError(gatt.getDevice(), ERROR_WRITE_DESCRIPTOR, status);
 			}
-			mRequest.completed(status == BluetoothGatt.GATT_SUCCESS);
 			mOperationInProgress = false;
 			nextRequest();
 		}
@@ -1424,7 +1454,15 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				Logger.a(mLogSession, "Battery level received: " + batteryValue + "%");
 				mBatteryValue = batteryValue;
 				onBatteryValueReceived(gatt, batteryValue);
+				if (mBatteryLevelRequest != null)
+					mBatteryLevelRequest.notifyBatteryLevelChanged(batteryValue);
 				mCallbacks.onBatteryValueReceived(gatt.getDevice(), batteryValue);
+			} else if (isServiceChanged(characteristic)) {
+				// TODO this should be tested. Should services be invalidated? Clal onDeviceDisconnected()?
+				Logger.i(mLogSession, "Service Changed indication received");
+				Logger.v(mLogSession, "Discovering Services...");
+				Logger.d(mLogSession, "gatt.discoverServices()");
+				gatt.discoverServices();
 			} else {
 				final BluetoothGattDescriptor cccd = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID);
 				final boolean notifications = cccd == null || cccd.getValue() == null || cccd.getValue().length != 2 || cccd.getValue()[0] == 0x01;
@@ -1436,20 +1474,26 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					Logger.i(mLogSession, "Indication received from " + characteristic.getUuid() + ", value: " + data);
 					onCharacteristicIndicated(gatt, characteristic);
 				}
+				final ReadRequest request = mNotificationRequests.get(characteristic);
+				if (request != null)
+					request.notifyValueChanged(characteristic.getValue());
 			}
 		}
 
+		@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 		@Override
 		public void onMtuChanged(final BluetoothGatt gatt, final int mtu, final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				Logger.i(mLogSession, "MTU changed to: " + mtu);
+				mMtu = mtu;
 				onMtuChanged(mtu);
+				((MtuRequest) mRequest).notifyMtuChanged(mtu);
+				mRequest.notifySuccess();
 			} else {
 				Log.e(TAG, "onMtuChanged error: " + status + ", mtu: " + mtu);
+				mRequest.notifyFail(status);
 				onError(gatt.getDevice(), ERROR_MTU_REQUEST, status);
 			}
-			mMtu = mtu;
-			mRequest.completed(status == BluetoothGatt.GATT_SUCCESS);
 			mOperationInProgress = false;
 			nextRequest();
 		}
@@ -1469,24 +1513,35 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @param status   {@link BluetoothGatt#GATT_SUCCESS} if the connection has been updated
 		 *                 successfully
 		 */
+		@RequiresApi(api = Build.VERSION_CODES.O)
 		public void onConnectionUpdated(final BluetoothGatt gatt, final int interval, final int latency, final int timeout, final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				Logger.i(mLogSession, "Connection parameters updated (interval: " + (interval * 1.25) + "ms, latency: " + latency + ", timeout: " + (timeout * 10) + "ms)");
 				onConnectionUpdated(interval, latency, timeout);
+				((ConnectionPriorityRequest) mRequest).notifyConnectionPriorityChanged(interval, latency, timeout);
+				mRequest.notifySuccess();
 			} else if (status == 0x3b) { // HCI_ERR_UNACCEPT_CONN_INTERVAL
 				Log.e(TAG, "onConnectionUpdated received status: Unacceptable connection interval, interval: " + interval + ", latency: " + latency + ", timeout: " + timeout);
 				Logger.w(mLogSession, "Connection parameters update failed with status: UNACCEPT CONN INTERVAL (0x3b) (interval: " + (interval * 1.25) + "ms, latency: " + latency + ", timeout: " + (timeout * 10) + "ms)");
+				mRequest.notifyFail(status);
 			} else {
 				Log.e(TAG, "onConnectionUpdated received status: " + status + ", interval: " + interval + ", latency: " + latency + ", timeout: " + timeout);
 				Logger.w(mLogSession, "Connection parameters update failed with status " + status + " (interval: " + (interval * 1.25) + "ms, latency: " + latency + ", timeout: " + (timeout * 10) + "ms)");
+				mRequest.notifyFail(status);
 				mCallbacks.onError(gatt.getDevice(), ERROR_CONNECTION_PRIORITY_REQUEST, status);
 			}
 			if (mConnectionPriorityOperationInProgress) {
-				mRequest.completed(status == BluetoothGatt.GATT_SUCCESS);
 				mConnectionPriorityOperationInProgress = false;
 				mOperationInProgress = false;
 				nextRequest();
 			}
+		}
+
+		private void enqueueFirst(final Request request) {
+			Deque<Request> queue = mInitQueue;
+			if (queue == null)
+				queue = mTaskQueue;
+			queue.addFirst(request);
 		}
 
 		/**
@@ -1536,9 +1591,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					break;
 				}
 				case WRITE: {
+					final WriteRequest wr = (WriteRequest) request;
 					final BluetoothGattCharacteristic characteristic = request.characteristic;
-					characteristic.setValue(request.data);
-					characteristic.setWriteType(request.writeType);
+					Objects.requireNonNull(characteristic).setValue(wr.getData(mMtu));
+					characteristic.setWriteType(wr.getWriteType());
 					result = internalWriteCharacteristic(characteristic);
 					break;
 				}
@@ -1547,8 +1603,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					break;
 				}
 				case WRITE_DESCRIPTOR: {
+					final WriteRequest wr = (WriteRequest) request;
 					final BluetoothGattDescriptor descriptor = request.descriptor;
-					descriptor.setValue(request.data);
+					Objects.requireNonNull(descriptor).setValue(wr.getData(mMtu));
 					result = internalWriteDescriptor(descriptor);
 					break;
 				}
@@ -1586,21 +1643,22 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				}
 				case REQUEST_MTU: {
 					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-						result = internalRequestMtu(request.value);
+						result = internalRequestMtu(((MtuRequest) request).getRequiredMtu());
 					}
 					break;
 				}
 				case REQUEST_CONNECTION_PRIORITY: {
+					final ConnectionPriorityRequest cpr = (ConnectionPriorityRequest) request;
 					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 						mConnectionPriorityOperationInProgress = true;
-						result = internalRequestConnectionPriority(request.value);
+						result = internalRequestConnectionPriority(cpr.getRequiredPriority());
 					} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-						result = internalRequestConnectionPriority(request.value);
+						result = internalRequestConnectionPriority(cpr.getRequiredPriority());
 						// There is no callback for requestConnectionPriority(...) before Android Oreo.\
 						// Let's give it some time to finish as the request is an asynchronous operation.
 						if (result) {
 							mHandler.postDelayed(() -> {
-								mRequest.success();
+								mRequest.notifySuccess();
 								mOperationInProgress = false;
 								nextRequest();
 							}, 100);
@@ -1613,7 +1671,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			// or the feature is not supported on the Android.
 			// In that case, proceed with next operation and ignore the one that failed.
 			if (!result) {
-				mRequest.fail(FailCallback.REASON_REQUEST_FAILED);
+				mRequest.notifyFail(FailCallback.REASON_REQUEST_FAILED);
 				mConnectionPriorityOperationInProgress = false;
 				mOperationInProgress = false;
 				nextRequest();
@@ -1627,10 +1685,17 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @return true if the descriptor belongs to the Service Changed characteristic
 		 */
 		private boolean isServiceChangedCCCD(final BluetoothGattDescriptor descriptor) {
-			if (descriptor == null)
-				return false;
+			return descriptor != null && SERVICE_CHANGED_CHARACTERISTIC.equals(descriptor.getCharacteristic().getUuid());
+		}
 
-			return SERVICE_CHANGED_CHARACTERISTIC.equals(descriptor.getCharacteristic().getUuid());
+		/**
+		 * Returns true if this is the Service Changed characteristic.
+		 *
+		 * @param characteristic the characteristic to be checked
+		 * @return true if it is the Service Changed characteristic
+		 */
+		private boolean isServiceChanged(final BluetoothGattCharacteristic characteristic) {
+			return characteristic != null && SERVICE_CHANGED_CHARACTERISTIC.equals(characteristic.getUuid());
 		}
 
 		/**
@@ -1640,10 +1705,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @return true if the characteristic is the Battery Level characteristic.
 		 */
 		private boolean isBatteryLevelCharacteristic(final BluetoothGattCharacteristic characteristic) {
-			if (characteristic == null)
-				return false;
-
-			return BATTERY_LEVEL_CHARACTERISTIC.equals(characteristic.getUuid());
+			return characteristic != null && BATTERY_LEVEL_CHARACTERISTIC.equals(characteristic.getUuid());
 		}
 
 		/**
@@ -1653,10 +1715,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @return true if the descriptor belongs to the Battery Level characteristic
 		 */
 		private boolean isBatteryLevelCCCD(final BluetoothGattDescriptor descriptor) {
-			if (descriptor == null)
-				return false;
-
-			return BATTERY_LEVEL_CHARACTERISTIC.equals(descriptor.getCharacteristic().getUuid());
+			return descriptor != null && BATTERY_LEVEL_CHARACTERISTIC.equals(descriptor.getCharacteristic().getUuid());
 		}
 
 		/**
@@ -1666,10 +1725,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @return true if the descriptor is a CCCD
 		 */
 		private boolean isCCCD(final BluetoothGattDescriptor descriptor) {
-			if (descriptor == null)
-				return false;
-
-			return CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID.equals(descriptor.getUuid());
+			return descriptor != null && CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID.equals(descriptor.getUuid());
 		}
 	}
 
