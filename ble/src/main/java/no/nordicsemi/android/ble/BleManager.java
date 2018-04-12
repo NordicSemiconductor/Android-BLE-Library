@@ -133,7 +133,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	private Request mRequest;
 	private BatteryLevelRequest mBatteryLevelRequest;
-	private HashMap<BluetoothGattCharacteristic, ReadRequest> mNotificationRequests;
+	private final HashMap<BluetoothGattCharacteristic, ReadRequest> mNotificationRequests = new HashMap<>();
 
 	private final BroadcastReceiver mBluetoothStateBroadcastReceiver = new BroadcastReceiver() {
 		@Override
@@ -427,6 +427,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			mConnected = false;
 			mInitialConnection = false;
 			mRequest = null;
+			mBatteryLevelRequest = null;
+			mNotificationRequests.clear();
 			mConnectionState = BluetoothGatt.STATE_DISCONNECTED;
 			if (mGattCallback != null)
 				mGattCallback.cancelQueue();
@@ -972,7 +974,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		throw new IllegalStateException("Device not connected");
 	}
 
-	@SuppressWarnings({"WeakerAccess", "DeprecatedIsStillUsed"})
+	@SuppressWarnings({"WeakerAccess", "DeprecatedIsStillUsed", "deprecation"})
 	protected abstract class BleManagerGattCallback extends BluetoothGattCallback {
 		private final static String ERROR_CONNECTION_STATE_CHANGE = "Error on connection state change";
 		private final static String ERROR_DISCOVERY_SERVICE = "Error on discovering services";
@@ -1408,6 +1410,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					if (value != null && value.length == 2 && value[1] == 0x00) {
 						switch (value[0]) {
 							case 0x00:
+								mNotificationRequests.remove(descriptor.getCharacteristic());
 								Logger.a(mLogSession, "Notifications and indications disabled");
 								break;
 							case 0x01:
