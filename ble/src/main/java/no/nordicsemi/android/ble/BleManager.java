@@ -46,6 +46,11 @@ import java.util.LinkedList;
 import java.util.Queue;
 import java.util.UUID;
 
+import no.nordicsemi.android.ble.callback.BatteryLevelCallback;
+import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
+import no.nordicsemi.android.ble.callback.FailCallback;
+import no.nordicsemi.android.ble.callback.SuccessCallback;
+import no.nordicsemi.android.ble.callback.ValueCallback;
 import no.nordicsemi.android.ble.error.GattError;
 import no.nordicsemi.android.ble.utils.ILogger;
 import no.nordicsemi.android.ble.utils.ParserUtils;
@@ -1051,7 +1056,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 *
 		 * @param gatt           GATT client
 		 * @param characteristic Characteristic that was read from the associated remote device.
+		 * @deprecated Use {@link ReadRequest#then(ValueCallback)} instead.
 		 */
+		@Deprecated
 		protected void onCharacteristicRead(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
 			// do nothing
 		}
@@ -1066,7 +1073,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 *
 		 * @param gatt           GATT client
 		 * @param characteristic Characteristic that was written to the associated remote device.
+		 * @deprecated Use {@link WriteRequest#done(SuccessCallback)} instead.
 		 */
+		@Deprecated
 		protected void onCharacteristicWrite(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
 			// do nothing
 		}
@@ -1076,7 +1085,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 *
 		 * @param gatt       GATT client
 		 * @param descriptor Descriptor that was read from the associated remote device.
+		 * @deprecated Use {@link ReadRequest#then(ValueCallback)} instead.
 		 */
+		@Deprecated
 		protected void onDescriptorRead(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor) {
 			// do nothing
 		}
@@ -1090,7 +1101,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 *
 		 * @param gatt       GATT client
 		 * @param descriptor Descriptor that was written to the associated remote device.
+		 * @deprecated use {@link WriteRequest} and {@link no.nordicsemi.android.ble.callback.SuccessCallback} instead.
 		 */
+		@Deprecated
 		protected void onDescriptorWrite(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor) {
 			// do nothing
 		}
@@ -1101,7 +1114,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 *
 		 * @param gatt  GATT client
 		 * @param value the battery value in percent
+		 * @deprecated Use {@link BatteryLevelRequest#then(BatteryLevelCallback)} instead.
 		 */
+		@Deprecated
 		protected void onBatteryValueReceived(final BluetoothGatt gatt, final int value) {
 			// do nothing
 		}
@@ -1111,6 +1126,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 *
 		 * @param gatt           GATT client
 		 * @param characteristic Characteristic from which the notification came.
+		 * @deprecated Use {@link ReadRequest#then(ValueCallback)} instead.
 		 */
 		protected void onCharacteristicNotified(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
 			// do nothing
@@ -1121,7 +1137,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 *
 		 * @param gatt           GATT client
 		 * @param characteristic Characteristic from which the indication came.
+		 * @deprecated Use {@link ReadRequest#then(ValueCallback)} instead.
 		 */
+		@Deprecated
 		protected void onCharacteristicIndicated(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
 			// do nothing
 		}
@@ -1145,7 +1163,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 *                 is from 0 to 499
 		 * @param timeout  Supervision timeout for this connection, in 10ms unit. Valid range is from 10
 		 *                 (0.1s) to 3200 (32s)
+		 * @deprecated Use {@link ConnectionPriorityRequest#then(ConnectionPriorityCallback)} instead.
 		 */
+		@Deprecated
 		@TargetApi(Build.VERSION_CODES.O)
 		protected void onConnectionUpdated(final int interval, final int latency, final int timeout) {
 			// do nothing
@@ -1580,7 +1600,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 						// Let's give it some time to finish as the request is an asynchronous operation.
 						if (result) {
 							mHandler.postDelayed(() -> {
-								mRequest.completed(true);
+								mRequest.success();
 								mOperationInProgress = false;
 								nextRequest();
 							}, 100);
@@ -1593,7 +1613,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			// or the feature is not supported on the Android.
 			// In that case, proceed with next operation and ignore the one that failed.
 			if (!result) {
-				mRequest.completed(false);
+				mRequest.fail(FailCallback.REASON_REQUEST_FAILED);
 				mConnectionPriorityOperationInProgress = false;
 				mOperationInProgress = false;
 				nextRequest();

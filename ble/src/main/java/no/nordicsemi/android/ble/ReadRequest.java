@@ -2,6 +2,8 @@ package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
@@ -12,32 +14,36 @@ public class ReadRequest extends Request {
 	ValueCallback valueCallback;
 	ValueMerger valueMerger;
 
-	ReadRequest(final Type type, final BluetoothGattCharacteristic characteristic) {
+	ReadRequest(final @NonNull Type type, final @NonNull BluetoothGattCharacteristic characteristic) {
 		super(type, characteristic);
 	}
 
-	ReadRequest(final Type type, final BluetoothGattDescriptor descriptor) {
+	ReadRequest(final @NonNull Type type, final @NonNull BluetoothGattDescriptor descriptor) {
 		super(type, descriptor);
 	}
 
-	public ReadRequest then(final ValueCallback callback) {
+	@NonNull
+	public ReadRequest then(final @Nullable ValueCallback callback) {
 		this.valueCallback = callback;
 		return this;
 	}
 
-	public ReadRequest merge(final ValueMerger merger) {
+	@NonNull
+	public ReadRequest merge(final @Nullable ValueMerger merger) {
 		this.valueMerger = merger;
 		return this;
 	}
 
 	@Override
-	public ReadRequest done(final SuccessCallback callback) {
+	@NonNull
+	public ReadRequest done(final @Nullable SuccessCallback callback) {
 		this.successCallback = callback;
 		return this;
 	}
 
 	@Override
-	public ReadRequest fail(final FailCallback callback) {
+	@NonNull
+	public ReadRequest fail(final @Nullable FailCallback callback) {
 		this.failCallback = callback;
 		return this;
 	}

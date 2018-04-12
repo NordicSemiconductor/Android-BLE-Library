@@ -1,6 +1,10 @@
 package no.nordicsemi.android.ble.callback;
 
-public interface ConnectionPriorityRequestCallback {
+import android.os.Build;
+import android.support.annotation.RequiresApi;
+
+@RequiresApi(api = Build.VERSION_CODES.O)
+public interface ConnectionPriorityCallback {
 
 	/**
 	 * Callback indicating the connection parameters were updated. Works on Android 8+.
@@ -12,5 +16,6 @@ public interface ConnectionPriorityRequestCallback {
 	 * @param timeout  Supervision timeout for this connection, in 10ms unit. Valid range is from 10
 	 *                 (0.1s) to 3200 (32s)
 	 */
+	@RequiresApi(api = Build.VERSION_CODES.O)
 	void onConnectionUpdated(final int interval, final int latency, final int timeout);
 }

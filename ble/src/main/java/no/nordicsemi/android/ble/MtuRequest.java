@@ -1,29 +1,37 @@
 package no.nordicsemi.android.ble;
 
+import android.os.Build;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+import android.support.annotation.RequiresApi;
+
 import no.nordicsemi.android.ble.callback.FailCallback;
-import no.nordicsemi.android.ble.callback.MtuRequestCallback;
+import no.nordicsemi.android.ble.callback.MtuCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
 public class MtuRequest extends Request {
-	MtuRequestCallback valueCallback;
+	MtuCallback valueCallback;
 
-	MtuRequest(final Type type, final int mtu) {
+	MtuRequest(final @NonNull Type type, final int mtu) {
 		super(type, mtu);
 	}
 
-	public MtuRequest then(final MtuRequestCallback callback) {
+	@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+	public MtuRequest then(final @Nullable MtuCallback callback) {
 		this.valueCallback = callback;
 		return this;
 	}
 
 	@Override
-	public MtuRequest done(final SuccessCallback callback) {
+	@NonNull
+	public MtuRequest done(final @Nullable SuccessCallback callback) {
 		this.successCallback = callback;
 		return this;
 	}
 
 	@Override
-	public MtuRequest fail(final FailCallback callback) {
+	@NonNull
+	public MtuRequest fail(final @Nullable FailCallback callback) {
 		this.failCallback = callback;
 		return this;
 	}
