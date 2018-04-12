@@ -108,9 +108,8 @@ public interface BleManagerCallbacks {
 	/**
 	 * Called when battery value has been received from the device.
 	 *
-	 * @param value
-	 *            the battery value in percent
-	 * @param device the device frm which the battery value has changed
+	 * @param device the device from which the battery value has changed
+	 * @param value  the battery value in percent
 	 */
 	void onBatteryValueReceived(final BluetoothDevice device, final int value);
 

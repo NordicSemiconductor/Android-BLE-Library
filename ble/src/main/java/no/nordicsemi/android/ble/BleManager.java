@@ -459,9 +459,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	/**
 	 * Enqueues creating bond request to the queue.
 	 *
-	 * @return true if request has been enqueued, false if the device has not been connected
+	 * @return the request
 	 */
-	protected final boolean createBond() {
+	protected final Request createBond() {
 		return enqueue(Request.createBond());
 	}
 
@@ -544,9 +544,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	/**
 	 * Enables notifications on given characteristic.
 	 *
-	 * @return true is the request has been enqueued
+	 * @return the request
 	 */
-	protected final boolean enableNotifications(final BluetoothGattCharacteristic characteristic) {
+	protected final ReadRequest enableNotifications(final BluetoothGattCharacteristic characteristic) {
 		return enqueue(Request.newEnableNotificationsRequest(characteristic));
 	}
 
@@ -575,9 +575,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	/**
 	 * Enables notifications on given characteristic.
 	 *
-	 * @return true is the request has been enqueued
+	 * @return the request
 	 */
-	protected final boolean disableNotifications(final BluetoothGattCharacteristic characteristic) {
+	protected final Request disableNotifications(final BluetoothGattCharacteristic characteristic) {
 		return enqueue(Request.newDisableNotificationsRequest(characteristic));
 	}
 
@@ -606,9 +606,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	/**
 	 * Enables indications on given characteristic.
 	 *
-	 * @return true is the request has been enqueued
+	 * @return the request
 	 */
-	protected final boolean enableIndications(final BluetoothGattCharacteristic characteristic) {
+	protected final ReadRequest enableIndications(final BluetoothGattCharacteristic characteristic) {
 		return enqueue(Request.newEnableIndicationsRequest(characteristic));
 	}
 
@@ -637,9 +637,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
     /**
      * Enables indications on given characteristic.
      *
-     * @return true is the request has been enqueued
-     */
-    protected final boolean disableIndications(final BluetoothGattCharacteristic characteristic) {
+     * @return the request
+	 */
+	protected final Request disableIndications(final BluetoothGattCharacteristic characteristic) {
         return enqueue(Request.newDisableIndicationsRequest(characteristic));
     }
 
@@ -652,9 +652,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * Sends the read request to the given characteristic.
 	 *
 	 * @param characteristic the characteristic to read
-	 * @return true if request has been enqueued
+	 * @return the request
 	 */
-	protected final boolean readCharacteristic(final BluetoothGattCharacteristic characteristic) {
+	protected final ReadRequest readCharacteristic(final BluetoothGattCharacteristic characteristic) {
 		return enqueue(Request.newReadRequest(characteristic));
 	}
 
@@ -677,9 +677,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * Writes the characteristic value to the given characteristic.
 	 *
 	 * @param characteristic the characteristic to write to
-	 * @return true if request has been enqueued
+	 * @return the request
 	 */
-	protected final boolean writeCharacteristic(final BluetoothGattCharacteristic characteristic) {
+	protected final WriteRequest writeCharacteristic(final BluetoothGattCharacteristic characteristic) {
 		return enqueue(Request.newWriteRequest(characteristic, characteristic.getValue()));
 	}
 
@@ -702,9 +702,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * Sends the read request to the given descriptor.
 	 *
 	 * @param descriptor the descriptor to read
-	 * @return true if request has been enqueued
+	 * @return the request
 	 */
-	protected final boolean readDescriptor(final BluetoothGattDescriptor descriptor) {
+	protected final Request readDescriptor(final BluetoothGattDescriptor descriptor) {
 		return enqueue(Request.newReadRequest(descriptor));
 	}
 
@@ -722,9 +722,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * Writes the descriptor value to the given descriptor.
 	 *
 	 * @param descriptor the descriptor to write to
-	 * @return true if request has been enqueued
+	 * @return the request
 	 */
-	protected final boolean writeDescriptor(final BluetoothGattDescriptor descriptor) {
+	protected final WriteRequest writeDescriptor(final BluetoothGattDescriptor descriptor) {
 		return enqueue(Request.newWriteRequest(descriptor, descriptor.getValue()));
 	}
 
@@ -741,9 +741,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	/**
 	 * Reads the battery level from the device.
 	 *
-	 * @return true if request has been enqueued
+	 * @return the request
 	 */
-	public final boolean readBatteryLevel() {
+	public final BatteryLevelRequest readBatteryLevel() {
 		return enqueue(Request.newReadBatteryLevelRequest());
 	}
 
@@ -770,15 +770,20 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	/**
-	 * This method tries to enable notifications on the Battery Level characteristic.
+	 * This method enables notifications on the Battery Level characteristic.
 	 *
-	 * @param enable <code>true</code> to enable battery notifications, false to disable
-	 * @return true if request has been enqueued
+	 * @return the request
 	 */
-	public final boolean setBatteryNotifications(final boolean enable) {
-		if (enable)
-			return enqueue(Request.newEnableBatteryLevelNotificationsRequest());
-		else
+	public final BatteryLevelRequest enableBatteryLevelNotifications() {
+		return enqueue(Request.newEnableBatteryLevelNotificationsRequest());
+	}
+
+	/**
+	 * This method disables notifications on the Battery Level characteristic.
+	 *
+	 * @return the request
+	 */
+	public final Request disableBatteryLevelNotifications() {
 			return enqueue(Request.newDisableBatteryLevelNotificationsRequest());
 	}
 
@@ -845,12 +850,12 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	/**
-	 * Requests new MTU. On Android 4.3 and 4.4.x returns false.
+	 * Requests new MTU. Works only on Android Lollipop or newer.
 	 *
-	 * @return true if request has been enqueued
+	 * @return the request
 	 */
-	protected final boolean requestMtu(final int mtu) {
-		return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && enqueue(Request.newMtuRequest(mtu));
+	protected final MtuRequest requestMtu(final int mtu) {
+		return enqueue(Request.newMtuRequest(mtu));
 	}
 
 	/**
@@ -861,6 +866,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback is not invoked, therefor the returned MTU value will not be correct.
 	 * Use {@link android.bluetooth.BluetoothGattServerCallback#onMtuChanged(BluetoothDevice, int)} to get the
 	 * callback with right value requested from the peripheral side.
+	 *
 	 * @return the current MTU value. Default to 23.
 	 */
 	protected final int getMtu() {
@@ -871,6 +877,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * This method overrides the MTU value. Use it only when the peripheral has changed MTU and you
 	 * received the {@link android.bluetooth.BluetoothGattServerCallback#onMtuChanged(BluetoothDevice, int)}
 	 * callback. If you want to set MTU as a master, use {@link #requestMtu(int)} instead.
+	 *
 	 * @param mtu the MTU value set by the peripheral.
 	 */
 	protected final void overrideMtu(final int mtu) {
@@ -896,14 +903,14 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * <li>{@link BluetoothGatt#CONNECTION_PRIORITY_BALANCED} - Interval: 30 - 50 ms, latency: 0, supervision timeout: 20 sec,</li>
 	 * <li>{@link BluetoothGatt#CONNECTION_PRIORITY_LOW_POWER} - Interval: 100 - 125 ms, latency: 2, supervision timeout: 20 sec.</li>
 	 * </ol>
-	 * On Android 4.3 and 4.4.x returns false.
+	 * Works only on Android Lollipop or newer.
 	 *
 	 * @param priority one of: {@link BluetoothGatt#CONNECTION_PRIORITY_HIGH}, {@link BluetoothGatt#CONNECTION_PRIORITY_BALANCED},
 	 *                 {@link BluetoothGatt#CONNECTION_PRIORITY_LOW_POWER}.
-	 * @return true if request has been enqueued
+	 * @return the request
 	 */
-	protected final boolean requestConnectionPriority(final int priority) {
-		return Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP && enqueue(Request.newConnectionPriorityRequest(priority));
+	protected final ConnectionPriorityRequest requestConnectionPriority(final int priority) {
+		return enqueue(Request.newConnectionPriorityRequest(priority));
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -940,17 +947,17 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * before a new one will be called.</p>
 	 *
 	 * @param request new request to be added to the queue.
-	 * @return true if request has been enqueued, false if the {@link #connect(BluetoothDevice)} method was not called before,
-	 * or the manager was closed using {@link #close()}.
+	 * @return the request to allow chaining
+	 * @throws IllegalStateException if the device hasn't been connected (the BluetoothGattCallback is null)
 	 */
-	protected boolean enqueue(final Request request) {
+	protected <R extends Request> R enqueue(final R request) {
 		if (mGattCallback != null) {
 			// Add the new task to the end of the queue
 			mGattCallback.mTaskQueue.add(request);
 			mGattCallback.nextRequest();
-			return true;
+			return request;
 		}
-		return false;
+		throw new IllegalStateException("Device not connected");
 	}
 
 	protected abstract class BleManagerGattCallback extends BluetoothGattCallback {
