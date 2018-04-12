@@ -127,6 +127,12 @@ public interface BleManagerCallbacks {
 	void onBonded(final BluetoothDevice device);
 
 	/**
+	 * Called when the bond state has changed from {@link BluetoothDevice#BOND_BONDING} to {@link BluetoothDevice#BOND_NONE}.
+	 * @param device the device that failed to bond
+	 */
+	void onBondingFailed(final BluetoothDevice device);
+
+	/**
 	 * Called when a BLE error has occurred
 	 *
 	 * @param message

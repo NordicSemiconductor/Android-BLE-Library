@@ -120,6 +120,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * The current MTU (Maximum Transfer Unit). The maximum number of bytes that can be sent in a single packet is MTU-3.
 	 */
 	private int mMtu = 23;
+	/**
+	 * Currently performed request or null.
+	 */
+	private Request mRequest;
 
 	private final BroadcastReceiver mBluetoothStateBroadcastReceiver = new BroadcastReceiver() {
 		@Override
@@ -174,14 +178,24 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			Log.i(TAG, "Bond state changed for: " + device.getName() + " new state: " + bondState + " previous: " + previousBondState);
 
 			switch (bondState) {
+				case BluetoothDevice.BOND_NONE:
+					if (previousBondState == BluetoothDevice.BOND_BONDING) {
+						mCallbacks.onBondingFailed(device);
+						if (mRequest != null)
+							mRequest.completed(false);
+					}
 				case BluetoothDevice.BOND_BONDING:
 					mCallbacks.onBondingRequired(device);
-					break;
+					return;
 				case BluetoothDevice.BOND_BONDED:
 					Logger.i(mLogSession, "Device bonded");
 					mCallbacks.onBonded(device);
+					if (mRequest != null)
+						mRequest.completed(true);
 					break;
 			}
+			if (mGattCallback != null)
+				mGattCallback.nextRequest();
 		}
 	};
 
@@ -199,14 +213,28 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			Logger.d(mLogSession, "[Broadcast] Action received: android.bluetooth.device.action.PAIRING_REQUEST"/*BluetoothDevice.ACTION_PAIRING_REQUEST*/ +
 					", pairing variant: " + pairingVariantToString(variant) + " (" + variant + ")");
 
-			// The API below is available for Android 4.4 or newer.
-
-			// An app may set the PIN here or set pairing confirmation (depending on the variant) using:
-			// device.setPin(new byte[] { '1', '2', '3', '4', '5', '6' });
-			// device.setPairingConfirmation(true);
+			onPairingRequestReceived(device, variant);
 		}
 	};
 
+	/**
+	 * This method will be called if a remote device requires a non-'just works' pairing.
+	 * See PAIRING_* constants for possible options.
+	 * @param device the device
+	 * @param variant pairing variant
+	 */
+	protected void onPairingRequestReceived(final BluetoothDevice device, final int variant) {
+		// The API below is available for Android 4.4 or newer.
+
+		// An app may set the PIN here or set pairing confirmation (depending on the variant) using:
+		// device.setPin(new byte[] { '1', '2', '3', '4', '5', '6' });
+		// device.setPairingConfirmation(true);
+	}
+
+	/**
+	 * The manager constructor.
+	 * @param context context
+	 */
 	public BleManager(final Context context) {
 		mContext = context;
 		mHandler = new Handler();
@@ -388,7 +416,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			}
 			mConnected = false;
 			mInitialConnection = false;
+			mRequest = null;
 			mConnectionState = BluetoothGatt.STATE_DISCONNECTED;
+			if (mGattCallback != null)
+				mGattCallback.cancelQueue();
 			mGattCallback = null;
 			mBluetoothDevice = null;
 		}
@@ -447,8 +478,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			return false;
 
 		if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
-			Logger.v(mLogSession, "Create bond request on already bonded device...");
+			Logger.v(mLogSession, "Creating bond request on already bonded device...");
 			Logger.i(mLogSession, "Device bonded");
+			mRequest.completed(true);
 			return false;
 		}
 
@@ -473,8 +505,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			}
 		}
 
-		if (!result)
+		if (!result) {
 			Log.w(TAG, "Creating bond failed");
+			mRequest.completed(false);
+		}
 		return result;
 	}
 
@@ -934,6 +968,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		private Deque<Request> mInitQueue;
 		private boolean mInitInProgress;
 		private boolean mOperationInProgress = true; // Initially true to block operations before services are discovered.
+
 		/**
 		 * This flag is required to resume operations after the connection priority request was made.
 		 * It is used only on Android Oreo and newer, as only there there is onConnectionUpdated callback.
@@ -1251,6 +1286,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				Log.e(TAG, "onCharacteristicRead error " + status);
 				onError(gatt.getDevice(), ERROR_READ_CHARACTERISTIC, status);
 			}
+			mRequest.completed(status == BluetoothGatt.GATT_SUCCESS);
 			mOperationInProgress = false;
 			nextRequest();
 		}
@@ -1271,6 +1307,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				Log.e(TAG, "onCharacteristicWrite error " + status);
 				onError(gatt.getDevice(), ERROR_WRITE_CHARACTERISTIC, status);
 			}
+			mRequest.completed(status == BluetoothGatt.GATT_SUCCESS);
 			mOperationInProgress = false;
 			nextRequest();
 		}
@@ -1292,6 +1329,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				Log.e(TAG, "onDescriptorRead error " + status);
 				onError(gatt.getDevice(), ERROR_READ_DESCRIPTOR, status);
 			}
+			mRequest.completed(status == BluetoothGatt.GATT_SUCCESS);
 			mOperationInProgress = false;
 			nextRequest();
 		}
@@ -1344,6 +1382,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				Log.e(TAG, "onDescriptorWrite error " + status);
 				onError(gatt.getDevice(), ERROR_WRITE_DESCRIPTOR, status);
 			}
+			mRequest.completed(status == BluetoothGatt.GATT_SUCCESS);
 			mOperationInProgress = false;
 			nextRequest();
 		}
@@ -1383,6 +1422,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				onError(gatt.getDevice(), ERROR_MTU_REQUEST, status);
 			}
 			mMtu = mtu;
+			mRequest.completed(status == BluetoothGatt.GATT_SUCCESS);
 			mOperationInProgress = false;
 			nextRequest();
 		}
@@ -1415,10 +1455,19 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				mCallbacks.onError(gatt.getDevice(), ERROR_CONNECTION_PRIORITY_REQUEST, status);
 			}
 			if (mConnectionPriorityOperationInProgress) {
+				mRequest.completed(status == BluetoothGatt.GATT_SUCCESS);
 				mConnectionPriorityOperationInProgress = false;
 				mOperationInProgress = false;
 				nextRequest();
 			}
+		}
+
+		/**
+		 * Removes all enqueued requests from the queue.
+		 * Does not affect the Init queue created with {@link #initGatt(BluetoothGatt)}.
+		 */
+		protected void cancelQueue() {
+			mTaskQueue.clear();
 		}
 
 		/**
@@ -1442,11 +1491,12 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				// If so, we can continue with the task queue
 				request = mTaskQueue.poll();
 				if (request == null) {
-					// Nothing to be done for now
+					mRequest = null;
 					return;
 				}
 			}
 
+			mRequest = request;
 			mOperationInProgress = true;
 			boolean result = false;
 			switch (request.type) {
@@ -1523,6 +1573,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 						// Let's give it some time to finish as the request is an asynchronous operation.
 						if (result) {
 							mHandler.postDelayed(() -> {
+								mRequest.completed(true);
 								mOperationInProgress = false;
 								nextRequest();
 							}, 100);
@@ -1535,6 +1586,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			// or the feature is not supported on the Android.
 			// In that case, proceed with next operation and ignore the one that failed.
 			if (!result) {
+				mRequest.completed(false);
 				mConnectionPriorityOperationInProgress = false;
 				mOperationInProgress = false;
 				nextRequest();
@@ -1594,13 +1646,13 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		}
 	}
 
-	private static final int PAIRING_VARIANT_PIN = 0;
-	private static final int PAIRING_VARIANT_PASSKEY = 1;
-	private static final int PAIRING_VARIANT_PASSKEY_CONFIRMATION = 2;
-	private static final int PAIRING_VARIANT_CONSENT = 3;
-	private static final int PAIRING_VARIANT_DISPLAY_PASSKEY = 4;
-	private static final int PAIRING_VARIANT_DISPLAY_PIN = 5;
-	private static final int PAIRING_VARIANT_OOB_CONSENT = 6;
+	protected static final int PAIRING_VARIANT_PIN = 0;
+	protected static final int PAIRING_VARIANT_PASSKEY = 1;
+	protected static final int PAIRING_VARIANT_PASSKEY_CONFIRMATION = 2;
+	protected static final int PAIRING_VARIANT_CONSENT = 3;
+	protected static final int PAIRING_VARIANT_DISPLAY_PASSKEY = 4;
+	protected static final int PAIRING_VARIANT_DISPLAY_PIN = 5;
+	protected static final int PAIRING_VARIANT_OOB_CONSENT = 6;
 
 	protected String pairingVariantToString(final int variant) {
 		switch (variant) {
