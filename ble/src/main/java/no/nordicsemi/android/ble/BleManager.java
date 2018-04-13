@@ -1331,11 +1331,12 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					mCallbacks.onBatteryValueReceived(gatt.getDevice(), batteryValue);
 				} else {
 					onCharacteristicRead(gatt, characteristic);
-					((ReadRequest) mRequest).notifyValueChanged(characteristic.getValue());
-					if (((ReadRequest) mRequest).hasMore())
-						enqueueFirst(mRequest);
-					else
-						mRequest.notifySuccess();
+				}
+				((ReadRequest) mRequest).notifyValueChanged(characteristic.getValue());
+				if (((ReadRequest) mRequest).hasMore()) {
+					enqueueFirst(mRequest);
+				} else {
+					mRequest.notifySuccess();
 				}
 			} else if (status == BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION) {
 				if (gatt.getDevice().getBondState() != BluetoothDevice.BOND_NONE) {
@@ -1385,10 +1386,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 				onDescriptorRead(gatt, descriptor);
 				((ReadRequest) mRequest).notifyValueChanged(descriptor.getValue());
-				if (((ReadRequest) mRequest).hasMore())
+				if (((ReadRequest) mRequest).hasMore()) {
 					enqueueFirst(mRequest);
-				else
+				} else {
 					mRequest.notifySuccess();
+				}
 			} else if (status == BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION) {
 				if (gatt.getDevice().getBondState() != BluetoothDevice.BOND_NONE) {
 					// This should never happen but it used to: http://stackoverflow.com/a/20093695/2115352
