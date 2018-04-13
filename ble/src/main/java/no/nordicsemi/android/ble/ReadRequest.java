@@ -43,12 +43,12 @@ public class ReadRequest extends Request {
 			return;
 
 		if (valueMerger == null) {
-			valueCallback.onValueChanged(new Data(value));
+			valueCallback.onDataReceived(new Data(value));
 		} else {
 			if (buffer == null)
 				buffer = new ByteArrayOutputStream();
 			if (valueMerger.merge(buffer, value, count++)) {
-				valueCallback.onValueChanged(new Data(buffer.toByteArray()));
+				valueCallback.onDataReceived(new Data(buffer.toByteArray()));
 				buffer = null;
 				count = 0;
 			} // else

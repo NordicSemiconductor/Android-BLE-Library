@@ -1,6 +1,8 @@
 package no.nordicsemi.android.ble.callback;
 
-public class Data {
+@SuppressWarnings({"WeakerAccess", "unused"})
+public final class Data {
+	private static char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 
 	/**
 	 * Characteristic value format type uint8
@@ -50,10 +52,18 @@ public class Data {
 
 	/**
 	 * Returns the underlying byte array.
-	 * @return data received
+	 * @return Data received.
 	 */
 	public byte[] getValue() {
 		return mValue;
+	}
+
+	/**
+	 * Returns the size of underlying byte array.
+	 * @return Length of the data.
+	 */
+	public int size() {
+		return mValue.length;
 	}
 
 	/**
@@ -65,6 +75,22 @@ public class Data {
 		if (offset + 1 > mValue.length) return null;
 
 		return mValue[offset];
+	}
+
+	@Override
+	public String toString() {
+		if (mValue.length == 0)
+			return "empty data";
+
+		final char[] out = new char[mValue.length * 3 - 1];
+		for (int j = 0; j < mValue.length; j++) {
+			int v = mValue[j] & 0xFF;
+			out[j * 3] = HEX_ARRAY[v >>> 4];
+			out[j * 3 + 1] = HEX_ARRAY[v & 0x0F];
+			if (j != mValue.length - 1)
+				out[j * 3 + 2] = '-';
+		}
+		return "(0x) " + new String(out);
 	}
 
 	/**
