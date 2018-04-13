@@ -3,19 +3,15 @@ package no.nordicsemi.android.ble;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
-import java.io.BufferedOutputStream;
 import java.io.ByteArrayOutputStream;
-import java.nio.ByteBuffer;
 
-import no.nordicsemi.android.ble.callback.FailCallback;
-import no.nordicsemi.android.ble.callback.SuccessCallback;
-import no.nordicsemi.android.ble.callback.ValueCallback;
+import no.nordicsemi.android.ble.callback.Data;
+import no.nordicsemi.android.ble.callback.DataCallback;
 import no.nordicsemi.android.ble.callback.ValueMerger;
 
 public class ReadRequest extends Request {
-	private ValueCallback valueCallback;
+	private DataCallback valueCallback;
 	private ValueMerger valueMerger;
 	private ByteArrayOutputStream buffer;
 	private int count = 0;
@@ -29,29 +25,15 @@ public class ReadRequest extends Request {
 	}
 
 	@NonNull
-	public ReadRequest then(final @NonNull ValueCallback callback) {
+	public Request with(final @NonNull DataCallback callback) {
 		this.valueCallback = callback;
 		return this;
 	}
 
 	@NonNull
-	public ReadRequest then(final @NonNull ValueCallback callback, final @NonNull ValueMerger merger) {
+	public Request with(final @NonNull DataCallback callback, final @NonNull ValueMerger merger) {
 		this.valueCallback = callback;
 		this.valueMerger = merger;
-		return this;
-	}
-
-	@Override
-	@NonNull
-	public ReadRequest done(final @NonNull SuccessCallback callback) {
-		super.done(callback);
-		return this;
-	}
-
-	@Override
-	@NonNull
-	public ReadRequest fail(final @NonNull FailCallback callback) {
-		super.fail(callback);
 		return this;
 	}
 
@@ -61,12 +43,12 @@ public class ReadRequest extends Request {
 			return;
 
 		if (valueMerger == null) {
-			valueCallback.onValueChanged(value);
+			valueCallback.onValueChanged(new Data(value));
 		} else {
 			if (buffer == null)
 				buffer = new ByteArrayOutputStream();
 			if (valueMerger.merge(buffer, value, count++)) {
-				valueCallback.onValueChanged(buffer.toByteArray());
+				valueCallback.onValueChanged(new Data(buffer.toByteArray()));
 				buffer = null;
 				count = 0;
 			} // else

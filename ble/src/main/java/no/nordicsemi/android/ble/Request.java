@@ -5,10 +5,9 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
-import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
+import no.nordicsemi.android.ble.callback.SuccessCallback;
 
 /**
  * On Android, when multiple BLE operations needs to be done, it is required to wait for a proper

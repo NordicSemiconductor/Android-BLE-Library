@@ -1,11 +1,8 @@
 package no.nordicsemi.android.ble;
 
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
-import no.nordicsemi.android.ble.callback.BatteryLevelCallback;
-import no.nordicsemi.android.ble.callback.FailCallback;
-import no.nordicsemi.android.ble.callback.SuccessCallback;
+import no.nordicsemi.android.ble.callback.profile.BatteryLevelCallback;
 
 public class BatteryLevelRequest extends Request {
 	private BatteryLevelCallback batteryLevelCallback;
@@ -15,22 +12,8 @@ public class BatteryLevelRequest extends Request {
 	}
 
 	@NonNull
-	public BatteryLevelRequest then(final @NonNull BatteryLevelCallback callback) {
+	public Request with(final @NonNull BatteryLevelCallback callback) {
 		this.batteryLevelCallback = callback;
-		return this;
-	}
-
-	@Override
-	@NonNull
-	public BatteryLevelRequest done(final @NonNull SuccessCallback callback) {
-		super.done(callback);
-		return this;
-	}
-
-	@Override
-	@NonNull
-	public BatteryLevelRequest fail(final @NonNull FailCallback callback) {
-		super.fail(callback);
 		return this;
 	}
 

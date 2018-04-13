@@ -3,11 +3,8 @@ package no.nordicsemi.android.ble;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
 import no.nordicsemi.android.ble.callback.DefaultMtuSpitter;
-import no.nordicsemi.android.ble.callback.FailCallback;
-import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.callback.ValueSplitter;
 
 public class WriteRequest extends Request {
@@ -42,28 +39,14 @@ public class WriteRequest extends Request {
 	}
 
 	@NonNull
-	public WriteRequest split(final @NonNull ValueSplitter splitter) {
+	public Request split(final @NonNull ValueSplitter splitter) {
 		this.valueSplitter = splitter;
 		return this;
 	}
 
 	@NonNull
-	public WriteRequest split() {
+	public Request split() {
 		this.valueSplitter = MTU_SPLITTER;
-		return this;
-	}
-
-	@Override
-	@NonNull
-	public WriteRequest done(final @NonNull SuccessCallback callback) {
-		super.done(callback);
-		return this;
-	}
-
-	@Override
-	@NonNull
-	public WriteRequest fail(final @NonNull FailCallback callback) {
-		super.fail(callback);
 		return this;
 	}
 

@@ -48,11 +48,12 @@ import java.util.Objects;
 import java.util.Queue;
 import java.util.UUID;
 
-import no.nordicsemi.android.ble.callback.BatteryLevelCallback;
 import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
+import no.nordicsemi.android.ble.callback.DataCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
+import no.nordicsemi.android.ble.callback.MtuCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
-import no.nordicsemi.android.ble.callback.ValueCallback;
+import no.nordicsemi.android.ble.callback.profile.BatteryLevelCallback;
 import no.nordicsemi.android.ble.error.GattError;
 import no.nordicsemi.android.ble.utils.ILogger;
 import no.nordicsemi.android.ble.utils.ParserUtils;
@@ -1028,8 +1029,25 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 *
 		 * @param gatt the gatt device with services discovered
 		 * @return the queue of requests
+		 * @deprecated use {@link #initGatt(BluetoothGatt, Queue)} instead
 		 */
-		protected abstract Deque<Request> initGatt(final BluetoothGatt gatt);
+		@Deprecated
+		protected Deque<Request> initGatt(final BluetoothGatt gatt) {
+			return new LinkedList<>();
+		}
+
+		/**
+		 * This method should set up the request queue needed to initialize the profile.
+		 * Enabling Service Change indications for bonded devices and reading the Battery Level value and enabling Battery Level notifications
+		 * is handled before executing this queue. The queue should not have requests that are not available, e.g. should not
+		 * read an optional service when it is not supported by the connected device.
+		 * <p>This method is called when the services has been discovered and the device is supported (has required service).</p>
+		 * @param gatt the gatt device with services discovered
+		 * @param requests the queue of requests
+		 */
+		protected void initGatt(final BluetoothGatt gatt, final Queue<Request> requests) {
+			// empty initialization queue
+		}
 
 		/**
 		 * Called then the initialization queue is complete.
@@ -1066,7 +1084,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 *
 		 * @param gatt           GATT client
 		 * @param characteristic Characteristic that was read from the associated remote device.
-		 * @deprecated Use {@link ReadRequest#then(ValueCallback)} instead.
+		 * @deprecated Use {@link ReadRequest#with(DataCallback)} instead.
 		 */
 		@Deprecated
 		protected void onCharacteristicRead(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
@@ -1095,7 +1113,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 *
 		 * @param gatt       GATT client
 		 * @param descriptor Descriptor that was read from the associated remote device.
-		 * @deprecated Use {@link ReadRequest#then(ValueCallback)} instead.
+		 * @deprecated Use {@link ReadRequest#with(DataCallback)} instead.
 		 */
 		@Deprecated
 		protected void onDescriptorRead(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor) {
@@ -1124,7 +1142,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 *
 		 * @param gatt  GATT client
 		 * @param value the battery value in percent
-		 * @deprecated Use {@link BatteryLevelRequest#then(BatteryLevelCallback)} instead.
+		 * @deprecated Use {@link BatteryLevelRequest#with(BatteryLevelCallback)} instead.
 		 */
 		@Deprecated
 		protected void onBatteryValueReceived(final BluetoothGatt gatt, final int value) {
@@ -1136,8 +1154,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 *
 		 * @param gatt           GATT client
 		 * @param characteristic Characteristic from which the notification came.
-		 * @deprecated Use {@link ReadRequest#then(ValueCallback)} instead.
+		 * @deprecated Use {@link ReadRequest#with(DataCallback)} instead.
 		 */
+		@Deprecated
 		protected void onCharacteristicNotified(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
 			// do nothing
 		}
@@ -1147,7 +1166,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 *
 		 * @param gatt           GATT client
 		 * @param characteristic Characteristic from which the indication came.
-		 * @deprecated Use {@link ReadRequest#then(ValueCallback)} instead.
+		 * @deprecated Use {@link ReadRequest#with(DataCallback)} instead.
 		 */
 		@Deprecated
 		protected void onCharacteristicIndicated(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
@@ -1159,7 +1178,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * be different than requested one.
 		 *
 		 * @param mtu the new MTU (Maximum Transfer Unit)
+		 * @deprecated Use {@link MtuRequest#with(MtuCallback)} instead.
 		 */
+		@Deprecated
 		protected void onMtuChanged(final int mtu) {
 			// do nothing
 		}
@@ -1173,7 +1194,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 *                 is from 0 to 499
 		 * @param timeout  Supervision timeout for this connection, in 10ms unit. Valid range is from 10
 		 *                 (0.1s) to 3200 (32s)
-		 * @deprecated Use {@link ConnectionPriorityRequest#then(ConnectionPriorityCallback)} instead.
+		 * @deprecated Use {@link ConnectionPriorityRequest#with(ConnectionPriorityCallback)} instead.
 		 */
 		@Deprecated
 		@TargetApi(Build.VERSION_CODES.O)
@@ -1273,6 +1294,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					// Before we start executing the initialization queue some other tasks need to be done.
 					if (mInitQueue == null)
 						mInitQueue = new LinkedList<>();
+					initGatt(gatt, mInitQueue);
 
 					// Note, that operations are added in reverse order to the front of the queue.
 
