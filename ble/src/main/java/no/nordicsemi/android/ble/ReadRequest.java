@@ -16,6 +16,10 @@ public class ReadRequest extends Request {
 	private ByteArrayOutputStream buffer;
 	private int count = 0;
 
+	ReadRequest(final @NonNull Type type) {
+		super(type);
+	}
+
 	ReadRequest(final @NonNull Type type, final @NonNull BluetoothGattCharacteristic characteristic) {
 		super(type, characteristic);
 	}

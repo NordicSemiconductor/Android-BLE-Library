@@ -234,8 +234,8 @@ public class Request {
 	 * @return the new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	public static BatteryLevelRequest newReadBatteryLevelRequest() {
-		return new BatteryLevelRequest(Type.READ_BATTERY_LEVEL); // the first Battery Level char from the first Battery Service is used
+	public static ReadRequest newReadBatteryLevelRequest() {
+		return new ReadRequest(Type.READ_BATTERY_LEVEL); // the first Battery Level char from the first Battery Service is used
 	}
 
 	/**
@@ -245,8 +245,8 @@ public class Request {
 	 * @return the new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	public static BatteryLevelRequest newEnableBatteryLevelNotificationsRequest() {
-		return new BatteryLevelRequest(Type.ENABLE_BATTERY_LEVEL_NOTIFICATIONS); // the first Battery Level char from the first Battery Service is used
+	public static ReadRequest newEnableBatteryLevelNotificationsRequest() {
+		return new ReadRequest(Type.ENABLE_BATTERY_LEVEL_NOTIFICATIONS); // the first Battery Level char from the first Battery Service is used
 	}
 
 	/**
