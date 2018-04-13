@@ -1,10 +1,10 @@
-package no.nordicsemi.android.ble.callback;
+package no.nordicsemi.android.ble.callback.profile;
 
 public interface BatteryLevelCallback {
 
 	/**
 	 * Callback received each time the Battery Level value was read or has changed using notifications or indications.
-	 * @param value the battery value in percent
+	 * @param batteryLevel the battery value in percent
 	 */
-	void onBatteryValueChanged(final int value);
+	void onBatteryValueChanged(final int batteryLevel);
 }
