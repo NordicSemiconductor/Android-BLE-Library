@@ -1330,7 +1330,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					onBatteryValueReceived(gatt, batteryValue);
 					mCallbacks.onBatteryValueReceived(gatt.getDevice(), batteryValue);
 				} else {
-					// The value has been read. Notify the manager and proceed with the initialization queue.
 					onCharacteristicRead(gatt, characteristic);
 					((ReadRequest) mRequest).notifyValueChanged(characteristic.getValue());
 					if (((ReadRequest) mRequest).hasMore())
@@ -1357,7 +1356,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		public final void onCharacteristicWrite(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				Logger.i(mLogSession, "Data written to " + characteristic.getUuid() + ", value: " + ParserUtils.parse(characteristic));
-				// The value has been written. Notify the manager and proceed with the initialization queue.
+
 				onCharacteristicWrite(gatt, characteristic);
 				if (((WriteRequest) mRequest).hasMore()) {
 					enqueueFirst(mRequest);
@@ -1384,7 +1383,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				Logger.i(mLogSession, "Read Response received from descr. " + descriptor.getUuid() + ", value: " + ParserUtils.parse(descriptor));
 
-				// The value has been read. Notify the manager and proceed with the initialization queue.
 				onDescriptorRead(gatt, descriptor);
 				((ReadRequest) mRequest).notifyValueChanged(descriptor.getValue());
 				if (((ReadRequest) mRequest).hasMore())
