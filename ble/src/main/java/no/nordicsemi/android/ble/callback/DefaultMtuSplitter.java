@@ -3,7 +3,7 @@ package no.nordicsemi.android.ble.callback;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-public class DefaultMtuSpitter implements ValueSplitter {
+public class DefaultMtuSplitter implements ValueSplitter {
 
 	@Nullable
 	@Override

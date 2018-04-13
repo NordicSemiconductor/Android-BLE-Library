@@ -4,11 +4,12 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.support.annotation.NonNull;
 
-import no.nordicsemi.android.ble.callback.DefaultMtuSpitter;
+import no.nordicsemi.android.ble.callback.DefaultMtuSplitter;
 import no.nordicsemi.android.ble.callback.ValueSplitter;
 
+@SuppressWarnings("unused")
 public class WriteRequest extends Request {
-	private final static ValueSplitter MTU_SPLITTER = new DefaultMtuSpitter();
+	private final static ValueSplitter MTU_SPLITTER = new DefaultMtuSplitter();
 
 	private ValueSplitter valueSplitter;
 	private final byte[] data;
@@ -29,6 +30,7 @@ public class WriteRequest extends Request {
 		this.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
 	}
 
+	@SuppressWarnings("ConstantConditions")
 	private static byte[] copy(final @NonNull byte[] value, final int offset, final int length) {
 		if (value == null || offset > value.length)
 			return null;

@@ -17,6 +17,7 @@ import no.nordicsemi.android.ble.callback.SuccessCallback;
  * queue is empty. Use static methods from below to instantiate a request and then enqueue them using
  * {@link BleManager#enqueue(Request)}.
  */
+@SuppressWarnings({"unused", "WeakerAccess", "ConstantConditions"})
 public class Request {
 	enum Type {
 		CREATE_BOND,
