@@ -1,5 +1,7 @@
 package no.nordicsemi.android.ble.callback;
 
+import android.bluetooth.BluetoothGattCharacteristic;
+
 @SuppressWarnings({"WeakerAccess", "unused"})
 public final class Data {
 	private static char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
@@ -44,7 +46,7 @@ public final class Data {
 	 */
 	public final static int FORMAT_FLOAT = 0x34;
 
-	private final byte[] mValue;
+	private byte[] mValue;
 
 	public Data(final byte[] value) {
 		this.mValue = value;
@@ -119,6 +121,7 @@ public final class Data {
 			case FORMAT_UINT32:
 				return unsignedBytesToInt(mValue[offset],   mValue[offset+1],
 						mValue[offset+2], mValue[offset+3]);
+
 			case FORMAT_SINT8:
 				return unsignedToSigned(unsignedByteToInt(mValue[offset]), 8);
 
@@ -154,6 +157,109 @@ public final class Data {
 		}
 
 		return null;
+	}
+
+	/**
+	 * Updates the locally stored value of this characteristic.
+	 *
+	 * <p>This function modifies the locally stored cached value of Data.
+	 * To send the value to the remote device, call
+	 * {@link no.nordicsemi.android.ble.BleManager#writeCharacteristic(BluetoothGattCharacteristic)} to send the value to the
+	 * remote device.
+	 *
+	 * @param value New value
+	 * @return true if the locally stored value has been set, false if the
+	 *              requested value could not be stored locally.
+	 */
+	public boolean setValue(final byte[] value) {
+		mValue = value;
+		return true;
+	}
+
+	/**
+	 * Set the locally stored value of this data.
+	 * <p>See {@link #setValue(byte[])} for details.
+	 *
+	 * @param value New value for this characteristic
+	 * @param formatType Integer format type used to transform the value parameter
+	 * @param offset Offset at which the value should be placed
+	 * @return true if the locally stored value has been set
+	 */
+	public boolean setValue(int value, int formatType, int offset) {
+		int len = offset + getTypeLen(formatType);
+		if (mValue == null) mValue = new byte[len];
+		if (len > mValue.length) return false;
+
+		switch (formatType) {
+			case FORMAT_SINT8:
+				value = intToSignedBits(value, 8);
+				// Fall-through intended
+			case FORMAT_UINT8:
+				mValue[offset] = (byte)(value & 0xFF);
+				break;
+
+			case FORMAT_SINT16:
+				value = intToSignedBits(value, 16);
+				// Fall-through intended
+			case FORMAT_UINT16:
+				mValue[offset++] = (byte)(value & 0xFF);
+				mValue[offset] = (byte)((value >> 8) & 0xFF);
+				break;
+
+			case FORMAT_SINT32:
+				value = intToSignedBits(value, 32);
+				// Fall-through intended
+			case FORMAT_UINT32:
+				mValue[offset++] = (byte)(value & 0xFF);
+				mValue[offset++] = (byte)((value >> 8) & 0xFF);
+				mValue[offset++] = (byte)((value >> 16) & 0xFF);
+				mValue[offset] = (byte)((value >> 24) & 0xFF);
+				break;
+
+			default:
+				return false;
+		}
+		return true;
+	}
+
+	/**
+	 * Set the locally stored value of this characteristic.
+	 * <p>See {@link #setValue(byte[])} for details.
+	 *
+	 * @param mantissa Mantissa for this characteristic
+	 * @param exponent  exponent value for this characteristic
+	 * @param formatType Float format type used to transform the value parameter
+	 * @param offset Offset at which the value should be placed
+	 * @return true if the locally stored value has been set
+	 */
+	public boolean setValue(int mantissa, int exponent, int formatType, int offset) {
+		int len = offset + getTypeLen(formatType);
+		if (mValue == null) mValue = new byte[len];
+		if (len > mValue.length) return false;
+
+		switch (formatType) {
+			case FORMAT_SFLOAT:
+				mantissa = intToSignedBits(mantissa, 12);
+				exponent = intToSignedBits(exponent, 4);
+				mValue[offset++] = (byte)(mantissa & 0xFF);
+				mValue[offset] = (byte)((mantissa >> 8) & 0x0F);
+				mValue[offset] += (byte)((exponent & 0x0F) << 4);
+				break;
+
+			case FORMAT_FLOAT:
+				mantissa = intToSignedBits(mantissa, 24);
+				exponent = intToSignedBits(exponent, 8);
+				mValue[offset++] = (byte)(mantissa & 0xFF);
+				mValue[offset++] = (byte)((mantissa >> 8) & 0xFF);
+				mValue[offset++] = (byte)((mantissa >> 16) & 0xFF);
+				mValue[offset] += (byte)(exponent & 0xFF);
+				break;
+
+			default:
+				return false;
+		}
+
+		return true;
 	}
 
 	/**
@@ -214,5 +320,15 @@ public final class Data {
 			unsigned = -1 * ((1 << size-1) - (unsigned & ((1 << size-1) - 1)));
 		}
 		return unsigned;
+	}
+
+	/**
+	 * Convert an integer into the signed bits of a given length.
+	 */
+	private int intToSignedBits(int i, int size) {
+		if (i < 0) {
+			i = (1 << size-1) + (i & ((1 << size-1) - 1));
+		}
+		return i;
 	}
 }

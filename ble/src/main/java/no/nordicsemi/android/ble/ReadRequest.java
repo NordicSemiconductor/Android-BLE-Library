@@ -3,11 +3,14 @@ package no.nordicsemi.android.ble;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import java.io.ByteArrayOutputStream;
 
 import no.nordicsemi.android.ble.callback.Data;
 import no.nordicsemi.android.ble.callback.DataCallback;
+import no.nordicsemi.android.ble.callback.FailCallback;
+import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.callback.ValueMerger;
 
 public class ReadRequest extends Request {
@@ -20,22 +23,36 @@ public class ReadRequest extends Request {
 		super(type);
 	}
 
-	ReadRequest(final @NonNull Type type, final @NonNull BluetoothGattCharacteristic characteristic) {
+	ReadRequest(final @NonNull Type type, final @Nullable BluetoothGattCharacteristic characteristic) {
 		super(type, characteristic);
 	}
 
-	ReadRequest(final @NonNull Type type, final @NonNull BluetoothGattDescriptor descriptor) {
+	ReadRequest(final @NonNull Type type, final @Nullable BluetoothGattDescriptor descriptor) {
 		super(type, descriptor);
 	}
 
+	@Override
 	@NonNull
-	public Request with(final @NonNull DataCallback callback) {
+	public ReadRequest done(final @NonNull SuccessCallback callback) {
+		this.successCallback = callback;
+		return this;
+	}
+
+	@Override
+	@NonNull
+	public ReadRequest fail(final @NonNull FailCallback callback) {
+		this.failCallback = callback;
+		return this;
+	}
+
+	@NonNull
+	public ReadRequest with(final @NonNull DataCallback callback) {
 		this.valueCallback = callback;
 		return this;
 	}
 
 	@NonNull
-	public Request with(final @NonNull DataCallback callback, final @NonNull ValueMerger merger) {
+	public ReadRequest with(final @NonNull DataCallback callback, final @NonNull ValueMerger merger) {
 		this.valueCallback = callback;
 		this.valueMerger = merger;
 		return this;

@@ -4,7 +4,9 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 
+import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.MtuCallback;
+import no.nordicsemi.android.ble.callback.SuccessCallback;
 
 public class MtuRequest extends Request {
 	private MtuCallback valueCallback;
@@ -19,8 +21,22 @@ public class MtuRequest extends Request {
 		this.value = mtu;
 	}
 
+	@Override
+	@NonNull
+	public MtuRequest done(final @NonNull SuccessCallback callback) {
+		this.successCallback = callback;
+		return this;
+	}
+
+	@Override
+	@NonNull
+	public MtuRequest fail(final @NonNull FailCallback callback) {
+		this.failCallback = callback;
+		return this;
+	}
+
 	@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-	public Request with(final @NonNull MtuCallback callback) {
+	public MtuRequest with(final @NonNull MtuCallback callback) {
 		this.valueCallback = callback;
 		return this;
 	}
