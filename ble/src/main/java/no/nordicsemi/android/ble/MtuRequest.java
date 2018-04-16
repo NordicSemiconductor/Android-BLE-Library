@@ -1,5 +1,6 @@
 package no.nordicsemi.android.ble;
 
+import android.bluetooth.BluetoothDevice;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
@@ -8,7 +9,7 @@ import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.MtuCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
-public class MtuRequest extends Request {
+public final class MtuRequest extends Request {
 	private MtuCallback valueCallback;
 	private final int value;
 
@@ -42,9 +43,9 @@ public class MtuRequest extends Request {
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-	void notifyMtuChanged(final int mtu) {
+	void notifyMtuChanged(final @NonNull BluetoothDevice device, final int mtu) {
 		if (valueCallback != null)
-			valueCallback.onMtuChanged(mtu);
+			valueCallback.onMtuChanged(device, mtu);
 	}
 
 	int getRequiredMtu() {

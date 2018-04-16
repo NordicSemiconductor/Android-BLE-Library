@@ -11,7 +11,7 @@ import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
-public class WriteRequest extends Request {
+public final class WriteRequest extends Request {
 	private final static DataSplitter MTU_SPLITTER = new DefaultMtuSplitter();
 
 	private DataSplitter dataSplitter;

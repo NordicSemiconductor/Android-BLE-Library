@@ -55,7 +55,7 @@ import no.nordicsemi.android.ble.callback.DataSplitter;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.MtuCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
-import no.nordicsemi.android.ble.callback.profile.BatteryLevelCallback;
+import no.nordicsemi.android.ble.callback.profile.BatteryLevelDataCallback;
 import no.nordicsemi.android.ble.error.GattError;
 import no.nordicsemi.android.ble.utils.ILogger;
 import no.nordicsemi.android.ble.utils.ParserUtils;
@@ -914,13 +914,13 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	@Deprecated
 	public ReadRequest readBatteryLevel() {
 		return enqueue(Request.newReadBatteryLevelRequest()
-				.with(new BatteryLevelCallback() {
+				.with(new BatteryLevelDataCallback() {
 					@Override
-					public void onBatteryValueChanged(final int batteryLevel) {
+					public void onBatteryLevelChanged(@NonNull final BluetoothDevice device, final int batteryLevel) {
 						Logger.a(mLogSession, "Battery Level received: " + batteryLevel + "%");
 						mBatteryValue = batteryLevel;
 						mGattCallback.onBatteryValueReceived(mBluetoothGatt, batteryLevel);
-						mCallbacks.onBatteryValueReceived(mBluetoothDevice, batteryLevel);
+						mCallbacks.onBatteryValueReceived(device, batteryLevel);
 					}
 				}));
 	}
@@ -950,16 +950,16 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	@Deprecated
 	public ReadRequest enableBatteryLevelNotifications() {
 		return enqueue(Request.newEnableBatteryLevelNotificationsRequest())
-				.with(new BatteryLevelCallback() {
+				.with(new BatteryLevelDataCallback() {
 					@Override
-					public void onBatteryValueChanged(final int batteryLevel) {
+					public void onBatteryLevelChanged(@NonNull final BluetoothDevice device, final int batteryLevel) {
 						mBatteryValue = batteryLevel;
 						mGattCallback.onBatteryValueReceived(mBluetoothGatt, batteryLevel);
-						mCallbacks.onBatteryValueReceived(mBluetoothDevice, batteryLevel);
+						mCallbacks.onBatteryValueReceived(device, batteryLevel);
 					}
 
 					@Override
-					public void onInvalidDataReceived(final @NonNull Data data) {
+					public void onInvalidDataReceived(@NonNull final BluetoothDevice device, final @NonNull Data data) {
 						log(LogContract.Log.Level.WARNING, "Invalid Battery Level data received: " + data);
 					}
 				})
@@ -1303,7 +1303,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 *
 		 * @param gatt  GATT client
 		 * @param value the battery value in percent
-		 * @deprecated Use {@link ReadRequest#with(DataCallback)} and {@link BatteryLevelCallback} instead.
+		 * @deprecated Use {@link ReadRequest#with(DataCallback)} and {@link BatteryLevelDataCallback} instead.
 		 */
 		@Deprecated
 		protected void onBatteryValueReceived(final @NonNull BluetoothGatt gatt, final int value) {
@@ -1494,7 +1494,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				Logger.i(mLogSession, "Read Response received from " + characteristic.getUuid() + ", value: " + ParserUtils.parse(characteristic));
 
 				onCharacteristicRead(gatt, characteristic);
-				((ReadRequest) mRequest).notifyValueChanged(characteristic.getValue());
+				((ReadRequest) mRequest).notifyValueChanged(gatt.getDevice(), characteristic.getValue());
 				if (((ReadRequest) mRequest).hasMore()) {
 					enqueueFirst(mRequest);
 				} else {
@@ -1547,7 +1547,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				Logger.i(mLogSession, "Read Response received from descr. " + descriptor.getUuid() + ", value: " + ParserUtils.parse(descriptor));
 
 				onDescriptorRead(gatt, descriptor);
-				((ReadRequest) mRequest).notifyValueChanged(descriptor.getValue());
+				((ReadRequest) mRequest).notifyValueChanged(gatt.getDevice(), descriptor.getValue());
 				if (((ReadRequest) mRequest).hasMore()) {
 					enqueueFirst(mRequest);
 				} else {
@@ -1640,7 +1640,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				}
 				final ReadRequest request = mNotificationRequests.get(characteristic);
 				if (request != null)
-					request.notifyValueChanged(characteristic.getValue());
+					request.notifyValueChanged(gatt.getDevice(), characteristic.getValue());
 			}
 		}
 
@@ -1651,7 +1651,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				Logger.i(mLogSession, "MTU changed to: " + mtu);
 				mMtu = mtu;
 				onMtuChanged(gatt, mtu);
-				((MtuRequest) mRequest).notifyMtuChanged(mtu);
+				((MtuRequest) mRequest).notifyMtuChanged(gatt.getDevice(), mtu);
 				mRequest.notifySuccess();
 			} else {
 				Log.e(TAG, "onMtuChanged error: " + status + ", mtu: " + mtu);
@@ -1682,7 +1682,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				Logger.i(mLogSession, "Connection parameters updated (interval: " + (interval * 1.25) + "ms, latency: " + latency + ", timeout: " + (timeout * 10) + "ms)");
 				onConnectionUpdated(gatt, interval, latency, timeout);
-				((ConnectionPriorityRequest) mRequest).notifyConnectionPriorityChanged(interval, latency, timeout);
+				((ConnectionPriorityRequest) mRequest).notifyConnectionPriorityChanged(gatt.getDevice(), interval, latency, timeout);
 				mRequest.notifySuccess();
 			} else if (status == 0x3b) { // HCI_ERR_UNACCEPT_CONN_INTERVAL
 				Log.e(TAG, "onConnectionUpdated received status: Unacceptable connection interval, interval: " + interval + ", latency: " + latency + ", timeout: " + timeout);

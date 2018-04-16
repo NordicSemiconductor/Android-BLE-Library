@@ -9,6 +9,7 @@ import android.support.annotation.Nullable;
 
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
+import no.nordicsemi.android.ble.callback.profile.BatteryLevelDataCallback;
 
 /**
  * On Android, when multiple BLE operations needs to be done, it is required to wait for a proper
@@ -236,7 +237,7 @@ public class Request {
 	 * If any of them is not found, or the characteristic does not have the READ property this operation will not execute.
 	 *
 	 * @return the new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
-	 * @deprecated Use {@link #newReadRequest(BluetoothGattCharacteristic)} with {@link no.nordicsemi.android.ble.callback.profile.BatteryLevelCallback BatteryLevelCallback} instead.
+	 * @deprecated Use {@link #newReadRequest(BluetoothGattCharacteristic)} with {@link BatteryLevelDataCallback BatteryLevelDataCallback} instead.
 	 */
 	@NonNull
 	@Deprecated
@@ -249,7 +250,7 @@ public class Request {
 	 * If any of them is not found, or the characteristic does not have the NOTIFY property this operation will not execute.
 	 *
 	 * @return the new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
-	 * @deprecated Use {@link #newEnableNotificationsRequest(BluetoothGattCharacteristic)} with {@link no.nordicsemi.android.ble.callback.profile.BatteryLevelCallback BatteryLevelCallback} instead.
+	 * @deprecated Use {@link #newEnableNotificationsRequest(BluetoothGattCharacteristic)} with {@link BatteryLevelDataCallback BatteryLevelDataCallback} instead.
 	 */
 	@NonNull
 	@Deprecated

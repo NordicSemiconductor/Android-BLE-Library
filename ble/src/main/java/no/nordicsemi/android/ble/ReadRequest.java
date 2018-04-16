@@ -1,5 +1,6 @@
 package no.nordicsemi.android.ble;
 
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.support.annotation.NonNull;
@@ -13,7 +14,7 @@ import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.callback.DataMerger;
 
-public class ReadRequest extends Request {
+public final class ReadRequest extends Request {
 	private DataCallback valueCallback;
 	private DataMerger dataMerger;
 	private ByteArrayOutputStream buffer;
@@ -58,18 +59,18 @@ public class ReadRequest extends Request {
 		return this;
 	}
 
-	void notifyValueChanged(final byte[] value) {
+	void notifyValueChanged(final @NonNull BluetoothDevice device, final byte[] value) {
 		// With no value callback there is no need for any merging
 		if (valueCallback == null)
 			return;
 
 		if (dataMerger == null) {
-			valueCallback.onDataReceived(new Data(value));
+			valueCallback.onDataReceived(device, new Data(value));
 		} else {
 			if (buffer == null)
 				buffer = new ByteArrayOutputStream();
 			if (dataMerger.merge(buffer, value, count++)) {
-				valueCallback.onDataReceived(new Data(buffer.toByteArray()));
+				valueCallback.onDataReceived(device, new Data(buffer.toByteArray()));
 				buffer = null;
 				count = 0;
 			} // else

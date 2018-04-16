@@ -107,7 +107,7 @@ public interface BleManagerCallbacks {
 	 * @return true to enabled battery level notifications after connecting to the device, false otherwise
 	 * @deprecated Use
 	 * <pre>{@code
-	 * enableNotifications(batteryLevelCharacteristic).with(new BatteryLevelCallback() {
+	 * enableNotifications(batteryLevelCharacteristic).with(new BatteryLevelDataCallback() {
 	 *     onBatteryValueChanged(int batteryLevel) {
 	 *         ...
 	 *     }
@@ -127,7 +127,7 @@ public interface BleManagerCallbacks {
 	 * @param value  the battery value in percent
 	 * @deprecated Use
 	 * <pre>{@code
-	 * enableNotifications(batteryLevelCharacteristic).with(new BatteryLevelCallback() {
+	 * enableNotifications(batteryLevelCharacteristic).with(new BatteryLevelDataCallback() {
 	 *     onBatteryValueChanged(int batteryLevel) {
 	 *         ...
 	 *     }

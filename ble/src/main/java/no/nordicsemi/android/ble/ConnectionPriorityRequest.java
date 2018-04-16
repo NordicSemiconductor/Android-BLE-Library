@@ -1,5 +1,6 @@
 package no.nordicsemi.android.ble;
 
+import android.bluetooth.BluetoothDevice;
 import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
@@ -8,7 +9,7 @@ import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
-public class ConnectionPriorityRequest extends Request {
+public final class ConnectionPriorityRequest extends Request {
 	private ConnectionPriorityCallback valueCallback;
 	private final int value;
 
@@ -41,9 +42,9 @@ public class ConnectionPriorityRequest extends Request {
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.O)
-	void notifyConnectionPriorityChanged(final int interval, final int latency, final int timeout) {
+	void notifyConnectionPriorityChanged(final @NonNull BluetoothDevice device, final int interval, final int latency, final int timeout) {
 		if (valueCallback != null)
-			valueCallback.onConnectionUpdated(interval, latency, timeout);
+			valueCallback.onConnectionUpdated(device, interval, latency, timeout);
 	}
 
 	int getRequiredPriority() {
