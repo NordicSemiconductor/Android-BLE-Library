@@ -196,7 +196,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			final int previousBondState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, -1);
 
 			// Skip other devices
-			if (mBluetoothGatt == null || !device.getAddress().equals(mBluetoothGatt.getDevice().getAddress()))
+			if (mBluetoothDevice == null || !device.getAddress().equals(mBluetoothDevice.getAddress()))
 				return;
 
 			Logger.d(mLogSession, "[Broadcast] Action received: " + BluetoothDevice.ACTION_BOND_STATE_CHANGED + ", bond state changed to: " + bondStateToString(bondState) + " (" + bondState + ")");
@@ -230,7 +230,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
 			// Skip other devices
-			if (mBluetoothGatt == null || !device.getAddress().equals(mBluetoothGatt.getDevice().getAddress()))
+			if (mBluetoothDevice == null || !device.getAddress().equals(mBluetoothDevice.getAddress()))
 				return;
 
 			// String values are used as the constants are not available for Android 4.3.
@@ -263,7 +263,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @param context context
 	 */
 	public BleManager(final Context context) {
-		mContext = context;
+		mContext = context.getApplicationContext();
 		mHandler = new Handler();
 	}
 
