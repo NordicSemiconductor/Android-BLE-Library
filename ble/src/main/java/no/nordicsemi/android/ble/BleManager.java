@@ -51,10 +51,10 @@ import java.util.UUID;
 import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
 import no.nordicsemi.android.ble.callback.Data;
 import no.nordicsemi.android.ble.callback.DataCallback;
+import no.nordicsemi.android.ble.callback.DataSplitter;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.MtuCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
-import no.nordicsemi.android.ble.callback.ValueSplitter;
 import no.nordicsemi.android.ble.callback.profile.BatteryLevelCallback;
 import no.nordicsemi.android.ble.error.GattError;
 import no.nordicsemi.android.ble.utils.ILogger;
@@ -98,16 +98,16 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	private final static UUID SERVICE_CHANGED_CHARACTERISTIC = UUID.fromString("00002A05-0000-1000-8000-00805f9b34fb");
 
 	private final Object mLock = new Object();
+	private final Context mContext;
+	private final Handler mHandler;
 	/**
 	 * The log session or null if nRF Logger is not installed.
 	 */
 	private ILogSession mLogSession;
-	private final Context mContext;
-	private final Handler mHandler;
-	protected BluetoothDevice mBluetoothDevice;
-	protected E mCallbacks;
 	private BluetoothGatt mBluetoothGatt;
+	private BluetoothDevice mBluetoothDevice;
 	private BleManagerGattCallback mGattCallback;
+	protected E mCallbacks;
 	/**
 	 * This flag is set to false only when the {@link #shouldAutoConnect()} method returns true and the device got disconnected without calling {@link #disconnect()} method.
 	 * If {@link #shouldAutoConnect()} returns false (default) this is always set to true.
@@ -123,19 +123,31 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * Flag set to true when the device is connected.
 	 */
 	private boolean mConnected;
+	/**
+	 * Connection state. One of {@link BluetoothGatt#STATE_CONNECTED}, {@link BluetoothGatt#STATE_CONNECTING},
+	 * {@link BluetoothGatt#STATE_DISCONNECTED}, {@link BluetoothGatt#STATE_DISCONNECTING}.
+	 */
 	private int mConnectionState = BluetoothGatt.STATE_DISCONNECTED;
 	/**
 	 * Last received battery value or -1 if value wasn't received.
+	 * @deprecated Battery value should be kept in the profile manager instead.
 	 */
+	@Deprecated
 	private int mBatteryValue = -1;
 	/**
 	 * The current MTU (Maximum Transfer Unit). The maximum number of bytes that can be sent in a single packet is MTU-3.
 	 */
 	private int mMtu = 23;
 	/**
-	 * Currently performed request or null.
+	 * Currently performed request or null in idle state.
 	 */
 	private Request mRequest;
+	/**
+	 * A map of ReadRequests for notifications and indications which contain value callback
+	 * and data merger.
+	 * If notifications/indications for given characteristic are enabled, the request are added
+	 * to the map. Whenever a characteristic value changes a proper callback is notified.
+	 */
 	private final HashMap<BluetoothGattCharacteristic, ReadRequest> mNotificationRequests = new HashMap<>();
 
 	private final BroadcastReceiver mBluetoothStateBroadcastReceiver = new BroadcastReceiver() {
@@ -720,7 +732,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	/**
 	 * Writes the characteristic value to the given characteristic. The write type is taken from the
 	 * characteristic.
-	 * Use {@link WriteRequest#split() split()} or {@link WriteRequest#split(ValueSplitter) split(ValueSplitter)}
+	 * Use {@link WriteRequest#split() split()} or {@link WriteRequest#split(DataSplitter) split(DataSplitter)}
 	 * on the returned {@link WriteRequest} if data should be automatically split into multiple packets.
 	 * If the characteristic is null the {@link Request#fail(FailCallback) fail(FailCallback)} callback will be called.
 	 *
@@ -734,7 +746,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 	/**
 	 * Writes the given data to the characteristic. The write type is taken from the characteristic.
-	 * Use {@link WriteRequest#split() split()} or {@link WriteRequest#split(ValueSplitter) split(ValueSplitter)}
+	 * Use {@link WriteRequest#split() split()} or {@link WriteRequest#split(DataSplitter) split(ValueSplitter)}
 	 * on the returned {@link WriteRequest} if data should be automatically split into multiple packets.
 	 * If the characteristic is null the {@link Request#fail(FailCallback) fail(FailCallback)} callback will be called.
 	 *
@@ -750,7 +762,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	/**
 	 * Writes at most length bytes from offset at given data to the characteristic.
 	 * The write type is taken from the characteristic.
-	 * Use {@link WriteRequest#split() split()} or {@link WriteRequest#split(ValueSplitter) split(ValueSplitter)}
+	 * Use {@link WriteRequest#split() split()} or {@link WriteRequest#split(DataSplitter) split(ValueSplitter)}
 	 * on the returned {@link WriteRequest} if data should be automatically split into multiple packets.
 	 * If the characteristic is null the {@link Request#fail(FailCallback) fail(FailCallback)} callback will be called.
 	 *
@@ -768,7 +780,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	/**
 	 * Writes at most length bytes from offset at given data to the characteristic.
 	 * The write type is taken from the characteristic.
-	 * Use {@link WriteRequest#split() split()} or {@link WriteRequest#split(ValueSplitter) split(ValueSplitter)}
+	 * Use {@link WriteRequest#split() split()} or {@link WriteRequest#split(DataSplitter) split(ValueSplitter)}
 	 * on the returned {@link WriteRequest} if data should be automatically split into multiple packets.
 	 * If the characteristic is null the {@link Request#fail(FailCallback) fail(FailCallback)} callback will be called.
 	 *
@@ -834,7 +846,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 	/**
 	 * Writes the given data to the descriptor.
-	 * Use {@link WriteRequest#split() split()} or {@link WriteRequest#split(ValueSplitter) split(ValueSplitter)}
+	 * Use {@link WriteRequest#split() split()} or {@link WriteRequest#split(DataSplitter) split(ValueSplitter)}
 	 * on the returned {@link WriteRequest} if data should be automatically split into multiple packets.
 	 * If the descriptor is null the {@link Request#fail(FailCallback) fail(FailCallback)} callback will be called.
 	 *
@@ -849,7 +861,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 	/**
 	 * Writes at most length bytes from offset at given data to the descriptor.
-	 * Use {@link WriteRequest#split() split()} or {@link WriteRequest#split(ValueSplitter) split(ValueSplitter)}
+	 * Use {@link WriteRequest#split() split()} or {@link WriteRequest#split(DataSplitter) split(ValueSplitter)}
 	 * on the returned {@link WriteRequest} if data should be automatically split into multiple packets.
 	 * If the descriptor is null the {@link Request#fail(FailCallback) fail(FailCallback)} callback will be called.
 	 *
@@ -866,7 +878,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 	/**
 	 * Writes at most length bytes from offset at given data to the descriptor.
-	 * Use {@link WriteRequest#split() split()} or {@link WriteRequest#split(ValueSplitter) split(ValueSplitter)}
+	 * Use {@link WriteRequest#split() split()} or {@link WriteRequest#split(DataSplitter) split(ValueSplitter)}
 	 * on the returned {@link WriteRequest} if data should be automatically split into multiple packets.
 	 * If the descriptor is null the {@link Request#fail(FailCallback) fail(FailCallback)} callback will be called.
 	 *

@@ -11,11 +11,11 @@ import no.nordicsemi.android.ble.callback.Data;
 import no.nordicsemi.android.ble.callback.DataCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
-import no.nordicsemi.android.ble.callback.ValueMerger;
+import no.nordicsemi.android.ble.callback.DataMerger;
 
 public class ReadRequest extends Request {
 	private DataCallback valueCallback;
-	private ValueMerger valueMerger;
+	private DataMerger dataMerger;
 	private ByteArrayOutputStream buffer;
 	private int count = 0;
 
@@ -52,9 +52,9 @@ public class ReadRequest extends Request {
 	}
 
 	@NonNull
-	public ReadRequest with(final @NonNull DataCallback callback, final @NonNull ValueMerger merger) {
+	public ReadRequest with(final @NonNull DataCallback callback, final @NonNull DataMerger merger) {
 		this.valueCallback = callback;
-		this.valueMerger = merger;
+		this.dataMerger = merger;
 		return this;
 	}
 
@@ -63,12 +63,12 @@ public class ReadRequest extends Request {
 		if (valueCallback == null)
 			return;
 
-		if (valueMerger == null) {
+		if (dataMerger == null) {
 			valueCallback.onDataReceived(new Data(value));
 		} else {
 			if (buffer == null)
 				buffer = new ByteArrayOutputStream();
-			if (valueMerger.merge(buffer, value, count++)) {
+			if (dataMerger.merge(buffer, value, count++)) {
 				valueCallback.onDataReceived(new Data(buffer.toByteArray()));
 				buffer = null;
 				count = 0;

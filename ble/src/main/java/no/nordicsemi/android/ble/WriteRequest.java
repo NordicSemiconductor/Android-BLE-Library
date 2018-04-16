@@ -5,16 +5,16 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import no.nordicsemi.android.ble.callback.DataSplitter;
 import no.nordicsemi.android.ble.callback.DefaultMtuSplitter;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
-import no.nordicsemi.android.ble.callback.ValueSplitter;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class WriteRequest extends Request {
-	private final static ValueSplitter MTU_SPLITTER = new DefaultMtuSplitter();
+	private final static DataSplitter MTU_SPLITTER = new DefaultMtuSplitter();
 
-	private ValueSplitter valueSplitter;
+	private DataSplitter dataSplitter;
 	private final byte[] data;
 	private final int writeType;
 	private int count = 0;
@@ -62,8 +62,8 @@ public class WriteRequest extends Request {
 	 * @return the request
 	 */
 	@NonNull
-	public WriteRequest split(final @NonNull ValueSplitter splitter) {
-		this.valueSplitter = splitter;
+	public WriteRequest split(final @NonNull DataSplitter splitter) {
+		this.dataSplitter = splitter;
 		return this;
 	}
 
@@ -74,15 +74,15 @@ public class WriteRequest extends Request {
 	 */
 	@NonNull
 	public WriteRequest split() {
-		this.valueSplitter = MTU_SPLITTER;
+		this.dataSplitter = MTU_SPLITTER;
 		return this;
 	}
 
 	byte[] getData(final int mtu) {
-		if (valueSplitter == null || data == null)
+		if (dataSplitter == null || data == null)
 			return data;
 
-		final byte[] chunk = valueSplitter.chunk(data, count++, mtu - 3);
+		final byte[] chunk = dataSplitter.chunk(data, count++, mtu - 3);
 		if (chunk == null) // all data were sent
 			count = 0;
 		return chunk;
