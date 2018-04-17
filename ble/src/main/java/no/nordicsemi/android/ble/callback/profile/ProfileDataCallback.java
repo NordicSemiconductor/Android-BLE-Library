@@ -1,11 +1,11 @@
-package no.nordicsemi.android.ble.profile;
+package no.nordicsemi.android.ble.callback.profile;
 
 import android.bluetooth.BluetoothDevice;
 import android.support.annotation.NonNull;
 
-import no.nordicsemi.android.ble.callback.Data;
+import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.callback.DataCallback;
-import no.nordicsemi.android.ble.callback.DataMerger;
+import no.nordicsemi.android.ble.data.DataMerger;
 
 public interface ProfileDataCallback extends DataCallback {
 

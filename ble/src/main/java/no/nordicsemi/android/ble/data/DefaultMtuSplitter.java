@@ -1,9 +1,12 @@
-package no.nordicsemi.android.ble.callback;
+package no.nordicsemi.android.ble.data;
 
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-public class DefaultMtuSplitter implements DataSplitter {
+/**
+ * Splits the message into at-most MTU-3 size packets.
+ */
+public final class DefaultMtuSplitter implements DataSplitter {
 
 	@Nullable
 	@Override

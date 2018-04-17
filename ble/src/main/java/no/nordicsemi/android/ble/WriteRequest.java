@@ -5,10 +5,10 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import no.nordicsemi.android.ble.callback.DataSplitter;
-import no.nordicsemi.android.ble.callback.DefaultMtuSplitter;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
+import no.nordicsemi.android.ble.data.DataSplitter;
+import no.nordicsemi.android.ble.data.DefaultMtuSplitter;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 public final class WriteRequest extends Request {

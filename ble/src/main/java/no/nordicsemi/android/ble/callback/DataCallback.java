@@ -3,6 +3,9 @@ package no.nordicsemi.android.ble.callback;
 import android.bluetooth.BluetoothDevice;
 import android.support.annotation.NonNull;
 
+import no.nordicsemi.android.ble.data.Data;
+import no.nordicsemi.android.ble.data.DataMerger;
+
 public interface DataCallback {
 
 	/**

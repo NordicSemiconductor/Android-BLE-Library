@@ -1,4 +1,4 @@
-package no.nordicsemi.android.ble.callback;
+package no.nordicsemi.android.ble.data;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 
@@ -48,8 +48,16 @@ public final class Data {
 
 	private byte[] mValue;
 
+	public Data() {
+		this.mValue = null;
+	}
+
 	public Data(final byte[] value) {
 		this.mValue = value;
+	}
+
+	public Data(final byte value) {
+		this.mValue = new byte[] { value };
 	}
 
 	/**

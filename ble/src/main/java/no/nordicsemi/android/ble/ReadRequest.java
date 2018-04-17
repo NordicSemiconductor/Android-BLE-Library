@@ -8,11 +8,11 @@ import android.support.annotation.Nullable;
 
 import java.io.ByteArrayOutputStream;
 
-import no.nordicsemi.android.ble.callback.Data;
 import no.nordicsemi.android.ble.callback.DataCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
-import no.nordicsemi.android.ble.callback.DataMerger;
+import no.nordicsemi.android.ble.data.Data;
+import no.nordicsemi.android.ble.data.DataMerger;
 
 public final class ReadRequest extends Request {
 	private DataCallback valueCallback;
