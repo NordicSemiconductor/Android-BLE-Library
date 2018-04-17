@@ -7,6 +7,7 @@ import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.callback.DataCallback;
 import no.nordicsemi.android.ble.data.DataMerger;
 
+@SuppressWarnings("unused")
 public interface ProfileDataCallback extends DataCallback {
 
 	/**
