@@ -1,48 +1,46 @@
 package no.nordicsemi.android.ble.data;
 
-import android.bluetooth.BluetoothGattCharacteristic;
-
-@SuppressWarnings({"WeakerAccess", "unused"})
+@SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
 public final class Data {
 	private static char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 
 	/**
-	 * Characteristic value format type uint8
+	 * Data value format type uint8
 	 */
 	public final static int FORMAT_UINT8 = 0x11;
 
 	/**
-	 * Characteristic value format type uint16
+	 * Data value format type uint16
 	 */
 	public final static int FORMAT_UINT16 = 0x12;
 
 	/**
-	 * Characteristic value format type uint32
+	 * Data value format type uint32
 	 */
 	public final static int FORMAT_UINT32 = 0x14;
 
 	/**
-	 * Characteristic value format type sint8
+	 * Data value format type sint8
 	 */
 	public final static int FORMAT_SINT8 = 0x21;
 
 	/**
-	 * Characteristic value format type sint16
+	 * Data value format type sint16
 	 */
 	public final static int FORMAT_SINT16 = 0x22;
 
 	/**
-	 * Characteristic value format type sint32
+	 * Data value format type sint32
 	 */
 	public final static int FORMAT_SINT32 = 0x24;
 
 	/**
-	 * Characteristic value format type sfloat (16-bit float)
+	 * Data value format type sfloat (16-bit float, IEEE-11073)
 	 */
 	public final static int FORMAT_SFLOAT = 0x32;
 
 	/**
-	 * Characteristic value format type float (32-bit float)
+	 * Data value format type float (32-bit float, IEEE-11073)
 	 */
 	public final static int FORMAT_FLOAT = 0x34;
 
@@ -56,8 +54,23 @@ public final class Data {
 		this.mValue = value;
 	}
 
-	public Data(final byte value) {
-		this.mValue = new byte[] { value };
+	public Data(final int size) {
+		this.mValue = new byte[size];
+	}
+
+	public static Data opCode(final byte opCode) {
+		return new Data(new byte[] { opCode });
+	}
+
+	public static Data opCode(final byte opCode, final byte parameter) {
+		return new Data(new byte[] { opCode, parameter });
+	}
+
+	public static Data opCode(final byte opCode, final int parameter, int formatType) {
+		final Data data = new Data(new byte[1 + getTypeLen(formatType)]);
+		data.setByte(opCode, 0);
+		data.setValue(parameter, formatType, 1);
+		return data;
 	}
 
 	/**
@@ -73,24 +86,13 @@ public final class Data {
 	 * @return Length of the data.
 	 */
 	public int size() {
-		return mValue.length;
-	}
-
-	/**
-	 * Returns a byte at the given offset from the byte array.
-	 * @param offset Offset at which the byte value can be found.
-	 * @return Cached value or null of offset exceeds value size.
-	 */
-	public Byte getByte(final int offset) {
-		if (offset + 1 > mValue.length) return null;
-
-		return mValue[offset];
+		return mValue != null ? mValue.length : 0;
 	}
 
 	@Override
 	public String toString() {
-		if (mValue.length == 0)
-			return "empty data";
+		if (size() == 0)
+			return "";
 
 		final char[] out = new char[mValue.length * 3 - 1];
 		for (int j = 0; j < mValue.length; j++) {
@@ -101,6 +103,17 @@ public final class Data {
 				out[j * 3 + 2] = '-';
 		}
 		return "(0x) " + new String(out);
+	}
+
+	/**
+	 * Returns a byte at the given offset from the byte array.
+	 * @param offset Offset at which the byte value can be found.
+	 * @return Cached value or null of offset exceeds value size.
+	 */
+	public Byte getByte(final int offset) {
+		if (offset + 1 > size()) return null;
+
+		return mValue[offset];
 	}
 
 	/**
@@ -117,7 +130,7 @@ public final class Data {
 	 * @return Cached value or null of offset exceeds value size.
 	 */
 	public Integer getIntValue(final int formatType, final int offset) {
-		if ((offset + getTypeLen(formatType)) > mValue.length) return null;
+		if ((offset + getTypeLen(formatType)) > size()) return null;
 
 		switch (formatType) {
 			case FORMAT_UINT8:
@@ -153,7 +166,7 @@ public final class Data {
 	 * @return Cached value at a given offset or null if the requested offset exceeds the value size.
 	 */
 	public Float getFloatValue(final int formatType, final int offset) {
-		if ((offset + getTypeLen(formatType)) > mValue.length) return null;
+		if ((offset + getTypeLen(formatType)) > size()) return null;
 
 		switch (formatType) {
 			case FORMAT_SFLOAT:
@@ -168,12 +181,7 @@ public final class Data {
 	}
 
 	/**
-	 * Updates the locally stored value of this characteristic.
-	 *
-	 * <p>This function modifies the locally stored cached value of Data.
-	 * To send the value to the remote device, call
-	 * {@link no.nordicsemi.android.ble.BleManager#writeCharacteristic(BluetoothGattCharacteristic)} to send the value to the
-	 * remote device.
+	 * Updates the locally stored value of this data.
 	 *
 	 * @param value New value
 	 * @return true if the locally stored value has been set, false if the
@@ -185,16 +193,31 @@ public final class Data {
 	}
 
 	/**
+	 * Updates the byte at offset position.
+	 * @param value byte to set
+	 * @param offset the offset
+	 * @return true if the locally stored value has been set, false if the
+	 *              requested value could not be stored locally.
+	 */
+	public boolean setByte(final byte value, final int offset) {
+		final int len = offset + 1;
+		if (mValue == null) mValue = new byte[len];
+		if (len > mValue.length) return false;
+		mValue[offset] = value;
+		return true;
+	}
+
+	/**
 	 * Set the locally stored value of this data.
 	 * <p>See {@link #setValue(byte[])} for details.
 	 *
-	 * @param value New value for this characteristic
+	 * @param value New value for this data
 	 * @param formatType Integer format type used to transform the value parameter
 	 * @param offset Offset at which the value should be placed
 	 * @return true if the locally stored value has been set
 	 */
 	public boolean setValue(int value, int formatType, int offset) {
-		int len = offset + getTypeLen(formatType);
+		final int len = offset + getTypeLen(formatType);
 		if (mValue == null) mValue = new byte[len];
 		if (len > mValue.length) return false;
 
@@ -211,7 +234,7 @@ public final class Data {
 				// Fall-through intended
 			case FORMAT_UINT16:
 				mValue[offset++] = (byte)(value & 0xFF);
-				mValue[offset] = (byte)((value >> 8) & 0xFF);
+				mValue[offset]   = (byte)((value >> 8) & 0xFF);
 				break;
 
 			case FORMAT_SINT32:
@@ -221,7 +244,7 @@ public final class Data {
 				mValue[offset++] = (byte)(value & 0xFF);
 				mValue[offset++] = (byte)((value >> 8) & 0xFF);
 				mValue[offset++] = (byte)((value >> 16) & 0xFF);
-				mValue[offset] = (byte)((value >> 24) & 0xFF);
+				mValue[offset]   = (byte)((value >> 24) & 0xFF);
 				break;
 
 			default:
@@ -241,7 +264,7 @@ public final class Data {
 	 * @return true if the locally stored value has been set
 	 */
 	public boolean setValue(int mantissa, int exponent, int formatType, int offset) {
-		int len = offset + getTypeLen(formatType);
+		final int len = offset + getTypeLen(formatType);
 		if (mValue == null) mValue = new byte[len];
 		if (len > mValue.length) return false;
 
@@ -273,28 +296,28 @@ public final class Data {
 	/**
 	 * Returns the size of a give value type.
 	 */
-	private int getTypeLen(int formatType) {
+	private static int getTypeLen(int formatType) {
 		return formatType & 0xF;
 	}
 
 	/**
 	 * Convert a signed byte to an unsigned int.
 	 */
-	private int unsignedByteToInt(byte b) {
+	private static int unsignedByteToInt(byte b) {
 		return b & 0xFF;
 	}
 
 	/**
 	 * Convert signed bytes to a 16-bit unsigned int.
 	 */
-	private int unsignedBytesToInt(byte b0, byte b1) {
+	private static int unsignedBytesToInt(byte b0, byte b1) {
 		return (unsignedByteToInt(b0) + (unsignedByteToInt(b1) << 8));
 	}
 
 	/**
 	 * Convert signed bytes to a 32-bit unsigned int.
 	 */
-	private int unsignedBytesToInt(byte b0, byte b1, byte b2, byte b3) {
+	private static int unsignedBytesToInt(byte b0, byte b1, byte b2, byte b3) {
 		return (unsignedByteToInt(b0) + (unsignedByteToInt(b1) << 8))
 				+ (unsignedByteToInt(b2) << 16) + (unsignedByteToInt(b3) << 24);
 	}
@@ -302,7 +325,7 @@ public final class Data {
 	/**
 	 * Convert signed bytes to a 16-bit short float value.
 	 */
-	private float bytesToFloat(byte b0, byte b1) {
+	private static float bytesToFloat(byte b0, byte b1) {
 		int mantissa = unsignedToSigned(unsignedByteToInt(b0)
 				+ ((unsignedByteToInt(b1) & 0x0F) << 8), 12);
 		int exponent = unsignedToSigned(unsignedByteToInt(b1) >> 4, 4);
@@ -312,7 +335,7 @@ public final class Data {
 	/**
 	 * Convert signed bytes to a 32-bit short float value.
 	 */
-	private float bytesToFloat(byte b0, byte b1, byte b2, byte b3) {
+	private static float bytesToFloat(byte b0, byte b1, byte b2, byte b3) {
 		int mantissa = unsignedToSigned(unsignedByteToInt(b0)
 				+ (unsignedByteToInt(b1) << 8)
 				+ (unsignedByteToInt(b2) << 16), 24);
@@ -323,7 +346,7 @@ public final class Data {
 	 * Convert an unsigned integer value to a two's-complement encoded
 	 * signed value.
 	 */
-	private int unsignedToSigned(int unsigned, int size) {
+	private static int unsignedToSigned(int unsigned, int size) {
 		if ((unsigned & (1 << size-1)) != 0) {
 			unsigned = -1 * ((1 << size-1) - (unsigned & ((1 << size-1) - 1)));
 		}
@@ -333,7 +356,7 @@ public final class Data {
 	/**
 	 * Convert an integer into the signed bits of a given length.
 	 */
-	private int intToSignedBits(int i, int size) {
+	private static int intToSignedBits(int i, int size) {
 		if (i < 0) {
 			i = (1 << size-1) + (i & ((1 << size-1) - 1));
 		}
