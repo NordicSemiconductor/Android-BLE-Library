@@ -932,7 +932,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
 	@Deprecated
-	public ReadRequest readBatteryLevel() {
+	protected ReadRequest readBatteryLevel() {
 		return enqueue(Request.newReadBatteryLevelRequest()
 				.with((device, data) -> {
 					if (data.size() == 1) {
@@ -969,7 +969,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
 	@Deprecated
-	public ReadRequest enableBatteryLevelNotifications() {
+	protected ReadRequest enableBatteryLevelNotifications() {
 		return enqueue(Request.newEnableBatteryLevelNotificationsRequest())
 				.with((device, data) -> {
 					if (data.size() == 1) {
@@ -991,7 +991,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	@NonNull
 	@Deprecated
-	public Request disableBatteryLevelNotifications() {
+	protected Request disableBatteryLevelNotifications() {
 		return enqueue(Request.newDisableBatteryLevelNotificationsRequest())
 				.done(() -> log(LogContract.Log.Level.INFO, "Battery Level notifications disabled"));
 	}
