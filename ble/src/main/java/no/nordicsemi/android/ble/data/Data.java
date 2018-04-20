@@ -199,11 +199,11 @@ public final class Data {
 	 * @return true if the locally stored value has been set, false if the
 	 *              requested value could not be stored locally.
 	 */
-	public boolean setByte(final byte value, final int offset) {
+	public boolean setByte(final int value, final int offset) {
 		final int len = offset + 1;
 		if (mValue == null) mValue = new byte[len];
 		if (len > mValue.length) return false;
-		mValue[offset] = value;
+		mValue[offset] = (byte) value;
 		return true;
 	}
 
