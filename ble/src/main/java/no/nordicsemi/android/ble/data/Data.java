@@ -15,6 +15,11 @@ public final class Data {
 	public final static int FORMAT_UINT16 = 0x12;
 
 	/**
+	 * Data value format type uint24
+	 */
+	public final static int FORMAT_UINT24 = 0x13;
+
+	/**
 	 * Data value format type uint32
 	 */
 	public final static int FORMAT_UINT32 = 0x14;
@@ -28,6 +33,11 @@ public final class Data {
 	 * Data value format type sint16
 	 */
 	public final static int FORMAT_SINT16 = 0x22;
+
+	/**
+	 * Data value format type sint24
+	 */
+	public final static int FORMAT_SINT24 = 0x23;
 
 	/**
 	 * Data value format type sint32
@@ -59,11 +69,11 @@ public final class Data {
 	}
 
 	public static Data opCode(final byte opCode) {
-		return new Data(new byte[] { opCode });
+		return new Data(new byte[]{opCode});
 	}
 
 	public static Data opCode(final byte opCode, final byte parameter) {
-		return new Data(new byte[] { opCode, parameter });
+		return new Data(new byte[]{opCode, parameter});
 	}
 
 	public static Data opCode(final byte opCode, final int parameter, int formatType) {
@@ -75,6 +85,7 @@ public final class Data {
 
 	/**
 	 * Returns the underlying byte array.
+	 *
 	 * @return Data received.
 	 */
 	public byte[] getValue() {
@@ -83,6 +94,7 @@ public final class Data {
 
 	/**
 	 * Returns the size of underlying byte array.
+	 *
 	 * @return Length of the data.
 	 */
 	public int size() {
@@ -107,6 +119,7 @@ public final class Data {
 
 	/**
 	 * Returns a byte at the given offset from the byte array.
+	 *
 	 * @param offset Offset at which the byte value can be found.
 	 * @return Cached value or null of offset exceeds value size.
 	 */
@@ -118,7 +131,7 @@ public final class Data {
 
 	/**
 	 * Returns an integer value from the byte array.
-	 *
+	 * <p>
 	 * <p>The formatType parameter determines how the value
 	 * is to be interpreted. For example, setting formatType to
 	 * {@link #FORMAT_UINT16} specifies that the first two bytes of the
@@ -126,7 +139,7 @@ public final class Data {
 	 * return value.
 	 *
 	 * @param formatType The format type used to interpret the value.
-	 * @param offset Offset at which the integer value can be found.
+	 * @param offset     Offset at which the integer value can be found.
 	 * @return Cached value or null of offset exceeds value size.
 	 */
 	public Integer getIntValue(final int formatType, final int offset) {
@@ -137,22 +150,30 @@ public final class Data {
 				return unsignedByteToInt(mValue[offset]);
 
 			case FORMAT_UINT16:
-				return unsignedBytesToInt(mValue[offset], mValue[offset+1]);
+				return unsignedBytesToInt(mValue[offset], mValue[offset + 1]);
+
+			case FORMAT_UINT24:
+				return unsignedBytesToInt(mValue[offset], mValue[offset + 1],
+						mValue[offset + 2], (byte) 0);
 
 			case FORMAT_UINT32:
-				return unsignedBytesToInt(mValue[offset],   mValue[offset+1],
-						mValue[offset+2], mValue[offset+3]);
+				return unsignedBytesToInt(mValue[offset], mValue[offset + 1],
+						mValue[offset + 2], mValue[offset + 3]);
 
 			case FORMAT_SINT8:
 				return unsignedToSigned(unsignedByteToInt(mValue[offset]), 8);
 
 			case FORMAT_SINT16:
 				return unsignedToSigned(unsignedBytesToInt(mValue[offset],
-						mValue[offset+1]), 16);
+						mValue[offset + 1]), 16);
+
+			case FORMAT_SINT24:
+				return unsignedToSigned(unsignedBytesToInt(mValue[offset],
+						mValue[offset + 1], mValue[offset + 2], (byte) 0), 24);
 
 			case FORMAT_SINT32:
 				return unsignedToSigned(unsignedBytesToInt(mValue[offset],
-						mValue[offset+1], mValue[offset+2], mValue[offset+3]), 32);
+						mValue[offset + 1], mValue[offset + 2], mValue[offset + 3]), 32);
 		}
 
 		return null;
@@ -162,7 +183,7 @@ public final class Data {
 	 * Returns an float value from the given byte array.
 	 *
 	 * @param formatType The format type used to interpret the value.
-	 * @param offset Offset at which the float value can be found.
+	 * @param offset     Offset at which the float value can be found.
 	 * @return Cached value at a given offset or null if the requested offset exceeds the value size.
 	 */
 	public Float getFloatValue(final int formatType, final int offset) {
@@ -170,11 +191,11 @@ public final class Data {
 
 		switch (formatType) {
 			case FORMAT_SFLOAT:
-				return bytesToFloat(mValue[offset], mValue[offset+1]);
+				return bytesToFloat(mValue[offset], mValue[offset + 1]);
 
 			case FORMAT_FLOAT:
-				return bytesToFloat(mValue[offset],   mValue[offset+1],
-						mValue[offset+2], mValue[offset+3]);
+				return bytesToFloat(mValue[offset], mValue[offset + 1],
+						mValue[offset + 2], mValue[offset + 3]);
 		}
 
 		return null;
@@ -185,7 +206,7 @@ public final class Data {
 	 *
 	 * @param value New value
 	 * @return true if the locally stored value has been set, false if the
-	 *              requested value could not be stored locally.
+	 * requested value could not be stored locally.
 	 */
 	public boolean setValue(final byte[] value) {
 		mValue = value;
@@ -194,10 +215,11 @@ public final class Data {
 
 	/**
 	 * Updates the byte at offset position.
-	 * @param value byte to set
+	 *
+	 * @param value  byte to set
 	 * @param offset the offset
 	 * @return true if the locally stored value has been set, false if the
-	 *              requested value could not be stored locally.
+	 * requested value could not be stored locally.
 	 */
 	public boolean setByte(final int value, final int offset) {
 		final int len = offset + 1;
@@ -211,9 +233,9 @@ public final class Data {
 	 * Set the locally stored value of this data.
 	 * <p>See {@link #setValue(byte[])} for details.
 	 *
-	 * @param value New value for this data
+	 * @param value      New value for this data
 	 * @param formatType Integer format type used to transform the value parameter
-	 * @param offset Offset at which the value should be placed
+	 * @param offset     Offset at which the value should be placed
 	 * @return true if the locally stored value has been set
 	 */
 	public boolean setValue(int value, int formatType, int offset) {
@@ -226,25 +248,34 @@ public final class Data {
 				value = intToSignedBits(value, 8);
 				// Fall-through intended
 			case FORMAT_UINT8:
-				mValue[offset] = (byte)(value & 0xFF);
+				mValue[offset] = (byte) (value & 0xFF);
 				break;
 
 			case FORMAT_SINT16:
 				value = intToSignedBits(value, 16);
 				// Fall-through intended
 			case FORMAT_UINT16:
-				mValue[offset++] = (byte)(value & 0xFF);
-				mValue[offset]   = (byte)((value >> 8) & 0xFF);
+				mValue[offset++] = (byte) (value & 0xFF);
+				mValue[offset] = (byte) ((value >> 8) & 0xFF);
+				break;
+
+			case FORMAT_SINT24:
+				value = intToSignedBits(value, 24);
+				// Fall-through intended
+			case FORMAT_UINT24:
+				mValue[offset++] = (byte) (value & 0xFF);
+				mValue[offset++] = (byte) ((value >> 8) & 0xFF);
+				mValue[offset] = (byte) ((value >> 16) & 0xFF);
 				break;
 
 			case FORMAT_SINT32:
 				value = intToSignedBits(value, 32);
 				// Fall-through intended
 			case FORMAT_UINT32:
-				mValue[offset++] = (byte)(value & 0xFF);
-				mValue[offset++] = (byte)((value >> 8) & 0xFF);
-				mValue[offset++] = (byte)((value >> 16) & 0xFF);
-				mValue[offset]   = (byte)((value >> 24) & 0xFF);
+				mValue[offset++] = (byte) (value & 0xFF);
+				mValue[offset++] = (byte) ((value >> 8) & 0xFF);
+				mValue[offset++] = (byte) ((value >> 16) & 0xFF);
+				mValue[offset] = (byte) ((value >> 24) & 0xFF);
 				break;
 
 			default:
@@ -257,10 +288,10 @@ public final class Data {
 	 * Set the locally stored value of this characteristic.
 	 * <p>See {@link #setValue(byte[])} for details.
 	 *
-	 * @param mantissa Mantissa for this characteristic
-	 * @param exponent  exponent value for this characteristic
+	 * @param mantissa   Mantissa for this characteristic
+	 * @param exponent   exponent value for this characteristic
 	 * @param formatType Float format type used to transform the value parameter
-	 * @param offset Offset at which the value should be placed
+	 * @param offset     Offset at which the value should be placed
 	 * @return true if the locally stored value has been set
 	 */
 	public boolean setValue(int mantissa, int exponent, int formatType, int offset) {
@@ -272,18 +303,18 @@ public final class Data {
 			case FORMAT_SFLOAT:
 				mantissa = intToSignedBits(mantissa, 12);
 				exponent = intToSignedBits(exponent, 4);
-				mValue[offset++] = (byte)(mantissa & 0xFF);
-				mValue[offset] = (byte)((mantissa >> 8) & 0x0F);
-				mValue[offset] += (byte)((exponent & 0x0F) << 4);
+				mValue[offset++] = (byte) (mantissa & 0xFF);
+				mValue[offset] = (byte) ((mantissa >> 8) & 0x0F);
+				mValue[offset] += (byte) ((exponent & 0x0F) << 4);
 				break;
 
 			case FORMAT_FLOAT:
 				mantissa = intToSignedBits(mantissa, 24);
 				exponent = intToSignedBits(exponent, 8);
-				mValue[offset++] = (byte)(mantissa & 0xFF);
-				mValue[offset++] = (byte)((mantissa >> 8) & 0xFF);
-				mValue[offset++] = (byte)((mantissa >> 16) & 0xFF);
-				mValue[offset] += (byte)(exponent & 0xFF);
+				mValue[offset++] = (byte) (mantissa & 0xFF);
+				mValue[offset++] = (byte) ((mantissa >> 8) & 0xFF);
+				mValue[offset++] = (byte) ((mantissa >> 16) & 0xFF);
+				mValue[offset] += (byte) (exponent & 0xFF);
 				break;
 
 			default:
@@ -329,7 +360,7 @@ public final class Data {
 		int mantissa = unsignedToSigned(unsignedByteToInt(b0)
 				+ ((unsignedByteToInt(b1) & 0x0F) << 8), 12);
 		int exponent = unsignedToSigned(unsignedByteToInt(b1) >> 4, 4);
-		return (float)(mantissa * Math.pow(10, exponent));
+		return (float) (mantissa * Math.pow(10, exponent));
 	}
 
 	/**
@@ -339,7 +370,7 @@ public final class Data {
 		int mantissa = unsignedToSigned(unsignedByteToInt(b0)
 				+ (unsignedByteToInt(b1) << 8)
 				+ (unsignedByteToInt(b2) << 16), 24);
-		return (float)(mantissa * Math.pow(10, b3));
+		return (float) (mantissa * Math.pow(10, b3));
 	}
 
 	/**
@@ -347,8 +378,8 @@ public final class Data {
 	 * signed value.
 	 */
 	private static int unsignedToSigned(int unsigned, int size) {
-		if ((unsigned & (1 << size-1)) != 0) {
-			unsigned = -1 * ((1 << size-1) - (unsigned & ((1 << size-1) - 1)));
+		if ((unsigned & (1 << size - 1)) != 0) {
+			unsigned = -1 * ((1 << size - 1) - (unsigned & ((1 << size - 1) - 1)));
 		}
 		return unsigned;
 	}
@@ -358,7 +389,7 @@ public final class Data {
 	 */
 	private static int intToSignedBits(int i, int size) {
 		if (i < 0) {
-			i = (1 << size-1) + (i & ((1 << size-1) - 1));
+			i = (1 << size - 1) + (i & ((1 << size - 1) - 1));
 		}
 		return i;
 	}
