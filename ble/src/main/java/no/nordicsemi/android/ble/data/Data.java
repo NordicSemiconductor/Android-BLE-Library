@@ -54,6 +54,31 @@ public final class Data {
 	 */
 	public final static int FORMAT_FLOAT = 0x34;
 
+	// Values required to convert float to IEEE-11073 SFLOAT
+	private final static int SFLOAT_POSITIVE_INFINITY = 0x07FE;
+	private final static int SFLOAT_NAN = 0x07FF;
+	private final static int SFLOAT_NOT_AT_THIS_RESOLUTION = 0x0800;
+	private final static int SFLOAT_RESERVED_VALUE = 0x0801;
+	private final static int SFLOAT_NEGATIVE_INFINITY = 0x0802;
+	private final static int SFLOAT_MANTISSA_MAX = 0x07FD;
+	private final static int SFLOAT_EXPONENT_MAX = 7;
+	private final static int SFLOAT_EXPONENT_MIN = -8;
+	private final static float SFLOAT_MAX = 20450000000.0f;
+	private final static float SFLOAT_MIN = -SFLOAT_MAX;
+	private final static int SFLOAT_PRECISION = 10000;
+	private final static float SFLOAT_EPSILON = 1e-8f;
+
+	// Values required to convert float to IEEE-11073 FLOAT
+	private final static int FLOAT_POSITIVE_INFINITY = 0x007FFFFE;
+	private final static int FLOAT_NAN = 0x007FFFFF;
+	private final static int FLOAT_NOT_AT_THIS_RESOLUTION = 0x00800000;
+	private final static int FLOAT_RESERVED_VALUE = 0x00800001;
+	private final static int FLOAT_NEGATIVE_INFINITY = 0x00800002;
+	private final static int FLOAT_MANTISSA_MAX = 0x007FFFFD;
+	private final static int FLOAT_EXPONENT_MAX = 127;
+	private final static int FLOAT_EXPONENT_MIN = -128;
+	private final static int FLOAT_PRECISION = 10000000;
+
 	private byte[] mValue;
 
 	public Data() {
@@ -191,9 +216,32 @@ public final class Data {
 
 		switch (formatType) {
 			case FORMAT_SFLOAT:
+				if (mValue[offset + 1] == 0x07 && mValue[offset] == (byte) 0xFE)
+					return Float.POSITIVE_INFINITY;
+				if ((mValue[offset + 1] == 0x07 && mValue[offset] == (byte) 0xFF) ||
+					(mValue[offset + 1] == 0x08 && mValue[offset] == 0x00) ||
+					(mValue[offset + 1] == 0x08 && mValue[offset] == 0x01))
+					return Float.NaN;
+				if (mValue[offset + 1] == 0x08 && mValue[offset] == 0x02)
+					return Float.NEGATIVE_INFINITY;
+
 				return bytesToFloat(mValue[offset], mValue[offset + 1]);
 
 			case FORMAT_FLOAT:
+				if (mValue[offset + 3] == 0x00) {
+					if (mValue[offset + 2] == 0x7F && mValue[offset + 1] == (byte) 0xFF) {
+						if (mValue[offset] == (byte) 0xFE)
+							return Float.POSITIVE_INFINITY;
+						if (mValue[offset] == (byte) 0xFF)
+							return Float.NaN;
+					} else if (mValue[offset + 2] == (byte) 0x80 && mValue[offset + 1] == 0x00) {
+						if (mValue[offset] == 0x00 || mValue[offset] == 0x01)
+							return Float.NaN;
+						if (mValue[offset] == 0x02)
+							return Float.NEGATIVE_INFINITY;
+					}
+				}
+
 				return bytesToFloat(mValue[offset], mValue[offset + 1],
 						mValue[offset + 2], mValue[offset + 3]);
 		}
@@ -285,11 +333,11 @@ public final class Data {
 	}
 
 	/**
-	 * Set the locally stored value of this characteristic.
+	 * Set the locally stored value of this data.
 	 * <p>See {@link #setValue(byte[])} for details.
 	 *
-	 * @param mantissa   Mantissa for this characteristic
-	 * @param exponent   exponent value for this characteristic
+	 * @param mantissa   Mantissa for this data
+	 * @param exponent   Exponent value for this data
 	 * @param formatType Float format type used to transform the value parameter
 	 * @param offset     Offset at which the value should be placed
 	 * @return true if the locally stored value has been set
@@ -322,6 +370,164 @@ public final class Data {
 		}
 
 		return true;
+	}
+
+	/**
+	 * Set the locally stored value of this data.
+	 * <p>See {@link #setValue(byte[])} for details.
+	 *
+	 * @param value      Float value to be written
+	 * @param formatType Float format type used to transform the value parameter
+	 * @param offset     Offset at which the value should be placed
+	 * @return true if the locally stored value has been set
+	 */
+	public boolean setValue(float value, int formatType, int offset) {
+		final int len = offset + getTypeLen(formatType);
+		if (mValue == null) mValue = new byte[len];
+		if (len > mValue.length) return false;
+
+		switch (formatType) {
+			case FORMAT_SFLOAT:
+				final int sfloatAsInt = sfloatToInt(value);
+				mValue[offset++] = (byte) (sfloatAsInt & 0xFF);
+				mValue[offset] = (byte) ((sfloatAsInt >> 8) & 0xFF);
+				break;
+
+			case FORMAT_FLOAT:
+				final int floatAsInt = floatToInt(value);
+				mValue[offset++] = (byte) (floatAsInt & 0xFF);
+				mValue[offset++] = (byte) ((floatAsInt >> 8) & 0xFF);
+				mValue[offset++] = (byte) ((floatAsInt >> 16) & 0xFF);
+				mValue[offset] += (byte) ((floatAsInt >> 24) & 0xFF);
+				break;
+
+			default:
+				return false;
+		}
+
+		return true;
+	}
+
+	/**
+	 * Converts float to SFLOAT IEEE 11073 format as UINT16, rounding up or down.
+	 * See: https://github.com/signove/antidote/blob/master/src/util/bytelib.c
+	 *
+	 * @param value the value to be converted.
+	 * @return given float as UINT16 in IEEE 11073 format.
+	 */
+	private static int sfloatToInt(final float value) {
+		if (Float.isNaN(value)) {
+			return SFLOAT_NAN;
+		} else if (value > SFLOAT_MAX) {
+			return SFLOAT_POSITIVE_INFINITY;
+		} else if (value < SFLOAT_MIN) {
+			return SFLOAT_NEGATIVE_INFINITY;
+		}
+
+		int sign = value >= 0 ? +1 : -1;
+		float mantissa = Math.abs(value);
+		int exponent = 0; // Note: 10**x exponent, not 2**x
+
+		// scale up if number is too big
+		while (mantissa > SFLOAT_MANTISSA_MAX) {
+			mantissa /= 10.0f;
+			++exponent;
+			if (exponent > SFLOAT_EXPONENT_MAX) {
+				// argh, should not happen
+				if (sign > 0) {
+					return SFLOAT_POSITIVE_INFINITY;
+				} else {
+					return SFLOAT_NEGATIVE_INFINITY;
+				}
+			}
+		}
+
+		// scale down if number is too small
+		while (mantissa < 1) {
+			mantissa *= 10;
+			--exponent;
+			if (exponent < SFLOAT_EXPONENT_MIN) {
+				// argh, should not happen
+				return 0;
+			}
+		}
+
+		// scale down if number needs more precision
+		double smantissa = Math.round(mantissa * SFLOAT_PRECISION);
+		double rmantissa = Math.round(mantissa) * SFLOAT_PRECISION;
+		double mdiff = Math.abs(smantissa - rmantissa);
+		while (mdiff > 0.5 && exponent > SFLOAT_EXPONENT_MIN &&
+				(mantissa * 10) <= SFLOAT_MANTISSA_MAX) {
+			mantissa *= 10;
+			--exponent;
+			smantissa = Math.round(mantissa * SFLOAT_PRECISION);
+			rmantissa = Math.round(mantissa) * SFLOAT_PRECISION;
+			mdiff = Math.abs(smantissa - rmantissa);
+		}
+
+		int int_mantissa = Math.round(sign * mantissa);
+		return ((exponent & 0xF) << 12) | (int_mantissa & 0xFFF);
+	}
+
+	/**
+	 * Converts float to FLOAT IEEE 11073 format as UINT32, rounding up or down.
+	 * See: https://github.com/signove/antidote/blob/master/src/util/bytelib.c
+	 *
+	 * @param value the value to be converted.
+	 * @return given float as UINT32 in IEEE 11073 format.
+	 */
+	private static int floatToInt(final float value) {
+		if (Float.isNaN(value)) {
+			return FLOAT_NAN;
+		} else if (value == Float.POSITIVE_INFINITY) {
+			return FLOAT_POSITIVE_INFINITY;
+		} else if (value == Float.NEGATIVE_INFINITY) {
+			return FLOAT_NEGATIVE_INFINITY;
+		}
+
+		int sign = value >= 0 ? +1 : -1;
+		float mantissa = Math.abs(value);
+		int exponent = 0; // Note: 10**x exponent, not 2**x
+
+		// scale up if number is too big
+		while (mantissa > FLOAT_MANTISSA_MAX) {
+			mantissa /= 10.0f;
+			++exponent;
+			if (exponent > FLOAT_EXPONENT_MAX) {
+				// argh, should not happen
+				if (sign > 0) {
+					return FLOAT_POSITIVE_INFINITY;
+				} else {
+					return FLOAT_NEGATIVE_INFINITY;
+				}
+			}
+		}
+
+		// scale down if number is too small
+		while (mantissa < 1) {
+			mantissa *= 10;
+			--exponent;
+			if (exponent < FLOAT_EXPONENT_MIN) {
+				// argh, should not happen
+				return 0;
+			}
+		}
+
+		// scale down if number needs more precision
+		double smantissa = Math.round(mantissa * FLOAT_PRECISION);
+		double rmantissa = Math.round(mantissa) * FLOAT_PRECISION;
+		double mdiff = Math.abs(smantissa - rmantissa);
+		while (mdiff > 0.5 && exponent > FLOAT_EXPONENT_MIN &&
+				(mantissa * 10) <= FLOAT_MANTISSA_MAX) {
+			mantissa *= 10;
+			--exponent;
+			smantissa = Math.round(mantissa * FLOAT_PRECISION);
+			rmantissa = Math.round(mantissa) * FLOAT_PRECISION;
+			mdiff = Math.abs(smantissa - rmantissa);
+		}
+
+		int int_mantissa = Math.round(sign * mantissa);
+		return (exponent << 24) | (int_mantissa & 0xFFFFFF);
 	}
 
 	/**
