@@ -237,7 +237,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					return;
 				case BluetoothDevice.BOND_BONDED:
 					Logger.i(mLogSession, "Device bonded");
-					mCallbacks.onBonded(device);
+					mCallbacks.onBound(device);
 					if (mRequest != null)
 						mRequest.notifySuccess();
 					break;
@@ -312,7 +312,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * that will be automatically connect as soon as they become available (true). In the latter case, if
 	 * Bluetooth adapter is enabled, Android scans periodically for devices from the white list and if a advertising packet
 	 * is received from such, it tries to connect to it. When the connection is lost, the system will keep trying to reconnect
-	 * to it in. If true is returned, and the connection to the device is lost the {@link BleManagerCallbacks#onLinklossOccur(BluetoothDevice)}
+	 * to it in. If true is returned, and the connection to the device is lost the {@link BleManagerCallbacks#onLinklossOccurred(BluetoothDevice)}
 	 * callback is called instead of {@link BleManagerCallbacks#onDeviceDisconnected(BluetoothDevice)}.
 	 * <p>This feature works much better on newer Android phone models and many not work on older phones.</p>
 	 * <p>This method should only be used with bonded devices, as otherwise the device may change it's address.
@@ -1245,7 +1245,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				close();
 			} else {
 				Logger.w(mLogSession, "Connection lost");
-				mCallbacks.onLinklossOccur(device);
+				mCallbacks.onLinklossOccurred(device);
 				// We are not closing the connection here as the device should try to reconnect automatically.
 				// This may be only called when the shouldAutoConnect() method returned true.
 			}
