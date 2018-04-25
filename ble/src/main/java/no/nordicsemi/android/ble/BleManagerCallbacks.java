@@ -105,7 +105,7 @@ public interface BleManagerCallbacks {
 	 * @deprecated Use
 	 * <pre>{@code
 	 * enableNotifications(batteryLevelCharacteristic).with(new BatteryLevelDataCallback() {
-	 *     onBatteryValueChanged(int batteryLevel) {
+	 *     onBatteryLevelChanged(int batteryLevel) {
 	 *         ...
 	 *     }
 	 * })
@@ -125,7 +125,7 @@ public interface BleManagerCallbacks {
 	 * @deprecated Use
 	 * <pre>{@code
 	 * enableNotifications(batteryLevelCharacteristic).with(new BatteryLevelDataCallback() {
-	 *     onBatteryValueChanged(int batteryLevel) {
+	 *     onBatteryLevelChanged(int batteryLevel) {
 	 *         ...
 	 *     }
 	 * })
