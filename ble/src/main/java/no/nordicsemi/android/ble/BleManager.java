@@ -85,7 +85,7 @@ import no.nordicsemi.android.log.Logger;
  *     operation (for example the Battery Level characteristic may not have the READ property)
  *     it tries to enable Battery Level notifications, to get battery updates from the device.</li>
  *     <li>Afterwards, the manager initializes the device using given queue of commands.
- *     See {@link BleManagerGattCallback#initialize(BluetoothDevice)} method for more details.</li>
+ *     See {@link BleManagerGattCallback#initialize(BluetoothGatt)} method for more details.</li>
  *     <li>When initialization complete, the {@link BleManagerCallbacks#onDeviceReady(BluetoothDevice)}
  *     callback is called.</li>
  *     </ol>
@@ -1202,7 +1202,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 *
 		 * @param gatt the gatt device with services discovered
 		 * @return The queue of requests.
-		 * @deprecated Use {@link #initialize(BluetoothDevice)} instead.
+		 * @deprecated Use {@link #initialize(BluetoothGatt)} instead.
 		 */
 		@Deprecated
 		protected Deque<Request> initGatt(final @NonNull BluetoothGatt gatt) {
@@ -1211,14 +1211,14 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 		/**
 		 * This method should set up the request queue needed to initialize the profile.
-		 * Enabling Service Change indications for bonded devices and reading the Battery Level value and enabling Battery Level notifications
-		 * is handled before executing this queue. The queue should not have requests that are not available, e.g. should not
-		 * read an optional service when it is not supported by the connected device.
+		 * Enabling Service Change indications for bonded devices  is handled before executing this queue.
+		 * The queue may have requests that are not available, e.g. read an optional service when
+		 * it is not supported by the connected device. Such call will trigger {@link Request#fail(FailCallback)}.
 		 * <p>This method is called when the services has been discovered and the device is supported (has required service).</p>
 		 *
-		 * @param device the device with services discovered
+		 * @param gatt the gatt device with services discovered having required services found
 		 */
-		protected void initialize(final @NonNull BluetoothDevice device) {
+		protected void initialize(final @NonNull BluetoothGatt gatt) {
 			// empty initialization queue
 		}
 
@@ -1470,6 +1470,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					mInitInProgress = true;
 					mInitQueue = initGatt(gatt);
 
+					final boolean deprecatedApiUser = mInitQueue != null;
+
 					// Before we start executing the initialization queue some other tasks need to be done.
 					if (mInitQueue == null)
 						mInitQueue = new LinkedList<>();
@@ -1479,15 +1481,20 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 						enqueueFirst(Request.newEnableServiceChangedIndicationsRequest());
 
 					// Deprecated:
-					// This code will be removed in a future version
-					// 2. Read Battery Level characteristic (if such does not exist, this will be skipped)
-					readBatteryLevel();
-					// 3. Enable Battery Level notifications if required (if this char. does not exist, this operation will be skipped)
-					if (mCallbacks.shouldEnableBatteryLevelNotifications(gatt.getDevice()))
-						enableBatteryLevelNotifications();
+					if (deprecatedApiUser) {
+						// All Battery Service handling will be removed from BleManager in the future.
+						// If you want to read/enable notifications on Battery Level characteristic
+						// do this in initialize(...).
+
+						// 2. Read Battery Level characteristic (if such does not exist, this will be skipped)
+						readBatteryLevel();
+						// 3. Enable Battery Level notifications if required (if this char. does not exist, this operation will be skipped)
+						if (mCallbacks.shouldEnableBatteryLevelNotifications(gatt.getDevice()))
+							enableBatteryLevelNotifications();
+					}
 					// End
 
-					initialize(gatt.getDevice());
+					initialize(gatt);
 
 					// Note, that operations are added in reverse order to the front of the queue.
 
