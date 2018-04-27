@@ -10,12 +10,14 @@ import java.io.ByteArrayOutputStream;
 
 import no.nordicsemi.android.ble.callback.DataReceivedCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
+import no.nordicsemi.android.ble.callback.ReadProgressCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.data.DataMerger;
 
 public final class ReadRequest extends Request {
 	private DataReceivedCallback valueCallback;
+	private ReadProgressCallback progressCallback;
 	private DataMerger dataMerger;
 	private ByteArrayOutputStream buffer;
 	private int count = 0;
@@ -61,6 +63,20 @@ public final class ReadRequest extends Request {
 	@NonNull
 	public ReadRequest merge(final @NonNull DataMerger merger) {
 		this.dataMerger = merger;
+		this.progressCallback = null;
+		return this;
+	}
+
+	/**
+	 * Adds a merger that will be used to merge multiple packets into a single Data.
+	 * The merger may modify each packet if necessary.
+	 *
+	 * @return the request
+	 */
+	@NonNull
+	public ReadRequest merge(final @NonNull DataMerger merger, final @NonNull ReadProgressCallback callback) {
+		this.dataMerger = merger;
+		this.progressCallback = callback;
 		return this;
 	}
 
@@ -72,6 +88,8 @@ public final class ReadRequest extends Request {
 		if (dataMerger == null) {
 			valueCallback.onDataReceived(device, new Data(value));
 		} else {
+			if (progressCallback != null)
+				progressCallback.onPacketReceived(device, value, count);
 			if (buffer == null)
 				buffer = new ByteArrayOutputStream();
 			if (dataMerger.merge(buffer, value, count++)) {

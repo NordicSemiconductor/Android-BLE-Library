@@ -1158,7 +1158,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		throw new IllegalStateException("Device not connected");
 	}
 
-	@SuppressWarnings({"WeakerAccess", "DeprecatedIsStillUsed", "deprecation"})
+	@SuppressWarnings({"WeakerAccess", "DeprecatedIsStillUsed"})
 	protected abstract class BleManagerGattCallback extends BluetoothGattCallback {
 		private final static String ERROR_CONNECTION_STATE_CHANGE = "Error on connection state change";
 		private final static String ERROR_DISCOVERY_SERVICE = "Error on discovering services";
@@ -1554,6 +1554,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				Logger.i(mLogSession, "Data written to " + characteristic.getUuid() + ", value: " + ParserUtils.parse(characteristic));
 
 				onCharacteristicWrite(gatt, characteristic);
+				((WriteRequest) mRequest).notifyPacketSent(gatt.getDevice(), characteristic.getValue());
 				if (((WriteRequest) mRequest).hasMore()) {
 					enqueueFirst(mRequest);
 				} else {
@@ -1629,6 +1630,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					onDescriptorWrite(gatt, descriptor);
 				}
 				// mRequest may be either WriteRequest or ReadRequest, in case of enableNotifications/Indications requests
+				((WriteRequest) mRequest).notifyPacketSent(gatt.getDevice(), descriptor.getValue());
 				if (mRequest instanceof WriteRequest && ((WriteRequest) mRequest).hasMore()) {
 					enqueueFirst(mRequest);
 				} else {
