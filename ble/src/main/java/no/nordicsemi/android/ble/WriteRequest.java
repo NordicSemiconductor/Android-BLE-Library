@@ -10,6 +10,7 @@ import no.nordicsemi.android.ble.callback.DataSentCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.callback.WriteProgressCallback;
+import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.data.DataSplitter;
 import no.nordicsemi.android.ble.data.DefaultMtuSplitter;
 
@@ -17,12 +18,13 @@ import no.nordicsemi.android.ble.data.DefaultMtuSplitter;
 public final class WriteRequest extends Request {
 	private final static DataSplitter MTU_SPLITTER = new DefaultMtuSplitter();
 
-	private DataSentCallback valueCallback;
 	private WriteProgressCallback progressCallback;
+	private DataSentCallback valueCallback;
 	private DataSplitter dataSplitter;
 	private final byte[] data;
 	private final int writeType;
 	private int count = 0;
+	private boolean complete = false;
 
 	WriteRequest(final @NonNull Type type, final @Nullable BluetoothGattCharacteristic characteristic,
 				 final @Nullable byte[] data, final int offset, final int length, final int writeType) {
@@ -135,12 +137,14 @@ public final class WriteRequest extends Request {
 	}
 
 	byte[] getData(final int mtu) {
-		if (dataSplitter == null || data == null)
+		if (dataSplitter == null || data == null) {
+			complete = true;
 			return data;
+		}
 
 		final byte[] chunk = dataSplitter.chunk(data, count, mtu - 3);
 		if (chunk == null) // all data were sent
-			count = 0;
+			complete = true;
 		return chunk;
 	}
 
@@ -148,10 +152,12 @@ public final class WriteRequest extends Request {
 		if (progressCallback != null)
 			progressCallback.onPacketSent(device, data, count);
 		count++;
+		if (complete && valueCallback != null)
+			valueCallback.onDataSent(device, new Data(WriteRequest.this.data));
 	}
 
 	boolean hasMore() {
-		return count > 0;
+		return !complete;
 	}
 
 	int getWriteType() {

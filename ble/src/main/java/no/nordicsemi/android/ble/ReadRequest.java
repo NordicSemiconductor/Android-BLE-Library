@@ -15,9 +15,10 @@ import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.data.DataMerger;
 
+@SuppressWarnings("unused")
 public final class ReadRequest extends Request {
-	private DataReceivedCallback valueCallback;
 	private ReadProgressCallback progressCallback;
+	private DataReceivedCallback valueCallback;
 	private DataMerger dataMerger;
 	private ByteArrayOutputStream buffer;
 	private int count = 0;
@@ -97,7 +98,7 @@ public final class ReadRequest extends Request {
 				buffer = null;
 				count = 0;
 			} // else
-				// wait for more packets to be merged
+			// wait for more packets to be merged
 		}
 	}
 
