@@ -1,5 +1,6 @@
 package no.nordicsemi.android.ble;
 
+import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -200,6 +201,7 @@ public class Request {
 	/**
 	 * Creates new Disable Notification request. The request will not be executed if given characteristic
 	 * is null, does not have NOTIFY property or the CCCD. After the operation is complete a proper callback will be invoked.
+	 *
 	 * @param characteristic characteristic to have notifications disabled
 	 * @return the new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
@@ -223,6 +225,7 @@ public class Request {
 	/**
 	 * Creates new Disable Indications request. The request will not be executed if given characteristic
 	 * is null, does not have INDICATE property or the CCCD. After the operation is complete a proper callback will be invoked.
+	 *
 	 * @param characteristic characteristic to have indications disabled
 	 * @return the new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
@@ -316,6 +319,7 @@ public class Request {
 	/**
 	 * Use to add a completion callback. The callback will be invoked when the operation has finished
 	 * successfully.
+	 *
 	 * @param callback the callback
 	 * @return the request
 	 */
@@ -327,6 +331,7 @@ public class Request {
 
 	/**
 	 * Use to add a callback that will be called in case of the request has failed.
+	 *
 	 * @param callback the callback
 	 * @return the request
 	 */
@@ -336,13 +341,13 @@ public class Request {
 		return this;
 	}
 
-	void notifySuccess() {
+	void notifySuccess(final BluetoothDevice device) {
 		if (successCallback != null)
-			successCallback.onRequestCompleted();
+			successCallback.onRequestCompleted(device);
 	}
 
-	void notifyFail(final int status) {
+	void notifyFail(final BluetoothDevice device, final int status) {
 		if (failCallback != null)
-			failCallback.onRequestFailed(status);
+			failCallback.onRequestFailed(device, status);
 	}
 }

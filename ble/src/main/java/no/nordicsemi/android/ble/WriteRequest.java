@@ -5,6 +5,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import no.nordicsemi.android.ble.callback.DataSentCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.data.DataSplitter;
@@ -14,6 +15,7 @@ import no.nordicsemi.android.ble.data.DefaultMtuSplitter;
 public final class WriteRequest extends Request {
 	private final static DataSplitter MTU_SPLITTER = new DefaultMtuSplitter();
 
+	private DataSentCallback valueCallback;
 	private DataSplitter dataSplitter;
 	private final byte[] data;
 	private final int writeType;
@@ -57,9 +59,26 @@ public final class WriteRequest extends Request {
 	}
 
 	/**
-	 * Adds a splitter that will be used to cut given data into multiple packets.
-	 * The splitter may modify each packet if necessary.
+	 * Callback called after the whole data have been sent (possible in multiple packets if
+	 * {@link DataSplitter} was used.
+	 *
+	 * @param callback the callback
 	 * @return the request
+	 */
+	@NonNull
+	public WriteRequest with(final @NonNull DataSentCallback callback) {
+		this.valueCallback = callback;
+		return this;
+	}
+
+	/**
+	 * Adds a splitter that will be used to cut given data into multiple packets.
+	 * The splitter may modify each packet if necessary, i.e. add a flag indicating first packet,
+	 * continuation or the last packet.
+	 *
+	 * @param splitter an implementation of a splitter
+	 * @return the request
+	 * @see #split()
 	 */
 	@NonNull
 	public WriteRequest split(final @NonNull DataSplitter splitter) {
@@ -70,6 +89,7 @@ public final class WriteRequest extends Request {
 	/**
 	 * Adds a default MTU splitter that will be used to cut given data into at-most MTU-3
 	 * bytes long packets.
+	 *
 	 * @return the request
 	 */
 	@NonNull

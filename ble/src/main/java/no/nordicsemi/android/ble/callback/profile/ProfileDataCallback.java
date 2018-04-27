@@ -4,11 +4,11 @@ import android.bluetooth.BluetoothDevice;
 import android.support.annotation.NonNull;
 
 import no.nordicsemi.android.ble.data.Data;
-import no.nordicsemi.android.ble.callback.DataCallback;
+import no.nordicsemi.android.ble.callback.DataReceivedCallback;
 import no.nordicsemi.android.ble.data.DataMerger;
 
 @SuppressWarnings("unused")
-public interface ProfileDataCallback extends DataCallback {
+public interface ProfileDataCallback extends DataReceivedCallback {
 
 	/**
 	 * Callback called when the data received do not conform to required scheme.

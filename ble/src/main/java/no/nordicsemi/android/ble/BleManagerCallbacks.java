@@ -36,6 +36,7 @@ public interface BleManagerCallbacks {
 	 * Called when the Android device started connecting to given device.
 	 * The {@link #onDeviceConnected(BluetoothDevice)} will be called when the device is connected,
 	 * or {@link #onError(BluetoothDevice, String, int)} in case of error.
+	 *
 	 * @param device the device that got connected
 	 */
 	void onDeviceConnecting(final BluetoothDevice device);
@@ -45,12 +46,14 @@ public interface BleManagerCallbacks {
 	 * A service discovery will be handled automatically after this call. Service discovery
 	 * may ends up with calling {@link #onServicesDiscovered(BluetoothDevice, boolean)} or
 	 * {@link #onDeviceNotSupported(BluetoothDevice)} if required services have not been found.
+	 *
 	 * @param device the device that got connected
 	 */
 	void onDeviceConnected(final BluetoothDevice device);
 
 	/**
 	 * Called when user initialized disconnection.
+	 *
 	 * @param device the device that gets disconnecting
 	 */
 	void onDeviceDisconnecting(final BluetoothDevice device);
@@ -60,6 +63,7 @@ public interface BleManagerCallbacks {
 	 * {@link BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)} with state DISCONNECTED),
 	 * but ONLY if the {@link BleManager#shouldAutoConnect()} method returned false for this device when it was connecting.
 	 * Otherwise the {@link #onLinklossOccurred(BluetoothDevice)} method will be called instead.
+	 *
 	 * @param device the device that got disconnected
 	 */
 	void onDeviceDisconnected(final BluetoothDevice device);
@@ -68,6 +72,7 @@ public interface BleManagerCallbacks {
 	 * This callback is invoked when the Ble Manager lost connection to a device that has been connected
 	 * with autoConnect option (see {@link BleManager#shouldAutoConnect()}.
 	 * Otherwise a {@link #onDeviceDisconnected(BluetoothDevice)} method will be called on such event.
+	 *
 	 * @param device the device that got disconnected due to a link loss
 	 */
 	void onLinklossOccurred(final BluetoothDevice device);
@@ -81,14 +86,14 @@ public interface BleManagerCallbacks {
 	 * <p>After successful service discovery the service will initialize all services.
 	 * The {@link #onDeviceReady(BluetoothDevice)} method will be called when the initialization is complete.</p>
 	 *
-	 * @param device the device which services got disconnected
-	 * @param optionalServicesFound
-	 *            if <code>true</code> the secondary services were also found on the device.
+	 * @param device                the device which services got disconnected
+	 * @param optionalServicesFound if <code>true</code> the secondary services were also found on the device.
 	 */
 	void onServicesDiscovered(final BluetoothDevice device, final boolean optionalServicesFound);
 
 	/**
 	 * Method called when all initialization requests has been completed.
+	 *
 	 * @param device the device that get ready
 	 */
 	void onDeviceReady(final BluetoothDevice device);
@@ -97,9 +102,11 @@ public interface BleManagerCallbacks {
 	 * This method should return true if Battery Level notifications should be enabled on the target device.
 	 * If there is no Battery Service, or the Battery Level characteristic does not have NOTIFY property,
 	 * this method will not be called for this device.
-	 * <p>This method may return true only if an activity is bound to the service (to display the information
+	 * <p>
+	 * This method may return true only if an activity is bound to the service (to display the information
 	 * to the user), always (e.g. if critical battery level is reported using notifications) or never, if
 	 * such information is not important or the manager wants to control Battery Level notifications on its own.</p>
+	 *
 	 * @param device target device
 	 * @return true to enabled battery level notifications after connecting to the device, false otherwise
 	 * @deprecated Use
@@ -110,7 +117,7 @@ public interface BleManagerCallbacks {
 	 *     }
 	 * })
 	 * }</pre>
-	 * in the {@link no.nordicsemi.android.ble.BleManager.BleManagerGattCallback#initialize(BluetoothDevice) initialize(BluetoothDevice)} instead.
+	 * in the {@link BleManager.BleManagerGattCallback#initialize() initialize(BluetoothDevice)} instead.
 	 */
 	@Deprecated
 	default boolean shouldEnableBatteryLevelNotifications(final BluetoothDevice device) {
@@ -130,7 +137,7 @@ public interface BleManagerCallbacks {
 	 *     }
 	 * })
 	 * }</pre>
-	 * in the {@link no.nordicsemi.android.ble.BleManager.BleManagerGattCallback#initialize(BluetoothDevice) initialize(BluetoothDevice)} instead.
+	 * in the {@link BleManager.BleManagerGattCallback#initialize() initialize(BluetoothDevice)} instead.
 	 */
 	@Deprecated
 	default void onBatteryValueReceived(final BluetoothDevice device, final int value) {
@@ -140,18 +147,21 @@ public interface BleManagerCallbacks {
 	/**
 	 * Called when an {@link BluetoothGatt#GATT_INSUFFICIENT_AUTHENTICATION} error occurred and the
 	 * device bond state is {@link BluetoothDevice#BOND_NONE}.
+	 *
 	 * @param device the device that requires bonding
 	 */
 	void onBondingRequired(final BluetoothDevice device);
 
 	/**
-	 * Called when the device has been successfully bound.
-	 * @param device the device that got bound
+	 * Called when the device has been successfully bonded.
+	 *
+	 * @param device the device that got bonded
 	 */
-	void onBound(final BluetoothDevice device);
+	void onBonded(final BluetoothDevice device);
 
 	/**
 	 * Called when the bond state has changed from {@link BluetoothDevice#BOND_BONDING} to {@link BluetoothDevice#BOND_NONE}.
+	 *
 	 * @param device the device that failed to bond
 	 */
 	void onBondingFailed(final BluetoothDevice device);
@@ -159,16 +169,15 @@ public interface BleManagerCallbacks {
 	/**
 	 * Called when a BLE error has occurred
 	 *
-	 * @param message
-	 *            the error message
-	 * @param errorCode
-	 *            the error code
-	 * @param device the device that caused an error
+	 * @param message   the error message
+	 * @param errorCode the error code
+	 * @param device    the device that caused an error
 	 */
 	void onError(final BluetoothDevice device, final String message, final int errorCode);
 
 	/**
 	 * Called when service discovery has finished but the main services were not found on the device.
+	 *
 	 * @param device the device that failed to connect due to lack of required services
 	 */
 	void onDeviceNotSupported(final BluetoothDevice device);

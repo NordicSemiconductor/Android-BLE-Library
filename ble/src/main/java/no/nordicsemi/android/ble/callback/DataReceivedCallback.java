@@ -6,10 +6,11 @@ import android.support.annotation.NonNull;
 import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.data.DataMerger;
 
-public interface DataCallback {
+public interface DataReceivedCallback {
 
 	/**
 	 * Callback received each time the value was read or has changed using notifications or indications.
+	 *
 	 * @param device target device.
 	 * @param data the data received. If the {@link DataMerger} was used, this contains the merged result.
 	 */

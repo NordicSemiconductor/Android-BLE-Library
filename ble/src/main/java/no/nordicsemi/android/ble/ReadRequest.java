@@ -8,14 +8,14 @@ import android.support.annotation.Nullable;
 
 import java.io.ByteArrayOutputStream;
 
-import no.nordicsemi.android.ble.callback.DataCallback;
+import no.nordicsemi.android.ble.callback.DataReceivedCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.data.DataMerger;
 
 public final class ReadRequest extends Request {
-	private DataCallback valueCallback;
+	private DataReceivedCallback valueCallback;
 	private DataMerger dataMerger;
 	private ByteArrayOutputStream buffer;
 	private int count = 0;
@@ -47,14 +47,19 @@ public final class ReadRequest extends Request {
 	}
 
 	@NonNull
-	public ReadRequest with(final @NonNull DataCallback callback) {
+	public ReadRequest with(final @NonNull DataReceivedCallback callback) {
 		this.valueCallback = callback;
 		return this;
 	}
 
+	/**
+	 * Adds a merger that will be used to merge multiple packets into a single Data.
+	 * The merger may modify each packet if necessary.
+	 *
+	 * @return the request
+	 */
 	@NonNull
-	public ReadRequest with(final @NonNull DataCallback callback, final @NonNull DataMerger merger) {
-		this.valueCallback = callback;
+	public ReadRequest merge(final @NonNull DataMerger merger) {
 		this.dataMerger = merger;
 		return this;
 	}
