@@ -6,21 +6,20 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import java.io.ByteArrayOutputStream;
-
 import no.nordicsemi.android.ble.callback.DataReceivedCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.ReadProgressCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.data.DataMerger;
+import no.nordicsemi.android.ble.data.DataStream;
 
 @SuppressWarnings("unused")
 public final class ReadRequest extends Request {
 	private ReadProgressCallback progressCallback;
 	private DataReceivedCallback valueCallback;
 	private DataMerger dataMerger;
-	private ByteArrayOutputStream buffer;
+	private DataStream buffer;
 	private int count = 0;
 
 	ReadRequest(final @NonNull Type type) {
@@ -92,9 +91,9 @@ public final class ReadRequest extends Request {
 			if (progressCallback != null)
 				progressCallback.onPacketReceived(device, value, count);
 			if (buffer == null)
-				buffer = new ByteArrayOutputStream();
+				buffer = new DataStream();
 			if (dataMerger.merge(buffer, value, count++)) {
-				valueCallback.onDataReceived(device, new Data(buffer.toByteArray()));
+				valueCallback.onDataReceived(device, buffer.toData());
 				buffer = null;
 				count = 0;
 			} // else
