@@ -1539,6 +1539,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					Log.w(TAG, ERROR_AUTH_ERROR_WHILE_BONDED);
 					mCallbacks.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status);
 				}
+				mRequest.notifyFail(gatt.getDevice(), status);
 			} else {
 				Log.e(TAG, "onCharacteristicRead error " + status);
 				mRequest.notifyFail(gatt.getDevice(), status);
@@ -1554,8 +1555,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				Logger.i(mLogSession, "Data written to " + characteristic.getUuid() + ", value: " + ParserUtils.parse(characteristic));
 
 				onCharacteristicWrite(gatt, characteristic);
-				((WriteRequest) mRequest).notifyPacketSent(gatt.getDevice(), characteristic.getValue());
-				if (((WriteRequest) mRequest).hasMore()) {
+				final WriteRequest request = (WriteRequest) mRequest;
+				request.notifyPacketSent(gatt.getDevice(), characteristic.getValue());
+				if (request.hasMore()) {
 					enqueueFirst(mRequest);
 				} else {
 					mRequest.notifySuccess(gatt.getDevice());
@@ -1566,6 +1568,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					Log.w(TAG, ERROR_AUTH_ERROR_WHILE_BONDED);
 					mCallbacks.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status);
 				}
+				mRequest.notifyFail(gatt.getDevice(), status);
 			} else {
 				Log.e(TAG, "onCharacteristicWrite error " + status);
 				mRequest.notifyFail(gatt.getDevice(), status);
@@ -1593,6 +1596,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					Log.w(TAG, ERROR_AUTH_ERROR_WHILE_BONDED);
 					mCallbacks.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status);
 				}
+				mRequest.notifyFail(gatt.getDevice(), status);
 			} else {
 				Log.e(TAG, "onDescriptorRead error " + status);
 				mRequest.notifyFail(gatt.getDevice(), status);
@@ -1630,9 +1634,14 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					onDescriptorWrite(gatt, descriptor);
 				}
 				// mRequest may be either WriteRequest or ReadRequest, in case of enableNotifications/Indications requests
-				((WriteRequest) mRequest).notifyPacketSent(gatt.getDevice(), descriptor.getValue());
-				if (mRequest instanceof WriteRequest && ((WriteRequest) mRequest).hasMore()) {
-					enqueueFirst(mRequest);
+				if (mRequest instanceof WriteRequest) {
+					final WriteRequest request = (WriteRequest) mRequest;
+					request.notifyPacketSent(gatt.getDevice(), descriptor.getValue());
+					if (request.hasMore()) {
+						enqueueFirst(request);
+					} else {
+						request.notifySuccess(gatt.getDevice());
+					}
 				} else {
 					mRequest.notifySuccess(gatt.getDevice());
 				}
@@ -1642,6 +1651,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					Log.w(TAG, ERROR_AUTH_ERROR_WHILE_BONDED);
 					mCallbacks.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status);
 				}
+				mRequest.notifyFail(gatt.getDevice(), status);
 			} else {
 				Log.e(TAG, "onDescriptorWrite error " + status);
 				mRequest.notifyFail(gatt.getDevice(), status);
