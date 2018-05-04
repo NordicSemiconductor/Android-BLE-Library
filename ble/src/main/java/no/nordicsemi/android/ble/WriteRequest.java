@@ -15,16 +15,26 @@ import no.nordicsemi.android.ble.data.DataSplitter;
 import no.nordicsemi.android.ble.data.DefaultMtuSplitter;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
-public final class WriteRequest extends Request {
+public final class WriteRequest extends Request<DataSentCallback> {
 	private final static DataSplitter MTU_SPLITTER = new DefaultMtuSplitter();
 
 	private WriteProgressCallback progressCallback;
-	private DataSentCallback valueCallback;
 	private DataSplitter dataSplitter;
 	private final byte[] data;
 	private final int writeType;
 	private int count = 0;
 	private boolean complete = false;
+
+	WriteRequest(final @NonNull Type type) {
+		this(type, null);
+	}
+
+	WriteRequest(final @NonNull Type type, final @Nullable BluetoothGattCharacteristic characteristic) {
+		super(type, characteristic);
+		// not used:
+		this.data = null;
+		this.writeType = 0;
+	}
 
 	WriteRequest(final @NonNull Type type, final @Nullable BluetoothGattCharacteristic characteristic,
 				 final @Nullable byte[] data, final int offset, final int length, final int writeType) {
@@ -63,13 +73,7 @@ public final class WriteRequest extends Request {
 		return this;
 	}
 
-	/**
-	 * Callback called after the whole data have been sent (possible in multiple packets if
-	 * {@link DataSplitter} was used.
-	 *
-	 * @param callback the callback
-	 * @return the request
-	 */
+	@Override
 	@NonNull
 	public WriteRequest with(final @NonNull DataSentCallback callback) {
 		this.valueCallback = callback;

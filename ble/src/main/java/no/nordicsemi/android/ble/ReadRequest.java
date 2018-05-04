@@ -15,9 +15,8 @@ import no.nordicsemi.android.ble.data.DataMerger;
 import no.nordicsemi.android.ble.data.DataStream;
 
 @SuppressWarnings("unused")
-public final class ReadRequest extends Request {
+public final class ReadRequest extends Request<DataReceivedCallback> {
 	private ReadProgressCallback progressCallback;
-	private DataReceivedCallback valueCallback;
 	private DataMerger dataMerger;
 	private DataStream buffer;
 	private int count = 0;
@@ -48,6 +47,7 @@ public final class ReadRequest extends Request {
 		return this;
 	}
 
+	@Override
 	@NonNull
 	public ReadRequest with(final @NonNull DataReceivedCallback callback) {
 		this.valueCallback = callback;
@@ -87,6 +87,7 @@ public final class ReadRequest extends Request {
 
 		if (dataMerger == null) {
 			valueCallback.onDataReceived(device, new Data(value));
+			syncLock.open();
 		} else {
 			if (progressCallback != null)
 				progressCallback.onPacketReceived(device, value, count);
@@ -96,6 +97,7 @@ public final class ReadRequest extends Request {
 				valueCallback.onDataReceived(device, buffer.toData());
 				buffer = null;
 				count = 0;
+				syncLock.open();
 			} // else
 			// wait for more packets to be merged
 		}

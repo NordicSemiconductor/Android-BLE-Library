@@ -5,11 +5,14 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.os.ConditionVariable;
+import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
+import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 /**
  * On Android, when multiple BLE operations needs to be done, it is required to wait for a proper
@@ -18,9 +21,11 @@ import no.nordicsemi.android.ble.callback.SuccessCallback;
  * containing all data necessary for a given operation. Requests are performed one after another until the
  * queue is empty. Use static methods from below to instantiate a request and then enqueue them using
  * {@link BleManager#enqueue(Request)}.
+ *
+ * @param <T> The sent/received value callback type, or Void if n/a.
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
-public class Request {
+public class Request<T> {
 	enum Type {
 		CREATE_BOND,
 		WRITE,
@@ -31,6 +36,7 @@ public class Request {
 		ENABLE_INDICATIONS,
 		DISABLE_NOTIFICATIONS,
 		DISABLE_INDICATIONS,
+		WAIT_FOR_VALUE_CHANGE,
 		@Deprecated
 		READ_BATTERY_LEVEL,
 		@Deprecated
@@ -45,25 +51,30 @@ public class Request {
 	final Type type;
 	final BluetoothGattCharacteristic characteristic;
 	final BluetoothGattDescriptor descriptor;
+	final ConditionVariable syncLock;
 	SuccessCallback successCallback;
 	FailCallback failCallback;
+	T valueCallback;
 
 	Request(final @NonNull Type type) {
 		this.type = type;
 		this.characteristic = null;
 		this.descriptor = null;
+		this.syncLock = new ConditionVariable(true);
 	}
 
 	Request(final @NonNull Type type, final @Nullable BluetoothGattCharacteristic characteristic) {
 		this.type = type;
 		this.characteristic = characteristic;
 		this.descriptor = null;
+		this.syncLock = new ConditionVariable(true);
 	}
 
 	Request(final @NonNull Type type, final @Nullable BluetoothGattDescriptor descriptor) {
 		this.type = type;
 		this.characteristic = null;
 		this.descriptor = descriptor;
+		this.syncLock = new ConditionVariable(true);
 	}
 
 	/**
@@ -72,8 +83,8 @@ public class Request {
 	 * @return the new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	public static Request createBond() {
-		return new Request(Type.CREATE_BOND);
+	public static Request<Void> createBond() {
+		return new Request<>(Type.CREATE_BOND);
 	}
 
 	/**
@@ -194,8 +205,8 @@ public class Request {
 	 * @return the new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	public static ReadRequest newEnableNotificationsRequest(final @Nullable BluetoothGattCharacteristic characteristic) {
-		return new ReadRequest(Type.ENABLE_NOTIFICATIONS, characteristic);
+	public static WriteRequest newEnableNotificationsRequest(final @Nullable BluetoothGattCharacteristic characteristic) {
+		return new WriteRequest(Type.ENABLE_NOTIFICATIONS, characteristic);
 	}
 
 	/**
@@ -206,8 +217,8 @@ public class Request {
 	 * @return the new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	public static Request newDisableNotificationsRequest(final @Nullable BluetoothGattCharacteristic characteristic) {
-		return new Request(Type.DISABLE_NOTIFICATIONS, characteristic);
+	public static WriteRequest newDisableNotificationsRequest(final @Nullable BluetoothGattCharacteristic characteristic) {
+		return new WriteRequest(Type.DISABLE_NOTIFICATIONS, characteristic);
 	}
 
 	/**
@@ -218,8 +229,8 @@ public class Request {
 	 * @return the new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	public static ReadRequest newEnableIndicationsRequest(final @Nullable BluetoothGattCharacteristic characteristic) {
-		return new ReadRequest(Type.ENABLE_INDICATIONS, characteristic);
+	public static WriteRequest newEnableIndicationsRequest(final @Nullable BluetoothGattCharacteristic characteristic) {
+		return new WriteRequest(Type.ENABLE_INDICATIONS, characteristic);
 	}
 
 	/**
@@ -230,9 +241,9 @@ public class Request {
 	 * @return the new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	public static Request newDisableIndicationsRequest(final @Nullable BluetoothGattCharacteristic characteristic) {
-		return new Request(Type.DISABLE_INDICATIONS, characteristic);
-     }
+	public static WriteRequest newDisableIndicationsRequest(final @Nullable BluetoothGattCharacteristic characteristic) {
+		return new WriteRequest(Type.DISABLE_INDICATIONS, characteristic);
+	}
 
 	/**
 	 * Reads the first found Battery Level characteristic value from the first found Battery Service.
@@ -258,8 +269,8 @@ public class Request {
 	 */
 	@NonNull
 	@Deprecated
-	public static ReadRequest newEnableBatteryLevelNotificationsRequest() {
-		return new ReadRequest(Type.ENABLE_BATTERY_LEVEL_NOTIFICATIONS); // the first Battery Level char from the first Battery Service is used
+	public static WriteRequest newEnableBatteryLevelNotificationsRequest() {
+		return new WriteRequest(Type.ENABLE_BATTERY_LEVEL_NOTIFICATIONS); // the first Battery Level char from the first Battery Service is used
 	}
 
 	/**
@@ -271,8 +282,8 @@ public class Request {
 	 */
 	@NonNull
 	@Deprecated
-	public static Request newDisableBatteryLevelNotificationsRequest() {
-		return new Request(Type.DISABLE_BATTERY_LEVEL_NOTIFICATIONS); // the first Battery Level char from the first Battery Service is used
+	public static WriteRequest newDisableBatteryLevelNotificationsRequest() {
+		return new WriteRequest(Type.DISABLE_BATTERY_LEVEL_NOTIFICATIONS); // the first Battery Level char from the first Battery Service is used
 	}
 
 	/**
@@ -283,8 +294,8 @@ public class Request {
 	 * @return the new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	static Request newEnableServiceChangedIndicationsRequest() {
-		return new Request(Type.ENABLE_SERVICE_CHANGED_INDICATIONS); // the only Service Changed char is used (if such exists)
+	static WriteRequest newEnableServiceChangedIndicationsRequest() {
+		return new WriteRequest(Type.ENABLE_SERVICE_CHANGED_INDICATIONS); // the only Service Changed char is used (if such exists)
 	}
 
 	/**
@@ -318,27 +329,161 @@ public class Request {
 
 	/**
 	 * Use to add a completion callback. The callback will be invoked when the operation has finished
-	 * successfully.
+	 * successfully unless {@link #await(int)} or its variant was used, in which case this callback
+	 * will be ignored.
 	 *
 	 * @param callback the callback
 	 * @return the request
 	 */
 	@NonNull
-	public Request done(final @NonNull SuccessCallback callback) {
+	public Request<T> done(final @NonNull SuccessCallback callback) {
 		this.successCallback = callback;
 		return this;
 	}
 
 	/**
 	 * Use to add a callback that will be called in case of the request has failed.
+	 * This callback will be ignored if {@link #await(int)} or its variant was used, in which case
+	 * it will be ignored and the error will be returned as an exception.
 	 *
 	 * @param callback the callback
 	 * @return the request
 	 */
 	@NonNull
-	public Request fail(final @NonNull FailCallback callback) {
+	public Request<T> fail(final @NonNull FailCallback callback) {
 		this.failCallback = callback;
 		return this;
+	}
+
+	/**
+	 * Sets the value callback. When {@link #await(int)} is used this callback will be returned
+	 * by that method.
+	 *
+	 * @param callback the callback
+	 * @return the request
+	 */
+	@NonNull
+	protected Request<T> with(final @NonNull T callback) {
+		this.valueCallback = callback;
+		return this;
+	}
+
+	/**
+	 * Synchronously waits until the request is done.
+	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)} and
+	 * {@link #with(T)} will be ignored.
+	 * <p>
+	 * This method may not be called from the main (UI) thread.
+	 * </p>
+	 *
+	 * @throws RequestFailedException thrown when the BLE request finished with status other than
+	 *                                {@link BluetoothGatt#GATT_SUCCESS}.
+	 * @throws IllegalStateException  thrown when you try to call this method from the main (UI)
+	 *                                thread.
+	 */
+	@SuppressWarnings("ConstantConditions")
+	public void await() throws RequestFailedException {
+		try {
+			await(null, 0);
+		} catch (final InterruptedException e) {
+			// never happen
+		}
+	}
+
+	/**
+	 * Synchronously waits until the request is done.
+	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)} and
+	 * {@link #with(T)} will be ignored.
+	 * <p>
+	 * This method may not be called from the main (UI) thread.
+	 * </p>
+	 *
+	 * @return the object set with {@link #with(T)}, or null if this methods wasn't called.
+	 * @throws RequestFailedException thrown when the BLE request finished with status other than
+	 *                                {@link BluetoothGatt#GATT_SUCCESS}.
+	 * @throws IllegalStateException  thrown when you try to call this method from the main (UI)
+	 *                                thread.
+	 */
+	@Nullable
+	public <E extends T> E await(final Class<E> resultClass) throws RequestFailedException {
+		try {
+			return await(resultClass, 0);
+		} catch (final InterruptedException e) {
+			// never happen
+			return null;
+		}
+	}
+
+	/**
+	 * Synchronously waits until the request is done, for at most given number of milliseconds.
+	 * Callbacks set using {@link #done(SuccessCallback)}, {@link #fail(FailCallback)} and
+	 * {@link #with(T)} will be ignored.
+	 * <p>
+	 * This method may not be called from the main (UI) thread.
+	 * </p>
+	 *
+	 * @param timeout optional timeout in milliseconds
+	 * @throws RequestFailedException thrown when the BLE request finished with status other than
+	 *                                {@link BluetoothGatt#GATT_SUCCESS}.
+	 * @throws InterruptedException   thrown if the timeout occurred before the request has finished.
+	 * @throws IllegalStateException  thrown when you try to call this method from the main (UI)
+	 *                                thread.
+	 */
+	@SuppressWarnings("ConstantConditions")
+	public void await(final int timeout) throws RequestFailedException, InterruptedException {
+		await(null, timeout);
+	}
+
+	/**
+	 * Synchronously waits until the request is done, for at most given number of milliseconds.
+	 * Callbacks set using {@link #done(SuccessCallback)}, {@link #fail(FailCallback)} and
+	 * {@link #with(T)} will be ignored.
+	 * <p>
+	 * This method may not be called from the main (UI) thread.
+	 * </p>
+	 *
+	 * @param resultClass the result class. This class will be instantiate so it has to have a default
+	 *                    constructor.
+	 * @param timeout     optional timeout in milliseconds
+	 * @return the object with a response
+	 * @throws RequestFailedException thrown when the BLE request finished with status other than
+	 *                                {@link BluetoothGatt#GATT_SUCCESS}.
+	 * @throws InterruptedException   thrown if the timeout occurred before the request has finished.
+	 * @throws IllegalStateException  thrown when you try to call this method from the main (UI)
+	 *                                thread.
+	 */
+	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
+	@Nullable
+	public <E extends T> E await(final @NonNull Class<E> resultClass, final int timeout) throws RequestFailedException, InterruptedException {
+		assertNotMainThread();
+
+		final SuccessCallback sc = successCallback;
+		final FailCallback fc = failCallback;
+		final T vc = valueCallback;
+		try {
+			E response = null;
+			if (resultClass != null)
+				response = resultClass.newInstance();
+			syncLock.close();
+			final RequestCallback callback = new RequestCallback();
+			with(response).done(callback).fail(callback);
+
+			if (!syncLock.block(timeout)) {
+				throw new InterruptedException();
+			}
+			if (!callback.isSuccess()) {
+				throw new RequestFailedException(this, callback.status);
+			}
+			return response;
+		} catch (IllegalAccessException e) {
+			throw new IllegalArgumentException("Couldn't instantiate " + resultClass.getCanonicalName() + " class. Is the default constructor accessible?");
+		} catch (InstantiationException e) {
+			throw new IllegalArgumentException("Couldn't instantiate " + resultClass.getCanonicalName() + " class. Does it have a default constructor with no arguments?");
+		} finally {
+			successCallback = sc;
+			failCallback = fc;
+			valueCallback = vc;
+		}
 	}
 
 	void notifySuccess(final BluetoothDevice device) {
@@ -349,5 +494,35 @@ public class Request {
 	void notifyFail(final BluetoothDevice device, final int status) {
 		if (failCallback != null)
 			failCallback.onRequestFailed(device, status);
+	}
+
+	/**
+	 * Asserts that the synchronous method was not called from the UI thread.
+	 *
+	 * @throws IllegalStateException when called from a UI thread.
+	 */
+	protected static void assertNotMainThread() throws IllegalStateException {
+		if (Looper.myLooper() == Looper.getMainLooper()) {
+			throw new IllegalStateException("Cannot execute synchronous operation from the UI thread.");
+		}
+	}
+
+	private final class RequestCallback implements SuccessCallback, FailCallback {
+		private int status = BluetoothGatt.GATT_SUCCESS;
+
+		@Override
+		public void onRequestCompleted(final BluetoothDevice device) {
+			syncLock.open();
+		}
+
+		@Override
+		public void onRequestFailed(final BluetoothDevice device, final int status) {
+			this.status = status;
+			syncLock.open();
+		}
+
+		public boolean isSuccess() {
+			return this.status == BluetoothGatt.GATT_SUCCESS;
+		}
 	}
 }

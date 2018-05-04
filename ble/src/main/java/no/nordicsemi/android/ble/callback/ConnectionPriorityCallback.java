@@ -1,11 +1,8 @@
 package no.nordicsemi.android.ble.callback;
 
 import android.bluetooth.BluetoothDevice;
-import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.annotation.RequiresApi;
 
-@RequiresApi(api = Build.VERSION_CODES.O)
 public interface ConnectionPriorityCallback {
 
 	/**
@@ -19,6 +16,5 @@ public interface ConnectionPriorityCallback {
 	 * @param timeout  Supervision timeout for this connection, in 10ms unit. Valid range is from 10
 	 *                 (0.1s) to 3200 (32s)
 	 */
-	@RequiresApi(api = Build.VERSION_CODES.O)
 	void onConnectionUpdated(final @NonNull BluetoothDevice device, final int interval, final int latency, final int timeout);
 }
