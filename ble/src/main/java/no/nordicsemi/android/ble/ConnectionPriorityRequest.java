@@ -46,21 +46,21 @@ public final class ConnectionPriorityRequest extends Request<ConnectionPriorityC
 	}
 
 	@RequiresApi(value = Build.VERSION_CODES.O)
-	@Nullable
+	@NonNull
 	@Override
-	public <E extends ConnectionPriorityCallback> E await(final Class<E> resultClass)
+	public <E extends ConnectionPriorityCallback> E await(final Class<E> responseClass)
 			throws RequestFailedException {
 		// The BluetoothGattCallback#onConnectionUpdated callback was introduced in Android Oreo.
-		return super.await(resultClass);
+		return super.await(responseClass);
 	}
 
 	@RequiresApi(value = Build.VERSION_CODES.O)
-	@Nullable
+	@NonNull
 	@Override
-	public <E extends ConnectionPriorityCallback> E await(@NonNull final Class<E> resultClass, final int timeout)
+	public <E extends ConnectionPriorityCallback> E await(@NonNull final Class<E> responseClass, final int timeout)
 			throws RequestFailedException, InterruptedException {
 		// The BluetoothGattCallback#onConnectionUpdated callback was introduced in Android Oreo.
-		return super.await(resultClass, timeout);
+		return super.await(responseClass, timeout);
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.O)

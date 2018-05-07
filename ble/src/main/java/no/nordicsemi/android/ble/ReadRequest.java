@@ -1,6 +1,7 @@
 package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.support.annotation.NonNull;
@@ -10,9 +11,12 @@ import no.nordicsemi.android.ble.callback.DataReceivedCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.ReadProgressCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
+import no.nordicsemi.android.ble.callback.profile.ProfileReadResponse;
 import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.data.DataMerger;
 import no.nordicsemi.android.ble.data.DataStream;
+import no.nordicsemi.android.ble.exception.InvalidDataException;
+import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 @SuppressWarnings("unused")
 public final class ReadRequest extends Request<DataReceivedCallback> {
@@ -80,6 +84,54 @@ public final class ReadRequest extends Request<DataReceivedCallback> {
 		return this;
 	}
 
+	/**
+	 * Same as {@link #await(Class)}, but if the response class extends {@link ProfileReadResponse}
+	 * and the received response is not valid, this method will thrown an exception instead of
+	 * just returning a response with {@link ProfileReadResponse#isValid()} returning false.
+	 *
+	 * @param responseClass the result class. This class will be instantiate, therefore it has to have
+	 *                      a default constructor.
+	 * @return the object with the response
+	 * @throws RequestFailedException thrown when the BLE request finished with status other than
+	 *                                {@link BluetoothGatt#GATT_SUCCESS}.
+	 * @throws IllegalStateException  thrown when you try to call this method from the main (UI)
+	 *                                thread.
+	 */
+	@NonNull
+	public <E extends ProfileReadResponse> E awaitForValid(final @NonNull Class<E> responseClass)
+			throws RequestFailedException, InvalidDataException {
+		E response = await(responseClass);
+		if (!response.isValid()) {
+			throw new InvalidDataException(response);
+		}
+		return response;
+	}
+
+	/**
+	 * Same as {@link #await(Class, int)}, but if the response class extends {@link ProfileReadResponse}
+	 * and the received response is not valid, this method will thrown an exception instead of
+	 * just returning a response with {@link ProfileReadResponse#isValid()} returning false.
+	 *
+	 * @param responseClass the result class. This class will be instantiate, therefore it has to have
+	 *                    a default constructor.
+	 * @param timeout     optional timeout in milliseconds
+	 * @return the object with the response
+	 * @throws RequestFailedException thrown when the BLE request finished with status other than
+	 *                                {@link BluetoothGatt#GATT_SUCCESS}.
+	 * @throws InterruptedException   thrown if the timeout occurred before the request has finished.
+	 * @throws IllegalStateException  thrown when you try to call this method from the main (UI)
+	 *                                thread.
+	 */
+	@NonNull
+	public <E extends ProfileReadResponse> E awaitForValid(final @NonNull Class<E> responseClass, final int timeout)
+			throws RequestFailedException, InterruptedException, InvalidDataException {
+		E response = await(responseClass, timeout);
+		if (!response.isValid()) {
+			throw new InvalidDataException(response);
+		}
+		return response;
+	}
+
 	void notifyValueChanged(final @NonNull BluetoothDevice device, final byte[] value) {
 		// With no value callback there is no need for any merging
 		if (valueCallback == null)
@@ -87,7 +139,6 @@ public final class ReadRequest extends Request<DataReceivedCallback> {
 
 		if (dataMerger == null) {
 			valueCallback.onDataReceived(device, new Data(value));
-			syncLock.open();
 		} else {
 			if (progressCallback != null)
 				progressCallback.onPacketReceived(device, value, count);
@@ -97,7 +148,6 @@ public final class ReadRequest extends Request<DataReceivedCallback> {
 				valueCallback.onDataReceived(device, buffer.toData());
 				buffer = null;
 				count = 0;
-				syncLock.open();
 			} // else
 			// wait for more packets to be merged
 		}

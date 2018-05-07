@@ -48,10 +48,10 @@ public class Request<T> {
 		REQUEST_CONNECTION_PRIORITY,
 	}
 
+	private final ConditionVariable syncLock;
 	final Type type;
 	final BluetoothGattCharacteristic characteristic;
 	final BluetoothGattDescriptor descriptor;
-	final ConditionVariable syncLock;
 	SuccessCallback successCallback;
 	FailCallback failCallback;
 	T valueCallback;
@@ -391,30 +391,6 @@ public class Request<T> {
 	}
 
 	/**
-	 * Synchronously waits until the request is done.
-	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)} and
-	 * {@link #with(T)} will be ignored.
-	 * <p>
-	 * This method may not be called from the main (UI) thread.
-	 * </p>
-	 *
-	 * @return the object set with {@link #with(T)}, or null if this methods wasn't called.
-	 * @throws RequestFailedException thrown when the BLE request finished with status other than
-	 *                                {@link BluetoothGatt#GATT_SUCCESS}.
-	 * @throws IllegalStateException  thrown when you try to call this method from the main (UI)
-	 *                                thread.
-	 */
-	@Nullable
-	public <E extends T> E await(final Class<E> resultClass) throws RequestFailedException {
-		try {
-			return await(resultClass, 0);
-		} catch (final InterruptedException e) {
-			// never happen
-			return null;
-		}
-	}
-
-	/**
 	 * Synchronously waits until the request is done, for at most given number of milliseconds.
 	 * Callbacks set using {@link #done(SuccessCallback)}, {@link #fail(FailCallback)} and
 	 * {@link #with(T)} will be ignored.
@@ -435,6 +411,32 @@ public class Request<T> {
 	}
 
 	/**
+	 * Synchronously waits until the request is done.
+	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)} and
+	 * {@link #with(T)} will be ignored.
+	 * <p>
+	 * This method may not be called from the main (UI) thread.
+	 * </p>
+	 *
+	 * @param responseClass the response class. This class will be instantiate, therefore it has to have
+	 *                      a default constructor.
+	 * @return the response with a response
+	 * @throws RequestFailedException thrown when the BLE request finished with status other than
+	 *                                {@link BluetoothGatt#GATT_SUCCESS}.
+	 * @throws IllegalStateException  thrown when you try to call this method from the main (UI)
+	 *                                thread.
+	 */
+	@NonNull
+	public <E extends T> E await(final Class<E> responseClass) throws RequestFailedException {
+		try {
+			return await(responseClass, 0);
+		} catch (final InterruptedException e) {
+			// never happen
+			throw new IllegalStateException("This should never happen");
+		}
+	}
+
+	/**
 	 * Synchronously waits until the request is done, for at most given number of milliseconds.
 	 * Callbacks set using {@link #done(SuccessCallback)}, {@link #fail(FailCallback)} and
 	 * {@link #with(T)} will be ignored.
@@ -442,9 +444,9 @@ public class Request<T> {
 	 * This method may not be called from the main (UI) thread.
 	 * </p>
 	 *
-	 * @param resultClass the result class. This class will be instantiate so it has to have a default
-	 *                    constructor.
-	 * @param timeout     optional timeout in milliseconds
+	 * @param responseClass the response class. This class will be instantiate, therefore it has to have
+	 *                      a default constructor.
+	 * @param timeout       optional timeout in milliseconds
 	 * @return the object with a response
 	 * @throws RequestFailedException thrown when the BLE request finished with status other than
 	 *                                {@link BluetoothGatt#GATT_SUCCESS}.
@@ -453,8 +455,8 @@ public class Request<T> {
 	 *                                thread.
 	 */
 	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
-	@Nullable
-	public <E extends T> E await(final @NonNull Class<E> resultClass, final int timeout) throws RequestFailedException, InterruptedException {
+	@NonNull
+	public <E extends T> E await(final @NonNull Class<E> responseClass, final int timeout) throws RequestFailedException, InterruptedException {
 		assertNotMainThread();
 
 		final SuccessCallback sc = successCallback;
@@ -462,8 +464,8 @@ public class Request<T> {
 		final T vc = valueCallback;
 		try {
 			E response = null;
-			if (resultClass != null)
-				response = resultClass.newInstance();
+			if (responseClass != null)
+				response = responseClass.newInstance();
 			syncLock.close();
 			final RequestCallback callback = new RequestCallback();
 			with(response).done(callback).fail(callback);
@@ -476,9 +478,11 @@ public class Request<T> {
 			}
 			return response;
 		} catch (IllegalAccessException e) {
-			throw new IllegalArgumentException("Couldn't instantiate " + resultClass.getCanonicalName() + " class. Is the default constructor accessible?");
+			throw new IllegalArgumentException("Couldn't instantiate " + responseClass.getCanonicalName()
+					+ " class. Is the default constructor accessible?");
 		} catch (InstantiationException e) {
-			throw new IllegalArgumentException("Couldn't instantiate " + resultClass.getCanonicalName() + " class. Does it have a default constructor with no arguments?");
+			throw new IllegalArgumentException("Couldn't instantiate " + responseClass.getCanonicalName()
+					+ " class. Does it have a default constructor with no arguments?");
 		} finally {
 			successCallback = sc;
 			failCallback = fc;
