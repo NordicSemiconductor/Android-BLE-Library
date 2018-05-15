@@ -15,6 +15,7 @@ import no.nordicsemi.android.ble.callback.profile.ProfileReadResponse;
 import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.data.DataMerger;
 import no.nordicsemi.android.ble.data.DataStream;
+import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
 import no.nordicsemi.android.ble.exception.InvalidDataException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
@@ -96,10 +97,12 @@ public final class ReadRequest extends Request<DataReceivedCallback> {
 	 *                                {@link BluetoothGatt#GATT_SUCCESS}.
 	 * @throws IllegalStateException  thrown when you try to call this method from the main (UI)
 	 *                                thread.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
+	 *                                     was completed.
 	 */
 	@NonNull
-	public <E extends ProfileReadResponse> E awaitForValid(final @NonNull Class<E> responseClass)
-			throws RequestFailedException, InvalidDataException {
+	public <E extends ProfileReadResponse> E awaitValid(final @NonNull Class<E> responseClass)
+			throws RequestFailedException, InvalidDataException, DeviceDisconnectedException {
 		E response = await(responseClass);
 		if (!response.isValid()) {
 			throw new InvalidDataException(response);
@@ -121,10 +124,12 @@ public final class ReadRequest extends Request<DataReceivedCallback> {
 	 * @throws InterruptedException   thrown if the timeout occurred before the request has finished.
 	 * @throws IllegalStateException  thrown when you try to call this method from the main (UI)
 	 *                                thread.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
+	 *                                     was completed.
 	 */
 	@NonNull
-	public <E extends ProfileReadResponse> E awaitForValid(final @NonNull Class<E> responseClass, final int timeout)
-			throws RequestFailedException, InterruptedException, InvalidDataException {
+	public <E extends ProfileReadResponse> E awaitValid(final @NonNull Class<E> responseClass, final int timeout)
+			throws RequestFailedException, InterruptedException, InvalidDataException, DeviceDisconnectedException {
 		E response = await(responseClass, timeout);
 		if (!response.isValid()) {
 			throw new InvalidDataException(response);

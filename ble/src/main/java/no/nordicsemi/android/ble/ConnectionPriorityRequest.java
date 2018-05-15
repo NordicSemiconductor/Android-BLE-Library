@@ -9,6 +9,7 @@ import android.support.annotation.RequiresApi;
 import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
+import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 public final class ConnectionPriorityRequest extends Request<ConnectionPriorityCallback> {
@@ -49,7 +50,7 @@ public final class ConnectionPriorityRequest extends Request<ConnectionPriorityC
 	@NonNull
 	@Override
 	public <E extends ConnectionPriorityCallback> E await(final Class<E> responseClass)
-			throws RequestFailedException {
+			throws RequestFailedException, DeviceDisconnectedException {
 		// The BluetoothGattCallback#onConnectionUpdated callback was introduced in Android Oreo.
 		return super.await(responseClass);
 	}
@@ -58,7 +59,7 @@ public final class ConnectionPriorityRequest extends Request<ConnectionPriorityC
 	@NonNull
 	@Override
 	public <E extends ConnectionPriorityCallback> E await(@NonNull final Class<E> responseClass, final int timeout)
-			throws RequestFailedException, InterruptedException {
+			throws RequestFailedException, InterruptedException, DeviceDisconnectedException {
 		// The BluetoothGattCallback#onConnectionUpdated callback was introduced in Android Oreo.
 		return super.await(responseClass, timeout);
 	}
