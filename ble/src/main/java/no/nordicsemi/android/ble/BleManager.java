@@ -660,18 +660,44 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		return internalEnableIndications(scCharacteristic);
 	}
 
+	/**
+	 * Returns the callback that is registered for value changes (notifications) of given characteristic.
+	 * After assigning the notifications callback, notifications must be enabled using
+	 * {@link #enableNotifications(BluetoothGattCharacteristic)}. This applies also when they were
+	 * already enabled on the remote side.
+	 * <p>
+	 * To remove the callback, disable notifications using {@link #disableNotifications(BluetoothGattCharacteristic)}.
+	 * </p>
+	 *
+	 * @param characteristic characteristic to bind the callback with. If null, the returned callback
+	 *                       will not be null, but will not be used.
+	 * @return the callback
+	 */
 	@NonNull
 	protected final ValueChangedCallback setNotificationCallback(final @Nullable BluetoothGattCharacteristic characteristic) {
 		ValueChangedCallback callback = mNotificationCallbacks.get(characteristic);
 		if (callback == null) {
-			callback = new ValueChangedCallback();
+			callback = new ValueChangedCallback(this);
 			if (characteristic != null) {
 				mNotificationCallbacks.put(characteristic, callback);
 			}
 		}
-		return callback;
+		return callback.free();
 	}
 
+	/**
+	 * Returns the callback that is registered for value changes (indications) of given characteristic.
+	 * After assigning the notifications callback, notifications must be enabled using
+	 * {@link #enableIndications(BluetoothGattCharacteristic)}. This applies also when they were
+	 * already enabled on the remote side.
+	 * <p>
+	 * To remove the callback, disable indications using {@link #disableIndications(BluetoothGattCharacteristic)}.
+	 * </p>
+	 *
+	 * @param characteristic characteristic to bind the callback with. If null, the returned callback
+	 *                       will not be null, but will not be used.
+	 * @return the callback
+	 */
 	@NonNull
 	protected final ValueChangedCallback setIndicationCallback(final @Nullable BluetoothGattCharacteristic characteristic) {
 		return setNotificationCallback(characteristic);
@@ -1074,7 +1100,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	@Deprecated
 	protected WriteRequest enableBatteryLevelNotifications() {
 		if (mBatteryLevelNotificationCallback == null) {
-			mBatteryLevelNotificationCallback = new ValueChangedCallback()
+			mBatteryLevelNotificationCallback = new ValueChangedCallback(this)
 					.with((device, data) -> {
 						if (data.size() == 1) {
 							final int batteryLevel = data.getIntValue(Data.FORMAT_UINT8, 0);
@@ -1564,6 +1590,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 					if (mRequest != null)
 						mRequest.notifyFail(gatt.getDevice(), FailCallback.REASON_DEVICE_DISCONNECTED);
+					for (final ValueChangedCallback callback : mNotificationCallbacks.values()) {
+						callback.notifyDeviceDisconnected(gatt.getDevice());
+					}
 
 					mOperationInProgress = true; // no more calls are possible
 					mInitQueue = null;
@@ -2075,7 +2104,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			// or the feature is not supported on the Android.
 			// In that case, proceed with next operation and ignore the one that failed.
 			if (!result) {
-				mRequest.notifyFail(mBluetoothDevice, FailCallback.REASON_NULL_ATTRIBUTE);
+				mRequest.notifyFail(mBluetoothDevice, mConnected ? FailCallback.REASON_NULL_ATTRIBUTE : FailCallback.REASON_DEVICE_DISCONNECTED);
 				mConnectionPriorityOperationInProgress = false;
 				mOperationInProgress = false;
 				nextRequest();
