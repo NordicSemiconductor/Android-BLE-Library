@@ -34,6 +34,8 @@ public final class WriteRequest extends Request<DataSentCallback> {
 		// not used:
 		this.data = null;
 		this.writeType = 0;
+		// getData(int) isn't called on enabling and disabling notifications/indications.
+		this.complete = true;
 	}
 
 	WriteRequest(final @NonNull Type type, final @Nullable BluetoothGattCharacteristic characteristic,
