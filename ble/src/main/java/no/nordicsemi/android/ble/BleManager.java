@@ -113,7 +113,7 @@ import no.nordicsemi.android.log.Logger;
  *
  * @param <E> The profile callbacks type
  */
-@SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue", "DeprecatedIsStillUsed"})
+@SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue", "DeprecatedIsStillUsed", "deprecation"})
 public abstract class BleManager<E extends BleManagerCallbacks> implements ILogger {
 	private final static String TAG = "BleManager";
 
