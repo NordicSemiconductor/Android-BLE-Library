@@ -2139,10 +2139,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 */
 		@Deprecated
 		private boolean isBatteryLevelCharacteristic(final BluetoothGattCharacteristic characteristic) {
-			if (characteristic == null)
-				return false;
-
-			return BATTERY_LEVEL_CHARACTERISTIC.equals(characteristic.getUuid());
+			return characteristic != null && BATTERY_LEVEL_CHARACTERISTIC.equals(characteristic.getUuid());
 		}
 
 		/**
