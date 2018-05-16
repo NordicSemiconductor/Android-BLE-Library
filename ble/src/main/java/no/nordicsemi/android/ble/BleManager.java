@@ -180,6 +180,15 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				case BluetoothDevice.BOND_BONDED:
 					Logger.i(mLogSession, "Device bonded");
 					mCallbacks.onBonded(device);
+					// If the device started to pair just after the connection was established the services were not discovered.
+					if (mBluetoothGatt.getServices().isEmpty()) {
+						mHandler.post(() -> {
+							Logger.v(mLogSession, "Discovering Services...");
+							Logger.d(mLogSession, "gatt.discoverServices()");
+							mBluetoothGatt.discoverServices();
+						});
+						return;
+					}
 					break;
 			}
 		}
@@ -257,8 +266,12 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @param device a device to connect to
 	 */
 	public void connect(final BluetoothDevice device) {
-		if (mConnected)
+		if (mCallbacks == null) {
+			throw new NullPointerException("You have to set callbacks using setGattCallbacks(E callbacks) before connecting");
+		}
+		if (mConnected) {
 			return;
+		}
 
 		synchronized (mLock) {
 			if (mBluetoothGatt != null) {
@@ -377,7 +390,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			mContext.unregisterReceiver(mBluetoothStateBroadcastReceiver);
 			mContext.unregisterReceiver(mBondingBroadcastReceiver);
 			mContext.unregisterReceiver(mPairingRequestBroadcastReceiver);
-		} catch (Exception e) {
+		} catch (final Exception e) {
 			// the receiver must have been not registered or unregistered before
 		}
 		synchronized (mLock) {
