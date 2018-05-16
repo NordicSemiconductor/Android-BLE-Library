@@ -138,6 +138,9 @@ public final class ReadRequest extends Request<DataReceivedCallback> {
 	}
 
 	void notifyValueChanged(final @NonNull BluetoothDevice device, final byte[] value) {
+		// Keep a reference to the value callback, as it may change during execution
+		final DataReceivedCallback valueCallback = this.valueCallback;
+
 		// With no value callback there is no need for any merging
 		if (valueCallback == null)
 			return;
