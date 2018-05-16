@@ -369,8 +369,12 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	@RequiresApi(api = Build.VERSION_CODES.O)
 	public void connect(final BluetoothDevice device, final int preferredPhy) {
-		if (mConnected)
+		if (mCallbacks == null) {
+			throw new NullPointerException("You have to set callbacks using setGattCallbacks(E callbacks) before connecting");
+		}
+		if (mConnected) {
 			return;
+		}
 
 		runOnUiThread(() -> {
 			synchronized (mLock) {
@@ -1204,8 +1208,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @param mtu the MTU value set by the peripheral.
 	 */
 	protected final void overrideMtu(final int mtu) {
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP)
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 			mMtu = mtu;
+		}
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
@@ -1869,11 +1874,15 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				log(Level.INFO, "MTU changed to: " + mtu);
 				mMtu = mtu;
 				onMtuChanged(gatt, mtu);
-				((MtuRequest) mRequest).notifyMtuChanged(gatt.getDevice(), mtu);
-				mRequest.notifySuccess(gatt.getDevice());
+				if (mRequest != null && mRequest instanceof MtuRequest) {
+					((MtuRequest) mRequest).notifyMtuChanged(gatt.getDevice(), mtu);
+					mRequest.notifySuccess(gatt.getDevice());
+				}
 			} else {
 				Log.e(TAG, "onMtuChanged error: " + status + ", mtu: " + mtu);
-				mRequest.notifyFail(gatt.getDevice(), status);
+				if (mRequest != null && mRequest instanceof MtuRequest) {
+					mRequest.notifyFail(gatt.getDevice(), status);
+				}
 				onError(gatt.getDevice(), ERROR_MTU_REQUEST, status);
 			}
 			mOperationInProgress = false;
@@ -1900,22 +1909,34 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				log(Level.INFO, "Connection parameters updated (interval: " + (interval * 1.25) + "ms," +
 						" latency: " + latency + ", timeout: " + (timeout * 10) + "ms)");
 				onConnectionUpdated(gatt, interval, latency, timeout);
-				((ConnectionPriorityRequest) mRequest).notifyConnectionPriorityChanged(gatt.getDevice(), interval, latency, timeout);
-				mRequest.notifySuccess(gatt.getDevice());
+
+				// This callback may be called af any time, also when some other request is executed
+				if (mRequest != null && mRequest instanceof ConnectionPriorityRequest) {
+					((ConnectionPriorityRequest) mRequest).notifyConnectionPriorityChanged(gatt.getDevice(), interval, latency, timeout);
+					mRequest.notifySuccess(gatt.getDevice());
+				}
 			} else if (status == 0x3b) { // HCI_ERR_UNACCEPT_CONN_INTERVAL
 				Log.e(TAG, "onConnectionUpdated received status: Unacceptable connection interval, " +
 						"interval: " + interval + ", latency: " + latency + ", timeout: " + timeout);
 				log(Level.WARNING, "Connection parameters update failed with status: " +
 						"UNACCEPT CONN INTERVAL (0x3b) (interval: " + (interval * 1.25) + "ms, " +
 						"latency: " + latency + ", timeout: " + (timeout * 10) + "ms)");
-				mRequest.notifyFail(gatt.getDevice(), status);
+
+				// This callback may be called af any time, also when some other request is executed
+				if (mRequest != null && mRequest instanceof ConnectionPriorityRequest) {
+					mRequest.notifyFail(gatt.getDevice(), status);
+				}
 			} else {
 				Log.e(TAG, "onConnectionUpdated received status: " + status + ", " +
 						"interval: " + interval + ", latency: " + latency + ", timeout: " + timeout);
 				log(Level.WARNING, "Connection parameters update failed with " +
 						"status " + status + " (interval: " + (interval * 1.25) + "ms, " +
 						"latency: " + latency + ", timeout: " + (timeout * 10) + "ms)");
-				mRequest.notifyFail(gatt.getDevice(), status);
+
+				// This callback may be called af any time, also when some other request is executed
+				if (mRequest != null && mRequest instanceof ConnectionPriorityRequest) {
+					mRequest.notifyFail(gatt.getDevice(), status);
+				}
 				mCallbacks.onError(gatt.getDevice(), ERROR_CONNECTION_PRIORITY_REQUEST, status);
 			}
 			if (mConnectionPriorityOperationInProgress) {
