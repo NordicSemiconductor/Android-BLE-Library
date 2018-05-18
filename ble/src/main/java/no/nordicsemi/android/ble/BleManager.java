@@ -2000,7 +2000,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * Executes the next request. If the last element from the initialization queue has been executed
 		 * the {@link #onDeviceReady()} callback is called.
 		 */
-		@SuppressWarnings("ConstantConditions")
 		private void nextRequest() {
 			if (mOperationInProgress)
 				return;

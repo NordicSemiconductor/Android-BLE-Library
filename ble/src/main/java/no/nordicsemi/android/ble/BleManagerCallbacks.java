@@ -33,6 +33,7 @@ import android.bluetooth.BluetoothGattCallback;
  * Keeping this file as is (and {@link BleManager} as well) will allow to quickly update it when
  * an update is posted here.
  */
+@SuppressWarnings({"DeprecatedIsStillUsed", "unused"})
 public interface BleManagerCallbacks {
 
 	/**
