@@ -225,13 +225,27 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			Logger.d(mLogSession, "[Broadcast] Action received: android.bluetooth.device.action.PAIRING_REQUEST"/*BluetoothDevice.ACTION_PAIRING_REQUEST*/ +
 					", pairing variant: " + pairingVariantToString(variant) + " (" + variant + ")");
 
-			// The API below is available for Android 4.4 or newer.
-
-			// An app may set the PIN here or set pairing confirmation (depending on the variant) using:
-			// device.setPin(new byte[] { '1', '2', '3', '4', '5', '6' });
-			// device.setPairingConfirmation(true);
+			onPairingRequestReceived(device, variant);
 		}
 	};
+
+	/**
+	 * This method will be called if a remote device requires a non-'just works' pairing.
+	 * See PAIRING_* constants for possible options.
+	 *
+	 * @param device  the device
+	 * @param variant pairing variant
+	 */
+	protected void onPairingRequestReceived(final BluetoothDevice device, final int variant) {
+		// The API below is available for Android 4.4 or newer.
+
+		// An app may set the PIN here or set pairing confirmation (depending on the variant) using:
+		// device.setPin(new byte[] { '1', '2', '3', '4', '5', '6' });
+		// device.setPairingConfirmation(true);
+
+		// However, setting the PIN here will not prevent from displaying the default pairing
+		// dialog, which is shown by another application (Bluetooth Settings).
+	}
 
 	/**
 	 * The manager constructor.
