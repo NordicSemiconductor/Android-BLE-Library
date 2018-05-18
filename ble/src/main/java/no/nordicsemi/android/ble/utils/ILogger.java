@@ -21,6 +21,8 @@
  */
 package no.nordicsemi.android.ble.utils;
 
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.StringRes;
 
 public interface ILogger {
@@ -30,7 +32,7 @@ public interface ILogger {
 	 * @param level   the log level
 	 * @param message the message to be logged
 	 */
-	void log(final int level, final String message);
+	void log(final int level, @NonNull final String message);
 
 	/**
 	 * Logs the given message with given log level into the all managed devices' log session.
@@ -38,5 +40,5 @@ public interface ILogger {
 	 * @param messageRes string resource id
 	 * @param params     additional (optional) parameters used to fill the message
 	 */
-	void log(final int level, @StringRes final int messageRes, final Object... params);
+	void log(final int level, @StringRes final int messageRes, @Nullable final Object... params);
 }
