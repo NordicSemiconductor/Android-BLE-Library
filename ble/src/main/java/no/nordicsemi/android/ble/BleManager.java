@@ -74,6 +74,7 @@ import no.nordicsemi.android.log.Logger;
  *
  * @param <E> The profile callbacks type
  */
+@SuppressWarnings({"unused", "WeakerAccess"})
 public abstract class BleManager<E extends BleManagerCallbacks> implements ILogger {
 	private final static String TAG = "BleManager";
 
@@ -1438,6 +1439,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * Executes the next request. If the last element from the initialization queue has been executed
 		 * the {@link #onDeviceReady()} callback is called.
 		 */
+		@SuppressWarnings("ConstantConditions")
 		private void nextRequest() {
 			if (mOperationInProgress)
 				return;
@@ -1561,10 +1563,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @return true if the descriptor belongs to the Service Changed characteristic
 		 */
 		private boolean isServiceChangedCCCD(final BluetoothGattDescriptor descriptor) {
-			if (descriptor == null)
-				return false;
-
-			return SERVICE_CHANGED_CHARACTERISTIC.equals(descriptor.getCharacteristic().getUuid());
+			return descriptor != null && SERVICE_CHANGED_CHARACTERISTIC.equals(descriptor.getCharacteristic().getUuid());
 		}
 
 		/**
@@ -1574,10 +1573,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @return true if the characteristic is the Battery Level characteristic.
 		 */
 		private boolean isBatteryLevelCharacteristic(final BluetoothGattCharacteristic characteristic) {
-			if (characteristic == null)
-				return false;
-
-			return BATTERY_LEVEL_CHARACTERISTIC.equals(characteristic.getUuid());
+			return characteristic != null && BATTERY_LEVEL_CHARACTERISTIC.equals(characteristic.getUuid());
 		}
 
 		/**
@@ -1587,10 +1583,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @return true if the descriptor belongs to the Battery Level characteristic
 		 */
 		private boolean isBatteryLevelCCCD(final BluetoothGattDescriptor descriptor) {
-			if (descriptor == null)
-				return false;
-
-			return BATTERY_LEVEL_CHARACTERISTIC.equals(descriptor.getCharacteristic().getUuid());
+			return descriptor != null && BATTERY_LEVEL_CHARACTERISTIC.equals(descriptor.getCharacteristic().getUuid());
 		}
 
 		/**
@@ -1600,10 +1593,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @return true if the descriptor is a CCCD
 		 */
 		private boolean isCCCD(final BluetoothGattDescriptor descriptor) {
-			if (descriptor == null)
-				return false;
-
-			return CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID.equals(descriptor.getUuid());
+			return descriptor != null && CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID.equals(descriptor.getUuid());
 		}
 	}
 
