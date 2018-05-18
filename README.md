@@ -73,7 +73,7 @@ Clone all 3 projects, check out *develop* branches on each of them, ensure the p
 The library may be found on jcenter and Maven Central repository. Add it to your project by adding the following dependency:
 
 ```grovy
-compile 'no.nordicsemi.android:ble:1.1.0'
+implementation 'no.nordicsemi.android:ble:1.1.0'
 ```
 
 #### Manual
