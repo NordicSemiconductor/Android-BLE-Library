@@ -1,6 +1,6 @@
 package no.nordicsemi.android.ble.data;
 
-@SuppressWarnings("unused")
+@SuppressWarnings({"unused", "SameParameterValue"})
 public class MutableData extends Data {
 	// Values required to convert float to IEEE-11073 SFLOAT
 	private final static int SFLOAT_POSITIVE_INFINITY = 0x07FE;
@@ -156,6 +156,37 @@ public class MutableData extends Data {
 				return false;
 		}
 
+		return true;
+	}
+
+	/**
+	 * Set the locally stored value of this data.
+	 * <p>See {@link #setValue(byte[])} for details.
+	 *
+	 * @param value      New value for this data. This allows to send {@link #FORMAT_UINT32}.
+	 * @param formatType Integer format type used to transform the value parameter
+	 * @param offset     Offset at which the value should be placed
+	 * @return true if the locally stored value has been set
+	 */
+	public boolean setValue(long value, int formatType, int offset) {
+		final int len = offset + getTypeLen(formatType);
+		if (mValue == null) mValue = new byte[len];
+		if (len > mValue.length) return false;
+
+		switch (formatType) {
+			case FORMAT_SINT32:
+				value = longToSignedBits(value, 32);
+				// Fall-through intended
+			case FORMAT_UINT32:
+				mValue[offset++] = (byte) (value & 0xFF);
+				mValue[offset++] = (byte) ((value >> 8) & 0xFF);
+				mValue[offset++] = (byte) ((value >> 16) & 0xFF);
+				mValue[offset] = (byte) ((value >> 24) & 0xFF);
+				break;
+
+			default:
+				return false;
+		}
 		return true;
 	}
 
@@ -323,6 +354,16 @@ public class MutableData extends Data {
 	private static int intToSignedBits(int i, int size) {
 		if (i < 0) {
 			i = (1 << size - 1) + (i & ((1 << size - 1) - 1));
+		}
+		return i;
+	}
+
+	/**
+	 * Convert a long into the signed bits of a given length.
+	 */
+	private static long longToSignedBits(long i, int size) {
+		if (i < 0) {
+			i = (1L << size - 1) + (i & ((1L << size - 1) - 1));
 		}
 		return i;
 	}

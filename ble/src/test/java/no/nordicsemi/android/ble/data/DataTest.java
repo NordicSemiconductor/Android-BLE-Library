@@ -243,4 +243,18 @@ public class DataTest {
 		final int value = data.getIntValue(Data.FORMAT_UINT32, 0);
 		assertEquals(0xfefdfd00, value);
 	}
+
+	@Test
+	public void setValue_UINT32_big() {
+		final MutableData data = new MutableData(new byte[4]);
+		data.setValue(0xF0000001L, Data.FORMAT_UINT32, 0);
+		assertArrayEquals(new byte[] { 0x01, 0x00, 0x00, (byte) 0xF0} , data.getValue());
+	}
+
+	@Test
+	public void getValue_UINT32_big() {
+		final Data data = new Data(new byte[] { 0x01, 0x00, 0x00, (byte) 0xF0});
+		final long value = data.getLongValue(Data.FORMAT_UINT32, 0);
+		assertEquals(0xF0000001L, value);
+	}
 }

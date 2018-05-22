@@ -169,6 +169,35 @@ public class Data {
 	}
 
 	/**
+	 * Returns a long value from the byte array.
+	 * <p>Only {@link #FORMAT_UINT32} and {@link #FORMAT_SINT32} are supported.
+	 * <p>The formatType parameter determines how the value
+	 * is to be interpreted. For example, setting formatType to
+	 * {@link #FORMAT_UINT32} specifies that the first four bytes of the
+	 * value at the given offset are interpreted to generate the
+	 * return value.
+	 *
+	 * @param formatType The format type used to interpret the value.
+	 * @param offset     Offset at which the integer value can be found.
+	 * @return Cached value or null of offset exceeds value size.
+	 */
+	public Long getLongValue(final int formatType, final int offset) {
+		if ((offset + getTypeLen(formatType)) > size()) return null;
+
+		switch (formatType) {
+			case FORMAT_SINT32:
+				return unsignedToSigned(unsignedBytesToLong(mValue[offset],
+						mValue[offset + 1], mValue[offset + 2], mValue[offset + 3]), 32);
+
+			case FORMAT_UINT32:
+				return unsignedBytesToLong(mValue[offset], mValue[offset + 1],
+						mValue[offset + 2], mValue[offset + 3]);
+		}
+
+		return null;
+	}
+
+	/**
 	 * Returns an float value from the given byte array.
 	 *
 	 * @param formatType The format type used to interpret the value.
@@ -228,6 +257,13 @@ public class Data {
 	}
 
 	/**
+	 * Convert a signed byte to an unsigned int.
+	 */
+	private static long unsignedByteToLong(final byte b) {
+		return b & 0xFFL;
+	}
+
+	/**
 	 * Convert signed bytes to a 16-bit unsigned int.
 	 */
 	private static int unsignedBytesToInt(final byte b0, final byte b1) {
@@ -240,6 +276,14 @@ public class Data {
 	private static int unsignedBytesToInt(final byte b0, final byte b1, final byte b2, final byte b3) {
 		return (unsignedByteToInt(b0) + (unsignedByteToInt(b1) << 8))
 				+ (unsignedByteToInt(b2) << 16) + (unsignedByteToInt(b3) << 24);
+	}
+
+	/**
+	 * Convert signed bytes to a 32-bit unsigned long.
+	 */
+	private static long unsignedBytesToLong(final byte b0, final byte b1, final byte b2, final byte b3) {
+		return (unsignedByteToLong(b0) + (unsignedByteToLong(b1) << 8))
+				+ (unsignedByteToLong(b2) << 16) + (unsignedByteToLong(b3) << 24);
 	}
 
 	/**
@@ -267,6 +311,17 @@ public class Data {
 	 * signed value.
 	 */
 	private static int unsignedToSigned(int unsigned, final int size) {
+		if ((unsigned & (1 << size - 1)) != 0) {
+			unsigned = -1 * ((1 << size - 1) - (unsigned & ((1 << size - 1) - 1)));
+		}
+		return unsigned;
+	}
+
+	/**
+	 * Convert an unsigned long value to a two's-complement encoded
+	 * signed value.
+	 */
+	private static long unsignedToSigned(long unsigned, final int size) {
 		if ((unsigned & (1 << size - 1)) != 0) {
 			unsigned = -1 * ((1 << size - 1) - (unsigned & ((1 << size - 1) - 1)));
 		}
