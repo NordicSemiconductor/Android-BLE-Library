@@ -1,5 +1,8 @@
 package no.nordicsemi.android.ble.data;
 
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
+
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
 public class Data {
 	private static char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
@@ -62,6 +65,14 @@ public class Data {
 
 	public Data(final byte[] value) {
 		this.mValue = value;
+	}
+
+	public static Data from(final BluetoothGattCharacteristic characteristic) {
+		return new Data(characteristic.getValue());
+	}
+
+	public static Data from(final BluetoothGattDescriptor descriptor) {
+		return new Data(descriptor.getValue());
 	}
 
 	public static Data opCode(final byte opCode) {
