@@ -1,5 +1,8 @@
 package no.nordicsemi.android.ble.data;
 
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
+
 @SuppressWarnings({"unused", "SameParameterValue"})
 public class MutableData extends Data {
 	// Values required to convert float to IEEE-11073 SFLOAT
@@ -34,6 +37,14 @@ public class MutableData extends Data {
 
 	public MutableData(final byte[] data) {
 		super(data);
+	}
+
+	public static MutableData from(final BluetoothGattCharacteristic characteristic) {
+		return new MutableData(characteristic.getValue());
+	}
+
+	public static MutableData from(final BluetoothGattDescriptor descriptor) {
+		return new MutableData(descriptor.getValue());
 	}
 
 	/**

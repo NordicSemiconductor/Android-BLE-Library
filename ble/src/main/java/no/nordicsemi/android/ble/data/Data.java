@@ -2,9 +2,11 @@ package no.nordicsemi.android.ble.data;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.os.Parcel;
+import android.os.Parcelable;
 
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
-public class Data {
+public class Data implements Parcelable {
 	private static char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 
 	/**
@@ -338,4 +340,31 @@ public class Data {
 		}
 		return unsigned;
 	}
+
+	// Parcelable
+	protected Data(final Parcel in) {
+		mValue = in.createByteArray();
+	}
+
+	@Override
+	public void writeToParcel(final Parcel dest, final int flags) {
+		dest.writeByteArray(mValue);
+	}
+
+	@Override
+	public int describeContents() {
+		return 0;
+	}
+
+	public static final Creator<Data> CREATOR = new Creator<Data>() {
+		@Override
+		public Data createFromParcel(final Parcel in) {
+			return new Data(in);
+		}
+
+		@Override
+		public Data[] newArray(final int size) {
+			return new Data[size];
+		}
+	};
 }

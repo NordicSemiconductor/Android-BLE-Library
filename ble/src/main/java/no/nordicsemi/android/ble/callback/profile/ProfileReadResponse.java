@@ -1,6 +1,8 @@
 package no.nordicsemi.android.ble.callback.profile;
 
 import android.bluetooth.BluetoothDevice;
+import android.os.Parcel;
+import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
 import no.nordicsemi.android.ble.data.Data;
@@ -17,8 +19,12 @@ import no.nordicsemi.android.ble.response.ReadResponse;
  * </p>
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
-public class ProfileReadResponse extends ReadResponse implements ProfileDataCallback {
+public class ProfileReadResponse extends ReadResponse implements ProfileDataCallback, Parcelable {
 	private boolean valid = true;
+
+	public ProfileReadResponse() {
+		// empty
+	}
 
 	@Override
 	public void onInvalidDataReceived(@NonNull final BluetoothDevice device, @NonNull final Data data) {
@@ -33,4 +39,28 @@ public class ProfileReadResponse extends ReadResponse implements ProfileDataCall
 	public boolean isValid() {
 		return valid;
 	}
+
+	// Parcelable
+	protected ProfileReadResponse(final Parcel in) {
+		super(in);
+		valid = in.readByte() != 0;
+	}
+
+	@Override
+	public void writeToParcel(final Parcel dest, final int flags) {
+		super.writeToParcel(dest, flags);
+		dest.writeByte((byte) (valid ? 1 : 0));
+	}
+
+	public static final Creator<ProfileReadResponse> CREATOR = new Creator<ProfileReadResponse>() {
+		@Override
+		public ProfileReadResponse createFromParcel(final Parcel in) {
+			return new ProfileReadResponse(in);
+		}
+
+		@Override
+		public ProfileReadResponse[] newArray(final int size) {
+			return new ProfileReadResponse[size];
+		}
+	};
 }
