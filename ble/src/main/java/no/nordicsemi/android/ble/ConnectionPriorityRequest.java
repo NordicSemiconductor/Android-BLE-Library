@@ -3,7 +3,6 @@ package no.nordicsemi.android.ble;
 import android.bluetooth.BluetoothDevice;
 import android.os.Build;
 import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 
 import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
@@ -12,7 +11,7 @@ import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
-public final class ConnectionPriorityRequest extends Request<ConnectionPriorityCallback> {
+public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPriorityCallback> {
 	private ConnectionPriorityCallback valueCallback;
 	private final int value;
 

@@ -7,7 +7,7 @@ import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.MtuCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
-public final class MtuRequest extends Request<MtuCallback> {
+public final class MtuRequest extends ValueRequest<MtuCallback> {
 	private final int value;
 
 	MtuRequest(final @NonNull Type type, int mtu) {

@@ -20,7 +20,7 @@ import no.nordicsemi.android.ble.exception.InvalidDataException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 @SuppressWarnings("unused")
-public final class ReadRequest extends Request<DataReceivedCallback> {
+public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 	private ReadProgressCallback progressCallback;
 	private DataMerger dataMerger;
 	private DataStream buffer;
