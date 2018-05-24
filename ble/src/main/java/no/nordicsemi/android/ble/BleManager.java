@@ -2012,11 +2012,16 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				if (mInitInProgress) {
 					mInitInProgress = false;
 					mInitQueue = null; // release the queue
+
+					// Set the 'operation in progress' flag, so any request made in onDeviceReady()
+					// will not start new nextRequest() call.
+					mOperationInProgress = true;
 					onDeviceReady();
 				}
 				// If so, we can continue with the task queue
 				request = mTaskQueue.poll();
 				if (request == null) {
+					mOperationInProgress = false;
 					mRequest = null;
 					return;
 				}
