@@ -4,6 +4,8 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
 public class Data implements Parcelable {
@@ -65,15 +67,19 @@ public class Data implements Parcelable {
 		this.mValue = null;
 	}
 
-	public Data(final byte[] value) {
+	public Data(@Nullable final byte[] value) {
 		this.mValue = value;
 	}
 
-	public static Data from(final BluetoothGattCharacteristic characteristic) {
+	public static Data from(@NonNull final String value) {
+		return new Data(value.getBytes()); // UTF-8
+	}
+
+	public static Data from(@NonNull final BluetoothGattCharacteristic characteristic) {
 		return new Data(characteristic.getValue());
 	}
 
-	public static Data from(final BluetoothGattDescriptor descriptor) {
+	public static Data from(@NonNull final BluetoothGattDescriptor descriptor) {
 		return new Data(descriptor.getValue());
 	}
 
@@ -90,6 +96,7 @@ public class Data implements Parcelable {
 	 *
 	 * @return Data received.
 	 */
+	@Nullable
 	public byte[] getValue() {
 		return mValue;
 	}
@@ -125,6 +132,7 @@ public class Data implements Parcelable {
 	 * @param offset Offset at which the byte value can be found.
 	 * @return Cached value or null of offset exceeds value size.
 	 */
+	@Nullable
 	public Byte getByte(final int offset) {
 		if (offset + 1 > size()) return null;
 
@@ -144,6 +152,7 @@ public class Data implements Parcelable {
 	 * @param offset     Offset at which the integer value can be found.
 	 * @return Cached value or null of offset exceeds value size.
 	 */
+	@Nullable
 	public Integer getIntValue(final int formatType, final int offset) {
 		if ((offset + getTypeLen(formatType)) > size()) return null;
 
@@ -194,6 +203,7 @@ public class Data implements Parcelable {
 	 * @param offset     Offset at which the integer value can be found.
 	 * @return Cached value or null of offset exceeds value size.
 	 */
+	@Nullable
 	public Long getLongValue(final int formatType, final int offset) {
 		if ((offset + getTypeLen(formatType)) > size()) return null;
 
@@ -217,6 +227,7 @@ public class Data implements Parcelable {
 	 * @param offset     Offset at which the float value can be found.
 	 * @return Cached value at a given offset or null if the requested offset exceeds the value size.
 	 */
+	@Nullable
 	public Float getFloatValue(final int formatType, final int offset) {
 		if ((offset + getTypeLen(formatType)) > size()) return null;
 
