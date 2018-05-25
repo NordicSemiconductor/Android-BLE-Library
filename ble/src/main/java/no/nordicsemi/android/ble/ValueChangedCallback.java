@@ -3,7 +3,6 @@ package no.nordicsemi.android.ble;
 import android.bluetooth.BluetoothDevice;
 import android.os.ConditionVariable;
 import android.support.annotation.NonNull;
-import android.util.Log;
 
 import no.nordicsemi.android.ble.callback.DataReceivedCallback;
 import no.nordicsemi.android.ble.callback.ReadProgressCallback;
@@ -253,11 +252,9 @@ public class ValueChangedCallback {
 				trigger.run();
 			}
 			// Wait for value change event
-			Log.d("AA", "block, deviceDisconnected: " + deviceDisconnected);
 			if (!deviceDisconnected && !syncLock.block(timeout)) {
 				throw new InterruptedException();
 			}
-			Log.d("AA", "block finished, deviceDisconnected: " + deviceDisconnected);
 			if (deviceDisconnected) {
 				syncLock.open();
 				throw new DeviceDisconnectedException();
