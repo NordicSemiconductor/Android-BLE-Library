@@ -4,10 +4,10 @@ import no.nordicsemi.android.ble.Request;
 
 @SuppressWarnings("WeakerAccess")
 public final class RequestFailedException extends Exception {
-	private final Request<?> request;
+	private final Request request;
 	private final int status;
 
-	public RequestFailedException(final Request<?> request, final int status) {
+	public RequestFailedException(final Request request, final int status) {
 		super("Request failed with status " + status);
 		this.request = request;
 		this.status = status;
@@ -15,9 +15,9 @@ public final class RequestFailedException extends Exception {
 
 	/**
 	 * Returns the request status. One of {{@link android.bluetooth.BluetoothGatt}} GATT_*
-	 * of {@link no.nordicsemi.android.ble.callback.FailCallback} REASON_* codes.
+	 * or {@link no.nordicsemi.android.ble.callback.FailCallback} REASON_* codes.
 	 *
-	 * @return error code
+	 * @return Error code.
 	 */
 	public int getStatus() {
 		return status;
@@ -25,9 +25,9 @@ public final class RequestFailedException extends Exception {
 
 	/**
 	 * Returns the request that failed.
-	 * @return the request that failed.
+	 * @return The request that failed.
 	 */
-	public Request<?> getRequest() {
+	public Request getRequest() {
 		return request;
 	}
 }
