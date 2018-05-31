@@ -29,6 +29,8 @@ import no.nordicsemi.android.ble.exception.RequestFailedException;
 public class Request {
 	@SuppressWarnings("DeprecatedIsStillUsed")
 	enum Type {
+		CONNECT,
+		DISCONNECT,
 		CREATE_BOND,
 		WRITE,
 		READ,
@@ -57,6 +59,8 @@ public class Request {
 	final BluetoothGattDescriptor descriptor;
 	SuccessCallback successCallback;
 	FailCallback failCallback;
+	FailCallback internalFailCallback;
+	boolean enqueued;
 
 	Request(final @NonNull Type type) {
 		this.type = type;
@@ -77,6 +81,26 @@ public class Request {
 		this.characteristic = null;
 		this.descriptor = descriptor;
 		this.syncLock = new ConditionVariable(true);
+	}
+
+	/**
+	 * Creates a new connect request. This allows to set a callback to a connect event,
+	 * just like any other request.
+	 *
+	 * @return The new connect request.
+	 */
+	static ConnectRequest connect() {
+		return new ConnectRequest(Type.CONNECT);
+	}
+
+	/**
+	 * Creates a new disconnect request. This allows to set a callback to a dis connect event,
+	 * just like any other request.
+	 *
+	 * @return The new disconnect request.
+	 */
+	static DisconnectRequest disconnect() {
+		return new DisconnectRequest(Type.DISCONNECT);
 	}
 
 	/**
@@ -386,7 +410,7 @@ public class Request {
 	 * will be ignored.
 	 *
 	 * @param callback the callback
-	 * @return the request
+	 * @return The request.
 	 */
 	@NonNull
 	public Request done(final @NonNull SuccessCallback callback) {
@@ -399,8 +423,8 @@ public class Request {
 	 * This callback will be ignored if {@link #await(int)} or its variant was used, in which case
 	 * it will be ignored and the error will be returned as an exception.
 	 *
-	 * @param callback the callback
-	 * @return the request
+	 * @param callback the callback.
+	 * @return The request.
 	 */
 	@NonNull
 	public Request fail(final @NonNull FailCallback callback) {
@@ -409,12 +433,21 @@ public class Request {
 	}
 
 	/**
+	 * Used to set internal fail callback. The callback will be notified in case the request
+	 * has failed.
+	 *
+	 * @param callback the callback.
+	 */
+	void internalFail(final @NonNull FailCallback callback) {
+		this.internalFailCallback = callback;
+	}
+
+	/**
 	 * Synchronously waits until the request is done.
 	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)}
 	 * will be ignored.
 	 * <p>
 	 * This method may not be called from the main (UI) thread.
-	 * </p>
 	 *
 	 * @throws RequestFailedException      thrown when the BLE request finished with status other than
 	 *                                     {@link BluetoothGatt#GATT_SUCCESS}.
@@ -437,7 +470,6 @@ public class Request {
 	 * will be ignored.
 	 * <p>
 	 * This method may not be called from the main (UI) thread.
-	 * </p>
 	 *
 	 * @param timeout optional timeout in milliseconds
 	 * @throws RequestFailedException      thrown when the BLE request finished with status other than
@@ -483,6 +515,8 @@ public class Request {
 	void notifyFail(final BluetoothDevice device, final int status) {
 		if (failCallback != null)
 			failCallback.onRequestFailed(device, status);
+		if (internalFailCallback != null)
+			internalFailCallback.onRequestFailed(device, status);
 	}
 
 	/**
@@ -510,7 +544,8 @@ public class Request {
 			syncLock.open();
 		}
 
-		public boolean isSuccess() {
+		@SuppressWarnings("BooleanMethodIsAlwaysInverted")
+		boolean isSuccess() {
 			return this.status == BluetoothGatt.GATT_SUCCESS;
 		}
 	}

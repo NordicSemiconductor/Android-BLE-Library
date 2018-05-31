@@ -162,6 +162,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	private int mMtu = 23;
 	/**
+	 * The connect request. This is instantiated in {@link #connect(BluetoothDevice, int)}
+	 * and nullified after the device is ready.
+	 */
+	private ConnectRequest mConnectRequest;
+	/**
 	 * Currently performed request or null in idle state.
 	 */
 	private Request mRequest;
@@ -356,25 +361,65 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		return false;
 	}
 
+	/**
+	 * Connects to the Bluetooth Smart device on a default PHY LE 1M.
+	 * <p>
+	 * This method returns the {@link ConnectRequest} which can be used to set completion
+	 * and failure callbacks. The completion callback will be called after the initialization
+	 * is complete, after {@link BleManagerCallbacks#onDeviceReady(BluetoothDevice)} has been
+	 * called.
+	 * <p>
+	 * Calling {@link ConnectRequest#await(int)} will make this request
+	 * synchronous (the callbacks set will be ignored, instead the synchronous method will
+	 * return or throw an exception).
+	 *
+	 * @param device a device to connect to.
+	 * @return The connect request with allows to set a completion and failure callbacks.
+	 */
+	@NonNull
 	@SuppressLint("NewApi")
-	public void connect(@NonNull final BluetoothDevice device) {
-		connect(device, 1 /* BluetoothDevice.PHY_LE_1M */);
+	public ConnectRequest connect(@NonNull final BluetoothDevice device) {
+		return connect(device, 1 /* BluetoothDevice.PHY_LE_1M */);
 	}
 
 	/**
 	 * Connects to the Bluetooth Smart device.
+	 * <p>
+	 * This method returns the {@link ConnectRequest} which can be used to set completion
+	 * and failure callbacks. The completion callback will be called after the initialization
+	 * is complete, after {@link BleManagerCallbacks#onDeviceReady(BluetoothDevice)} has been
+	 * called.
+	 * <p>
+	 * Calling {@link ConnectRequest#await(int)} will make this request
+	 * synchronous (the callbacks set will be ignored, instead the synchronous method will
+	 * return or throw an exception).
 	 *
-	 * @param device a device to connect to.
+	 * @param device       a device to connect to.
+	 * @param preferredPhy preferred PHY used in connection. Different PHY is available
+	 *                     on supported devices running Android Oreo or newer.
+	 * @return The connect request with allows to set a completion and failure callbacks.
 	 */
+	@NonNull
 	@RequiresApi(api = Build.VERSION_CODES.O)
-	public void connect(@NonNull final BluetoothDevice device, final int preferredPhy) {
+	public ConnectRequest connect(@NonNull final BluetoothDevice device, final int preferredPhy) {
 		if (mCallbacks == null) {
 			throw new NullPointerException("You have to set callbacks using setGattCallbacks(E callbacks) before connecting");
 		}
-		if (mConnected) {
-			return;
+		if (mConnected || mConnectionState == BluetoothGatt.STATE_CONNECTING) {
+			final ConnectRequest request = Request.connect();
+			mHandler.post(() -> {
+				final BluetoothDevice currentDevice = mBluetoothDevice;
+				if (currentDevice != null && currentDevice.equals(device)) {
+					request.notifySuccess(device);
+				} else {
+					request.notifyFail(device, FailCallback.REASON_REQUEST_FAILED);
+				}
+			});
+			return request;
 		}
 
+		mConnectRequest = Request.connect();
+		mConnectionState = BluetoothGatt.STATE_CONNECTING;
 		runOnUiThread(() -> {
 			synchronized (mLock) {
 				if (mBluetoothGatt != null) {
@@ -403,7 +448,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 						// flag set to false.
 						mInitialConnection = false;
 						log(Level.VERBOSE, "Connecting...");
-						mConnectionState = BluetoothGatt.STATE_CONNECTING;
 						mCallbacks.onDeviceConnecting(device);
 						log(Level.DEBUG, "gatt.connect()");
 						mBluetoothGatt.connect();
@@ -423,11 +467,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			// The first connection will always be done with autoConnect = false to make the connection quick.
 			// If the shouldAutoConnect() method returned true, the manager will automatically try to
 			// reconnect to this device on link loss.
-			if (shouldAutoConnect)
+			if (shouldAutoConnect) {
 				mInitialConnection = true;
+			}
 			mBluetoothDevice = device;
 			log(Level.VERBOSE, "Connecting...");
-			mConnectionState = BluetoothGatt.STATE_CONNECTING;
 			mCallbacks.onDeviceConnecting(device);
 			log(Level.DEBUG, "gatt = device.connectGatt(autoConnect = false)");
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -438,19 +482,25 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				mBluetoothGatt = device.connectGatt(mContext, false, mGattCallback = getGattCallback());
 			}
 		});
+		return mConnectRequest;
 	}
 
 	/**
 	 * Disconnects from the device or cancels the pending connection attempt.
 	 * Does nothing if device was not connected.
 	 *
-	 * @return True if device is to be disconnected. False if it was already disconnected.
+	 * @return The disconnect request. The completion callback will be called after the device
+	 * has disconnected and the connection was closed. If the device was not connected,
+	 * the completion callback will be called immediately with device parameter set to null.
 	 */
-	public boolean disconnect() {
+	@NonNull
+	public DisconnectRequest disconnect() {
 		mUserDisconnected = true;
 		mInitialConnection = false;
 
+		final DisconnectRequest request = Request.disconnect();
 		if (mBluetoothGatt != null) {
+			mRequest = request;
 			mConnectionState = BluetoothGatt.STATE_DISCONNECTING;
 			log(Level.VERBOSE, mConnected ? "Disconnecting..." : "Cancelling connection...");
 			runOnUiThread(() -> mCallbacks.onDeviceDisconnecting(mBluetoothGatt.getDevice()));
@@ -464,9 +514,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				log(Level.INFO, "Disconnected");
 				runOnUiThread(() -> mCallbacks.onDeviceDisconnected(mBluetoothGatt.getDevice()));
 			}
-			return true;
+		} else {
+			mHandler.post(() -> request.notifySuccess(mBluetoothDevice));
 		}
-		return false;
+		return request;
 	}
 
 	/**
@@ -1416,6 +1467,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				log(Level.INFO, "Disconnected");
 				mCallbacks.onDeviceDisconnected(device);
 				close();
+				if (mRequest != null && mRequest.type == Request.Type.DISCONNECT) {
+					mRequest.notifySuccess(device);
+				}
 			} else {
 				log(Level.WARNING, "Connection lost");
 				mCallbacks.onLinkLossOccurred(device);
@@ -1606,18 +1660,26 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 						log(Level.WARNING, "Error: (0x" + Integer.toHexString(status) + "): " +
 								GattError.parseConnectionError(status));
 
-					if (mRequest != null)
-						mRequest.notifyFail(gatt.getDevice(), FailCallback.REASON_DEVICE_DISCONNECTED);
-					for (final ValueChangedCallback callback : mNotificationCallbacks.values()) {
-						callback.notifyDeviceDisconnected(gatt.getDevice());
-					}
-
 					mOperationInProgress = true; // no more calls are possible
 					mInitQueue = null;
 					mTaskQueue.clear();
-					final boolean wasConnected = mConnected;
 
-					// This sets the mConnected flag to false
+					// Signal all threads waiting synchronously for a notification
+					for (final ValueChangedCallback callback : mNotificationCallbacks.values()) {
+						callback.notifyDeviceDisconnected(gatt.getDevice());
+					}
+					// Signal the current request, if any
+					if (mRequest != null && mRequest.type != Request.Type.DISCONNECT) {
+						mRequest.notifyFail(gatt.getDevice(), FailCallback.REASON_DEVICE_DISCONNECTED);
+					}
+					if (mConnectRequest != null) {
+						mConnectRequest.notifyFail(gatt.getDevice(), FailCallback.REASON_DEVICE_DISCONNECTED);
+						mConnectRequest = null;
+					}
+
+					// Store the current value of the mConnected flag...
+					final boolean wasConnected = mConnected;
+					// ...because this method sets the mConnected flag to false
 					notifyDeviceDisconnected(gatt.getDevice());
 
 					// Try to reconnect if the initial connection was lost because of a link loss or timeout,
@@ -1691,6 +1753,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				} else {
 					log(Level.WARNING, "Device is not supported");
 					mCallbacks.onDeviceNotSupported(gatt.getDevice());
+					mConnectRequest.notifyFail(gatt.getDevice(), FailCallback.REASON_DEVICE_NOT_SUPPORTED);
+					mConnectRequest = null;
 					disconnect();
 				}
 			} else {
@@ -1845,8 +1909,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 		@Override
 		final void onCharacteristicChangedSafe(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
-			final String data = ParserUtils.parse(characteristic);
-
 			if (isServiceChangedCharacteristic(characteristic)) {
 				// TODO this should be tested. Should services be invalidated? Clal onDeviceDisconnected()?
 				mOperationInProgress = true;
@@ -1858,6 +1920,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				final BluetoothGattDescriptor cccd = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID);
 				final boolean notifications = cccd == null || cccd.getValue() == null || cccd.getValue().length != 2 || cccd.getValue()[0] == 0x01;
 
+				final String data = ParserUtils.parse(characteristic);
 				if (notifications) {
 					log(Level.INFO, "Notification received from " + characteristic.getUuid() + ", value: " + data);
 					onCharacteristicNotified(gatt, characteristic);
@@ -1990,6 +2053,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		private void enqueueFirst(final Request request) {
 			final Deque<Request> queue = mInitInProgress ? mInitQueue : mTaskQueue;
 			queue.addFirst(request);
+			request.enqueued = true;
 		}
 
 		/**
@@ -2001,6 +2065,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		private void enqueue(final Request request) {
 			final Deque<Request> queue = mInitInProgress ? mInitQueue : mTaskQueue;
 			queue.add(request);
+			request.enqueued = true;
 		}
 
 		/**
@@ -2032,6 +2097,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					// will not start new nextRequest() call.
 					mOperationInProgress = true;
 					onDeviceReady();
+					if (mConnectRequest != null) {
+						mConnectRequest.notifySuccess(mBluetoothDevice);
+						mConnectRequest = null;
+					}
 				}
 				// If so, we can continue with the task queue
 				request = mTaskQueue.poll();
@@ -2110,10 +2179,12 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					break;
 				}
 				case REQUEST_MTU: {
-					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-						result = internalRequestMtu(((MtuRequest) request).getRequiredMtu());
+					final MtuRequest mr = (MtuRequest) request;
+					if (mMtu != mr.getRequiredMtu()
+							&& Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+						result = internalRequestMtu(mr.getRequiredMtu());
 					} else {
-						((MtuRequest) request).notifyMtuChanged(mBluetoothDevice, mMtu);
+						mr.notifyMtuChanged(mBluetoothDevice, mMtu);
 						request.notifySuccess(mBluetoothDevice);
 						result = true;
 					}
