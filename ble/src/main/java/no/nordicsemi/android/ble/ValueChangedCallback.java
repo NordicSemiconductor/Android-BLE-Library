@@ -1,6 +1,8 @@
 package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCharacteristic;
 import android.os.ConditionVariable;
 import android.support.annotation.NonNull;
 
@@ -12,6 +14,7 @@ import no.nordicsemi.android.ble.data.DataMerger;
 import no.nordicsemi.android.ble.data.DataStream;
 import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
 import no.nordicsemi.android.ble.exception.InvalidDataException;
+import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 @SuppressWarnings({"unused", "WeakerAccess", "UnusedReturnValue"})
 public class ValueChangedCallback {
@@ -23,6 +26,7 @@ public class ValueChangedCallback {
 	private DataStream buffer;
 	private int count = 0;
 	private boolean deviceDisconnected;
+	private int triggerStatus;
 
 	ValueChangedCallback(final BleManager<?> manager) {
 		bleManager = manager;
@@ -35,10 +39,9 @@ public class ValueChangedCallback {
 	 * <p>
 	 * This callback is ignored when synchronous call is made using {@link #await(Class, int)}
 	 * or any of variants.
-	 * </p>
 	 *
 	 * @param callback the data callback.
-	 * @return the request
+	 * @return The request.
 	 */
 	@NonNull
 	public ValueChangedCallback with(@NonNull final DataReceivedCallback callback) {
@@ -50,7 +53,7 @@ public class ValueChangedCallback {
 	 * Adds a merger that will be used to merge multiple packets into a single Data.
 	 * The merger may modify each packet if necessary.
 	 *
-	 * @return the callback
+	 * @return The request.
 	 */
 	@NonNull
 	public ValueChangedCallback merge(final @NonNull DataMerger merger) {
@@ -63,7 +66,7 @@ public class ValueChangedCallback {
 	 * Adds a merger that will be used to merge multiple packets into a single Data.
 	 * The merger may modify each packet if necessary.
 	 *
-	 * @return the callback
+	 * @return The request.
 	 */
 	@NonNull
 	public ValueChangedCallback merge(final @NonNull DataMerger merger, final @NonNull ReadProgressCallback callback) {
@@ -76,10 +79,8 @@ public class ValueChangedCallback {
 	 * Synchronously waits for a notification or an indication on the requested characteristic.
 	 * <p>
 	 * This method may not be called from the main (UI) thread.
-	 * </p>
 	 * <p>
 	 * The value of returned notification or indication is ignored.
-	 * </p>
 	 *
 	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
 	 *                                     thread.
@@ -88,7 +89,7 @@ public class ValueChangedCallback {
 	 */
 	@SuppressWarnings("ConstantConditions")
 	public void await() throws DeviceDisconnectedException {
-		awaitAfter(null, null);
+		await((DataReceivedCallback) null);
 	}
 
 	/**
@@ -96,12 +97,10 @@ public class ValueChangedCallback {
 	 * for at most given number of milliseconds.
 	 * <p>
 	 * This method may not be called from the main (UI) thread.
-	 * </p>
 	 * <p>
 	 * The value of returned notification or indication is ignored.
-	 * </p>
 	 *
-	 * @param timeout optional timeout in milliseconds
+	 * @param timeout optional timeout in milliseconds.
 	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
 	 *                                     thread.
 	 * @throws InterruptedException        thrown when the timeout occurred before the characteristic
@@ -111,18 +110,17 @@ public class ValueChangedCallback {
 	 */
 	@SuppressWarnings("ConstantConditions")
 	public void await(final int timeout) throws InterruptedException, DeviceDisconnectedException {
-		awaitAfter(null, null, timeout);
+		await((DataReceivedCallback) null, timeout);
 	}
 
 	/**
 	 * Synchronously waits for a notification or an indication on the requested characteristic.
 	 * <p>
 	 * This method may not be called from the main (UI) thread.
-	 * </p>
 	 *
 	 * @param responseClass the response class. This class will be instantiate, therefore it has to have
 	 *                      a default constructor.
-	 * @return the object received with a notification or indication
+	 * @return The object received with a notification or indication.
 	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
 	 *                                     thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
@@ -132,19 +130,47 @@ public class ValueChangedCallback {
 	@NonNull
 	public <E extends DataReceivedCallback> E await(final @NonNull Class<E> responseClass)
 			throws DeviceDisconnectedException {
-		return awaitAfter(null, responseClass);
+		try {
+			return awaitAfter(null, responseClass);
+		} catch (final RequestFailedException e) {
+			// never happen
+			throw new IllegalStateException("This should never happen");
+		}
 	}
 
 	/**
 	 * Synchronously waits for a notification or an indication on the requested characteristic.
 	 * <p>
 	 * This method may not be called from the main (UI) thread.
-	 * </p>
+	 *
+	 * @param response the response object that will be returned.
+	 * @return The object received with a notification or indication.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
+	 *                                     thread.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
+	 *                                     notification or indication was received.
+	 */
+	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
+	@NonNull
+	public <E extends DataReceivedCallback> E await(final @NonNull E response)
+			throws DeviceDisconnectedException {
+		try {
+			return awaitAfter(null, response);
+		} catch (final RequestFailedException e) {
+			// never happen
+			throw new IllegalStateException("This should never happen");
+		}
+	}
+
+	/**
+	 * Synchronously waits for a notification or an indication on the requested characteristic.
+	 * <p>
+	 * This method may not be called from the main (UI) thread.
 	 *
 	 * @param timeout       optional timeout in milliseconds
 	 * @param responseClass the response class. This class will be instantiate, therefore it has to have
 	 *                      a default constructor.
-	 * @return the object received with a notification or indication
+	 * @return The object received with a notification or indication.
 	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
 	 *                                     thread.
 	 * @throws InterruptedException        thrown when the timeout occurred before the characteristic
@@ -157,33 +183,103 @@ public class ValueChangedCallback {
 	public <E extends DataReceivedCallback> E await(final @NonNull Class<E> responseClass,
 													final int timeout)
 			throws InterruptedException, DeviceDisconnectedException {
-		return awaitAfter(null, responseClass, timeout);
+		try {
+			return awaitAfter(null, responseClass, timeout);
+		} catch (final RequestFailedException e) {
+			// never happen
+			throw new IllegalStateException("This should never happen");
+		}
 	}
 
 	/**
-	 * This method works just like {@link #awaitAfter(Runnable, Class, int)},
+	 * Synchronously waits for a notification or an indication on the requested characteristic.
+	 * <p>
+	 * This method may not be called from the main (UI) thread.
+	 *
+	 * @param timeout  optional timeout in milliseconds
+	 * @param response the response object that will be returned.
+	 * @return The object received with a notification or indication.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
+	 *                                     thread.
+	 * @throws InterruptedException        thrown when the timeout occurred before the characteristic
+	 *                                     value has changed.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
+	 *                                     notification or indication was received.
+	 */
+	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
+	@NonNull
+	public <E extends DataReceivedCallback> E await(final @NonNull E response,
+													final int timeout)
+			throws InterruptedException, DeviceDisconnectedException {
+		try {
+			return awaitAfter(null, response, timeout);
+		} catch (final RequestFailedException e) {
+			// never happen
+			throw new IllegalStateException("This should never happen");
+		}
+	}
+
+	/**
+	 * This method works just like {@link #awaitAfter(Request, Class, int)},
 	 * but will wait without a timeout until a notification/indication is received, or the
 	 * device disconnects.
 	 *
-	 * @param trigger       an action that will be executed after the notification callback has
-	 *                      been initiated. Usually it's a write request that triggers the
-	 *                      notification or indication.
+	 * @param trigger       an optional request that will be executed after the notification
+	 *                      callback has been initiated. Usually it's a write request that triggers
+	 *                      the notification or indication. This request may no have been enqueued
+	 *                      before, so you have to use {@link Request}.new...Request() instead of
+	 *                      i.e. {@link BleManager#writeCharacteristic(BluetoothGattCharacteristic)}
+	 *                      which returns already enqueued request.
 	 * @param responseClass the response class. This class will be instantiate, therefore it has to
 	 *                      have a default constructor.
-	 * @return the object received with a notification or indication
+	 * @return The object received with a notification or indication.
 	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
 	 *                                     thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
-	 * @see #awaitAfter(Runnable, Class, int)
+	 * @throws RequestFailedException      thrown when the trigger request has failed.
+	 * @see #awaitAfter(Request, E)
 	 */
 	@SuppressWarnings("NullableProblems")
 	@NonNull
-	public <E extends DataReceivedCallback> E awaitAfter(final @NonNull Runnable trigger,
+	public <E extends DataReceivedCallback> E awaitAfter(final @NonNull Request trigger,
 														 final @NonNull Class<E> responseClass)
-			throws DeviceDisconnectedException {
+			throws DeviceDisconnectedException, RequestFailedException {
 		try {
 			return awaitAfter(trigger, responseClass, 0);
+		} catch (final InterruptedException e) {
+			// never happen
+			throw new IllegalStateException("This should never happen");
+		}
+	}
+
+	/**
+	 * This method works just like {@link #awaitAfter(Request, E, int)},
+	 * but will wait without a timeout until a notification/indication is received, or the
+	 * device disconnects.
+	 *
+	 * @param trigger  an optional request that will be executed after the notification
+	 *                 callback has been initiated. Usually it's a write request that triggers
+	 *                 the notification or indication. This request may no have been enqueued
+	 *                 before, so you have to use {@link Request}.new...Request() instead of
+	 *                 i.e. {@link BleManager#writeCharacteristic(BluetoothGattCharacteristic)}
+	 *                 which returns already enqueued request.
+	 * @param response the response object that will be returned.
+	 * @return The object received with a notification or indication.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
+	 *                                     thread.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
+	 *                                     notification or indication was received.
+	 * @throws RequestFailedException      thrown when the trigger request has failed.
+	 * @see #awaitAfter(Request, Class)
+	 */
+	@SuppressWarnings("NullableProblems")
+	@NonNull
+	public <E extends DataReceivedCallback> E awaitAfter(final @NonNull Request trigger,
+														 final @NonNull E response)
+			throws DeviceDisconnectedException, RequestFailedException {
+		try {
+			return awaitAfter(trigger, response, 0);
 		} catch (final InterruptedException e) {
 			// never happen
 			throw new IllegalStateException("This should never happen");
@@ -209,47 +305,119 @@ public class ValueChangedCallback {
 	 *
 	 *     // Then, bind notification callback and write op code.
 	 *     SomeResponse response = setNotificationCallback(characteristic)
-	 *          .awaitAfter(() -> {
-	 *                writeCharacteristic(controlPoint, OP_CODE);
-	 *          }, SomeResponse.class, 1000);
+	 *          .awaitAfter(Request.newWriteRequest(characteristic, OP_CODE),
+	 *                      SomeResponse.class, 1000);
 	 * </pre>
 	 * </p>
 	 *
-	 * @param trigger       an action that will be executed after the notification callback has
-	 *                      been initiated. Usually it's a write request that triggers the
-	 *                      notification or indication.
+	 * @param trigger       an optional request that will be executed after the notification
+	 *                      callback has been initiated. Usually it's a write request that triggers
+	 *                      the notification or indication. This request may no have been enqueued
+	 *                      before, so you have to use {@link Request}.new...Request() instead of
+	 *                      i.e. {@link BleManager#writeCharacteristic(BluetoothGattCharacteristic)}
+	 *                      which returns already enqueued request.
 	 * @param responseClass the response class. This class will be instantiate, therefore it has to
 	 *                      have a default constructor.
-	 * @param timeout       optional timeout in milliseconds
-	 * @return the object received with a notification or indication
+	 * @param timeout       optional timeout in milliseconds.
+	 * @return The object received with a notification or indication.
 	 * @throws InterruptedException        thrown when the timeout occurred before the characteristic
 	 *                                     value has changed.
 	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
 	 *                                     thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
+	 * @throws RequestFailedException      thrown when the trigger request has failed.
 	 */
 	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
-	public <E extends DataReceivedCallback> E awaitAfter(final @NonNull Runnable trigger,
+	public <E extends DataReceivedCallback> E awaitAfter(final @NonNull Request trigger,
 														 final @NonNull Class<E> responseClass,
 														 final int timeout)
-			throws InterruptedException, DeviceDisconnectedException {
+			throws InterruptedException, DeviceDisconnectedException, RequestFailedException {
+		try {
+			Request.assertNotMainThread();
+
+			E response = null;
+			if (responseClass != null)
+				response = responseClass.newInstance();
+			return awaitAfter(trigger, response, timeout);
+		} catch (IllegalAccessException e) {
+			throw new IllegalArgumentException("Couldn't instantiate " + responseClass.getCanonicalName()
+					+ " class. Is the default constructor accessible?");
+		} catch (InstantiationException e) {
+			throw new IllegalArgumentException("Couldn't instantiate " + responseClass.getCanonicalName()
+					+ " class. Does it have a default constructor with no arguments?");
+		}
+	}
+
+	/**
+	 * Synchronously waits for a notification or an indication on the requested characteristic,
+	 * for at most given number of milliseconds. Before binding the value change callback
+	 * with given characteristic this method will execute the trigger.
+	 * This is to ensure that the value change handler is bound to the characteristic before the
+	 * trigger request is performed and that, if the request will fail, the app will not wait
+	 * forever for the notification. Otherwise, a race condition may occur when either the triggered
+	 * notification is received before setting the callback, or the callback awaits a notification
+	 * but the trigger command has never been sent.
+	 * <p>
+	 * This method may not be called from the main (UI) thread.
+	 * </p>
+	 * <p>
+	 * Example of synchronous usage:
+	 * <pre>
+	 *     // First, enable notifications
+	 *     enableNotifications(characteristic).await();
+	 *
+	 *     // Then, bind notification callback and write op code.
+	 *     SomeResponse response = setNotificationCallback(characteristic)
+	 *          .awaitAfter(Request.newWriteRequest(characteristic, OP_CODE),
+	 *                      new SomeResponse(parameter), 1000);
+	 * </pre>
+	 * </p>
+	 *
+	 * @param trigger  an optional request that will be executed after the notification callback has
+	 *                 been initiated. Usually it's a write request that triggers the
+	 *                 notification or indication. This request may no have been enqueued before,
+	 *                 so you have to use {@link Request}.new...Request() instead of i.e.
+	 *                 {@link BleManager#writeCharacteristic(BluetoothGattCharacteristic)} which
+	 *                 returns already enqueued request.
+	 * @param response the response object that will be returned.
+	 * @param timeout  optional timeout in milliseconds.
+	 * @return The object received with a notification or indication.
+	 * @throws InterruptedException        thrown when the timeout occurred before the characteristic
+	 *                                     value has changed.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
+	 *                                     thread.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
+	 *                                     notification or indication was received.
+	 * @throws RequestFailedException      thrown when the trigger request has failed.
+	 */
+	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
+	@NonNull
+	public <E extends DataReceivedCallback> E awaitAfter(final @NonNull Request trigger,
+														 final @NonNull E response,
+														 final int timeout)
+			throws InterruptedException, DeviceDisconnectedException, RequestFailedException {
 		Request.assertNotMainThread();
 
 		final DataReceivedCallback vc = valueCallback;
 		try {
-			E response = null;
-			if (responseClass != null)
-				response = responseClass.newInstance();
 			syncLock.close();
 			with(response);
 
 			deviceDisconnected = !bleManager.isConnected();
 
 			// Ensure the trigger request it done after the callback has been set
+			triggerStatus = BluetoothGatt.GATT_SUCCESS;
+			if (trigger != null && trigger.enqueued) {
+				throw new IllegalStateException("Request already enqueued; use Request.new...Request() instead.");
+			}
 			if (!deviceDisconnected && trigger != null) {
-				trigger.run();
+				trigger.internalFail((device, status) -> {
+					triggerStatus = status;
+					syncLock.open();
+				});
+				bleManager.enqueue(trigger);
 			}
 			// Wait for value change event
 			if (!deviceDisconnected && !syncLock.block(timeout)) {
@@ -259,13 +427,10 @@ public class ValueChangedCallback {
 				syncLock.open();
 				throw new DeviceDisconnectedException();
 			}
+			if (triggerStatus != BluetoothGatt.GATT_SUCCESS) {
+				throw new RequestFailedException(trigger, triggerStatus);
+			}
 			return response;
-		} catch (IllegalAccessException e) {
-			throw new IllegalArgumentException("Couldn't instantiate " + responseClass.getCanonicalName()
-					+ " class. Is the default constructor accessible?");
-		} catch (InstantiationException e) {
-			throw new IllegalArgumentException("Couldn't instantiate " + responseClass.getCanonicalName()
-					+ " class. Does it have a default constructor with no arguments?");
 		} finally {
 			valueCallback = vc;
 		}
@@ -279,7 +444,7 @@ public class ValueChangedCallback {
 	 * @param responseClass the result class. This class will be instantiate, therefore it has to have
 	 *                      a default constructor.
 	 * @param <E>           a response class that extends {@link ProfileReadResponse}.
-	 * @return object with a valid response
+	 * @return Object with a valid response.
 	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
 	 *                                     thread.
 	 * @throws InvalidDataException        exception thrown when the data received were invalid and
@@ -297,6 +462,40 @@ public class ValueChangedCallback {
 		} catch (final InterruptedException e) {
 			// never happen
 			throw new IllegalStateException("This should never happen");
+		} catch (final RequestFailedException e) {
+			// never happen
+			throw new IllegalStateException("This should never happen");
+		}
+	}
+
+	/**
+	 * Similar to {@link #await(Class)}, but if the response class extends {@link ProfileReadResponse}
+	 * and the received response is invalid, an exception is thrown. This allows to keep all
+	 * error handling in one place.
+	 *
+	 * @param response the result object.
+	 * @param <E>      a response class that extends {@link ProfileReadResponse}.
+	 * @return Object with a valid response.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
+	 *                                     thread.
+	 * @throws InvalidDataException        exception thrown when the data received were invalid and
+	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}
+	 *                                     was called during parsing them.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
+	 *                                     notification or indication was received.
+	 */
+	@SuppressWarnings("ConstantConditions")
+	@NonNull
+	public <E extends ProfileReadResponse> E awaitValid(final @NonNull E response)
+			throws InvalidDataException, DeviceDisconnectedException {
+		try {
+			return awaitValidAfter(null, response, 0);
+		} catch (final InterruptedException e) {
+			// never happen
+			throw new IllegalStateException("This should never happen");
+		} catch (final RequestFailedException e) {
+			// never happen
+			throw new IllegalStateException("This should never happen");
 		}
 	}
 
@@ -308,7 +507,7 @@ public class ValueChangedCallback {
 	 * @param responseClass the result class. This class will be instantiate, therefore it has to have
 	 *                      a default constructor.
 	 * @param <E>           a response class that extends {@link ProfileReadResponse}.
-	 * @return object with a valid response
+	 * @return Object with a valid response.
 	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
 	 *                                     thread.
 	 * @throws InterruptedException        thrown when the timeout occurred before the characteristic
@@ -324,11 +523,47 @@ public class ValueChangedCallback {
 	public <E extends ProfileReadResponse> E awaitValid(final @NonNull Class<E> responseClass,
 														final int timeout)
 			throws InterruptedException, InvalidDataException, DeviceDisconnectedException {
-		return awaitValidAfter(null, responseClass, timeout);
+		try {
+			return awaitValidAfter(null, responseClass, timeout);
+		} catch (final RequestFailedException e) {
+			// never happen
+			throw new IllegalStateException("This should never happen");
+		}
 	}
 
 	/**
-	 * Same as {@link #awaitAfter(Runnable, Class)}, but if the response class extends
+	 * Similar to {@link #await(Class)}, but if the response class extends {@link ProfileReadResponse}
+	 * and the received response is invalid, an exception is thrown. This allows to keep all
+	 * error handling in one place.
+	 *
+	 * @param response the result object.
+	 * @param <E>      a response class that extends {@link ProfileReadResponse}.
+	 * @return Object with a valid response.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
+	 *                                     thread.
+	 * @throws InterruptedException        thrown when the timeout occurred before the characteristic
+	 *                                     value has changed.
+	 * @throws InvalidDataException        exception thrown when the data received were invalid and
+	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}
+	 *                                     was called during parsing them.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
+	 *                                     notification or indication was received.
+	 */
+	@SuppressWarnings("ConstantConditions")
+	@NonNull
+	public <E extends ProfileReadResponse> E awaitValid(final @NonNull E response,
+														final int timeout)
+			throws InterruptedException, InvalidDataException, DeviceDisconnectedException {
+		try {
+			return awaitValidAfter(null, response, timeout);
+		} catch (final RequestFailedException e) {
+			// never happen
+			throw new IllegalStateException("This should never happen");
+		}
+	}
+
+	/**
+	 * Same as {@link #awaitAfter(Request, Class)}, but if the response class extends
 	 * {@link ProfileReadResponse} and the received response is not valid, this method will thrown
 	 * an exception instead of just returning a response with {@link ProfileReadResponse#isValid()}
 	 * returning false.
@@ -339,7 +574,7 @@ public class ValueChangedCallback {
 	 * @param responseClass the result class. This class will be instantiate, therefore it has to have
 	 *                      a default constructor.
 	 * @param <E>           a response class that extends {@link ProfileReadResponse}.
-	 * @return object with a valid response
+	 * @return Object with a valid response.
 	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
 	 *                                     thread.
 	 * @throws InvalidDataException        exception thrown when the data received were invalid and
@@ -347,12 +582,13 @@ public class ValueChangedCallback {
 	 *                                     was called during parsing them.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
-	 * @see #awaitAfter(Runnable, Class)
+	 * @throws RequestFailedException      thrown when the trigger request has failed.
+	 * @see #awaitAfter(Request, Class)
 	 */
 	@NonNull
-	public <E extends ProfileReadResponse> E awaitValidAfter(final @NonNull Runnable trigger,
+	public <E extends ProfileReadResponse> E awaitValidAfter(final @NonNull Request trigger,
 															 final @NonNull Class<E> responseClass)
-			throws InvalidDataException, DeviceDisconnectedException {
+			throws InvalidDataException, DeviceDisconnectedException, RequestFailedException {
 		try {
 			return awaitValidAfter(trigger, responseClass, 0);
 		} catch (final InterruptedException e) {
@@ -362,7 +598,41 @@ public class ValueChangedCallback {
 	}
 
 	/**
-	 * Same as {@link #awaitAfter(Runnable, Class, int)}, but if the response class extends
+	 * Same as {@link #awaitAfter(Request, Class)}, but if the response class extends
+	 * {@link ProfileReadResponse} and the received response is not valid, this method will thrown
+	 * an exception instead of just returning a response with {@link ProfileReadResponse#isValid()}
+	 * returning false.
+	 *
+	 * @param trigger  an action that will be executed after the notification callback has
+	 *                 been initiated. Usually it's a write request that triggers the
+	 *                 notification or indication.
+	 * @param response the result object.
+	 * @param <E>      a response class that extends {@link ProfileReadResponse}.
+	 * @return Object with a valid response.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
+	 *                                     thread.
+	 * @throws InvalidDataException        exception thrown when the data received were invalid and
+	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}
+	 *                                     was called during parsing them.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
+	 *                                     notification or indication was received.
+	 * @throws RequestFailedException      thrown when the trigger request has failed.
+	 * @see #awaitAfter(Request, Class)
+	 */
+	@NonNull
+	public <E extends ProfileReadResponse> E awaitValidAfter(final @NonNull Request trigger,
+															 final @NonNull E response)
+			throws InvalidDataException, DeviceDisconnectedException, RequestFailedException {
+		try {
+			return awaitValidAfter(trigger, response, 0);
+		} catch (final InterruptedException e) {
+			// never happen
+			throw new IllegalStateException("This should never happen");
+		}
+	}
+
+	/**
+	 * Same as {@link #awaitAfter(Request, Class, int)}, but if the response class extends
 	 * {@link ProfileReadResponse} and the received response is not valid, this method will thrown
 	 * an exception instead of just returning a response with {@link ProfileReadResponse#isValid()}
 	 * returning false.
@@ -374,7 +644,7 @@ public class ValueChangedCallback {
 	 *                      a default constructor.
 	 * @param timeout       optional timeout in milliseconds.
 	 * @param <E>           a response class that extends {@link ProfileReadResponse}.
-	 * @return object with a valid response
+	 * @return Object with a valid response.
 	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
 	 *                                     thread.
 	 * @throws InterruptedException        thrown when the timeout occurred before the characteristic
@@ -384,19 +654,58 @@ public class ValueChangedCallback {
 	 *                                     was called during parsing them.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
-	 * @see #awaitAfter(Runnable, Class, int)
+	 * @throws RequestFailedException      thrown when the trigger request has failed.
 	 */
 	@SuppressWarnings({"ConstantConditions", "NullableProblems"})
 	@NonNull
-	public <E extends ProfileReadResponse> E awaitValidAfter(final @NonNull Runnable trigger,
+	public <E extends ProfileReadResponse> E awaitValidAfter(final @NonNull Request trigger,
 															 final @NonNull Class<E> responseClass,
 															 final int timeout)
-			throws InterruptedException, InvalidDataException, DeviceDisconnectedException {
+			throws InterruptedException, InvalidDataException, DeviceDisconnectedException,
+			RequestFailedException {
 		final E response = awaitAfter(trigger, responseClass, timeout);
 		if (response != null && !response.isValid()) {
 			throw new InvalidDataException(response);
 		}
 		return response;
+	}
+
+	/**
+	 * Same as {@link #awaitAfter(Request, Class, int)}, but if the response class extends
+	 * {@link ProfileReadResponse} and the received response is not valid, this method will thrown
+	 * an exception instead of just returning a response with {@link ProfileReadResponse#isValid()}
+	 * returning false.
+	 *
+	 * @param trigger  an action that will be executed after the notification callback has
+	 *                 been initiated. Usually it's a write request that triggers the
+	 *                 notification or indication.
+	 * @param response the result object.
+	 * @param timeout  optional timeout in milliseconds.
+	 * @param <E>      a response class that extends {@link ProfileReadResponse}.
+	 * @return Object with a valid response.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
+	 *                                     thread.
+	 * @throws InterruptedException        thrown when the timeout occurred before the characteristic
+	 *                                     value has changed.
+	 * @throws InvalidDataException        exception thrown when the data received were invalid and
+	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}
+	 *                                     was called during parsing them.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
+	 *                                     notification or indication was received.
+	 * @throws RequestFailedException      thrown when the trigger request has failed.
+	 */
+	@SuppressWarnings({"ConstantConditions", "NullableProblems"})
+	@NonNull
+	public <E extends ProfileReadResponse> E awaitValidAfter(final @NonNull Request trigger,
+															 final @NonNull E response,
+															 final int timeout)
+			throws InterruptedException, InvalidDataException, DeviceDisconnectedException,
+			RequestFailedException {
+		final E result = awaitAfter(trigger, response, timeout);
+		if (result != null && !result.isValid()) {
+			throw new InvalidDataException(result);
+		}
+		return result;
 	}
 
 	ValueChangedCallback free() {
