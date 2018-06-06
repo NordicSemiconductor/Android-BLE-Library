@@ -697,12 +697,27 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 	/**
 	 * Writes the characteristic value to the given characteristic.
+	 * The write type will be read from the characteristic.
 	 *
 	 * @param characteristic the characteristic to write to
+	 * @param data the data to be sent
 	 * @return true if request has been enqueued
 	 */
-	protected final boolean writeCharacteristic(final BluetoothGattCharacteristic characteristic) {
-		return enqueue(Request.newWriteRequest(characteristic, characteristic.getValue()));
+	protected final boolean writeCharacteristic(final BluetoothGattCharacteristic characteristic, final byte[] data) {
+		return enqueue(Request.newWriteRequest(characteristic, data));
+	}
+
+	/**
+	 * Writes the characteristic value to the given characteristic.
+	 *
+	 * @param characteristic the characteristic to write to
+	 * @param data the data to be sent
+	 * @param writeType the write type, one of {@link BluetoothGattCharacteristic#WRITE_TYPE_DEFAULT}
+	 *                  or {@link BluetoothGattCharacteristic#WRITE_TYPE_NO_RESPONSE}.
+	 * @return true if request has been enqueued
+	 */
+	protected final boolean writeCharacteristic(final BluetoothGattCharacteristic characteristic, final byte[] data, final int writeType) {
+		return enqueue(Request.newWriteRequest(characteristic, data, writeType));
 	}
 
 	private boolean internalWriteCharacteristic(final BluetoothGattCharacteristic characteristic) {
@@ -744,10 +759,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * Writes the descriptor value to the given descriptor.
 	 *
 	 * @param descriptor the descriptor to write to
+	 * @param data the data to be sent
 	 * @return true if request has been enqueued
 	 */
-	protected final boolean writeDescriptor(final BluetoothGattDescriptor descriptor) {
-		return enqueue(Request.newWriteRequest(descriptor, descriptor.getValue()));
+	protected final boolean writeDescriptor(final BluetoothGattDescriptor descriptor, final byte[] data) {
+		return enqueue(Request.newWriteRequest(descriptor, data));
 	}
 
 	private boolean internalWriteDescriptor(final BluetoothGattDescriptor descriptor) {
