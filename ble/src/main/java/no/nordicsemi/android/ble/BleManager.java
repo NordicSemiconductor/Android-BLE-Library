@@ -907,24 +907,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	/**
-	 * Writes the characteristic value to the given characteristic. The write type is taken from the
-	 * characteristic.
-	 * <p>
-	 * Use {@link WriteRequest#split() split()} or {@link WriteRequest#split(DataSplitter) split(DataSplitter)}
-	 * on the returned {@link WriteRequest} if data should be automatically split into multiple packets.
-	 * If the characteristic is null the {@link Request#fail(FailCallback) fail(FailCallback)}
-	 * callback will be called.
-	 * </p>
-	 *
-	 * @param characteristic the characteristic to write to.
-	 * @return The request.
-	 */
-	@NonNull
-	protected final WriteRequest writeCharacteristic(final @Nullable BluetoothGattCharacteristic characteristic) {
-		return enqueue(Request.newWriteRequest(characteristic, characteristic != null ? characteristic.getValue() : null));
-	}
-
-	/**
 	 * Writes the given data to the characteristic. The write type is taken from the characteristic.
 	 * <p>
 	 * Use {@link WriteRequest#split() split()} or {@link WriteRequest#split(DataSplitter) split(ValueSplitter)}
@@ -1017,23 +999,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		log(Level.VERBOSE, "Reading descriptor " + descriptor.getUuid());
 		log(Level.DEBUG, "gatt.readDescriptor(" + descriptor.getUuid() + ")");
 		return gatt.readDescriptor(descriptor);
-	}
-
-	/**
-	 * Writes the descriptor value to the given descriptor.
-	 * <p>
-	 * Use {@link WriteRequest#split() split()} or {@link WriteRequest#split(DataSplitter) split(ValueSplitter)}
-	 * on the returned {@link WriteRequest} if data should be automatically split into multiple packets.
-	 * If the descriptor is null the {@link Request#fail(FailCallback) fail(FailCallback)}
-	 * callback will be called.
-	 * </p>
-	 *
-	 * @param descriptor the descriptor to write to.
-	 * @return The request.
-	 */
-	@NonNull
-	protected final WriteRequest writeDescriptor(final @Nullable BluetoothGattDescriptor descriptor) {
-		return enqueue(Request.newWriteRequest(descriptor, descriptor != null ? descriptor.getValue() : null));
 	}
 
 	/**
