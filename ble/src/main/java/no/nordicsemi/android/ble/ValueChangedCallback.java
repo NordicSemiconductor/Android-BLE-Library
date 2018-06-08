@@ -81,6 +81,8 @@ public class ValueChangedCallback {
 	 * The first notification or indication must be received before the timeout occurs,
 	 * otherwise {@link RequiredDataReceivedCallback#onTimeoutOccurred(BluetoothDevice)}
 	 * will be called. If a merger is set, the whole message must be completed before the timeout.
+	 * Set timeout to 0 to only be notified when the device disconnected before the
+	 * characteristic value has changed (infinite timeout).
 	 * <p>
 	 * This callback is ignored when synchronous call is made using {@link #await(Class, int)}
 	 * or any of variants.
@@ -88,25 +90,23 @@ public class ValueChangedCallback {
 	 * @param callback the data callback.
 	 * @param timeout the time in which a notification or an indication is expected.
 	 *                If {@link #merge(DataMerger)} was used, the whole message needs to be
-	 *                received before the timeout. In milliseconds.
+	 *                received before the timeout. In milliseconds. Use 0 for infinite timeout.
 	 * @return The request.
 	 */
 	@NonNull
 	public ValueChangedCallback with(@NonNull final RequiredDataReceivedCallback callback,
 									 final long timeout) {
 		this.valueCallback = callback;
+		this.timeoutHandler = () -> {
+			timeoutHandler = null;
+			if (deviceDisconnected) {
+				callback.onDeviceDisconnected(bleManager.getBluetoothDevice());
+			} else {
+				callback.onTimeoutOccurred(bleManager.getBluetoothDevice());
+			}
+		};
 		if (timeout > 0) {
-			this.timeoutHandler = () -> {
-				timeoutHandler = null;
-				if (deviceDisconnected) {
-					callback.onDeviceDisconnected(bleManager.getBluetoothDevice());
-				} else {
-					callback.onTimeoutOccurred(bleManager.getBluetoothDevice());
-				}
-			};
-			this.bleManager.mHandler.postDelayed(timeoutHandler, timeout);
-		} else {
-			cancelTimeout();
+			bleManager.mHandler.postDelayed(timeoutHandler, timeout);
 		}
 		return this;
 	}
@@ -131,7 +131,8 @@ public class ValueChangedCallback {
 	 * @return The request.
 	 */
 	@NonNull
-	public ValueChangedCallback merge(@NonNull final DataMerger merger, @NonNull final ReadProgressCallback callback) {
+	public ValueChangedCallback merge(@NonNull final DataMerger merger,
+									  @NonNull final ReadProgressCallback callback) {
 		this.dataMerger = merger;
 		this.progressCallback = callback;
 		return this;
@@ -144,8 +145,8 @@ public class ValueChangedCallback {
 	 * <p>
 	 * The value of returned notification or indication is ignored.
 	 *
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
+	 * @throws IllegalStateException       thrown when you try to call this method from
+	 *                                     the main (UI) thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
 	 */
@@ -163,10 +164,10 @@ public class ValueChangedCallback {
 	 * The value of returned notification or indication is ignored.
 	 *
 	 * @param timeout optional timeout in milliseconds.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
-	 * @throws InterruptedException        thrown when the timeout occurred before the characteristic
-	 *                                     value has changed.
+	 * @throws IllegalStateException       thrown when you try to call this method from
+	 *                                     the main (UI) thread.
+	 * @throws InterruptedException        thrown when the timeout occurred before the
+	 *                                     characteristic value has changed.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
 	 */
@@ -180,11 +181,11 @@ public class ValueChangedCallback {
 	 * <p>
 	 * This method may not be called from the main (UI) thread.
 	 *
-	 * @param responseClass the response class. This class will be instantiate, therefore it has to have
-	 *                      a default constructor.
+	 * @param responseClass the response class. This class will be instantiate, therefore it has
+	 *                      to have a default constructor.
 	 * @return The object received with a notification or indication.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
+	 * @throws IllegalStateException       thrown when you try to call this method from
+	 *                                     the main (UI) thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
 	 */
@@ -207,8 +208,8 @@ public class ValueChangedCallback {
 	 *
 	 * @param response the response object that will be returned.
 	 * @return The object received with a notification or indication.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
+	 * @throws IllegalStateException       thrown when you try to call this method from
+	 *                                     the main (UI) thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
 	 */
@@ -230,13 +231,13 @@ public class ValueChangedCallback {
 	 * This method may not be called from the main (UI) thread.
 	 *
 	 * @param timeout       optional timeout in milliseconds
-	 * @param responseClass the response class. This class will be instantiate, therefore it has to have
-	 *                      a default constructor.
+	 * @param responseClass the response class. This class will be instantiate, therefore it has
+	 *                      to have a default constructor.
 	 * @return The object received with a notification or indication.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
-	 * @throws InterruptedException        thrown when the timeout occurred before the characteristic
-	 *                                     value has changed.
+	 * @throws IllegalStateException       thrown when you try to call this method from
+	 *                                     the main (UI) thread.
+	 * @throws InterruptedException        thrown when the timeout occurred before the
+	 *                                     characteristic value has changed.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
 	 */
@@ -261,10 +262,10 @@ public class ValueChangedCallback {
 	 * @param timeout  optional timeout in milliseconds
 	 * @param response the response object that will be returned.
 	 * @return The object received with a notification or indication.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
-	 * @throws InterruptedException        thrown when the timeout occurred before the characteristic
-	 *                                     value has changed.
+	 * @throws IllegalStateException       thrown when you try to call this method from
+	 *                                     the main (UI) thread.
+	 * @throws InterruptedException        thrown when the timeout occurred before the
+	 *                                     characteristic value has changed.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
 	 */
@@ -295,8 +296,8 @@ public class ValueChangedCallback {
 	 * @param responseClass the response class. This class will be instantiate, therefore it has to
 	 *                      have a default constructor.
 	 * @return The object received with a notification or indication.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
+	 * @throws IllegalStateException       thrown when you try to call this method from
+	 *                                     the main (UI) thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
 	 * @throws RequestFailedException      thrown when the trigger request has failed.
@@ -328,8 +329,8 @@ public class ValueChangedCallback {
 	 *                 which returns already enqueued request.
 	 * @param response the response object that will be returned.
 	 * @return The object received with a notification or indication.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
+	 * @throws IllegalStateException       thrown when you try to call this method from
+	 *                                     the main (UI) thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
 	 * @throws RequestFailedException      thrown when the trigger request has failed.
@@ -382,10 +383,10 @@ public class ValueChangedCallback {
 	 *                      have a default constructor.
 	 * @param timeout       optional timeout in milliseconds.
 	 * @return The object received with a notification or indication.
-	 * @throws InterruptedException        thrown when the timeout occurred before the characteristic
-	 *                                     value has changed.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
+	 * @throws InterruptedException        thrown when the timeout occurred before the
+	 *                                     characteristic value has changed.
+	 * @throws IllegalStateException       thrown when you try to call this method from
+	 *                                     the main (UI) thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
 	 * @throws RequestFailedException      thrown when the trigger request has failed.
@@ -446,10 +447,10 @@ public class ValueChangedCallback {
 	 * @param response the response object that will be returned.
 	 * @param timeout  optional timeout in milliseconds.
 	 * @return The object received with a notification or indication.
-	 * @throws InterruptedException        thrown when the timeout occurred before the characteristic
-	 *                                     value has changed.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
+	 * @throws InterruptedException        thrown when the timeout occurred before the
+	 *                                     characteristic value has changed.
+	 * @throws IllegalStateException       thrown when you try to call this method from
+	 *                                     the main (UI) thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
 	 * @throws RequestFailedException      thrown when the trigger request has failed.
@@ -473,7 +474,8 @@ public class ValueChangedCallback {
 			// Ensure the trigger request it done after the callback has been set
 			triggerStatus = BluetoothGatt.GATT_SUCCESS;
 			if (trigger != null && trigger.enqueued) {
-				throw new IllegalStateException("Request already enqueued; use Request.new...Request() instead.");
+				throw new IllegalStateException("Request already enqueued; " +
+						"use Request.new...Request() instead.");
 			}
 			if (!deviceDisconnected && trigger != null) {
 				trigger.internalFail((device, status) -> {
@@ -500,16 +502,16 @@ public class ValueChangedCallback {
 	}
 
 	/**
-	 * Similar to {@link #await(Class)}, but if the response class extends {@link ProfileReadResponse}
-	 * and the received response is invalid, an exception is thrown. This allows to keep all
-	 * error handling in one place.
+	 * Similar to {@link #await(Class)}, but if the response class extends
+	 * {@link ProfileReadResponse} and the received response is invalid, an exception is thrown.
+	 * This allows to keep all error handling in one place.
 	 *
-	 * @param responseClass the result class. This class will be instantiate, therefore it has to have
-	 *                      a default constructor.
+	 * @param responseClass the result class. This class will be instantiate, therefore it
+	 *                      has to have a default constructor.
 	 * @param <E>           a response class that extends {@link ProfileReadResponse}.
 	 * @return Object with a valid response.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
+	 * @throws IllegalStateException       thrown when you try to call this method from
+	 *                                     the main (UI) thread.
 	 * @throws InvalidDataException        exception thrown when the data received were invalid and
 	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}
 	 *                                     was called during parsing them.
@@ -532,15 +534,15 @@ public class ValueChangedCallback {
 	}
 
 	/**
-	 * Similar to {@link #await(Class)}, but if the response class extends {@link ProfileReadResponse}
-	 * and the received response is invalid, an exception is thrown. This allows to keep all
-	 * error handling in one place.
+	 * Similar to {@link #await(Class)}, but if the response class extends
+	 * {@link ProfileReadResponse} and the received response is invalid, an exception is thrown.
+	 * This allows to keep all error handling in one place.
 	 *
 	 * @param response the result object.
 	 * @param <E>      a response class that extends {@link ProfileReadResponse}.
 	 * @return Object with a valid response.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
+	 * @throws IllegalStateException       thrown when you try to call this method from
+	 *                                     the main (UI) thread.
 	 * @throws InvalidDataException        exception thrown when the data received were invalid and
 	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}
 	 *                                     was called during parsing them.
@@ -563,18 +565,18 @@ public class ValueChangedCallback {
 	}
 
 	/**
-	 * Similar to {@link #await(Class)}, but if the response class extends {@link ProfileReadResponse}
-	 * and the received response is invalid, an exception is thrown. This allows to keep all
-	 * error handling in one place.
+	 * Similar to {@link #await(Class)}, but if the response class extends
+	 * {@link ProfileReadResponse} and the received response is invalid, an exception is thrown.
+	 * This allows to keep all error handling in one place.
 	 *
-	 * @param responseClass the result class. This class will be instantiate, therefore it has to have
-	 *                      a default constructor.
+	 * @param responseClass the result class. This class will be instantiate, therefore it
+	 *                      has to have a default constructor.
 	 * @param <E>           a response class that extends {@link ProfileReadResponse}.
 	 * @return Object with a valid response.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
-	 * @throws InterruptedException        thrown when the timeout occurred before the characteristic
-	 *                                     value has changed.
+	 * @throws IllegalStateException       thrown when you try to call this method from
+	 *                                     the main (UI) thread.
+	 * @throws InterruptedException        thrown when the timeout occurred before the
+	 *                                     characteristic value has changed.
 	 * @throws InvalidDataException        exception thrown when the data received were invalid and
 	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}
 	 *                                     was called during parsing them.
@@ -595,17 +597,17 @@ public class ValueChangedCallback {
 	}
 
 	/**
-	 * Similar to {@link #await(Class)}, but if the response class extends {@link ProfileReadResponse}
-	 * and the received response is invalid, an exception is thrown. This allows to keep all
-	 * error handling in one place.
+	 * Similar to {@link #await(Class)}, but if the response class extends
+	 * {@link ProfileReadResponse} and the received response is invalid, an exception is thrown.
+	 * This allows to keep all error handling in one place.
 	 *
 	 * @param response the result object.
 	 * @param <E>      a response class that extends {@link ProfileReadResponse}.
 	 * @return Object with a valid response.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
-	 * @throws InterruptedException        thrown when the timeout occurred before the characteristic
-	 *                                     value has changed.
+	 * @throws IllegalStateException       thrown when you try to call this method from
+	 *                                     the main (UI) thread.
+	 * @throws InterruptedException        thrown when the timeout occurred before the
+	 *                                     characteristic value has changed.
 	 * @throws InvalidDataException        exception thrown when the data received were invalid and
 	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}
 	 *                                     was called during parsing them.
@@ -634,12 +636,12 @@ public class ValueChangedCallback {
 	 * @param trigger       an action that will be executed after the notification callback has
 	 *                      been initiated. Usually it's a write request that triggers the
 	 *                      notification or indication.
-	 * @param responseClass the result class. This class will be instantiate, therefore it has to have
-	 *                      a default constructor.
+	 * @param responseClass the result class. This class will be instantiate, therefore it
+	 *                      has to have a default constructor.
 	 * @param <E>           a response class that extends {@link ProfileReadResponse}.
 	 * @return Object with a valid response.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
+	 * @throws IllegalStateException       thrown when you try to call this method from
+	 *                                     the main (UI) thread.
 	 * @throws InvalidDataException        exception thrown when the data received were invalid and
 	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}
 	 *                                     was called during parsing them.
@@ -672,8 +674,8 @@ public class ValueChangedCallback {
 	 * @param response the result object.
 	 * @param <E>      a response class that extends {@link ProfileReadResponse}.
 	 * @return Object with a valid response.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
+	 * @throws IllegalStateException       thrown when you try to call this method from
+	 *                                     the main (UI) thread.
 	 * @throws InvalidDataException        exception thrown when the data received were invalid and
 	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}
 	 *                                     was called during parsing them.
@@ -703,15 +705,15 @@ public class ValueChangedCallback {
 	 * @param trigger       an action that will be executed after the notification callback has
 	 *                      been initiated. Usually it's a write request that triggers the
 	 *                      notification or indication.
-	 * @param responseClass the result class. This class will be instantiate, therefore it has to have
-	 *                      a default constructor.
+	 * @param responseClass the result class. This class will be instantiate, therefore it
+	 *                      has to have a default constructor.
 	 * @param timeout       optional timeout in milliseconds.
 	 * @param <E>           a response class that extends {@link ProfileReadResponse}.
 	 * @return Object with a valid response.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
-	 * @throws InterruptedException        thrown when the timeout occurred before the characteristic
-	 *                                     value has changed.
+	 * @throws IllegalStateException       thrown when you try to call this method from
+	 *                                     the main (UI) thread.
+	 * @throws InterruptedException        thrown when the timeout occurred before the
+	 *                                     characteristic value has changed.
 	 * @throws InvalidDataException        exception thrown when the data received were invalid and
 	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}
 	 *                                     was called during parsing them.
@@ -746,10 +748,10 @@ public class ValueChangedCallback {
 	 * @param timeout  optional timeout in milliseconds.
 	 * @param <E>      a response class that extends {@link ProfileReadResponse}.
 	 * @return Object with a valid response.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
-	 * @throws InterruptedException        thrown when the timeout occurred before the characteristic
-	 *                                     value has changed.
+	 * @throws IllegalStateException       thrown when you try to call this method from
+	 *                                     the main (UI) thread.
+	 * @throws InterruptedException        thrown when the timeout occurred before the
+	 *                                     characteristic value has changed.
 	 * @throws InvalidDataException        exception thrown when the data received were invalid and
 	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}
 	 *                                     was called during parsing them.
