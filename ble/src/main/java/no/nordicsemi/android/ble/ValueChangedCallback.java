@@ -30,6 +30,7 @@ import android.support.annotation.NonNull;
 
 import no.nordicsemi.android.ble.callback.DataReceivedCallback;
 import no.nordicsemi.android.ble.callback.ReadProgressCallback;
+import no.nordicsemi.android.ble.callback.RequiredDataReceivedCallback;
 import no.nordicsemi.android.ble.callback.profile.ProfileReadResponse;
 import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.data.DataMerger;
@@ -49,6 +50,7 @@ public class ValueChangedCallback {
 	private int count = 0;
 	private boolean deviceDisconnected;
 	private int triggerStatus;
+	private Runnable timeoutHandler;
 
 	ValueChangedCallback(final BleManager<?> manager) {
 		bleManager = manager;
@@ -68,6 +70,44 @@ public class ValueChangedCallback {
 	@NonNull
 	public ValueChangedCallback with(@NonNull final DataReceivedCallback callback) {
 		this.valueCallback = callback;
+		cancelTimeout();
+		return this;
+	}
+
+	/**
+	 * Sets the asynchronous data callback that will be called whenever a notification or
+	 * an indication is received on given characteristic.
+	 * <p>
+	 * The first notification or indication must be received before the timeout occurs,
+	 * otherwise {@link RequiredDataReceivedCallback#onTimeoutOccurred(BluetoothDevice)}
+	 * will be called. If a merger is set, the whole message must be completed before the timeout.
+	 * <p>
+	 * This callback is ignored when synchronous call is made using {@link #await(Class, int)}
+	 * or any of variants.
+	 *
+	 * @param callback the data callback.
+	 * @param timeout the time in which a notification or an indication is expected.
+	 *                If {@link #merge(DataMerger)} was used, the whole message needs to be
+	 *                received before the timeout. In milliseconds.
+	 * @return The request.
+	 */
+	@NonNull
+	public ValueChangedCallback with(@NonNull final RequiredDataReceivedCallback callback,
+									 final long timeout) {
+		this.valueCallback = callback;
+		if (timeout > 0) {
+			this.timeoutHandler = () -> {
+				timeoutHandler = null;
+				if (deviceDisconnected) {
+					callback.onDeviceDisconnected(bleManager.getBluetoothDevice());
+				} else {
+					callback.onTimeoutOccurred(bleManager.getBluetoothDevice());
+				}
+			};
+			this.bleManager.mHandler.postDelayed(timeoutHandler, timeout);
+		} else {
+			cancelTimeout();
+		}
 		return this;
 	}
 
@@ -421,6 +461,7 @@ public class ValueChangedCallback {
 														 final int timeout)
 			throws InterruptedException, DeviceDisconnectedException, RequestFailedException {
 		Request.assertNotMainThread();
+		cancelTimeout();
 
 		final DataReceivedCallback vc = valueCallback;
 		try {
@@ -751,6 +792,7 @@ public class ValueChangedCallback {
 		}
 
 		if (dataMerger == null) {
+			cancelTimeout();
 			valueCallback.onDataReceived(device, new Data(value));
 			syncLock.open();
 		} else {
@@ -759,6 +801,7 @@ public class ValueChangedCallback {
 			if (buffer == null)
 				buffer = new DataStream();
 			if (dataMerger.merge(buffer, value, count++)) {
+				cancelTimeout();
 				valueCallback.onDataReceived(device, buffer.toData());
 				buffer = null;
 				count = 0;
@@ -771,5 +814,22 @@ public class ValueChangedCallback {
 	void notifyDeviceDisconnected(final BluetoothDevice device) {
 		deviceDisconnected = true;
 		syncLock.open();
+		notifyDataNotReceived();
+	}
+
+	private void cancelTimeout() {
+		final Runnable handler = timeoutHandler;
+		if (handler != null) {
+			bleManager.mHandler.removeCallbacks(handler);
+		}
+		timeoutHandler = null;
+	}
+
+	private void notifyDataNotReceived() {
+		final Runnable handler = timeoutHandler;
+		if (handler != null) {
+			handler.run();
+			cancelTimeout();
+		}
 	}
 }

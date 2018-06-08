@@ -116,7 +116,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 	private final Object mLock = new Object();
 	private final Context mContext;
-	private final Handler mHandler;
+	final Handler mHandler;
 	/**
 	 * The log session or null if nRF Logger is not installed.
 	 */
