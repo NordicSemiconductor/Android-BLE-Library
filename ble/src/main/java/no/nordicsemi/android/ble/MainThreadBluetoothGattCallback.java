@@ -26,15 +26,16 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
-import android.content.Context;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 
 /**
  * This class ensures that the BLE callbacks will be called on the main (UI) thread.
- * Handler parameter was added to {@link android.bluetooth.BluetoothDevice#connectGatt(Context, boolean, BluetoothGattCallback, int, int, Handler)}
+ * Handler parameter was added to {@link android.bluetooth.BluetoothDevice
+ * #connectGatt(Context, boolean, BluetoothGattCallback, int, int, Handler)}
  * in Android Oreo, before that the behavior was undefined.
  */
 abstract class MainThreadBluetoothGattCallback extends BluetoothGattCallback {
@@ -52,26 +53,42 @@ abstract class MainThreadBluetoothGattCallback extends BluetoothGattCallback {
 		}
 	}
 
-	abstract void onConnectionStateChangeSafe(final BluetoothGatt gatt, final int status, final int newState);
-	abstract void onServicesDiscoveredSafe(final BluetoothGatt gatt, final int status);
-	abstract void onCharacteristicReadSafe(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status);
-	abstract void onCharacteristicWriteSafe(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status);
-	abstract void onCharacteristicChangedSafe(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic);
-	abstract void onDescriptorReadSafe(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int status);
-	abstract void onReadRemoteRssiSafe(final BluetoothGatt gatt, final int rssi, final int status);
-	abstract void onDescriptorWriteSafe(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int status);
-	abstract void onReliableWriteCompletedSafe(final BluetoothGatt gatt, final int status);
+	abstract void onConnectionStateChangeSafe(@NonNull final BluetoothGatt gatt, final int status,
+											  final int newState);
+	abstract void onServicesDiscoveredSafe(@NonNull final BluetoothGatt gatt, final int status);
+	abstract void onCharacteristicReadSafe(@NonNull final BluetoothGatt gatt,
+										   @NonNull final BluetoothGattCharacteristic characteristic,
+										   final int status);
+	abstract void onCharacteristicWriteSafe(@NonNull final BluetoothGatt gatt,
+											@NonNull final BluetoothGattCharacteristic characteristic,
+											final int status);
+	abstract void onCharacteristicChangedSafe(@NonNull final BluetoothGatt gatt,
+											  @NonNull final BluetoothGattCharacteristic characteristic);
+	abstract void onDescriptorReadSafe(@NonNull final BluetoothGatt gatt,
+									   @NonNull final BluetoothGattDescriptor descriptor,
+									   final int status);
+	abstract void onReadRemoteRssiSafe(@NonNull final BluetoothGatt gatt, final int rssi,
+									   final int status);
+	abstract void onDescriptorWriteSafe(@NonNull final BluetoothGatt gatt,
+										@NonNull final BluetoothGattDescriptor descriptor,
+										final int status);
+	abstract void onReliableWriteCompletedSafe(@NonNull final BluetoothGatt gatt, final int status);
 	@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-	abstract void onMtuChangedSafe(final BluetoothGatt gatt, final int mtu, final int status);
+	abstract void onMtuChangedSafe(@NonNull final BluetoothGatt gatt, final int mtu, final int status);
 	@RequiresApi(api = Build.VERSION_CODES.O)
-	abstract void onPhyReadSafe(final BluetoothGatt gatt, final int txPhy, final int rxPhy, final int status);
+	abstract void onPhyReadSafe(@NonNull final BluetoothGatt gatt,
+								final int txPhy, final int rxPhy, final int status);
 	@RequiresApi(api = Build.VERSION_CODES.O)
-	abstract void onPhyUpdateSafe(final BluetoothGatt gatt, final int txPhy, final int rxPhy, final int status);
+	abstract void onPhyUpdateSafe(@NonNull final BluetoothGatt gatt,
+								  final int txPhy, final int rxPhy, final int status);
 	@RequiresApi(api = Build.VERSION_CODES.O)
-	abstract void onConnectionUpdatedSafe(final BluetoothGatt gatt, final int interval, final int latency, final int timeout, final int status);
+	abstract void onConnectionUpdatedSafe(@NonNull final BluetoothGatt gatt,
+										  final int interval, final int latency, final int timeout,
+										  final int status);
 
 	@Override
-	public final void onConnectionStateChange(final BluetoothGatt gatt, final int status, final int newState) {
+	public final void onConnectionStateChange(final BluetoothGatt gatt, final int status,
+											  final int newState) {
 		runOnUiThread(() -> onConnectionStateChangeSafe(gatt, status, newState));
 	}
 
@@ -81,27 +98,34 @@ abstract class MainThreadBluetoothGattCallback extends BluetoothGattCallback {
 	}
 
 	@Override
-	public final void onCharacteristicRead(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
+	public final void onCharacteristicRead(final BluetoothGatt gatt,
+										   final BluetoothGattCharacteristic characteristic,
+										   final int status) {
 		runOnUiThread(() -> onCharacteristicReadSafe(gatt, characteristic, status));
 	}
 
 	@Override
-	public final void onCharacteristicWrite(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
+	public final void onCharacteristicWrite(final BluetoothGatt gatt,
+											final BluetoothGattCharacteristic characteristic,
+											final int status) {
 		runOnUiThread(() -> onCharacteristicWriteSafe(gatt, characteristic, status));
 	}
 
 	@Override
-	public final void onCharacteristicChanged(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
+	public final void onCharacteristicChanged(final BluetoothGatt gatt,
+											  final BluetoothGattCharacteristic characteristic) {
 		runOnUiThread(() -> onCharacteristicChangedSafe(gatt, characteristic));
 	}
 
 	@Override
-	public final void onDescriptorRead(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int status) {
+	public final void onDescriptorRead(final BluetoothGatt gatt,
+									   final BluetoothGattDescriptor descriptor, final int status) {
 		runOnUiThread(() -> onDescriptorReadSafe(gatt, descriptor, status));
 	}
 
 	@Override
-	public final void onDescriptorWrite(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int status) {
+	public final void onDescriptorWrite(final BluetoothGatt gatt,
+										final BluetoothGattDescriptor descriptor, final int status) {
 		runOnUiThread(() -> onDescriptorWriteSafe(gatt, descriptor, status));
 	}
 
@@ -123,20 +147,25 @@ abstract class MainThreadBluetoothGattCallback extends BluetoothGattCallback {
 
 	@RequiresApi(api = Build.VERSION_CODES.O)
 	@Override
-	public final void onPhyRead(final BluetoothGatt gatt, final int txPhy, final int rxPhy, final int status) {
+	public final void onPhyRead(final BluetoothGatt gatt, final int txPhy, final int rxPhy,
+								final int status) {
 		runOnUiThread(() -> onPhyReadSafe(gatt, txPhy, rxPhy, status));
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.O)
 	@Override
-	public final void onPhyUpdate(final BluetoothGatt gatt, final int txPhy, final int rxPhy, final int status) {
+	public final void onPhyUpdate(final BluetoothGatt gatt, final int txPhy, final int rxPhy,
+								  final int status) {
 		runOnUiThread(() -> onPhyUpdateSafe(gatt, txPhy, rxPhy, status));
 	}
 
 	// This method is still hidden in Android Oreo
 	// @Override
+	@SuppressWarnings("unused")
 	@RequiresApi(api = Build.VERSION_CODES.O)
-	public final void onConnectionUpdated(final BluetoothGatt gatt, final int interval, final int latency, final int timeout, final int status) {
+	public final void onConnectionUpdated(final BluetoothGatt gatt,
+										  final int interval, final int latency, final int timeout,
+										  final int status) {
 		runOnUiThread(() -> onConnectionUpdatedSafe(gatt, interval, latency, timeout, status));
 	}
 }

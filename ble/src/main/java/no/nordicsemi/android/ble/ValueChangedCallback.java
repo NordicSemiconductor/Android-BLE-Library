@@ -250,7 +250,7 @@ public class ValueChangedCallback {
 	 *                      callback has been initiated. Usually it's a write request that triggers
 	 *                      the notification or indication. This request may no have been enqueued
 	 *                      before, so you have to use {@link Request}.new...Request() instead of
-	 *                      i.e. {@link BleManager#writeCharacteristic(BluetoothGattCharacteristic)}
+	 *                      {@link BleManager#writeCharacteristic(BluetoothGattCharacteristic, byte[])}
 	 *                      which returns already enqueued request.
 	 * @param responseClass the response class. This class will be instantiate, therefore it has to
 	 *                      have a default constructor.
@@ -283,8 +283,8 @@ public class ValueChangedCallback {
 	 * @param trigger  an optional request that will be executed after the notification
 	 *                 callback has been initiated. Usually it's a write request that triggers
 	 *                 the notification or indication. This request may no have been enqueued
-	 *                 before, so you have to use {@link Request}.new...Request() instead of
-	 *                 i.e. {@link BleManager#writeCharacteristic(BluetoothGattCharacteristic)}
+	 *                 before, so you have to use {@link Request}.new...Request() instead of i.e.
+	 *                 {@link BleManager#writeCharacteristic(BluetoothGattCharacteristic, byte[])}
 	 *                 which returns already enqueued request.
 	 * @param response the response object that will be returned.
 	 * @return The object received with a notification or indication.
@@ -336,7 +336,7 @@ public class ValueChangedCallback {
 	 *                      callback has been initiated. Usually it's a write request that triggers
 	 *                      the notification or indication. This request may no have been enqueued
 	 *                      before, so you have to use {@link Request}.new...Request() instead of
-	 *                      i.e. {@link BleManager#writeCharacteristic(BluetoothGattCharacteristic)}
+	 *                      {@link BleManager#writeCharacteristic(BluetoothGattCharacteristic, byte[])}
 	 *                      which returns already enqueued request.
 	 * @param responseClass the response class. This class will be instantiate, therefore it has to
 	 *                      have a default constructor.
@@ -401,8 +401,8 @@ public class ValueChangedCallback {
 	 *                 been initiated. Usually it's a write request that triggers the
 	 *                 notification or indication. This request may no have been enqueued before,
 	 *                 so you have to use {@link Request}.new...Request() instead of i.e.
-	 *                 {@link BleManager#writeCharacteristic(BluetoothGattCharacteristic)} which
-	 *                 returns already enqueued request.
+	 *                 {@link BleManager#writeCharacteristic(BluetoothGattCharacteristic, byte[])}
+	 *                 which returns already enqueued request.
 	 * @param response the response object that will be returned.
 	 * @param timeout  optional timeout in milliseconds.
 	 * @return The object received with a notification or indication.
