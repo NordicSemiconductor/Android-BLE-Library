@@ -471,15 +471,17 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				mInitialConnection = true;
 			}
 			mBluetoothDevice = device;
+			mGattCallback = getGattCallback();
+			mGattCallback.setHandler(mHandler);
 			log(Level.VERBOSE, "Connecting...");
 			mCallbacks.onDeviceConnecting(device);
 			log(Level.DEBUG, "gatt = device.connectGatt(autoConnect = false)");
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-				mBluetoothGatt = device.connectGatt(mContext, false, mGattCallback = getGattCallback(), BluetoothDevice.TRANSPORT_LE, preferredPhy, mHandler);
+				mBluetoothGatt = device.connectGatt(mContext, false, mGattCallback, BluetoothDevice.TRANSPORT_LE, preferredPhy, mHandler);
 			} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-				mBluetoothGatt = device.connectGatt(mContext, false, mGattCallback = getGattCallback(), BluetoothDevice.TRANSPORT_LE);
+				mBluetoothGatt = device.connectGatt(mContext, false, mGattCallback, BluetoothDevice.TRANSPORT_LE);
 			} else {
-				mBluetoothGatt = device.connectGatt(mContext, false, mGattCallback = getGattCallback());
+				mBluetoothGatt = device.connectGatt(mContext, false, mGattCallback);
 			}
 		});
 		return mConnectRequest;
