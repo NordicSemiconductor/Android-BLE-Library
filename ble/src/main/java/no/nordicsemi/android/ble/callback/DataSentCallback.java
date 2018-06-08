@@ -33,7 +33,7 @@ public interface DataSentCallback {
 	/**
 	 * Callback received each time the value was written to a characteristic or descriptor.
 	 *
-	 * @param device target device.
+	 * @param device the target device.
 	 * @param data the data sent. If the {@link DataSplitter} was used, this contains the full data.
 	 */
 	void onDataSent(final @NonNull BluetoothDevice device, final @NonNull Data data);

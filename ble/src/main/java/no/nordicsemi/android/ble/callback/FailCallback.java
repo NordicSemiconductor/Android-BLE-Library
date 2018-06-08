@@ -23,6 +23,7 @@
 package no.nordicsemi.android.ble.callback;
 
 import android.bluetooth.BluetoothDevice;
+import android.support.annotation.NonNull;
 
 public interface FailCallback {
 	int REASON_DEVICE_DISCONNECTED = -1;
@@ -41,5 +42,5 @@ public interface FailCallback {
 	 *               {@link #REASON_NULL_ATTRIBUTE} or
 	 *               {@link #REASON_REQUEST_FAILED}.
 	 */
-	void onRequestFailed(final BluetoothDevice device, final int status);
+	void onRequestFailed(@NonNull final BluetoothDevice device, final int status);
 }

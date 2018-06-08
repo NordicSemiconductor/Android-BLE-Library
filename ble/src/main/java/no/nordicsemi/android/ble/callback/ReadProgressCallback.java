@@ -34,7 +34,7 @@ public interface ReadProgressCallback {
 	 * Callback received each time the value was read or has changed using notifications or indications
 	 * when {@link DataMerger} was used.
 	 *
-	 * @param device target device.
+	 * @param device the target device.
 	 * @param data the last packet received.
 	 * @param index the index of a packet that will be merged into a single Data.
 	 */

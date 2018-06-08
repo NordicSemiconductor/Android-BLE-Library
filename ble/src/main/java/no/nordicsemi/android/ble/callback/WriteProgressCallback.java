@@ -32,7 +32,7 @@ public interface WriteProgressCallback {
 	/**
 	 * Callback called each time a packet has been sent when {@link DataSplitter} was used.
 	 *
-	 * @param device target device.
+	 * @param device the target device.
 	 * @param data the last packet sent.
 	 * @param index the index of a packet that the initial Data was cut into.
 	 */

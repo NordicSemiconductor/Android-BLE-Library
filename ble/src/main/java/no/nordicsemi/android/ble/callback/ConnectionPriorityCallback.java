@@ -49,7 +49,7 @@ public interface ConnectionPriorityCallback {
 	/**
 	 * Callback indicating the connection parameters were updated. Works on Android 8.0 Oreo or newer.
 	 *
-	 * @param device   target device.
+	 * @param device   the target device.
 	 * @param interval Connection interval used on this connection, 1.25ms unit. Valid range is from
 	 *                 6 (7.5ms) to 3200 (4000ms).
 	 * @param latency  Slave latency for the connection in number of connection events. Valid range

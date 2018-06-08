@@ -556,12 +556,12 @@ public class Request {
 		int status = BluetoothGatt.GATT_SUCCESS;
 
 		@Override
-		public void onRequestCompleted(final BluetoothDevice device) {
+		public void onRequestCompleted(@NonNull final BluetoothDevice device) {
 			syncLock.open();
 		}
 
 		@Override
-		public void onRequestFailed(final BluetoothDevice device, final int status) {
+		public void onRequestFailed(@NonNull final BluetoothDevice device, final int status) {
 			this.status = status;
 			syncLock.open();
 		}
