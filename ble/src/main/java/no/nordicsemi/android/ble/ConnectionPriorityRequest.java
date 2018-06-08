@@ -37,7 +37,7 @@ public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPrio
 	private ConnectionPriorityCallback valueCallback;
 	private final int value;
 
-	ConnectionPriorityRequest(final @NonNull Type type, int priority) {
+	ConnectionPriorityRequest(@NonNull final Type type, int priority) {
 		super(type);
 		if (priority < 0 || priority > 2)
 			priority = 0; // Balanced
@@ -46,14 +46,14 @@ public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPrio
 
 	@Override
 	@NonNull
-	public ConnectionPriorityRequest done(final @NonNull SuccessCallback callback) {
+	public ConnectionPriorityRequest done(@NonNull final SuccessCallback callback) {
 		this.successCallback = callback;
 		return this;
 	}
 
 	@Override
 	@NonNull
-	public ConnectionPriorityRequest fail(final @NonNull FailCallback callback) {
+	public ConnectionPriorityRequest fail(@NonNull final FailCallback callback) {
 		this.failCallback = callback;
 		return this;
 	}
@@ -61,7 +61,7 @@ public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPrio
 	@RequiresApi(value = Build.VERSION_CODES.O)
 	@Override
 	@NonNull
-	public ConnectionPriorityRequest with(final @NonNull ConnectionPriorityCallback callback) {
+	public ConnectionPriorityRequest with(@NonNull final ConnectionPriorityCallback callback) {
 		// The BluetoothGattCallback#onConnectionUpdated callback was introduced in Android Oreo.
 		this.valueCallback = callback;
 		return this;
@@ -86,7 +86,7 @@ public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPrio
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.O)
-	void notifyConnectionPriorityChanged(final @NonNull BluetoothDevice device,
+	void notifyConnectionPriorityChanged(@NonNull final BluetoothDevice device,
 										 final int interval, final int latency, final int timeout) {
 		if (valueCallback != null)
 			valueCallback.onConnectionUpdated(device, interval, latency, timeout);

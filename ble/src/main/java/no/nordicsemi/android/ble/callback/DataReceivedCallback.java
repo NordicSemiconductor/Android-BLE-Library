@@ -38,5 +38,5 @@ public interface DataReceivedCallback {
 	 * @param data the data received. If the {@link DataMerger} was used,
 	 *             this contains the merged result.
 	 */
-	void onDataReceived(final @NonNull BluetoothDevice device, final @NonNull Data data);
+	void onDataReceived(@NonNull final BluetoothDevice device, @NonNull final Data data);
 }

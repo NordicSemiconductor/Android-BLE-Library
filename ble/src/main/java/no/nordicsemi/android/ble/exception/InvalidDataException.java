@@ -29,7 +29,7 @@ import no.nordicsemi.android.ble.callback.profile.ProfileReadResponse;
 public final class InvalidDataException extends Exception {
 	private final ProfileReadResponse response;
 
-	public InvalidDataException(final @NonNull ProfileReadResponse response) {
+	public InvalidDataException(@NonNull final ProfileReadResponse response) {
 		this.response = response;
 	}
 

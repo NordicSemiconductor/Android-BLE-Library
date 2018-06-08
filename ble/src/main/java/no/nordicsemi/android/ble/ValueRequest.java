@@ -77,7 +77,7 @@ public abstract class ValueRequest<T> extends Request {
 	 * @return the request
 	 */
 	@NonNull
-	protected ValueRequest<T> with(final @NonNull T callback) {
+	protected ValueRequest<T> with(@NonNull final T callback) {
 		this.valueCallback = callback;
 		return this;
 	}
@@ -134,7 +134,7 @@ public abstract class ValueRequest<T> extends Request {
 	 */
 	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
-	public <E extends T> E await(final @NonNull Class<E> responseClass, final int timeout)
+	public <E extends T> E await(@NonNull final Class<E> responseClass, final int timeout)
 			throws RequestFailedException, InterruptedException, DeviceDisconnectedException {
 		assertNotMainThread();
 

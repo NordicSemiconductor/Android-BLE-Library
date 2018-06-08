@@ -36,5 +36,5 @@ public interface WriteProgressCallback {
 	 * @param data the last packet sent.
 	 * @param index the index of a packet that the initial Data was cut into.
 	 */
-	void onPacketSent(final @NonNull BluetoothDevice device, final byte[] data, final int index);
+	void onPacketSent(@NonNull final BluetoothDevice device, final byte[] data, final int index);
 }

@@ -34,5 +34,5 @@ public interface DataMerger {
 	 * @param index      an index of the packet, 0-based (if you expect 3 packets, they will be called with indexes 0, 1, 2).
 	 * @return true if the message is complete, false if more data are expected.
 	 */
-	boolean merge(final @NonNull DataStream output, final @NonNull byte[] lastPacket, final int index);
+	boolean merge(@NonNull final DataStream output, @NonNull final byte[] lastPacket, final int index);
 }

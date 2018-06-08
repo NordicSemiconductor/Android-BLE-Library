@@ -84,21 +84,21 @@ public class Request {
 	FailCallback internalFailCallback;
 	boolean enqueued;
 
-	Request(final @NonNull Type type) {
+	Request(@NonNull final Type type) {
 		this.type = type;
 		this.characteristic = null;
 		this.descriptor = null;
 		this.syncLock = new ConditionVariable(true);
 	}
 
-	Request(final @NonNull Type type, final @Nullable BluetoothGattCharacteristic characteristic) {
+	Request(@NonNull final Type type, @Nullable final BluetoothGattCharacteristic characteristic) {
 		this.type = type;
 		this.characteristic = characteristic;
 		this.descriptor = null;
 		this.syncLock = new ConditionVariable(true);
 	}
 
-	Request(final @NonNull Type type, final @Nullable BluetoothGattDescriptor descriptor) {
+	Request(@NonNull final Type type, @Nullable final BluetoothGattDescriptor descriptor) {
 		this.type = type;
 		this.characteristic = null;
 		this.descriptor = descriptor;
@@ -144,7 +144,7 @@ public class Request {
 	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	public static ReadRequest newReadRequest(final @Nullable BluetoothGattCharacteristic characteristic) {
+	public static ReadRequest newReadRequest(@Nullable final BluetoothGattCharacteristic characteristic) {
 		return new ReadRequest(Type.READ, characteristic);
 	}
 
@@ -159,8 +159,8 @@ public class Request {
 	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	public static WriteRequest newWriteRequest(final @Nullable BluetoothGattCharacteristic characteristic,
-											   final @Nullable byte[] value) {
+	public static WriteRequest newWriteRequest(@Nullable final BluetoothGattCharacteristic characteristic,
+											   @Nullable final byte[] value) {
 		return new WriteRequest(Type.WRITE, characteristic, value, 0,
 				value != null ? value.length : 0,
 				characteristic != null ? characteristic.getWriteType() : BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
@@ -180,8 +180,8 @@ public class Request {
 	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	public static WriteRequest newWriteRequest(final @Nullable BluetoothGattCharacteristic characteristic,
-											   final @Nullable byte[] value, final int writeType) {
+	public static WriteRequest newWriteRequest(@Nullable final BluetoothGattCharacteristic characteristic,
+											   @Nullable final byte[] value, final int writeType) {
 		return new WriteRequest(Type.WRITE, characteristic, value, 0,
 				value != null ? value.length : 0, writeType);
 	}
@@ -199,8 +199,8 @@ public class Request {
 	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	public static WriteRequest newWriteRequest(final @Nullable BluetoothGattCharacteristic characteristic,
-											   final @Nullable byte[] value, final int offset, final int length) {
+	public static WriteRequest newWriteRequest(@Nullable final BluetoothGattCharacteristic characteristic,
+											   @Nullable final byte[] value, final int offset, final int length) {
 		return new WriteRequest(Type.WRITE, characteristic, value, offset, length,
 				characteristic != null ? characteristic.getWriteType() : BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
 	}
@@ -221,7 +221,7 @@ public class Request {
 	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	public static WriteRequest newWriteRequest(final @Nullable BluetoothGattCharacteristic characteristic,
+	public static WriteRequest newWriteRequest(@Nullable final BluetoothGattCharacteristic characteristic,
 											   @Nullable final byte[] value, final int offset,
 											   final int length, final int writeType) {
 		return new WriteRequest(Type.WRITE, characteristic, value, offset, length, writeType);
@@ -235,7 +235,7 @@ public class Request {
 	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	public static ReadRequest newReadRequest(final @Nullable BluetoothGattDescriptor descriptor) {
+	public static ReadRequest newReadRequest(@Nullable final BluetoothGattDescriptor descriptor) {
 		return new ReadRequest(Type.READ_DESCRIPTOR, descriptor);
 	}
 
@@ -249,8 +249,8 @@ public class Request {
 	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	public static WriteRequest newWriteRequest(final @Nullable BluetoothGattDescriptor descriptor,
-											   final @Nullable byte[] value) {
+	public static WriteRequest newWriteRequest(@Nullable final BluetoothGattDescriptor descriptor,
+											   @Nullable final byte[] value) {
 		return new WriteRequest(Type.WRITE_DESCRIPTOR, descriptor, value, 0,
 				value != null ? value.length : 0);
 	}
@@ -267,7 +267,7 @@ public class Request {
 	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	public static WriteRequest newWriteRequest(final @Nullable BluetoothGattDescriptor descriptor,
+	public static WriteRequest newWriteRequest(@Nullable final BluetoothGattDescriptor descriptor,
 											   final byte[] value, final int offset, final int length) {
 		return new WriteRequest(Type.WRITE_DESCRIPTOR, descriptor, value, offset, length);
 	}
@@ -281,7 +281,7 @@ public class Request {
 	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	public static WriteRequest newEnableNotificationsRequest(final @Nullable BluetoothGattCharacteristic characteristic) {
+	public static WriteRequest newEnableNotificationsRequest(@Nullable final BluetoothGattCharacteristic characteristic) {
 		return new WriteRequest(Type.ENABLE_NOTIFICATIONS, characteristic);
 	}
 
@@ -294,7 +294,7 @@ public class Request {
 	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	public static WriteRequest newDisableNotificationsRequest(final @Nullable BluetoothGattCharacteristic characteristic) {
+	public static WriteRequest newDisableNotificationsRequest(@Nullable final BluetoothGattCharacteristic characteristic) {
 		return new WriteRequest(Type.DISABLE_NOTIFICATIONS, characteristic);
 	}
 
@@ -307,7 +307,7 @@ public class Request {
 	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	public static WriteRequest newEnableIndicationsRequest(final @Nullable BluetoothGattCharacteristic characteristic) {
+	public static WriteRequest newEnableIndicationsRequest(@Nullable final BluetoothGattCharacteristic characteristic) {
 		return new WriteRequest(Type.ENABLE_INDICATIONS, characteristic);
 	}
 
@@ -320,7 +320,7 @@ public class Request {
 	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
-	public static WriteRequest newDisableIndicationsRequest(final @Nullable BluetoothGattCharacteristic characteristic) {
+	public static WriteRequest newDisableIndicationsRequest(@Nullable final BluetoothGattCharacteristic characteristic) {
 		return new WriteRequest(Type.DISABLE_INDICATIONS, characteristic);
 	}
 
@@ -435,7 +435,7 @@ public class Request {
 	 * @return The request.
 	 */
 	@NonNull
-	public Request done(final @NonNull SuccessCallback callback) {
+	public Request done(@NonNull final SuccessCallback callback) {
 		this.successCallback = callback;
 		return this;
 	}
@@ -449,7 +449,7 @@ public class Request {
 	 * @return The request.
 	 */
 	@NonNull
-	public Request fail(final @NonNull FailCallback callback) {
+	public Request fail(@NonNull final FailCallback callback) {
 		this.failCallback = callback;
 		return this;
 	}
@@ -460,7 +460,7 @@ public class Request {
 	 *
 	 * @param callback the callback.
 	 */
-	void internalFail(final @NonNull FailCallback callback) {
+	void internalFail(@NonNull final FailCallback callback) {
 		this.internalFailCallback = callback;
 	}
 

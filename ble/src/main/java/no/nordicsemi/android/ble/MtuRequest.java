@@ -32,7 +32,7 @@ import no.nordicsemi.android.ble.callback.SuccessCallback;
 public final class MtuRequest extends ValueRequest<MtuCallback> {
 	private final int value;
 
-	MtuRequest(final @NonNull Type type, int mtu) {
+	MtuRequest(@NonNull final Type type, int mtu) {
 		super(type);
 		if (mtu < 23)
 			mtu = 23;
@@ -43,26 +43,26 @@ public final class MtuRequest extends ValueRequest<MtuCallback> {
 
 	@Override
 	@NonNull
-	public MtuRequest done(final @NonNull SuccessCallback callback) {
+	public MtuRequest done(@NonNull final SuccessCallback callback) {
 		this.successCallback = callback;
 		return this;
 	}
 
 	@Override
 	@NonNull
-	public MtuRequest fail(final @NonNull FailCallback callback) {
+	public MtuRequest fail(@NonNull final FailCallback callback) {
 		this.failCallback = callback;
 		return this;
 	}
 
 	@Override
 	@NonNull
-	public MtuRequest with(final @NonNull MtuCallback callback) {
+	public MtuRequest with(@NonNull final MtuCallback callback) {
 		this.valueCallback = callback;
 		return this;
 	}
 
-	void notifyMtuChanged(final @NonNull BluetoothDevice device, final int mtu) {
+	void notifyMtuChanged(@NonNull final BluetoothDevice device, final int mtu) {
 		if (valueCallback != null)
 			valueCallback.onMtuChanged(device, mtu);
 	}

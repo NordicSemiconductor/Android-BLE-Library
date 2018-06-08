@@ -40,5 +40,5 @@ public interface DataSplitter {
 	 * @return the packet to be sent, or null if the whole message was already split.
 	 */
 	@Nullable
-	byte[] chunk(final @NonNull byte[] message, final int index, final int maxLength);
+	byte[] chunk(@NonNull final byte[] message, final int index, final int maxLength);
 }

@@ -38,5 +38,5 @@ public interface ReadProgressCallback {
 	 * @param data the last packet received.
 	 * @param index the index of a packet that will be merged into a single Data.
 	 */
-	void onPacketReceived(final @NonNull BluetoothDevice device, final byte[] data, final int index);
+	void onPacketReceived(@NonNull final BluetoothDevice device, final byte[] data, final int index);
 }

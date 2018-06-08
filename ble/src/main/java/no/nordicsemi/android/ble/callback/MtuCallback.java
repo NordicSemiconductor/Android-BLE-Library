@@ -34,5 +34,5 @@ public interface MtuCallback {
 	 * @param device the target device.
 	 * @param mtu the new MTU (Maximum Transfer Unit).
 	 */
-	void onMtuChanged(final @NonNull BluetoothDevice device, final int mtu);
+	void onMtuChanged(@NonNull final BluetoothDevice device, final int mtu);
 }

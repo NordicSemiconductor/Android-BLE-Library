@@ -37,7 +37,7 @@ public interface ProfileDataCallback extends DataReceivedCallback {
 	 * @param device the target device.
 	 * @param data the data received. If the {@link DataMerger} was used, this contains the merged result.
 	 */
-	default void onInvalidDataReceived(final @NonNull BluetoothDevice device, final @NonNull Data data) {
+	default void onInvalidDataReceived(@NonNull final BluetoothDevice device, @NonNull final Data data) {
 		// ignore
 	}
 }

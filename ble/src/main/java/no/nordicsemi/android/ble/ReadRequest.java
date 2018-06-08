@@ -48,35 +48,35 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 	private DataStream buffer;
 	private int count = 0;
 
-	ReadRequest(final @NonNull Type type) {
+	ReadRequest(@NonNull final Type type) {
 		super(type);
 	}
 
-	ReadRequest(final @NonNull Type type, final @Nullable BluetoothGattCharacteristic characteristic) {
+	ReadRequest(@NonNull final Type type, @Nullable final BluetoothGattCharacteristic characteristic) {
 		super(type, characteristic);
 	}
 
-	ReadRequest(final @NonNull Type type, final @Nullable BluetoothGattDescriptor descriptor) {
+	ReadRequest(@NonNull final Type type, @Nullable final BluetoothGattDescriptor descriptor) {
 		super(type, descriptor);
 	}
 
 	@Override
 	@NonNull
-	public ReadRequest done(final @NonNull SuccessCallback callback) {
+	public ReadRequest done(@NonNull final SuccessCallback callback) {
 		this.successCallback = callback;
 		return this;
 	}
 
 	@Override
 	@NonNull
-	public ReadRequest fail(final @NonNull FailCallback callback) {
+	public ReadRequest fail(@NonNull final FailCallback callback) {
 		this.failCallback = callback;
 		return this;
 	}
 
 	@Override
 	@NonNull
-	public ReadRequest with(final @NonNull DataReceivedCallback callback) {
+	public ReadRequest with(@NonNull final DataReceivedCallback callback) {
 		this.valueCallback = callback;
 		return this;
 	}
@@ -88,7 +88,7 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 	 * @return the request
 	 */
 	@NonNull
-	public ReadRequest merge(final @NonNull DataMerger merger) {
+	public ReadRequest merge(@NonNull final DataMerger merger) {
 		this.dataMerger = merger;
 		this.progressCallback = null;
 		return this;
@@ -101,7 +101,7 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 	 * @return the request
 	 */
 	@NonNull
-	public ReadRequest merge(final @NonNull DataMerger merger, final @NonNull ReadProgressCallback callback) {
+	public ReadRequest merge(@NonNull final DataMerger merger, @NonNull final ReadProgressCallback callback) {
 		this.dataMerger = merger;
 		this.progressCallback = callback;
 		return this;
@@ -123,7 +123,7 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 	 *                                     was completed.
 	 */
 	@NonNull
-	public <E extends ProfileReadResponse> E awaitValid(final @NonNull Class<E> responseClass)
+	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass)
 			throws RequestFailedException, InvalidDataException, DeviceDisconnectedException {
 		E response = await(responseClass);
 		if (!response.isValid()) {
@@ -150,7 +150,7 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 	 *                                     was completed.
 	 */
 	@NonNull
-	public <E extends ProfileReadResponse> E awaitValid(final @NonNull Class<E> responseClass, final int timeout)
+	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass, final int timeout)
 			throws RequestFailedException, InterruptedException, InvalidDataException, DeviceDisconnectedException {
 		E response = await(responseClass, timeout);
 		if (!response.isValid()) {
@@ -159,7 +159,7 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 		return response;
 	}
 
-	void notifyValueChanged(final @NonNull BluetoothDevice device, final byte[] value) {
+	void notifyValueChanged(@NonNull final BluetoothDevice device, final byte[] value) {
 		// Keep a reference to the value callback, as it may change during execution
 		final DataReceivedCallback valueCallback = this.valueCallback;
 

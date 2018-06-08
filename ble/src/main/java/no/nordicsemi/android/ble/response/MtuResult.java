@@ -35,7 +35,7 @@ public class MtuResult implements MtuCallback, Parcelable {
 	private int mtu;
 
 	@Override
-	public void onMtuChanged(final @NonNull BluetoothDevice device, final int mtu) {
+	public void onMtuChanged(@NonNull final BluetoothDevice device, final int mtu) {
 		this.device = device;
 		this.mtu = mtu;
 	}

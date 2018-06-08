@@ -118,7 +118,7 @@ public class ValueChangedCallback {
 	 * @return The request.
 	 */
 	@NonNull
-	public ValueChangedCallback merge(final @NonNull DataMerger merger) {
+	public ValueChangedCallback merge(@NonNull final DataMerger merger) {
 		this.dataMerger = merger;
 		this.progressCallback = null;
 		return this;
@@ -131,7 +131,7 @@ public class ValueChangedCallback {
 	 * @return The request.
 	 */
 	@NonNull
-	public ValueChangedCallback merge(final @NonNull DataMerger merger, final @NonNull ReadProgressCallback callback) {
+	public ValueChangedCallback merge(@NonNull final DataMerger merger, @NonNull final ReadProgressCallback callback) {
 		this.dataMerger = merger;
 		this.progressCallback = callback;
 		return this;
@@ -190,7 +190,7 @@ public class ValueChangedCallback {
 	 */
 	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
-	public <E extends DataReceivedCallback> E await(final @NonNull Class<E> responseClass)
+	public <E extends DataReceivedCallback> E await(@NonNull final Class<E> responseClass)
 			throws DeviceDisconnectedException {
 		try {
 			return awaitAfter(null, responseClass);
@@ -214,7 +214,7 @@ public class ValueChangedCallback {
 	 */
 	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
-	public <E extends DataReceivedCallback> E await(final @NonNull E response)
+	public <E extends DataReceivedCallback> E await(@NonNull final E response)
 			throws DeviceDisconnectedException {
 		try {
 			return awaitAfter(null, response);
@@ -242,7 +242,7 @@ public class ValueChangedCallback {
 	 */
 	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
-	public <E extends DataReceivedCallback> E await(final @NonNull Class<E> responseClass,
+	public <E extends DataReceivedCallback> E await(@NonNull final Class<E> responseClass,
 													final int timeout)
 			throws InterruptedException, DeviceDisconnectedException {
 		try {
@@ -270,7 +270,7 @@ public class ValueChangedCallback {
 	 */
 	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
-	public <E extends DataReceivedCallback> E await(final @NonNull E response,
+	public <E extends DataReceivedCallback> E await(@NonNull final E response,
 													final int timeout)
 			throws InterruptedException, DeviceDisconnectedException {
 		try {
@@ -304,8 +304,8 @@ public class ValueChangedCallback {
 	 */
 	@SuppressWarnings("NullableProblems")
 	@NonNull
-	public <E extends DataReceivedCallback> E awaitAfter(final @NonNull Request trigger,
-														 final @NonNull Class<E> responseClass)
+	public <E extends DataReceivedCallback> E awaitAfter(@NonNull final Request trigger,
+														 @NonNull final Class<E> responseClass)
 			throws DeviceDisconnectedException, RequestFailedException {
 		try {
 			return awaitAfter(trigger, responseClass, 0);
@@ -337,8 +337,8 @@ public class ValueChangedCallback {
 	 */
 	@SuppressWarnings("NullableProblems")
 	@NonNull
-	public <E extends DataReceivedCallback> E awaitAfter(final @NonNull Request trigger,
-														 final @NonNull E response)
+	public <E extends DataReceivedCallback> E awaitAfter(@NonNull final Request trigger,
+														 @NonNull final E response)
 			throws DeviceDisconnectedException, RequestFailedException {
 		try {
 			return awaitAfter(trigger, response, 0);
@@ -392,8 +392,8 @@ public class ValueChangedCallback {
 	 */
 	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
-	public <E extends DataReceivedCallback> E awaitAfter(final @NonNull Request trigger,
-														 final @NonNull Class<E> responseClass,
+	public <E extends DataReceivedCallback> E awaitAfter(@NonNull final Request trigger,
+														 @NonNull final Class<E> responseClass,
 														 final int timeout)
 			throws InterruptedException, DeviceDisconnectedException, RequestFailedException {
 		try {
@@ -456,8 +456,8 @@ public class ValueChangedCallback {
 	 */
 	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
-	public <E extends DataReceivedCallback> E awaitAfter(final @NonNull Request trigger,
-														 final @NonNull E response,
+	public <E extends DataReceivedCallback> E awaitAfter(@NonNull final Request trigger,
+														 @NonNull final E response,
 														 final int timeout)
 			throws InterruptedException, DeviceDisconnectedException, RequestFailedException {
 		Request.assertNotMainThread();
@@ -518,7 +518,7 @@ public class ValueChangedCallback {
 	 */
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
-	public <E extends ProfileReadResponse> E awaitValid(final @NonNull Class<E> responseClass)
+	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass)
 			throws InvalidDataException, DeviceDisconnectedException {
 		try {
 			return awaitValidAfter(null, responseClass, 0);
@@ -549,7 +549,7 @@ public class ValueChangedCallback {
 	 */
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
-	public <E extends ProfileReadResponse> E awaitValid(final @NonNull E response)
+	public <E extends ProfileReadResponse> E awaitValid(@NonNull final E response)
 			throws InvalidDataException, DeviceDisconnectedException {
 		try {
 			return awaitValidAfter(null, response, 0);
@@ -583,7 +583,7 @@ public class ValueChangedCallback {
 	 */
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
-	public <E extends ProfileReadResponse> E awaitValid(final @NonNull Class<E> responseClass,
+	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass,
 														final int timeout)
 			throws InterruptedException, InvalidDataException, DeviceDisconnectedException {
 		try {
@@ -614,7 +614,7 @@ public class ValueChangedCallback {
 	 */
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
-	public <E extends ProfileReadResponse> E awaitValid(final @NonNull E response,
+	public <E extends ProfileReadResponse> E awaitValid(@NonNull final E response,
 														final int timeout)
 			throws InterruptedException, InvalidDataException, DeviceDisconnectedException {
 		try {
@@ -649,8 +649,8 @@ public class ValueChangedCallback {
 	 * @see #awaitAfter(Request, Class)
 	 */
 	@NonNull
-	public <E extends ProfileReadResponse> E awaitValidAfter(final @NonNull Request trigger,
-															 final @NonNull Class<E> responseClass)
+	public <E extends ProfileReadResponse> E awaitValidAfter(@NonNull final Request trigger,
+															 @NonNull final Class<E> responseClass)
 			throws InvalidDataException, DeviceDisconnectedException, RequestFailedException {
 		try {
 			return awaitValidAfter(trigger, responseClass, 0);
@@ -683,8 +683,8 @@ public class ValueChangedCallback {
 	 * @see #awaitAfter(Request, Class)
 	 */
 	@NonNull
-	public <E extends ProfileReadResponse> E awaitValidAfter(final @NonNull Request trigger,
-															 final @NonNull E response)
+	public <E extends ProfileReadResponse> E awaitValidAfter(@NonNull final Request trigger,
+															 @NonNull final E response)
 			throws InvalidDataException, DeviceDisconnectedException, RequestFailedException {
 		try {
 			return awaitValidAfter(trigger, response, 0);
@@ -721,8 +721,8 @@ public class ValueChangedCallback {
 	 */
 	@SuppressWarnings({"ConstantConditions", "NullableProblems"})
 	@NonNull
-	public <E extends ProfileReadResponse> E awaitValidAfter(final @NonNull Request trigger,
-															 final @NonNull Class<E> responseClass,
+	public <E extends ProfileReadResponse> E awaitValidAfter(@NonNull final Request trigger,
+															 @NonNull final Class<E> responseClass,
 															 final int timeout)
 			throws InterruptedException, InvalidDataException, DeviceDisconnectedException,
 			RequestFailedException {
@@ -759,8 +759,8 @@ public class ValueChangedCallback {
 	 */
 	@SuppressWarnings({"ConstantConditions", "NullableProblems"})
 	@NonNull
-	public <E extends ProfileReadResponse> E awaitValidAfter(final @NonNull Request trigger,
-															 final @NonNull E response,
+	public <E extends ProfileReadResponse> E awaitValidAfter(@NonNull final Request trigger,
+															 @NonNull final E response,
 															 final int timeout)
 			throws InterruptedException, InvalidDataException, DeviceDisconnectedException,
 			RequestFailedException {

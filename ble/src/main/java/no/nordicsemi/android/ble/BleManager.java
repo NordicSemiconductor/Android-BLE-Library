@@ -743,7 +743,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	@NonNull
 	protected final ValueChangedCallback setNotificationCallback(
-			final @Nullable BluetoothGattCharacteristic characteristic) {
+			@Nullable final BluetoothGattCharacteristic characteristic) {
 		ValueChangedCallback callback = mNotificationCallbacks.get(characteristic);
 		if (callback == null) {
 			callback = new ValueChangedCallback(this);
@@ -769,7 +769,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	@NonNull
 	protected final ValueChangedCallback setIndicationCallback(
-			final @Nullable BluetoothGattCharacteristic characteristic) {
+			@Nullable final BluetoothGattCharacteristic characteristic) {
 		return setNotificationCallback(characteristic);
 	}
 
@@ -782,7 +782,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	@NonNull
 	protected final WriteRequest enableNotifications(
-			final @Nullable BluetoothGattCharacteristic characteristic) {
+			@Nullable final BluetoothGattCharacteristic characteristic) {
 		return enqueue(Request.newEnableNotificationsRequest(characteristic));
 	}
 
@@ -816,7 +816,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest disableNotifications(final @Nullable BluetoothGattCharacteristic characteristic) {
+	protected final WriteRequest disableNotifications(@Nullable final BluetoothGattCharacteristic characteristic) {
 		return enqueue(Request.newDisableNotificationsRequest(characteristic));
 	}
 
@@ -850,7 +850,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest enableIndications(final @Nullable BluetoothGattCharacteristic characteristic) {
+	protected final WriteRequest enableIndications(@Nullable final BluetoothGattCharacteristic characteristic) {
 		return enqueue(Request.newEnableIndicationsRequest(characteristic));
 	}
 
@@ -884,7 +884,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest disableIndications(final @Nullable BluetoothGattCharacteristic characteristic) {
+	protected final WriteRequest disableIndications(@Nullable final BluetoothGattCharacteristic characteristic) {
 		return enqueue(Request.newDisableIndicationsRequest(characteristic));
 	}
 
@@ -902,7 +902,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return The request.
 	 */
 	@NonNull
-	protected final ReadRequest readCharacteristic(final @Nullable BluetoothGattCharacteristic characteristic) {
+	protected final ReadRequest readCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic) {
 		return enqueue(Request.newReadRequest(characteristic));
 	}
 
@@ -935,7 +935,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest writeCharacteristic(final @Nullable BluetoothGattCharacteristic characteristic, final @Nullable Data data) {
+	protected final WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic, @Nullable final Data data) {
 		return enqueue(Request.newWriteRequest(characteristic, data != null ? data.getValue() : null));
 	}
 
@@ -953,7 +953,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest writeCharacteristic(final @Nullable BluetoothGattCharacteristic characteristic, final @Nullable byte[] data) {
+	protected final WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic, @Nullable final byte[] data) {
 		return enqueue(Request.newWriteRequest(characteristic, data));
 	}
 
@@ -974,7 +974,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest writeCharacteristic(final @Nullable BluetoothGattCharacteristic characteristic, final @Nullable byte[] data, final int offset, final int length) {
+	protected final WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic, @Nullable final byte[] data, final int offset, final int length) {
 		return enqueue(Request.newWriteRequest(characteristic, data, offset, length));
 	}
 
@@ -1002,7 +1002,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return The request.
 	 */
 	@NonNull
-	protected final ReadRequest readDescriptor(final @Nullable BluetoothGattDescriptor descriptor) {
+	protected final ReadRequest readDescriptor(@Nullable final BluetoothGattDescriptor descriptor) {
 		return enqueue(Request.newReadRequest(descriptor));
 	}
 
@@ -1030,7 +1030,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest writeDescriptor(final @Nullable BluetoothGattDescriptor descriptor, final @Nullable Data data) {
+	protected final WriteRequest writeDescriptor(@Nullable final BluetoothGattDescriptor descriptor, @Nullable final Data data) {
 		return enqueue(Request.newWriteRequest(descriptor, data != null ? data.getValue() : null));
 	}
 
@@ -1048,7 +1048,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest writeDescriptor(final @Nullable BluetoothGattDescriptor descriptor, final @Nullable byte[] data) {
+	protected final WriteRequest writeDescriptor(@Nullable final BluetoothGattDescriptor descriptor, @Nullable final byte[] data) {
 		return enqueue(Request.newWriteRequest(descriptor, data));
 	}
 
@@ -1068,7 +1068,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest writeDescriptor(final @Nullable BluetoothGattDescriptor descriptor, final @Nullable byte[] data, final int offset, final int length) {
+	protected final WriteRequest writeDescriptor(@Nullable final BluetoothGattDescriptor descriptor, @Nullable final byte[] data, final int offset, final int length) {
 		return enqueue(Request.newWriteRequest(descriptor, data, offset, length));
 	}
 
@@ -1378,7 +1378,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @param gatt the gatt device with services discovered
 		 * @return <code>True</code> when the device has the required service.
 		 */
-		protected abstract boolean isRequiredServiceSupported(final @NonNull BluetoothGatt gatt);
+		protected abstract boolean isRequiredServiceSupported(@NonNull final BluetoothGatt gatt);
 
 		/**
 		 * This method should return <code>true</code> when the gatt device supports the optional services.
@@ -1387,7 +1387,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @param gatt the gatt device with services discovered
 		 * @return <code>True</code> when the device has the optional service.
 		 */
-		protected boolean isOptionalServiceSupported(final @NonNull BluetoothGatt gatt) {
+		protected boolean isOptionalServiceSupported(@NonNull final BluetoothGatt gatt) {
 			return false;
 		}
 
@@ -1407,7 +1407,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @deprecated Use {@link #initialize()} instead.
 		 */
 		@Deprecated
-		protected Deque<Request> initGatt(final @NonNull BluetoothGatt gatt) {
+		protected Deque<Request> initGatt(@NonNull final BluetoothGatt gatt) {
 			return null;
 		}
 
@@ -1440,7 +1440,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 */
 		protected abstract void onDeviceDisconnected();
 
-		private void notifyDeviceDisconnected(final @NonNull BluetoothDevice device) {
+		private void notifyDeviceDisconnected(@NonNull final BluetoothDevice device) {
 			mConnected = false;
 			mConnectionState = BluetoothGatt.STATE_DISCONNECTED;
 			if (mUserDisconnected) {
@@ -1467,7 +1467,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @deprecated Use {@link ReadRequest#with(DataReceivedCallback)} instead.
 		 */
 		@Deprecated
-		protected void onCharacteristicRead(final @NonNull BluetoothGatt gatt, @NonNull final BluetoothGattCharacteristic characteristic) {
+		protected void onCharacteristicRead(@NonNull final BluetoothGatt gatt, @NonNull final BluetoothGattCharacteristic characteristic) {
 			// do nothing
 		}
 
@@ -1484,7 +1484,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @deprecated Use {@link WriteRequest#done(SuccessCallback)} instead.
 		 */
 		@Deprecated
-		protected void onCharacteristicWrite(final @NonNull BluetoothGatt gatt, @NonNull final BluetoothGattCharacteristic characteristic) {
+		protected void onCharacteristicWrite(@NonNull final BluetoothGatt gatt, @NonNull final BluetoothGattCharacteristic characteristic) {
 			// do nothing
 		}
 
@@ -1496,7 +1496,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @deprecated Use {@link ReadRequest#with(DataReceivedCallback)} instead.
 		 */
 		@Deprecated
-		protected void onDescriptorRead(final @NonNull BluetoothGatt gatt, final @NonNull BluetoothGattDescriptor descriptor) {
+		protected void onDescriptorRead(@NonNull final BluetoothGatt gatt, @NonNull final BluetoothGattDescriptor descriptor) {
 			// do nothing
 		}
 
@@ -1512,7 +1512,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @deprecated Use {@link WriteRequest} and {@link no.nordicsemi.android.ble.callback.SuccessCallback} instead.
 		 */
 		@Deprecated
-		protected void onDescriptorWrite(final @NonNull BluetoothGatt gatt, @NonNull final BluetoothGattDescriptor descriptor) {
+		protected void onDescriptorWrite(@NonNull final BluetoothGatt gatt, @NonNull final BluetoothGattDescriptor descriptor) {
 			// do nothing
 		}
 
@@ -1530,7 +1530,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * BatteryLevelDataCallback from BLE-Common-Library instead.
 		 */
 		@Deprecated
-		protected void onBatteryValueReceived(final @NonNull BluetoothGatt gatt, final int value) {
+		protected void onBatteryValueReceived(@NonNull final BluetoothGatt gatt, final int value) {
 			// do nothing
 		}
 
@@ -1542,7 +1542,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @deprecated Use {@link ReadRequest#with(DataReceivedCallback)} instead.
 		 */
 		@Deprecated
-		protected void onCharacteristicNotified(final @NonNull BluetoothGatt gatt, final @NonNull BluetoothGattCharacteristic characteristic) {
+		protected void onCharacteristicNotified(@NonNull final BluetoothGatt gatt, @NonNull final BluetoothGattCharacteristic characteristic) {
 			// do nothing
 		}
 
@@ -1554,7 +1554,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @deprecated Use {@link ReadRequest#with(DataReceivedCallback)} instead.
 		 */
 		@Deprecated
-		protected void onCharacteristicIndicated(final @NonNull BluetoothGatt gatt, final @NonNull BluetoothGattCharacteristic characteristic) {
+		protected void onCharacteristicIndicated(@NonNull final BluetoothGatt gatt, @NonNull final BluetoothGattCharacteristic characteristic) {
 			// do nothing
 		}
 
@@ -1567,7 +1567,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @deprecated Use {@link MtuRequest#with(MtuCallback)} instead.
 		 */
 		@Deprecated
-		protected void onMtuChanged(final @NonNull BluetoothGatt gatt, final int mtu) {
+		protected void onMtuChanged(@NonNull final BluetoothGatt gatt, final int mtu) {
 			// do nothing
 		}
 
@@ -1585,7 +1585,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 */
 		@Deprecated
 		@TargetApi(Build.VERSION_CODES.O)
-		protected void onConnectionUpdated(final @NonNull BluetoothGatt gatt, final int interval, final int latency, final int timeout) {
+		protected void onConnectionUpdated(@NonNull final BluetoothGatt gatt, final int interval, final int latency, final int timeout) {
 			// do nothing
 		}
 

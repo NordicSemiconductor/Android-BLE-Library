@@ -36,5 +36,5 @@ public interface DataSentCallback {
 	 * @param device the target device.
 	 * @param data the data sent. If the {@link DataSplitter} was used, this contains the full data.
 	 */
-	void onDataSent(final @NonNull BluetoothDevice device, final @NonNull Data data);
+	void onDataSent(@NonNull final BluetoothDevice device, @NonNull final Data data);
 }

@@ -47,11 +47,11 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 	private int count = 0;
 	private boolean complete = false;
 
-	WriteRequest(final @NonNull Type type) {
+	WriteRequest(@NonNull final Type type) {
 		this(type, null);
 	}
 
-	WriteRequest(final @NonNull Type type, final @Nullable BluetoothGattCharacteristic characteristic) {
+	WriteRequest(@NonNull final Type type, @Nullable final BluetoothGattCharacteristic characteristic) {
 		super(type, characteristic);
 		// not used:
 		this.data = null;
@@ -60,21 +60,21 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 		this.complete = true;
 	}
 
-	WriteRequest(final @NonNull Type type, final @Nullable BluetoothGattCharacteristic characteristic,
-				 final @Nullable byte[] data, final int offset, final int length, final int writeType) {
+	WriteRequest(@NonNull final Type type, @Nullable final BluetoothGattCharacteristic characteristic,
+				 @Nullable final byte[] data, final int offset, final int length, final int writeType) {
 		super(type, characteristic);
 		this.data = copy(data, offset, length);
 		this.writeType = writeType;
 	}
 
-	WriteRequest(final @NonNull Type type, final @Nullable BluetoothGattDescriptor descriptor,
-				 final @Nullable byte[] data, final int offset, final int length) {
+	WriteRequest(@NonNull final Type type, @Nullable final BluetoothGattDescriptor descriptor,
+				 @Nullable final byte[] data, final int offset, final int length) {
 		super(type, descriptor);
 		this.data = copy(data, offset, length);
 		this.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
 	}
 
-	private static byte[] copy(final @Nullable byte[] value, final int offset, final int length) {
+	private static byte[] copy(@Nullable final byte[] value, final int offset, final int length) {
 		if (value == null || offset > value.length)
 			return null;
 		final int maxLength = Math.min(value.length - offset, length);
@@ -85,21 +85,21 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 
 	@Override
 	@NonNull
-	public WriteRequest done(final @NonNull SuccessCallback callback) {
+	public WriteRequest done(@NonNull final SuccessCallback callback) {
 		this.successCallback = callback;
 		return this;
 	}
 
 	@Override
 	@NonNull
-	public WriteRequest fail(final @NonNull FailCallback callback) {
+	public WriteRequest fail(@NonNull final FailCallback callback) {
 		this.failCallback = callback;
 		return this;
 	}
 
 	@Override
 	@NonNull
-	public WriteRequest with(final @NonNull DataSentCallback callback) {
+	public WriteRequest with(@NonNull final DataSentCallback callback) {
 		this.valueCallback = callback;
 		return this;
 	}
@@ -114,7 +114,7 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 	 * @see #split()
 	 */
 	@NonNull
-	public WriteRequest split(final @NonNull DataSplitter splitter) {
+	public WriteRequest split(@NonNull final DataSplitter splitter) {
 		this.dataSplitter = splitter;
 		this.progressCallback = null;
 		return this;
@@ -131,7 +131,7 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 	 * @see #split()
 	 */
 	@NonNull
-	public WriteRequest split(final @NonNull DataSplitter splitter, final @NonNull WriteProgressCallback callback) {
+	public WriteRequest split(@NonNull final DataSplitter splitter, @NonNull final WriteProgressCallback callback) {
 		this.dataSplitter = splitter;
 		this.progressCallback = callback;
 		return this;
@@ -158,7 +158,7 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 	 * @return the request
 	 */
 	@NonNull
-	public WriteRequest split(final @NonNull WriteProgressCallback callback) {
+	public WriteRequest split(@NonNull final WriteProgressCallback callback) {
 		this.dataSplitter = MTU_SPLITTER;
 		this.progressCallback = callback;
 		return this;
@@ -176,7 +176,7 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 		return chunk;
 	}
 
-	void notifyPacketSent(final @NonNull BluetoothDevice device, final byte[] data) {
+	void notifyPacketSent(@NonNull final BluetoothDevice device, final byte[] data) {
 		if (progressCallback != null)
 			progressCallback.onPacketSent(device, data, count);
 		count++;
