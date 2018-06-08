@@ -193,11 +193,13 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			switch (state) {
 				case BluetoothAdapter.STATE_TURNING_OFF:
 				case BluetoothAdapter.STATE_OFF:
-					if (mConnected && previousState != BluetoothAdapter.STATE_TURNING_OFF && previousState != BluetoothAdapter.STATE_OFF) {
+					if (mConnected && previousState != BluetoothAdapter.STATE_TURNING_OFF
+							&& previousState != BluetoothAdapter.STATE_OFF) {
 						// The connection is killed by the system, no need to gently disconnect
 						mGattCallback.notifyDeviceDisconnected(mBluetoothDevice);
 					}
-					// Calling close() will prevent the STATE_OFF event from being logged (this receiver will be unregistered). But it doesn't matter.
+					// Calling close() will prevent the STATE_OFF event from being logged
+					// (this receiver will be unregistered). But it doesn't matter.
 					close();
 					break;
 			}
@@ -477,9 +479,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			mCallbacks.onDeviceConnecting(device);
 			log(Level.DEBUG, "gatt = device.connectGatt(autoConnect = false)");
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-				mBluetoothGatt = device.connectGatt(mContext, false, mGattCallback, BluetoothDevice.TRANSPORT_LE, preferredPhy, mHandler);
+				mBluetoothGatt = device.connectGatt(mContext, false, mGattCallback,
+						BluetoothDevice.TRANSPORT_LE, preferredPhy, mHandler);
 			} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-				mBluetoothGatt = device.connectGatt(mContext, false, mGattCallback, BluetoothDevice.TRANSPORT_LE);
+				mBluetoothGatt = device.connectGatt(mContext, false, mGattCallback,
+						BluetoothDevice.TRANSPORT_LE);
 			} else {
 				mBluetoothGatt = device.connectGatt(mContext, false, mGattCallback);
 			}
@@ -532,7 +536,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	/**
-	 * This method returns true if the device is connected. Services could have not been discovered yet.
+	 * This method returns true if the device is connected. Services could have not been
+	 * discovered yet.
 	 */
 	public boolean isConnected() {
 		return mConnected;
@@ -552,8 +557,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	/**
-	 * Returns the last received value of Battery Level characteristic, or -1 if such does not exist,
-	 * hasn't been read or notification wasn't received yet.
+	 * Returns the last received value of Battery Level characteristic, or -1 if such
+	 * does not exist, hasn't been read or notification wasn't received yet.
 	 * <p>
 	 * The value returned will be invalid if overridden {@link #readBatteryLevel()} and
 	 * {@link #enableBatteryLevelNotifications()} were used.
@@ -597,11 +602,14 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 	/**
 	 * Sets the optional log session. This session will be used to log Bluetooth events.
-	 * The logs may be viewed using the nRF Logger application:
-	 * https://play.google.com/store/apps/details?id=no.nordicsemi.android.log
+	 * <p>
+	 * The logs may be viewed using the
+	 * <a href="https://play.google.com/store/apps/details?id=no.nordicsemi.android.log">nRF Logger</a>
+	 * application.
+	 * <p>
 	 * Since nRF Logger Library v2.0 an app may define it's own log provider.
-	 * NOTE: nRF Logger must be installed prior to nRF Toolbox as it defines the required permission
-	 * which is used by nRF Toolbox.
+	 * NOTE: nRF Logger must be installed prior to this app as it defines the required
+	 * permission.
 	 *
 	 * @param session the session, or null if nRF Logger is not installed.
 	 */
@@ -615,7 +623,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	@Override
-	public void log(final int level, @StringRes final int messageRes, @Nullable final Object... params) {
+	public void log(final int level, @StringRes final int messageRes,
+					@Nullable final Object... params) {
 		Logger.log(mLogSession, level, messageRes, params);
 	}
 
@@ -710,7 +719,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		if (gaService == null)
 			return false;
 
-		final BluetoothGattCharacteristic scCharacteristic = gaService.getCharacteristic(SERVICE_CHANGED_CHARACTERISTIC);
+		final BluetoothGattCharacteristic scCharacteristic =
+				gaService.getCharacteristic(SERVICE_CHANGED_CHARACTERISTIC);
 		if (scCharacteristic == null)
 			return false;
 
@@ -719,20 +729,21 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	/**
-	 * Returns the callback that is registered for value changes (notifications) of given characteristic.
-	 * After assigning the notifications callback, notifications must be enabled using
-	 * {@link #enableNotifications(BluetoothGattCharacteristic)}. This applies also when they were
-	 * already enabled on the remote side.
+	 * Returns the callback that is registered for value changes (notifications) of given
+	 * characteristic. After assigning the notifications callback, notifications must be
+	 * enabled using {@link #enableNotifications(BluetoothGattCharacteristic)}.
+	 * This applies also when they were already enabled on the remote side.
 	 * <p>
 	 * To remove the callback, disable notifications using
 	 * {@link #disableNotifications(BluetoothGattCharacteristic)}.
 	 *
-	 * @param characteristic characteristic to bind the callback with. If null, the returned callback
-	 *                       will not be null, but will not be used.
+	 * @param characteristic characteristic to bind the callback with. If null, the returned
+	 *                       callback will not be null, but will not be used.
 	 * @return The callback.
 	 */
 	@NonNull
-	protected final ValueChangedCallback setNotificationCallback(final @Nullable BluetoothGattCharacteristic characteristic) {
+	protected final ValueChangedCallback setNotificationCallback(
+			final @Nullable BluetoothGattCharacteristic characteristic) {
 		ValueChangedCallback callback = mNotificationCallbacks.get(characteristic);
 		if (callback == null) {
 			callback = new ValueChangedCallback(this);
@@ -744,20 +755,21 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	/**
-	 * Returns the callback that is registered for value changes (indications) of given characteristic.
-	 * After assigning the notifications callback, notifications must be enabled using
-	 * {@link #enableIndications(BluetoothGattCharacteristic)}. This applies also when they were
-	 * already enabled on the remote side.
+	 * Returns the callback that is registered for value changes (indications) of given
+	 * characteristic. After assigning the notifications callback, notifications must be
+	 * enabled using {@link #enableIndications(BluetoothGattCharacteristic)}.
+	 * This applies also when they were already enabled on the remote side.
 	 * <p>
 	 * To remove the callback, disable indications using
 	 * {@link #disableIndications(BluetoothGattCharacteristic)}.
 	 *
-	 * @param characteristic characteristic to bind the callback with. If null, the returned callback
-	 *                       will not be null, but will not be used.
+	 * @param characteristic characteristic to bind the callback with. If null, the returned
+	 *                       callback will not be null, but will not be used.
 	 * @return The callback.
 	 */
 	@NonNull
-	protected final ValueChangedCallback setIndicationCallback(final @Nullable BluetoothGattCharacteristic characteristic) {
+	protected final ValueChangedCallback setIndicationCallback(
+			final @Nullable BluetoothGattCharacteristic characteristic) {
 		return setNotificationCallback(characteristic);
 	}
 
@@ -769,7 +781,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest enableNotifications(final @Nullable BluetoothGattCharacteristic characteristic) {
+	protected final WriteRequest enableNotifications(
+			final @Nullable BluetoothGattCharacteristic characteristic) {
 		return enqueue(Request.newEnableNotificationsRequest(characteristic));
 	}
 
@@ -1582,7 +1595,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		}
 
 		@Override
-		final void onConnectionStateChangeSafe(final BluetoothGatt gatt, final int status, final int newState) {
+		final void onConnectionStateChangeSafe(@NonNull final BluetoothGatt gatt, final int status, final int newState) {
 			log(Level.DEBUG, "[Callback] Connection state changed with status: " +
 					status + " and new state: " + newState + " (" + stateToString(newState) + ")");
 
@@ -1668,7 +1681,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		}
 
 		@Override
-		final void onServicesDiscoveredSafe(final BluetoothGatt gatt, final int status) {
+		final void onServicesDiscoveredSafe(@NonNull final BluetoothGatt gatt, final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Level.INFO, "Services Discovered");
 				if (isRequiredServiceSupported(gatt)) {
@@ -1731,7 +1744,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		}
 
 		@Override
-		final void onCharacteristicReadSafe(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
+		final void onCharacteristicReadSafe(@NonNull final BluetoothGatt gatt, @NonNull final BluetoothGattCharacteristic characteristic, final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Level.INFO, "Read Response received from " + characteristic.getUuid() +
 						", value: " + ParserUtils.parse(characteristic));
@@ -1760,7 +1773,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		}
 
 		@Override
-		final void onCharacteristicWriteSafe(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic, final int status) {
+		final void onCharacteristicWriteSafe(@NonNull final BluetoothGatt gatt, @NonNull final BluetoothGattCharacteristic characteristic, final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Level.INFO, "Data written to " + characteristic.getUuid() +
 						", value: " + ParserUtils.parse(characteristic));
@@ -1790,12 +1803,12 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		}
 
 		@Override
-		final void onReliableWriteCompletedSafe(final BluetoothGatt gatt, final int status) {
+		final void onReliableWriteCompletedSafe(@NonNull final BluetoothGatt gatt, final int status) {
 			// TODO implement request
 		}
 
 		@Override
-		void onDescriptorReadSafe(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int status) {
+		void onDescriptorReadSafe(@NonNull final BluetoothGatt gatt, @NonNull final BluetoothGattDescriptor descriptor, final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Level.INFO, "Read Response received from descr. " + descriptor.getUuid() +
 						", value: " + ParserUtils.parse(descriptor));
@@ -1824,7 +1837,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		}
 
 		@Override
-		final void onDescriptorWriteSafe(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int status) {
+		final void onDescriptorWriteSafe(@NonNull final BluetoothGatt gatt, @NonNull final BluetoothGattDescriptor descriptor, final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Level.INFO, "Data written to descr. " + descriptor.getUuid() +
 						", value: " + ParserUtils.parse(descriptor));
@@ -1875,10 +1888,15 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		}
 
 		@Override
-		final void onCharacteristicChangedSafe(final BluetoothGatt gatt, final BluetoothGattCharacteristic characteristic) {
+		final void onCharacteristicChangedSafe(@NonNull final BluetoothGatt gatt, @NonNull final BluetoothGattCharacteristic characteristic) {
 			if (isServiceChangedCharacteristic(characteristic)) {
-				// TODO this should be tested. Should services be invalidated? Clal onDeviceDisconnected()?
+				// TODO this should be tested. Should services be invalidated?
+				// Forbid enqueuing more operations
 				mOperationInProgress = true;
+				// Clear queues, services are no longer valid
+				cancelQueue();
+				if (mInitQueue != null)
+					mInitQueue = null;
 				log(Level.INFO, "Service Changed indication received");
 				log(Level.VERBOSE, "Discovering Services...");
 				log(Level.DEBUG, "gatt.discoverServices()");
@@ -1906,13 +1924,13 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		}
 
 		@Override
-		final void onReadRemoteRssiSafe(final BluetoothGatt gatt, final int rssi, final int status) {
+		final void onReadRemoteRssiSafe(@NonNull final BluetoothGatt gatt, final int rssi, final int status) {
 			// TODO implement request
 		}
 
 		@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 		@Override
-		final void onMtuChangedSafe(final BluetoothGatt gatt, final int mtu, final int status) {
+		final void onMtuChangedSafe(@NonNull final BluetoothGatt gatt, final int mtu, final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Level.INFO, "MTU changed to: " + mtu);
 				mMtu = mtu;
@@ -1947,7 +1965,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 */
 		@RequiresApi(api = Build.VERSION_CODES.O)
 		@Override
-		final void onConnectionUpdatedSafe(final BluetoothGatt gatt, final int interval, final int latency, final int timeout, final int status) {
+		final void onConnectionUpdatedSafe(@NonNull final BluetoothGatt gatt, final int interval, final int latency, final int timeout, final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Level.INFO, "Connection parameters updated (interval: " + (interval * 1.25) + "ms," +
 						" latency: " + latency + ", timeout: " + (timeout * 10) + "ms)");
@@ -1991,7 +2009,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 		@RequiresApi(api = Build.VERSION_CODES.O)
 		@Override
-		final void onPhyReadSafe(final BluetoothGatt gatt, final int txPhy, final int rxPhy, final int status) {
+		final void onPhyReadSafe(@NonNull final BluetoothGatt gatt, final int txPhy, final int rxPhy, final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Level.INFO, "PHY read (TX: " + phyToString(txPhy) + ", RX: " + phyToString(rxPhy) + ")");
 			} else {
@@ -2002,7 +2020,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 		@RequiresApi(api = Build.VERSION_CODES.O)
 		@Override
-		final void onPhyUpdateSafe(final BluetoothGatt gatt, final int txPhy, final int rxPhy, final int status) {
+		final void onPhyUpdateSafe(@NonNull final BluetoothGatt gatt, final int txPhy, final int rxPhy, final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Level.INFO, "PHY updated (TX: " + phyToString(txPhy) + ", RX: " + phyToString(rxPhy) + ")");
 			} else {
