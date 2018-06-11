@@ -22,6 +22,7 @@
 
 package no.nordicsemi.android.ble;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -35,6 +36,7 @@ import no.nordicsemi.android.ble.callback.profile.ProfileReadResponse;
 import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.data.DataMerger;
 import no.nordicsemi.android.ble.data.DataStream;
+import no.nordicsemi.android.ble.exception.BluetoothDisabledException;
 import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
 import no.nordicsemi.android.ble.exception.InvalidDataException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
@@ -49,6 +51,7 @@ public class ValueChangedCallback {
 	private DataStream buffer;
 	private int count = 0;
 	private boolean deviceDisconnected;
+	private boolean bluetoothDisabled;
 	private int triggerStatus;
 	private Runnable timeoutHandler;
 
@@ -101,6 +104,8 @@ public class ValueChangedCallback {
 			timeoutHandler = null;
 			if (deviceDisconnected) {
 				callback.onDeviceDisconnected(bleManager.getBluetoothDevice());
+			} else if (bluetoothDisabled) {
+				callback.onBluetoothDisabled(bleManager.getBluetoothDevice());
 			} else {
 				callback.onTimeoutOccurred(bleManager.getBluetoothDevice());
 			}
@@ -149,9 +154,10 @@ public class ValueChangedCallback {
 	 *                                     the main (UI) thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 */
 	@SuppressWarnings("ConstantConditions")
-	public void await() throws DeviceDisconnectedException {
+	public void await() throws DeviceDisconnectedException, BluetoothDisabledException {
 		await((DataReceivedCallback) null);
 	}
 
@@ -170,9 +176,11 @@ public class ValueChangedCallback {
 	 *                                     characteristic value has changed.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 */
 	@SuppressWarnings("ConstantConditions")
-	public void await(final int timeout) throws InterruptedException, DeviceDisconnectedException {
+	public void await(final int timeout) throws InterruptedException, DeviceDisconnectedException,
+			BluetoothDisabledException {
 		await((DataReceivedCallback) null, timeout);
 	}
 
@@ -188,11 +196,12 @@ public class ValueChangedCallback {
 	 *                                     the main (UI) thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 */
 	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
 	public <E extends DataReceivedCallback> E await(@NonNull final Class<E> responseClass)
-			throws DeviceDisconnectedException {
+			throws DeviceDisconnectedException, BluetoothDisabledException {
 		try {
 			return awaitAfter(null, responseClass);
 		} catch (final RequestFailedException e) {
@@ -212,11 +221,12 @@ public class ValueChangedCallback {
 	 *                                     the main (UI) thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 */
 	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
 	public <E extends DataReceivedCallback> E await(@NonNull final E response)
-			throws DeviceDisconnectedException {
+			throws DeviceDisconnectedException, BluetoothDisabledException {
 		try {
 			return awaitAfter(null, response);
 		} catch (final RequestFailedException e) {
@@ -240,12 +250,13 @@ public class ValueChangedCallback {
 	 *                                     characteristic value has changed.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 */
 	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
 	public <E extends DataReceivedCallback> E await(@NonNull final Class<E> responseClass,
 													final int timeout)
-			throws InterruptedException, DeviceDisconnectedException {
+			throws InterruptedException, DeviceDisconnectedException, BluetoothDisabledException {
 		try {
 			return awaitAfter(null, responseClass, timeout);
 		} catch (final RequestFailedException e) {
@@ -268,12 +279,13 @@ public class ValueChangedCallback {
 	 *                                     characteristic value has changed.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 */
 	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
 	public <E extends DataReceivedCallback> E await(@NonNull final E response,
 													final int timeout)
-			throws InterruptedException, DeviceDisconnectedException {
+			throws InterruptedException, DeviceDisconnectedException, BluetoothDisabledException {
 		try {
 			return awaitAfter(null, response, timeout);
 		} catch (final RequestFailedException e) {
@@ -298,16 +310,17 @@ public class ValueChangedCallback {
 	 * @return The object received with a notification or indication.
 	 * @throws IllegalStateException       thrown when you try to call this method from
 	 *                                     the main (UI) thread.
+	 * @throws RequestFailedException      thrown when the trigger request has failed.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
-	 * @throws RequestFailedException      thrown when the trigger request has failed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 * @see #awaitAfter(Request, E)
 	 */
 	@SuppressWarnings("NullableProblems")
 	@NonNull
 	public <E extends DataReceivedCallback> E awaitAfter(@NonNull final Request trigger,
 														 @NonNull final Class<E> responseClass)
-			throws DeviceDisconnectedException, RequestFailedException {
+			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException {
 		try {
 			return awaitAfter(trigger, responseClass, 0);
 		} catch (final InterruptedException e) {
@@ -331,16 +344,17 @@ public class ValueChangedCallback {
 	 * @return The object received with a notification or indication.
 	 * @throws IllegalStateException       thrown when you try to call this method from
 	 *                                     the main (UI) thread.
+	 * @throws RequestFailedException      thrown when the trigger request has failed.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
-	 * @throws RequestFailedException      thrown when the trigger request has failed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 * @see #awaitAfter(Request, Class)
 	 */
 	@SuppressWarnings("NullableProblems")
 	@NonNull
 	public <E extends DataReceivedCallback> E awaitAfter(@NonNull final Request trigger,
 														 @NonNull final E response)
-			throws DeviceDisconnectedException, RequestFailedException {
+			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException {
 		try {
 			return awaitAfter(trigger, response, 0);
 		} catch (final InterruptedException e) {
@@ -387,16 +401,18 @@ public class ValueChangedCallback {
 	 *                                     characteristic value has changed.
 	 * @throws IllegalStateException       thrown when you try to call this method from
 	 *                                     the main (UI) thread.
+	 * @throws RequestFailedException      thrown when the trigger request has failed.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
-	 * @throws RequestFailedException      thrown when the trigger request has failed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 */
 	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
 	public <E extends DataReceivedCallback> E awaitAfter(@NonNull final Request trigger,
 														 @NonNull final Class<E> responseClass,
 														 final int timeout)
-			throws InterruptedException, DeviceDisconnectedException, RequestFailedException {
+			throws InterruptedException, RequestFailedException, DeviceDisconnectedException,
+			BluetoothDisabledException {
 		try {
 			Request.assertNotMainThread();
 
@@ -454,13 +470,15 @@ public class ValueChangedCallback {
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
 	 * @throws RequestFailedException      thrown when the trigger request has failed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 */
 	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
 	public <E extends DataReceivedCallback> E awaitAfter(@NonNull final Request trigger,
 														 @NonNull final E response,
 														 final int timeout)
-			throws InterruptedException, DeviceDisconnectedException, RequestFailedException {
+			throws InterruptedException, RequestFailedException, DeviceDisconnectedException,
+			BluetoothDisabledException {
 		Request.assertNotMainThread();
 		cancelTimeout();
 
@@ -470,6 +488,7 @@ public class ValueChangedCallback {
 			with(response);
 
 			deviceDisconnected = !bleManager.isConnected();
+			bluetoothDisabled = !BluetoothAdapter.getDefaultAdapter().isEnabled();
 
 			// Ensure the trigger request it done after the callback has been set
 			triggerStatus = BluetoothGatt.GATT_SUCCESS;
@@ -477,7 +496,7 @@ public class ValueChangedCallback {
 				throw new IllegalStateException("Request already enqueued; " +
 						"use Request.new...Request() instead.");
 			}
-			if (!deviceDisconnected && trigger != null) {
+			if (!bluetoothDisabled && !deviceDisconnected && trigger != null) {
 				trigger.internalFail((device, status) -> {
 					triggerStatus = status;
 					syncLock.open();
@@ -485,12 +504,16 @@ public class ValueChangedCallback {
 				bleManager.enqueue(trigger);
 			}
 			// Wait for value change event
-			if (!deviceDisconnected && !syncLock.block(timeout)) {
+			if (!bluetoothDisabled && !deviceDisconnected && !syncLock.block(timeout)) {
 				throw new InterruptedException();
 			}
 			if (deviceDisconnected) {
 				syncLock.open();
 				throw new DeviceDisconnectedException();
+			}
+			if (bluetoothDisabled) {
+				syncLock.open();
+				throw new BluetoothDisabledException();
 			}
 			if (triggerStatus != BluetoothGatt.GATT_SUCCESS) {
 				throw new RequestFailedException(trigger, triggerStatus);
@@ -517,11 +540,12 @@ public class ValueChangedCallback {
 	 *                                     was called during parsing them.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 */
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass)
-			throws InvalidDataException, DeviceDisconnectedException {
+			throws InvalidDataException, DeviceDisconnectedException, BluetoothDisabledException {
 		try {
 			return awaitValidAfter(null, responseClass, 0);
 		} catch (final InterruptedException e) {
@@ -548,11 +572,12 @@ public class ValueChangedCallback {
 	 *                                     was called during parsing them.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 */
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final E response)
-			throws InvalidDataException, DeviceDisconnectedException {
+			throws InvalidDataException, DeviceDisconnectedException, BluetoothDisabledException {
 		try {
 			return awaitValidAfter(null, response, 0);
 		} catch (final InterruptedException e) {
@@ -582,12 +607,14 @@ public class ValueChangedCallback {
 	 *                                     was called during parsing them.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 */
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass,
 														final int timeout)
-			throws InterruptedException, InvalidDataException, DeviceDisconnectedException {
+			throws InterruptedException, InvalidDataException, DeviceDisconnectedException,
+			BluetoothDisabledException {
 		try {
 			return awaitValidAfter(null, responseClass, timeout);
 		} catch (final RequestFailedException e) {
@@ -613,12 +640,14 @@ public class ValueChangedCallback {
 	 *                                     was called during parsing them.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 */
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final E response,
 														final int timeout)
-			throws InterruptedException, InvalidDataException, DeviceDisconnectedException {
+			throws InterruptedException, InvalidDataException, DeviceDisconnectedException,
+			BluetoothDisabledException {
 		try {
 			return awaitValidAfter(null, response, timeout);
 		} catch (final RequestFailedException e) {
@@ -645,15 +674,17 @@ public class ValueChangedCallback {
 	 * @throws InvalidDataException        exception thrown when the data received were invalid and
 	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}
 	 *                                     was called during parsing them.
+	 * @throws RequestFailedException      thrown when the trigger request has failed.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
-	 * @throws RequestFailedException      thrown when the trigger request has failed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 * @see #awaitAfter(Request, Class)
 	 */
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValidAfter(@NonNull final Request trigger,
 															 @NonNull final Class<E> responseClass)
-			throws InvalidDataException, DeviceDisconnectedException, RequestFailedException {
+			throws InvalidDataException, RequestFailedException, DeviceDisconnectedException,
+			BluetoothDisabledException {
 		try {
 			return awaitValidAfter(trigger, responseClass, 0);
 		} catch (final InterruptedException e) {
@@ -679,15 +710,17 @@ public class ValueChangedCallback {
 	 * @throws InvalidDataException        exception thrown when the data received were invalid and
 	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}
 	 *                                     was called during parsing them.
+	 * @throws RequestFailedException      thrown when the trigger request has failed.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
-	 * @throws RequestFailedException      thrown when the trigger request has failed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 * @see #awaitAfter(Request, Class)
 	 */
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValidAfter(@NonNull final Request trigger,
 															 @NonNull final E response)
-			throws InvalidDataException, DeviceDisconnectedException, RequestFailedException {
+			throws InvalidDataException, RequestFailedException, DeviceDisconnectedException,
+			BluetoothDisabledException {
 		try {
 			return awaitValidAfter(trigger, response, 0);
 		} catch (final InterruptedException e) {
@@ -717,17 +750,18 @@ public class ValueChangedCallback {
 	 * @throws InvalidDataException        exception thrown when the data received were invalid and
 	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}
 	 *                                     was called during parsing them.
+	 * @throws RequestFailedException      thrown when the trigger request has failed.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
-	 * @throws RequestFailedException      thrown when the trigger request has failed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 */
 	@SuppressWarnings({"ConstantConditions", "NullableProblems"})
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValidAfter(@NonNull final Request trigger,
 															 @NonNull final Class<E> responseClass,
 															 final int timeout)
-			throws InterruptedException, InvalidDataException, DeviceDisconnectedException,
-			RequestFailedException {
+			throws InterruptedException, InvalidDataException, RequestFailedException,
+			DeviceDisconnectedException, BluetoothDisabledException {
 		final E response = awaitAfter(trigger, responseClass, timeout);
 		if (response != null && !response.isValid()) {
 			throw new InvalidDataException(response);
@@ -758,6 +792,7 @@ public class ValueChangedCallback {
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
 	 * @throws RequestFailedException      thrown when the trigger request has failed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 */
 	@SuppressWarnings({"ConstantConditions", "NullableProblems"})
 	@NonNull
@@ -765,7 +800,7 @@ public class ValueChangedCallback {
 															 @NonNull final E response,
 															 final int timeout)
 			throws InterruptedException, InvalidDataException, DeviceDisconnectedException,
-			RequestFailedException {
+			RequestFailedException, BluetoothDisabledException {
 		final E result = awaitAfter(trigger, response, timeout);
 		if (result != null && !result.isValid()) {
 			throw new InvalidDataException(result);
@@ -815,6 +850,12 @@ public class ValueChangedCallback {
 
 	void notifyDeviceDisconnected(final BluetoothDevice device) {
 		deviceDisconnected = true;
+		syncLock.open();
+		notifyDataNotReceived();
+	}
+
+	void notifyBluetoothDisabled(final BluetoothDevice device) {
+		bluetoothDisabled = true;
 		syncLock.open();
 		notifyDataNotReceived();
 	}

@@ -37,6 +37,7 @@ import no.nordicsemi.android.ble.callback.profile.ProfileReadResponse;
 import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.data.DataMerger;
 import no.nordicsemi.android.ble.data.DataStream;
+import no.nordicsemi.android.ble.exception.BluetoothDisabledException;
 import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
 import no.nordicsemi.android.ble.exception.InvalidDataException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
@@ -121,10 +122,12 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 	 *                                thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 */
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass)
-			throws RequestFailedException, InvalidDataException, DeviceDisconnectedException {
+			throws RequestFailedException, InvalidDataException, DeviceDisconnectedException,
+			BluetoothDisabledException {
 		E response = await(responseClass);
 		if (!response.isValid()) {
 			throw new InvalidDataException(response);
@@ -148,10 +151,13 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 	 *                                thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 */
 	@NonNull
-	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass, final int timeout)
-			throws RequestFailedException, InterruptedException, InvalidDataException, DeviceDisconnectedException {
+	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass,
+														final int timeout)
+			throws RequestFailedException, InterruptedException, InvalidDataException,
+			DeviceDisconnectedException, BluetoothDisabledException {
 		E response = await(responseClass, timeout);
 		if (!response.isValid()) {
 			throw new InvalidDataException(response);

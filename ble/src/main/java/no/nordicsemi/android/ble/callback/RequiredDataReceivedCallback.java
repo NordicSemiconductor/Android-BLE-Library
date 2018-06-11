@@ -42,4 +42,12 @@ public interface RequiredDataReceivedCallback extends DataReceivedCallback {
 	 * @param device the device that disconnected.
 	 */
 	void onDeviceDisconnected(@NonNull final BluetoothDevice device);
+
+	/**
+	 * Callback received when Bluetooth adapter was disabled before a notification or indication
+	 * has been received.
+	 *
+	 * @param device the target device.
+	 */
+	void onBluetoothDisabled(@NonNull final BluetoothDevice device);
 }

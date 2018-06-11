@@ -34,6 +34,7 @@ import android.support.annotation.Nullable;
 
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
+import no.nordicsemi.android.ble.exception.BluetoothDisabledException;
 import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
@@ -477,8 +478,10 @@ public class Request {
 	 *                                     thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 */
-	public void await() throws RequestFailedException, DeviceDisconnectedException {
+	public void await() throws RequestFailedException, DeviceDisconnectedException,
+			BluetoothDisabledException {
 		try {
 			await(0);
 		} catch (final InterruptedException e) {
@@ -502,9 +505,11 @@ public class Request {
 	 *                                     thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
 	 */
 	public void await(final int timeout)
-			throws RequestFailedException, InterruptedException, DeviceDisconnectedException {
+			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
+			BluetoothDisabledException {
 		assertNotMainThread();
 
 		final SuccessCallback sc = successCallback;
@@ -520,6 +525,9 @@ public class Request {
 			if (!callback.isSuccess()) {
 				if (callback.status == FailCallback.REASON_DEVICE_DISCONNECTED) {
 					throw new DeviceDisconnectedException();
+				}
+				if (callback.status == FailCallback.REASON_BLUETOOTH_DISABLED) {
+					throw new BluetoothDisabledException();
 				}
 				throw new RequestFailedException(this, callback.status);
 			}

@@ -20,28 +20,8 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package no.nordicsemi.android.ble.callback;
+package no.nordicsemi.android.ble.exception;
 
-import android.bluetooth.BluetoothDevice;
-import android.support.annotation.NonNull;
-
-public interface FailCallback {
-	int REASON_DEVICE_DISCONNECTED = -1;
-	int REASON_DEVICE_NOT_SUPPORTED = -2;
-	int REASON_NULL_ATTRIBUTE = -3;
-	int REASON_REQUEST_FAILED = -4;
-	int REASON_BLUETOOTH_DISABLED = -100;
-
-	/**
-	 * A callback invoked when the request has failed with status other than
-	 * {@link android.bluetooth.BluetoothGatt#GATT_SUCCESS}.
-	 *
-	 * @param device target device.
-	 * @param status error status code, one of BluetoothGatt#GATT_* constants or
-	 *               {@link #REASON_DEVICE_DISCONNECTED},
-	 *               {@link #REASON_DEVICE_NOT_SUPPORTED} (only for Connect request),
-	 *               {@link #REASON_BLUETOOTH_DISABLED}, {@link #REASON_NULL_ATTRIBUTE}
-	 *               or {@link #REASON_REQUEST_FAILED} (for other reason).
-	 */
-	void onRequestFailed(@NonNull final BluetoothDevice device, final int status);
+@SuppressWarnings("WeakerAccess")
+public class ConnectionException extends Exception {
 }

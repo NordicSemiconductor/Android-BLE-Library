@@ -195,7 +195,26 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				case BluetoothAdapter.STATE_OFF:
 					if (mConnected && previousState != BluetoothAdapter.STATE_TURNING_OFF
 							&& previousState != BluetoothAdapter.STATE_OFF) {
+						// No more calls are possible
+						mGattCallback.mOperationInProgress = true;
+						mGattCallback.cancelQueues();
+
+						// Signal all notification callbacks
+						for (final ValueChangedCallback callback : mNotificationCallbacks.values()) {
+							callback.notifyBluetoothDisabled(mBluetoothDevice);
+						}
+						// Signal the current request, if any
+						if (mRequest != null && mRequest.type != Request.Type.DISCONNECT) {
+							mRequest.notifyFail(mBluetoothDevice, FailCallback.REASON_BLUETOOTH_DISABLED);
+							mRequest = null;
+						}
+						if (mConnectRequest != null) {
+							mConnectRequest.notifyFail(mBluetoothDevice, FailCallback.REASON_BLUETOOTH_DISABLED);
+							mConnectRequest = null;
+						}
+
 						// The connection is killed by the system, no need to gently disconnect
+						mUserDisconnected = true;
 						mGattCallback.notifyDeviceDisconnected(mBluetoothDevice);
 					}
 					// Calling close() will prevent the STATE_OFF event from being logged
@@ -407,14 +426,17 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		if (mCallbacks == null) {
 			throw new NullPointerException("You have to set callbacks using setGattCallbacks(E callbacks) before connecting");
 		}
-		if (mConnected || mConnectionState == BluetoothGatt.STATE_CONNECTING) {
+		final boolean bluetoothEnabled = BluetoothAdapter.getDefaultAdapter().isEnabled();
+		if (mConnected || mConnectionState == BluetoothGatt.STATE_CONNECTING || !bluetoothEnabled) {
 			final ConnectRequest request = Request.connect();
 			mHandler.post(() -> {
 				final BluetoothDevice currentDevice = mBluetoothDevice;
 				if (currentDevice != null && currentDevice.equals(device)) {
 					request.notifySuccess(device);
 				} else {
-					request.notifyFail(device, FailCallback.REASON_REQUEST_FAILED);
+					request.notifyFail(device, bluetoothEnabled ?
+							FailCallback.REASON_REQUEST_FAILED :
+							FailCallback.REASON_BLUETOOTH_DISABLED);
 				}
 			});
 			return request;
@@ -594,7 +616,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			mNotificationCallbacks.clear();
 			mConnectionState = BluetoothGatt.STATE_DISCONNECTED;
 			if (mGattCallback != null)
-				mGattCallback.cancelQueue();
+				mGattCallback.cancelQueues();
 			mGattCallback = null;
 			mBluetoothDevice = null;
 		}
@@ -1641,10 +1663,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 								GattError.parseConnectionError(status));
 
 					mOperationInProgress = true; // no more calls are possible
-					mInitQueue = null;
-					mTaskQueue.clear();
+					cancelQueues();
 
-					// Signal all threads waiting synchronously for a notification
+					// Signal all notification callbacks
 					for (final ValueChangedCallback callback : mNotificationCallbacks.values()) {
 						callback.notifyDeviceDisconnected(gatt.getDevice());
 					}
@@ -1894,9 +1915,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				// Forbid enqueuing more operations
 				mOperationInProgress = true;
 				// Clear queues, services are no longer valid
-				cancelQueue();
-				if (mInitQueue != null)
-					mInitQueue = null;
+				cancelQueues();
 				log(Level.INFO, "Service Changed indication received");
 				log(Level.VERBOSE, "Discovering Services...");
 				log(Level.DEBUG, "gatt.discoverServices()");
@@ -2054,11 +2073,14 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		}
 
 		/**
-		 * Removes all enqueued requests from the queue.
-		 * Does not affect the Init queue created with {@link #initGatt(BluetoothGatt)}.
+		 * Removes all enqueued requests from the queues.
 		 */
-		protected void cancelQueue() {
+		protected void cancelQueues() {
 			mTaskQueue.clear();
+			if (mInitQueue != null) {
+				mInitQueue.clear();
+				mInitQueue = null;
+			}
 		}
 
 		/**
@@ -2206,11 +2228,13 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					break;
 				}
 			}
-			// The result may be false if given characteristic or descriptor were not found on the device,
-			// or the feature is not supported on the Android.
+			// The result may be false if given characteristic or descriptor were not found
+			// on the device, or the feature is not supported on the Android.
 			// In that case, proceed with next operation and ignore the one that failed.
 			if (!result) {
-				mRequest.notifyFail(mBluetoothDevice, mConnected ? FailCallback.REASON_NULL_ATTRIBUTE : FailCallback.REASON_DEVICE_DISCONNECTED);
+				mRequest.notifyFail(mBluetoothDevice, mConnected ?
+						FailCallback.REASON_NULL_ATTRIBUTE :
+						FailCallback.REASON_DEVICE_DISCONNECTED);
 				mConnectionPriorityOperationInProgress = false;
 				mOperationInProgress = false;
 				nextRequest();
@@ -2224,7 +2248,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @return true if the descriptor belongs to the Service Changed characteristic
 		 */
 		private boolean isServiceChangedCCCD(final BluetoothGattDescriptor descriptor) {
-			return descriptor != null && SERVICE_CHANGED_CHARACTERISTIC.equals(descriptor.getCharacteristic().getUuid());
+			return descriptor != null &&
+					SERVICE_CHANGED_CHARACTERISTIC.equals(descriptor.getCharacteristic().getUuid());
 		}
 
 		/**
@@ -2234,7 +2259,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @return true if it is the Service Changed characteristic
 		 */
 		private boolean isServiceChangedCharacteristic(final BluetoothGattCharacteristic characteristic) {
-			return characteristic != null && SERVICE_CHANGED_CHARACTERISTIC.equals(characteristic.getUuid());
+			return characteristic != null &&
+					SERVICE_CHANGED_CHARACTERISTIC.equals(characteristic.getUuid());
 		}
 
 		/**
@@ -2245,7 +2271,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 */
 		@Deprecated
 		private boolean isBatteryLevelCharacteristic(final BluetoothGattCharacteristic characteristic) {
-			return characteristic != null && BATTERY_LEVEL_CHARACTERISTIC.equals(characteristic.getUuid());
+			return characteristic != null &&
+					BATTERY_LEVEL_CHARACTERISTIC.equals(characteristic.getUuid());
 		}
 
 		/**
@@ -2255,7 +2282,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @return true if the descriptor is a CCCD
 		 */
 		private boolean isCCCD(final BluetoothGattDescriptor descriptor) {
-			return descriptor != null && CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID.equals(descriptor.getUuid());
+			return descriptor != null &&
+					CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID.equals(descriptor.getUuid());
 		}
 	}
 

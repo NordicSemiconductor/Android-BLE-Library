@@ -30,6 +30,7 @@ import android.support.annotation.Nullable;
 
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
+import no.nordicsemi.android.ble.exception.BluetoothDisabledException;
 import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
@@ -99,10 +100,11 @@ public abstract class ValueRequest<T> extends Request {
 	 *                                     thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
 	 */
 	@NonNull
 	public <E extends T> E await(final Class<E> responseClass)
-			throws RequestFailedException, DeviceDisconnectedException {
+			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException {
 		try {
 			return await(responseClass, 0);
 		} catch (final InterruptedException e) {
@@ -131,11 +133,13 @@ public abstract class ValueRequest<T> extends Request {
 	 *                                     thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
 	 */
 	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
 	public <E extends T> E await(@NonNull final Class<E> responseClass, final int timeout)
-			throws RequestFailedException, InterruptedException, DeviceDisconnectedException {
+			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
+			BluetoothDisabledException {
 		assertNotMainThread();
 
 		final SuccessCallback sc = successCallback;
@@ -155,6 +159,9 @@ public abstract class ValueRequest<T> extends Request {
 			if (!callback.isSuccess()) {
 				if (callback.status == FailCallback.REASON_DEVICE_DISCONNECTED) {
 					throw new DeviceDisconnectedException();
+				}
+				if (callback.status == FailCallback.REASON_BLUETOOTH_DISABLED) {
+					throw new BluetoothDisabledException();
 				}
 				throw new RequestFailedException(this, callback.status);
 			}
