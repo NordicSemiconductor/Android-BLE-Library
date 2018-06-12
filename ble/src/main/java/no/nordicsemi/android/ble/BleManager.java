@@ -1456,6 +1456,13 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		}
 
 		/**
+		 * Called each time the task queue gets cleared.
+		 */
+		protected void onManagerReady() {
+			// empty
+		}
+
+		/**
 		 * This method should nullify all services and characteristics of the device.
 		 * It's called when the device is no longer connected, either due to user action
 		 * or a link loss.
@@ -2114,6 +2121,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				if (request == null) {
 					mOperationInProgress = false;
 					mRequest = null;
+					onManagerReady();
 					return;
 				}
 			}
