@@ -55,6 +55,7 @@ public class Request {
 		CONNECT,
 		DISCONNECT,
 		CREATE_BOND,
+		REMOVE_BOND,
 		WRITE,
 		READ,
 		WRITE_DESCRIPTOR,
@@ -137,6 +138,21 @@ public class Request {
 	@NonNull
 	public static Request createBond() {
 		return new Request(Type.CREATE_BOND);
+	}
+
+	/**
+	 * Creates a new request that will remove the bonding information from the Android device.
+	 * This is done using reflections and may not work on all devices.
+	 * <p>
+	 * The device will disconnect after calling this method. The success callback will be called
+	 * after the device got disconnected, when the {@link BluetoothDevice#getBondState()} changes
+	 * to {@link BluetoothDevice#BOND_NONE}.
+	 *
+	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 */
+	@NonNull
+	public static Request removeBond() {
+		return new Request(Type.REMOVE_BOND);
 	}
 
 	/**

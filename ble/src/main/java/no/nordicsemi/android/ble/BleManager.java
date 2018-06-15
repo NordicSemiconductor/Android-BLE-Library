@@ -261,7 +261,14 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 						mCallbacks.onBondingFailed(device);
 						if (mRequest != null)
 							mRequest.notifyFail(device, FailCallback.REASON_REQUEST_FAILED);
-					}
+					} else if (previousBondState == BluetoothDevice.BOND_BONDED) {
+					    if (mRequest != null && mRequest.type == Request.Type.REMOVE_BOND) {
+					    	// The device has already got disconnected.
+                            log(Level.INFO, "Bond information removed");
+                            mRequest.notifySuccess(device);
+                            mRequest = null;
+                        }
+                    }
 					break;
 				case BluetoothDevice.BOND_BONDING:
 					mCallbacks.onBondingRequired(device);
@@ -652,7 +659,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			}
 			mConnected = false;
 			mInitialConnection = false;
-			mRequest = null;
+			if (mRequest != null && mRequest.type != Request.Type.REMOVE_BOND)
+				mRequest = null;
 			mNotificationCallbacks.clear();
 			mConnectionState = BluetoothGatt.STATE_DISCONNECTED;
 			if (mGattCallback != null)
@@ -700,41 +708,36 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	/**
-	 * Enqueues creating bond request to the queue.
+	 * Enqueues creating bond request to the queue. The device must be first set using
+     * {@link #connect(BluetoothDevice)} which will try to connect to the device.
+     * If you need to pair with a device before connecting to it you may do it without
+     * the use of BleManager object and connect after bond is established.
 	 *
 	 * @return The request.
 	 */
+    @NonNull
 	protected final Request createBond() {
 		return enqueue(Request.createBond());
 	}
 
-	/**
-	 * Creates a bond with the device. The device must be first set using
-	 * {@link #connect(BluetoothDevice)} which will try to connect to the device.
-	 * If you need to pair with a device before connecting to it you may do it without
-	 * the use of BleManager object and connect after bond is established.
-	 *
-	 * @return true if pairing has started, false if it was already paired or
-	 * an immediate error occurred.
-	 */
 	private boolean internalCreateBond() {
 		final BluetoothDevice device = mBluetoothDevice;
 		if (device == null)
 			return false;
 
+        log(Level.VERBOSE, "Starting pairing...");
+
 		if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
-			log(Level.VERBOSE, "Creating bond request on already bonded device...");
-			log(Level.INFO, "Device bonded");
+			log(Level.WARNING, "Device already bonded");
 			mRequest.notifySuccess(device);
-			return false;
+			mGattCallback.mOperationInProgress = false;
+			mGattCallback.nextRequest();
+			return true;
 		}
 
-		log(Level.VERBOSE, "Starting pairing...");
-
-		boolean result = false;
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
 			log(Level.DEBUG, "device.createBond()");
-			result = device.createBond();
+			return device.createBond();
 		} else {
 			/*
 			 * There is a createBond() method in BluetoothDevice class but for now it's hidden.
@@ -744,19 +747,61 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				final Method createBond = device.getClass().getMethod("createBond");
 				if (createBond != null) {
 					log(Level.DEBUG, "device.createBond() (hidden)");
-					result = (Boolean) createBond.invoke(device);
+					return  (Boolean) createBond.invoke(device);
 				}
 			} catch (final Exception e) {
 				Log.w(TAG, "An exception occurred while creating bond", e);
 			}
 		}
-
-		if (!result) {
-			Log.w(TAG, "Creating bond failed");
-			mRequest.notifyFail(device, FailCallback.REASON_REQUEST_FAILED);
-		}
-		return result;
+		return false;
 	}
+
+    /**
+     * Enqueues removing bond information. When the device was bonded and the bond
+     * information was successfully removed, the device will disconnect.
+     * Note, that this will not remove the bond information from the connected device!
+	 * <p>
+	 * The success callback will be called after the device get disconnected,
+	 * when the {@link BluetoothDevice#getBondState()} changes to {@link BluetoothDevice#BOND_NONE}.
+     *
+     * @return The request.
+     */
+    @NonNull
+    protected final Request removeBond() {
+        return enqueue(Request.removeBond());
+    }
+
+    @SuppressWarnings("JavaReflectionMemberAccess")
+    private boolean internalRemoveBond() {
+        final BluetoothDevice device = mBluetoothDevice;
+        if (device == null)
+            return false;
+
+        log(Level.VERBOSE, "Removing bond information...");
+
+        if (device.getBondState() == BluetoothDevice.BOND_NONE) {
+            log(Level.WARNING, "Device is not bonded");
+            mRequest.notifySuccess(device);
+            mGattCallback.mOperationInProgress = false;
+            mGattCallback.nextRequest();
+            return true;
+        }
+
+        /*
+         * There is a removeBond() method in BluetoothDevice class but for now it's hidden.
+         * We will call it using reflections.
+         */
+        try {
+            final Method removeBond = device.getClass().getMethod("removeBond");
+            if (removeBond != null) {
+                log(Level.DEBUG, "device.removeBond() (hidden)");
+                return (Boolean) removeBond.invoke(device);
+            }
+        } catch (final Exception e) {
+            Log.w(TAG, "An exception occurred while removing bond", e);
+        }
+        return false;
+    }
 
 	/**
 	 * When the device is bonded and has the Generic Attribute service and the Service Changed
@@ -1883,7 +1928,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 						callback.notifyDeviceDisconnected(gatt.getDevice());
 					}
 					// Signal the current request, if any
-					if (mRequest != null && mRequest.type != Request.Type.DISCONNECT) {
+					if (mRequest != null && mRequest.type != Request.Type.DISCONNECT
+							&& mRequest.type != Request.Type.REMOVE_BOND) {
 						mRequest.notifyFail(gatt.getDevice(), FailCallback.REASON_DEVICE_DISCONNECTED);
 					}
 					if (mConnectRequest != null) {
@@ -2391,6 +2437,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					result = internalCreateBond();
 					break;
 				}
+                case REMOVE_BOND: {
+                    result = internalRemoveBond();
+                    break;
+                }
 				case READ: {
 					result = internalReadCharacteristic(request.characteristic);
 					break;
