@@ -72,6 +72,10 @@ public class Request {
 		ENABLE_SERVICE_CHANGED_INDICATIONS,
 		REQUEST_MTU,
 		REQUEST_CONNECTION_PRIORITY,
+		SET_PREFERRED_PHY,
+		READ_PHY,
+		READ_RSSI,
+		REFRESH_CACHE,
 		SLEEP,
 	}
 
@@ -384,7 +388,9 @@ public class Request {
 
 	/**
 	 * Requests new MTU (Maximum Transfer Unit). This is only supported on Android Lollipop or newer.
-	 * The target device may reject requested value and set smalled MTU.
+	 * On older platforms the request will enqueue, but will fail to execute and
+	 * {@link #fail(FailCallback)} callback will be called.
+	 * The target device may reject requested value and set a smaller MTU.
 	 *
 	 * @param mtu the new MTU. Acceptable values are &lt;23, 517&gt;.
 	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
@@ -397,22 +403,94 @@ public class Request {
 	/**
 	 * Requests the new connection priority. Acceptable values are:
 	 * <ol>
-	 * <li>{@link BluetoothGatt#CONNECTION_PRIORITY_HIGH}
-	 * - Interval: 11.25 -15 ms, latency: 0, supervision timeout: 20 sec,</li>
-	 * <li>{@link BluetoothGatt#CONNECTION_PRIORITY_BALANCED}
+	 * <li>{@link ConnectionPriorityRequest#CONNECTION_PRIORITY_HIGH}
+	 * - Interval: 11.25 -15 ms (Android 6+) and 7.5 - 10 ms (older), latency: 0,
+	 *   supervision timeout: 20 sec,</li>
+	 * <li>{@link ConnectionPriorityRequest#CONNECTION_PRIORITY_BALANCED}
 	 * - Interval: 30 - 50 ms, latency: 0, supervision timeout: 20 sec,</li>
-	 * <li>{@link BluetoothGatt#CONNECTION_PRIORITY_LOW_POWER}
+	 * <li>{@link ConnectionPriorityRequest#CONNECTION_PRIORITY_LOW_POWER}
 	 * - Interval: 100 - 125 ms, latency: 2, supervision timeout: 20 sec.</li>
 	 * </ol>
+	 * Requesting connection priority is available on Android Lollipop or newer. On older
+	 * platforms the request will enqueue, but will fail to execute and {@link #fail(FailCallback)}
+	 * callback will be called.
 	 *
-	 * @param priority one of: {@link BluetoothGatt#CONNECTION_PRIORITY_HIGH},
-	 *                 {@link BluetoothGatt#CONNECTION_PRIORITY_BALANCED},
-	 *                 {@link BluetoothGatt#CONNECTION_PRIORITY_LOW_POWER}.
+	 * @param priority one of: {@link ConnectionPriorityRequest#CONNECTION_PRIORITY_HIGH},
+	 *                 {@link ConnectionPriorityRequest#CONNECTION_PRIORITY_BALANCED},
+	 *                 {@link ConnectionPriorityRequest#CONNECTION_PRIORITY_LOW_POWER}.
 	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
 	 */
 	@NonNull
 	public static ConnectionPriorityRequest newConnectionPriorityRequest(final int priority) {
 		return new ConnectionPriorityRequest(Type.REQUEST_CONNECTION_PRIORITY, priority);
+	}
+
+	/**
+	 * Requests the change of preferred PHY for this connections.
+	 * <p>
+	 * PHY LE 2M and PHY LE Coded are supported only on Android Oreo or newer.
+	 * You may safely request other PHYs on older platforms, but the request will not be executed
+	 * and you will get PHY LE 1M as TX and RX PHY in the callback.
+	 *
+	 * @param txPhy preferred transmitter PHY. Bitwise OR of any of
+	 *             {@link PhyRequest#PHY_LE_1M_MASK}, {@link PhyRequest#PHY_LE_2M_MASK},
+	 *             and {@link PhyRequest#PHY_LE_CODED_MASK}.
+	 * @param rxPhy preferred receiver PHY. Bitwise OR of any of
+	 *             {@link PhyRequest#PHY_LE_1M_MASK}, {@link PhyRequest#PHY_LE_2M_MASK},
+	 *             and {@link PhyRequest#PHY_LE_CODED_MASK}.
+	 * @param phyOptions preferred coding to use when transmitting on the LE Coded PHY. Can be one
+	 *             of {@link PhyRequest#PHY_OPTION_NO_PREFERRED},
+	 *             {@link PhyRequest#PHY_OPTION_S2} or {@link PhyRequest#PHY_OPTION_S8}.
+	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 */
+	@NonNull
+	public static PhyRequest newSetPreferredPhyRequest(final int txPhy, final int rxPhy,
+													   final int phyOptions) {
+		return new PhyRequest(Type.SET_PREFERRED_PHY, txPhy, rxPhy, phyOptions);
+	}
+
+	/**
+	 * Reads the current PHY for this connections.
+	 * <p>
+	 * PHY LE 2M and PHY LE Coded are supported only on Android Oreo or newer.
+	 * You may safely read PHY on older platforms, but the request will not be executed
+	 * and you will get PHY LE 1M as TX and RX PHY in the callback.
+	 *
+	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 */
+	@NonNull
+	public static PhyRequest newReadPhyRequest() {
+		return new PhyRequest(Type.READ_PHY);
+	}
+
+	/**
+	 * Reads the current RSSI (Received Signal Strength Indication).
+	 *
+	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 */
+	@NonNull
+	public static ReadRssiRequest newReadRssiRequest() {
+		return new ReadRssiRequest(Type.READ_RSSI);
+	}
+
+	/**
+	 * Refreshes the device cache. As the {@link BluetoothGatt#refresh()} method is not in the
+	 * public API (it's hidden, and on Android P it is on a light gray list) it is called
+	 * using reflections and may be removed in some future Android release or on some devices.
+	 * <p>
+	 * There is no callback indicating when the cache has been cleared. This library assumes
+	 * some time and waits. After the delay, it will start service discovery and clear the
+	 * task queue. When the service discovery finishes, the
+	 * {@link BleManager.BleManagerGattCallback#isRequiredServiceSupported(BluetoothGatt)} and
+	 * {@link BleManager.BleManagerGattCallback#isOptionalServiceSupported(BluetoothGatt)} will
+	 * be called and the initialization will be performed as if the device has just connected.
+	 *
+	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 */
+	@SuppressWarnings("JavadocReference")
+	@NonNull
+	public static Request newRefreshCacheRequest() {
+		return new Request(Type.REFRESH_CACHE);
 	}
 
 	/**

@@ -34,14 +34,42 @@ import no.nordicsemi.android.ble.exception.BluetoothDisabledException;
 import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
+@SuppressWarnings({"unused", "WeakerAccess"})
 public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPriorityCallback> {
-	private ConnectionPriorityCallback valueCallback;
+	/**
+	 * Connection parameter update - Use the connection parameters recommended by the
+	 * Bluetooth SIG. This is the default value if no connection parameter update
+	 * is requested.
+	 * <p>
+	 * Interval: 30 - 50 ms, latency: 0, supervision timeout: 20 sec.
+	 */
+	public static final int CONNECTION_PRIORITY_BALANCED = 0;
+
+	/**
+	 * Connection parameter update - Request a high priority, low latency connection.
+	 * An application should only request high priority connection parameters to transfer
+	 * large amounts of data over LE quickly. Once the transfer is complete, the application
+	 * should request {@link #CONNECTION_PRIORITY_BALANCED} connection parameters
+	 * to reduce energy use.
+	 * <p>
+	 * Interval: 11.25 - 15 ms (Android 6+) or 7.5 - 10 ms (Android 4.3 - 5.1),
+	 * latency: 0, supervision timeout: 20 sec.
+	 */
+	public static final int CONNECTION_PRIORITY_HIGH = 1;
+
+	/**
+	 * Connection parameter update - Request low power, reduced data rate connection parameters.
+	 * <p>
+	 * Interval: 100 - 125 ms, latency: 2, supervision timeout: 20 sec.
+	 */
+	public static final int CONNECTION_PRIORITY_LOW_POWER = 2;
+
 	private final int value;
 
 	ConnectionPriorityRequest(@NonNull final Type type, int priority) {
 		super(type);
 		if (priority < 0 || priority > 2)
-			priority = 0; // Balanced
+			priority = CONNECTION_PRIORITY_BALANCED;
 		this.value = priority;
 	}
 
