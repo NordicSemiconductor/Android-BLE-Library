@@ -41,6 +41,13 @@ public final class MtuRequest extends ValueRequest<MtuCallback> {
 		this.value = mtu;
 	}
 
+	@NonNull
+	@Override
+	MtuRequest setManager(@NonNull final BleManager manager) {
+		super.setManager(manager);
+		return this;
+	}
+
 	@Override
 	@NonNull
 	public MtuRequest done(@NonNull final SuccessCallback callback) {

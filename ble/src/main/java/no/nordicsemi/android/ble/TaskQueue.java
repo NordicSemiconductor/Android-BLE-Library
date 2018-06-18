@@ -20,34 +20,16 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package no.nordicsemi.android.ble.callback;
+package no.nordicsemi.android.ble;
 
-import android.bluetooth.BluetoothDevice;
 import android.support.annotation.NonNull;
 
-public interface RequiredDataReceivedCallback extends DataReceivedCallback {
+public interface TaskQueue {
 
-	/**
-	 * Callback received when a notification or indication hasn't been received
-	 * before the timeout occurred.
-	 *
-	 * @param device the target device.
-	 */
-	void onTimeoutOccurred(@NonNull final BluetoothDevice device);
-
-	/**
-	 * Callback received when a notification or indication hasn't been received
-	 * before the device disconnected.
-	 *
-	 * @param device the device that disconnected.
-	 */
-	void onDeviceDisconnected(@NonNull final BluetoothDevice device);
-
-	/**
-	 * Callback received when Bluetooth adapter was disabled before a notification or indication
-	 * has been received.
-	 *
-	 * @param device the target device.
-	 */
-	void onBluetoothDisabled(@NonNull final BluetoothDevice device);
+    /**
+     * Enqueues a new request.
+     *
+     * @param request the new request to be added to the end of the queue.
+     */
+    void enqueue(@NonNull final Request request);
 }

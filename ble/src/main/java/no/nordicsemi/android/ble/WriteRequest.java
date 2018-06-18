@@ -74,6 +74,13 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 		this.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
 	}
 
+	@NonNull
+	@Override
+	WriteRequest setManager(@NonNull final BleManager manager) {
+		super.setManager(manager);
+		return this;
+	}
+
 	private static byte[] copy(@Nullable final byte[] value, final int offset, final int length) {
 		if (value == null || offset > value.length)
 			return null;
@@ -109,8 +116,8 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 	 * The splitter may modify each packet if necessary, i.e. add a flag indicating first packet,
 	 * continuation or the last packet.
 	 *
-	 * @param splitter an implementation of a splitter
-	 * @return the request
+	 * @param splitter an implementation of a splitter.
+	 * @return The request.
 	 * @see #split()
 	 */
 	@NonNull
@@ -125,13 +132,14 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 	 * The splitter may modify each packet if necessary, i.e. add a flag indicating first packet,
 	 * continuation or the last packet.
 	 *
-	 * @param splitter an implementation of a splitter
-	 * @param callback the progress callback that will be notified each time a packet was sent
-	 * @return the request
+	 * @param splitter an implementation of a splitter.
+	 * @param callback the progress callback that will be notified each time a packet was sent.
+	 * @return The request.
 	 * @see #split()
 	 */
 	@NonNull
-	public WriteRequest split(@NonNull final DataSplitter splitter, @NonNull final WriteProgressCallback callback) {
+	public WriteRequest split(@NonNull final DataSplitter splitter,
+							  @NonNull final WriteProgressCallback callback) {
 		this.dataSplitter = splitter;
 		this.progressCallback = callback;
 		return this;
@@ -141,7 +149,7 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 	 * Adds a default MTU splitter that will be used to cut given data into at-most MTU-3
 	 * bytes long packets.
 	 *
-	 * @return the request
+	 * @return The request.
 	 */
 	@NonNull
 	public WriteRequest split() {
@@ -154,8 +162,8 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 	 * Adds a default MTU splitter that will be used to cut given data into at-most MTU-3
 	 * bytes long packets.
 	 *
-	 * @param callback the progress callback that will be notified each time a packet was sent
-	 * @return the request
+	 * @param callback the progress callback that will be notified each time a packet was sent.
+	 * @return The request.
 	 */
 	@NonNull
 	public WriteRequest split(@NonNull final WriteProgressCallback callback) {

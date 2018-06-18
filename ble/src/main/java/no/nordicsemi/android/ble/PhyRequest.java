@@ -88,6 +88,13 @@ public final class PhyRequest extends ValueRequest<PhyCallback> {
 		this.phyOptions = phyOptions;
 	}
 
+	@NonNull
+	@Override
+	PhyRequest setManager(@NonNull final BleManager manager) {
+		super.setManager(manager);
+		return this;
+	}
+
 	@Override
 	@NonNull
 	public PhyRequest done(@NonNull final SuccessCallback callback) {

@@ -61,6 +61,13 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 		super(type, descriptor);
 	}
 
+	@NonNull
+	@Override
+	ReadRequest setManager(@NonNull final BleManager manager) {
+		super.setManager(manager);
+		return this;
+	}
+
 	@Override
 	@NonNull
 	public ReadRequest done(@NonNull final SuccessCallback callback) {
@@ -86,7 +93,7 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 	 * Adds a merger that will be used to merge multiple packets into a single Data.
 	 * The merger may modify each packet if necessary.
 	 *
-	 * @return the request
+     * @return The request.
 	 */
 	@NonNull
 	public ReadRequest merge(@NonNull final DataMerger merger) {
@@ -99,30 +106,37 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 	 * Adds a merger that will be used to merge multiple packets into a single Data.
 	 * The merger may modify each packet if necessary.
 	 *
-	 * @return the request
+	 * @return The request.
 	 */
 	@NonNull
-	public ReadRequest merge(@NonNull final DataMerger merger, @NonNull final ReadProgressCallback callback) {
+	public ReadRequest merge(@NonNull final DataMerger merger,
+							 @NonNull final ReadProgressCallback callback) {
 		this.dataMerger = merger;
 		this.progressCallback = callback;
 		return this;
 	}
 
 	/**
-	 * Same as {@link #await(Class)}, but if the response class extends {@link ProfileReadResponse}
-	 * and the received response is not valid, this method will thrown an exception instead of
-	 * just returning a response with {@link ProfileReadResponse#isValid()} returning false.
+	 * Same as {@link #await(Class)}, but if the response class extends
+	 * {@link ProfileReadResponse} and the received response is not valid
+	 * ({@link ProfileReadResponse#isValid()} returns false), this method will
+	 * throw an exception.
 	 *
-	 * @param responseClass the result class. This class will be instantiate, therefore it has to have
-	 *                      a default constructor.
-	 * @return the object with the response
-	 * @throws RequestFailedException thrown when the BLE request finished with status other than
-	 *                                {@link BluetoothGatt#GATT_SUCCESS}.
-	 * @throws IllegalStateException  thrown when you try to call this method from the main (UI)
-	 *                                thread.
+	 * @param responseClass the response class. This class will be instantiate, therefore it
+	 *                      has to have a default constructor.
+	 * @return The object with the response.
+	 * @throws RequestFailedException      thrown when the BLE request finished with status other
+     *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main
+     *                                     (UI) thread.
+	 * @throws IllegalArgumentException    thrown when the response class could not be instantiated.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
+     * @throws InvalidDataException        thrown when the received data were not valid (that is when
+     *                                     {@link ProfileReadResponse#onDataReceived(BluetoothDevice, Data)}
+     *                                     failed to parse the data correctly and called
+     *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}).
 	 */
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass)
@@ -136,22 +150,60 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 	}
 
 	/**
-	 * Same as {@link #await(Class, int)}, but if the response class extends {@link ProfileReadResponse}
-	 * and the received response is not valid, this method will thrown an exception instead of
-	 * just returning a response with {@link ProfileReadResponse#isValid()} returning false.
+	 * Same as {@link #await(Object)}, but if the response class extends
+	 * {@link ProfileReadResponse} and the received response is not valid
+	 * ({@link ProfileReadResponse#isValid()} returns false), this method will
+	 * throw an exception.
 	 *
-	 * @param responseClass the result class. This class will be instantiate, therefore it has to have
-	 *                    a default constructor.
-	 * @param timeout     optional timeout in milliseconds
-	 * @return the object with the response
-	 * @throws RequestFailedException thrown when the BLE request finished with status other than
-	 *                                {@link BluetoothGatt#GATT_SUCCESS}.
-	 * @throws InterruptedException   thrown if the timeout occurred before the request has finished.
-	 * @throws IllegalStateException  thrown when you try to call this method from the main (UI)
-	 *                                thread.
+	 * @param response the response object.
+	 * @return The object with the response.
+     * @throws RequestFailedException      thrown when the BLE request finished with status other
+     *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
+     * @throws IllegalStateException       thrown when you try to call this method from the main
+     *                                     (UI) thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
+     * @throws InvalidDataException        thrown when the received data were not valid (that is when
+     *                                     {@link ProfileReadResponse#onDataReceived(BluetoothDevice, Data)}
+     *                                     failed to parse the data correctly and called
+     *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}).
+	 */
+	@NonNull
+	public <E extends ProfileReadResponse> E awaitValid(@NonNull final E response)
+			throws RequestFailedException, InvalidDataException, DeviceDisconnectedException,
+			BluetoothDisabledException {
+		await(response);
+		if (!response.isValid()) {
+			throw new InvalidDataException(response);
+		}
+		return response;
+	}
+
+	/**
+	 * Same as {@link #await(Class, int)}, but if the response class extends
+	 * {@link ProfileReadResponse} and the received response is not valid
+	 * ({@link ProfileReadResponse#isValid()} returns false), this method will
+	 * throw an exception.
+	 *
+	 * @param responseClass the response class. This class will be instantiate, therefore it
+	 *                      has to have a default constructor.
+	 * @param timeout       optional timeout in milliseconds.
+	 * @return The object with the response.
+	 * @throws RequestFailedException      thrown when the BLE request finished with status other
+	 *                                     then {@link BluetoothGatt#GATT_SUCCESS}.
+	 * @throws InterruptedException        thrown if the timeout occurred before the request has
+     *                                     finished.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main
+	 *                                     (UI) thread.
+     * @throws IllegalArgumentException    thrown when the response class could not be instantiated.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
+	 *                                     was completed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
+     * @throws InvalidDataException        thrown when the received data were not valid (that is when
+     *                                     {@link ProfileReadResponse#onDataReceived(BluetoothDevice, Data)}
+     *                                     failed to parse the data correctly and called
+     *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}).
 	 */
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass,
@@ -159,6 +211,41 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 			throws RequestFailedException, InterruptedException, InvalidDataException,
 			DeviceDisconnectedException, BluetoothDisabledException {
 		E response = await(responseClass, timeout);
+		if (!response.isValid()) {
+			throw new InvalidDataException(response);
+		}
+		return response;
+	}
+
+	/**
+	 * Same as {@link #await(Object, int)}, but if the response class extends
+	 * {@link ProfileReadResponse} and the received response is not valid
+	 * ({@link ProfileReadResponse#isValid()} returns false), this method will
+	 * throw an exception.
+	 *
+	 * @param response the response object.
+	 * @param timeout  optional timeout in milliseconds.
+	 * @return The object with the response.
+     * @throws RequestFailedException      thrown when the BLE request finished with status other
+     *                                     then {@link BluetoothGatt#GATT_SUCCESS}.
+     * @throws InterruptedException        thrown if the timeout occurred before the request has
+     *                                     finished.
+     * @throws IllegalStateException       thrown when you try to call this method from the main
+     *                                     (UI) thread.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
+	 *                                     was completed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
+     * @throws InvalidDataException        thrown when the received data were not valid (that is when
+     *                                     {@link ProfileReadResponse#onDataReceived(BluetoothDevice, Data)}
+     *                                     failed to parse the data correctly and called
+     *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}).
+	 */
+	@NonNull
+	public <E extends ProfileReadResponse> E awaitValid(@NonNull final E response,
+														final int timeout)
+			throws RequestFailedException, InterruptedException, InvalidDataException,
+			DeviceDisconnectedException, BluetoothDisabledException {
+		await(response, timeout);
 		if (!response.isValid()) {
 			throw new InvalidDataException(response);
 		}

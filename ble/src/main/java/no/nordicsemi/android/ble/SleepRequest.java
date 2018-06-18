@@ -33,6 +33,13 @@ public final class SleepRequest extends Request {
 		this.delay = delay;
 	}
 
+    @NonNull
+    @Override
+    SleepRequest setManager(@NonNull final BleManager manager) {
+        super.setManager(manager);
+        return this;
+    }
+
 	long getDelay() {
 		return delay;
 	}

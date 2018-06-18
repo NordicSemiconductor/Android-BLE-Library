@@ -36,6 +36,13 @@ public class ConnectRequest extends Request {
 		enqueued = true;
 	}
 
+	@NonNull
+	@Override
+	ConnectRequest setManager(@NonNull final BleManager manager) {
+		super.setManager(manager);
+		return this;
+	}
+
 	/**
 	 * Use to add a completion callback. The callback will be invoked when the operation has finished
 	 * successfully unless {@link #await(int)} or its variant was used, in which case this callback

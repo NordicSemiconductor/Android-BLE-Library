@@ -37,6 +37,13 @@ public class DisconnectRequest extends Request {
 
 	@NonNull
 	@Override
+	DisconnectRequest setManager(@NonNull final BleManager manager) {
+		super.setManager(manager);
+		return this;
+	}
+
+	@NonNull
+	@Override
 	public DisconnectRequest done(@NonNull final SuccessCallback callback) {
 		super.done(callback);
 		return this;

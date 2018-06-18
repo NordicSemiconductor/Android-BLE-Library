@@ -124,6 +124,23 @@ public class Data implements Parcelable {
 	}
 
 	/**
+	 * Return the stored value of this characteristic.
+	 * <p>See {@link #getValue} for details.
+	 *
+	 * @param offset Offset at which the string value can be found.
+	 * @return Cached value of the characteristic
+	 */
+	@Nullable
+	public String getStringValue(final int offset) {
+		if (mValue == null || offset > mValue.length)
+			return null;
+		final byte[] strBytes = new byte[mValue.length - offset];
+		for (int i = 0; i != (mValue.length - offset); ++i)
+			strBytes[i] = mValue[offset+i];
+		return new String(strBytes);
+	}
+
+	/**
 	 * Returns the size of underlying byte array.
 	 *
 	 * @return Length of the data.

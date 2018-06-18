@@ -73,6 +73,13 @@ public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPrio
 		this.value = priority;
 	}
 
+	@NonNull
+	@Override
+	ConnectionPriorityRequest setManager(@NonNull final BleManager manager) {
+		super.setManager(manager);
+		return this;
+	}
+
 	@Override
 	@NonNull
 	public ConnectionPriorityRequest done(@NonNull final SuccessCallback callback) {

@@ -58,6 +58,13 @@ public abstract class ValueRequest<T> extends Request {
 
 	@NonNull
 	@Override
+	ValueRequest<T> setManager(@NonNull final BleManager manager) {
+		super.setManager(manager);
+		return this;
+	}
+
+	@NonNull
+	@Override
 	public ValueRequest<T> done(@NonNull final SuccessCallback callback) {
 		super.done(callback);
 		return this;
@@ -71,14 +78,15 @@ public abstract class ValueRequest<T> extends Request {
 	}
 
 	/**
-	 * Sets the value callback. When {@link #await(int)} is used this callback will be returned
-	 * by that method.
+	 * Sets the value callback. When the request is invoked synchronously, this callback will
+	 * be ignored and the received value will be returned by {@link #await(Class, int)}
+	 * (or any of its variants).
 	 *
-	 * @param callback the callback
-	 * @return the request
+	 * @param callback the callback.
+	 * @return The request.
 	 */
 	@NonNull
-	protected ValueRequest<T> with(@NonNull final T callback) {
+	public ValueRequest<T> with(@NonNull final T callback) {
 		this.valueCallback = callback;
 		return this;
 	}
@@ -89,15 +97,15 @@ public abstract class ValueRequest<T> extends Request {
 	 * {@link #with(T)} will be ignored.
 	 * <p>
 	 * This method may not be called from the main (UI) thread.
-	 * </p>
 	 *
 	 * @param responseClass the response class. This class will be instantiate, therefore it has to have
 	 *                      a default constructor.
-	 * @return the response with a response
+	 * @return The response with a response.
 	 * @throws RequestFailedException      thrown when the BLE request finished with status other than
 	 *                                     {@link BluetoothGatt#GATT_SUCCESS}.
 	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
 	 *                                     thread.
+	 * @throws IllegalArgumentException    thrown when the response class could not be instantiated.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
@@ -114,17 +122,88 @@ public abstract class ValueRequest<T> extends Request {
 	}
 
 	/**
+	 * Synchronously waits until the request is done.
+	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)} and
+	 * {@link #with(T)} will be ignored.
+	 * <p>
+	 * This method may not be called from the main (UI) thread.
+	 *
+	 * @param response the response object.
+	 * @return The response with a response.
+	 * @throws RequestFailedException      thrown when the BLE request finished with status other than
+	 *                                     {@link BluetoothGatt#GATT_SUCCESS}.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
+	 *                                     thread.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
+	 *                                     was completed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
+	 */
+	@NonNull
+	public <E extends T> E await(final E response)
+			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException {
+		try {
+			return await(response, 0);
+		} catch (final InterruptedException e) {
+			// never happen
+			throw new IllegalStateException("This should never happen");
+		}
+	}
+
+	/**
 	 * Synchronously waits until the request is done, for at most given number of milliseconds.
 	 * Callbacks set using {@link #done(SuccessCallback)}, {@link #fail(FailCallback)} and
 	 * {@link #with(T)} will be ignored.
 	 * <p>
 	 * This method may not be called from the main (UI) thread.
-	 * </p>
 	 *
 	 * @param responseClass the response class. This class will be instantiate, therefore it has
 	 *                      to have a default constructor.
-	 * @param timeout       optional timeout in milliseconds
-	 * @return the object with a response
+	 * @param timeout       optional timeout in milliseconds.
+	 * @return The object with a response.
+	 * @throws RequestFailedException      thrown when the BLE request finished with status other
+	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
+	 * @throws InterruptedException        thrown if the timeout occurred before the request has
+	 *                                     finished.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
+	 *                                     thread.
+	 * @throws IllegalArgumentException    thrown when the response class could not be instantiated.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
+	 *                                     was completed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
+	 */
+	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
+	@NonNull
+	public <E extends T> E await(@NonNull final Class<E> responseClass, final int timeout)
+			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
+			BluetoothDisabledException {
+		assertNotMainThread();
+
+		try {
+			Request.assertNotMainThread();
+
+			E response = null;
+			if (responseClass != null)
+				response = responseClass.newInstance();
+			return await(response, timeout);
+		} catch (IllegalAccessException e) {
+			throw new IllegalArgumentException("Couldn't instantiate " + responseClass.getCanonicalName()
+					+ " class. Is the default constructor accessible?");
+		} catch (InstantiationException e) {
+			throw new IllegalArgumentException("Couldn't instantiate " + responseClass.getCanonicalName()
+					+ " class. Does it have a default constructor with no arguments?");
+		}
+	}
+
+	/**
+	 * Synchronously waits until the request is done, for at most given number of milliseconds.
+	 * Callbacks set using {@link #done(SuccessCallback)}, {@link #fail(FailCallback)} and
+	 * {@link #with(T)} will be ignored.
+	 * <p>
+	 * This method may not be called from the main (UI) thread.
+	 *
+	 * @param response the response object.
+	 * @param timeout  optional timeout in milliseconds.
+	 * @return The object with a response.
 	 * @throws RequestFailedException      thrown when the BLE request finished with status other
 	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
 	 * @throws InterruptedException        thrown if the timeout occurred before the request has
@@ -137,7 +216,7 @@ public abstract class ValueRequest<T> extends Request {
 	 */
 	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
-	public <E extends T> E await(@NonNull final Class<E> responseClass, final int timeout)
+	public <E extends T> E await(@NonNull final E response, final int timeout)
 			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
 			BluetoothDisabledException {
 		assertNotMainThread();
@@ -146,12 +225,9 @@ public abstract class ValueRequest<T> extends Request {
 		final FailCallback fc = failCallback;
 		final T vc = valueCallback;
 		try {
-			E response = null;
-			if (responseClass != null)
-				response = responseClass.newInstance();
 			syncLock.close();
 			final RequestCallback callback = new RequestCallback();
-			with(response).done(callback).fail(callback);
+			with(response).done(callback).fail(callback).enqueue();
 
 			if (!syncLock.block(timeout)) {
 				throw new InterruptedException();
@@ -166,12 +242,6 @@ public abstract class ValueRequest<T> extends Request {
 				throw new RequestFailedException(this, callback.status);
 			}
 			return response;
-		} catch (IllegalAccessException e) {
-			throw new IllegalArgumentException("Couldn't instantiate " + responseClass.getCanonicalName()
-					+ " class. Is the default constructor accessible?");
-		} catch (InstantiationException e) {
-			throw new IllegalArgumentException("Couldn't instantiate " + responseClass.getCanonicalName()
-					+ " class. Does it have a default constructor with no arguments?");
 		} finally {
 			successCallback = sc;
 			failCallback = fc;

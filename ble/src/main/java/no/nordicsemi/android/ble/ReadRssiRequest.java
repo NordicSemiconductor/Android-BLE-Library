@@ -29,10 +29,17 @@ import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.RssiCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
-public class ReadRssiRequest extends ValueRequest<RssiCallback> {
+public final class ReadRssiRequest extends ValueRequest<RssiCallback> {
 
 	ReadRssiRequest(@NonNull final Type type) {
 		super(type);
+	}
+
+	@NonNull
+	@Override
+	ReadRssiRequest setManager(@NonNull final BleManager manager) {
+		super.setManager(manager);
+		return this;
 	}
 
 	@Override
