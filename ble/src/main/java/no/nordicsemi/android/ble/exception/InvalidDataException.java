@@ -26,6 +26,7 @@ import android.support.annotation.NonNull;
 
 import no.nordicsemi.android.ble.callback.profile.ProfileReadResponse;
 
+@SuppressWarnings("unused")
 public final class InvalidDataException extends Exception {
 	private final ProfileReadResponse response;
 

@@ -38,7 +38,6 @@ import no.nordicsemi.android.ble.response.ReadResponse;
  * {@link #onInvalidDataReceived(BluetoothDevice, Data)} in order to make getters working properly.
  * <p>
  * Check out profile data callbacks in the Android BLE Common Library for example of usage.
- * </p>
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class ProfileReadResponse extends ReadResponse implements ProfileDataCallback, Parcelable {
@@ -49,14 +48,15 @@ public class ProfileReadResponse extends ReadResponse implements ProfileDataCall
 	}
 
 	@Override
-	public void onInvalidDataReceived(@NonNull final BluetoothDevice device, @NonNull final Data data) {
+	public void onInvalidDataReceived(@NonNull final BluetoothDevice device,
+									  @NonNull final Data data) {
 		this.valid = false;
 	}
 
 	/**
 	 * Returns true if {@link #onInvalidDataReceived(BluetoothDevice, Data)} wasn't called.
 	 *
-	 * @return true if profile data were valid, false if parsing error occurred.
+	 * @return True, if profile data were valid, false if parsing error occurred.
 	 */
 	public boolean isValid() {
 		return valid;

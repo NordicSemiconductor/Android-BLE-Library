@@ -24,7 +24,7 @@ package no.nordicsemi.android.ble.exception;
 
 import no.nordicsemi.android.ble.Request;
 
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings({"WeakerAccess", "unused"})
 public final class RequestFailedException extends Exception {
 	private final Request request;
 	private final int status;

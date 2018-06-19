@@ -57,5 +57,6 @@ public interface ConnectionPriorityCallback {
 	 * @param timeout  Supervision timeout for this connection, in 10ms unit. Valid range is from 10
 	 *                 (0.1s) to 3200 (32s)
 	 */
-	void onConnectionUpdated(@NonNull final BluetoothDevice device, final int interval, final int latency, final int timeout);
+	void onConnectionUpdated(@NonNull final BluetoothDevice device, final int interval,
+							 final int latency, final int timeout);
 }

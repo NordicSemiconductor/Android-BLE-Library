@@ -24,6 +24,7 @@ package no.nordicsemi.android.ble.utils;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 
+@SuppressWarnings("WeakerAccess")
 public class ParserUtils {
 	protected final static char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 

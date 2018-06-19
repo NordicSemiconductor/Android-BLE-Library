@@ -35,9 +35,11 @@ public interface ProfileDataCallback extends DataReceivedCallback {
 	/**
 	 * Callback called when the data received do not conform to required scheme.
 	 * @param device the target device.
-	 * @param data the data received. If the {@link DataMerger} was used, this contains the merged result.
+	 * @param data the data received. If the {@link DataMerger} was used, this contains the
+	 *             merged result.
 	 */
-	default void onInvalidDataReceived(@NonNull final BluetoothDevice device, @NonNull final Data data) {
+	default void onInvalidDataReceived(@NonNull final BluetoothDevice device,
+									   @NonNull final Data data) {
 		// ignore
 	}
 }

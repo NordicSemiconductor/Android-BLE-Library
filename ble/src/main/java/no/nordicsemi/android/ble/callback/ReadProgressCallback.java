@@ -31,8 +31,8 @@ import no.nordicsemi.android.ble.data.DataMerger;
 public interface ReadProgressCallback {
 
 	/**
-	 * Callback received each time the value was read or has changed using notifications or indications
-	 * when {@link DataMerger} was used.
+	 * Callback received each time the value was read or has changed using notifications or
+	 * indications when {@link DataMerger} was used.
 	 *
 	 * @param device the target device.
 	 * @param data the last packet received.

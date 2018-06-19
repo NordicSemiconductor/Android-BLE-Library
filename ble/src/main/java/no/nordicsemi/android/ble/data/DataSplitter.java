@@ -36,8 +36,8 @@ public interface DataSplitter {
 	 * @param maxLength maximum length of the returned packet. Equals to MTU-3.
 	 *                  Use {@link no.nordicsemi.android.ble.BleManager#requestMtu(int)} to request
 	 *                  higher MTU, or {@link no.nordicsemi.android.ble.BleManager#overrideMtu(int)}
-	 *                  if the MTU change was initiated by the target device.
-	 * @return the packet to be sent, or null if the whole message was already split.
+	 *                  If the MTU change was initiated by the target device.
+	 * @return The packet to be sent, or null, if the whole message was already split.
 	 */
 	@Nullable
 	byte[] chunk(@NonNull final byte[] message, final int index, final int maxLength);

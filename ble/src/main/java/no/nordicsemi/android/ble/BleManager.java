@@ -57,6 +57,7 @@ import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.MtuCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.data.Data;
+import no.nordicsemi.android.ble.data.DataMerger;
 import no.nordicsemi.android.ble.data.DataSplitter;
 import no.nordicsemi.android.ble.error.GattError;
 import no.nordicsemi.android.ble.utils.ILogger;
@@ -718,10 +719,13 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	/**
-	 * Enqueues creating bond request to the queue. The device must be first set using
+	 * Returns a request to create bond with the device. The device must be first set using
 	 * {@link #connect(BluetoothDevice)} which will try to connect to the device.
 	 * If you need to pair with a device before connecting to it you may do it without
 	 * the use of BleManager object and connect after bond is established.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @return The request.
 	 */
@@ -773,6 +777,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * <p>
 	 * The success callback will be called after the device get disconnected,
 	 * when the {@link BluetoothDevice#getBondState()} changes to {@link BluetoothDevice#BOND_NONE}.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @return The request.
 	 */
@@ -873,7 +880,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 	/**
 	 * Returns the callback that is registered for value changes (indications) of given
-	 * characteristic. After assigning the notifications callback, notifications must be
+	 * characteristic. After assigning the notifications callback, indications must be
 	 * enabled using {@link #enableIndications(BluetoothGattCharacteristic)}.
 	 * This applies also when they were already enabled on the remote side.
 	 * <p>
@@ -892,7 +899,14 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 	/**
 	 * Sets a one-time callback that will be notified when the value of the given characteristic
-	 * changes.
+	 * changes. This is a blocking request, so the next request will be executed after the
+     * notification was received.
+     * <p>
+     * If {@link WaitForValueChangedRequest#merge(DataMerger)} was used, the whole message will be
+     * completed before the callback is notified.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @param characteristic the characteristic that value is expect to change.
 	 * @return The callback.
@@ -904,7 +918,14 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 	/**
 	 * Sets a one-time callback that will be notified when the value of the given characteristic
-	 * changes.
+	 * changes. This is a blocking request, so the next request will be executed after the
+     * indication was received.
+     * <p>
+     * If {@link WaitForValueChangedRequest#merge(DataMerger)} was used, the whole message will be
+     * completed before the callback is notified.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @param characteristic the characteristic that value is expect to change.
 	 * @return The callback.
@@ -916,8 +937,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 	/**
 	 * Enables notifications on given characteristic.
-	 * If the characteristic is null the {@link Request#fail(FailCallback) fail(FailCallback)}
+	 * If the characteristic is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
 	 * callback will be called.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to be enabled.
 	 * @return The request.
@@ -948,8 +972,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 	/**
 	 * Disables notifications on given characteristic.
-	 * If the characteristic is null the {@link Request#fail(FailCallback) fail(FailCallback)}
+	 * If the characteristic is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
 	 * callback will be called.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to be disabled.
 	 * @return The request.
@@ -979,8 +1006,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 	/**
 	 * Enables indications on given characteristic.
-	 * If the characteristic is null the {@link Request#fail(FailCallback) fail(FailCallback)}
+	 * If the characteristic is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
 	 * callback will be called.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to be enabled.
 	 * @return The request.
@@ -1010,8 +1040,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 	/**
 	 * Disables indications on given characteristic.
-	 * If the characteristic is null the {@link Request#fail(FailCallback) fail(FailCallback)}
+	 * If the characteristic is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
 	 * callback will be called.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to be disabled.
 	 * @return The request.
@@ -1036,8 +1069,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return The CCC descriptor or null if characteristic is null, if it doesn't have the
 	 * required property, or if the CCCD is missing.
 	 */
-	private BluetoothGattDescriptor getCccd(@Nullable final BluetoothGattCharacteristic characteristic,
-											final int requiredProperty) {
+	private static BluetoothGattDescriptor getCccd(@Nullable final BluetoothGattCharacteristic characteristic,
+											       final int requiredProperty) {
 		if (characteristic == null)
 			return null;
 
@@ -1051,8 +1084,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 	/**
 	 * Sends the read request to the given characteristic.
-	 * If the characteristic is null the {@link Request#fail(FailCallback) fail(FailCallback)}
+	 * If the characteristic is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
 	 * callback will be called.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to read.
 	 * @return The request.
@@ -1081,10 +1117,13 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * Writes the given data to the characteristic. The write type is taken from the characteristic.
 	 * <p>
 	 * Use {@link WriteRequest#split() split()} or
-	 * {@link WriteRequest#split(DataSplitter) split(ValueSplitter)} on the returned
+	 * {@link WriteRequest#split(DataSplitter) split(DataSplitter)} on the returned
 	 * {@link WriteRequest} if data should be automatically split into multiple packets.
-	 * If the characteristic is null the {@link Request#fail(FailCallback) fail(FailCallback)}
+	 * If the characteristic is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
 	 * callback will be called.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to write to.
 	 * @param data           data to be written to the characteristic.
@@ -1103,8 +1142,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * Use {@link WriteRequest#split() split()} or
 	 * {@link WriteRequest#split(DataSplitter) split(ValueSplitter)} on the returned
 	 * {@link WriteRequest} if data should be automatically split into multiple packets.
-	 * If the characteristic is null the {@link Request#fail(FailCallback) fail(FailCallback)}
+	 * If the characteristic is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
 	 * callback will be called.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to write to.
 	 * @param data           data to be written to the characteristic.
@@ -1124,8 +1166,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * Use {@link WriteRequest#split() split()} or
 	 * {@link WriteRequest#split(DataSplitter) split(ValueSplitter)} on the returned
 	 * {@link WriteRequest} if data should be automatically split into multiple packets.
-	 * If the characteristic is null the {@link Request#fail(FailCallback) fail(FailCallback)}
+	 * If the characteristic is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
 	 * callback will be called.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to write to.
 	 * @param data           data to be written to the characteristic.
@@ -1159,8 +1204,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 	/**
 	 * Sends the read request to the given descriptor.
-	 * If the descriptor is null the {@link Request#fail(FailCallback) fail(FailCallback)}
+	 * If the descriptor is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
 	 * callback will be called.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @param descriptor the descriptor to read.
 	 * @return The request.
@@ -1186,8 +1234,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * Use {@link WriteRequest#split() split()} or
 	 * {@link WriteRequest#split(DataSplitter) split(ValueSplitter)} on the returned
 	 * {@link WriteRequest} if data should be automatically split into multiple packets.
-	 * If the descriptor is null the {@link Request#fail(FailCallback) fail(FailCallback)}
+	 * If the descriptor is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
 	 * callback will be called.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @param descriptor the descriptor to write to.
 	 * @param data       data to be written to the descriptor.
@@ -1206,8 +1257,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * Use {@link WriteRequest#split() split()} or
 	 * {@link WriteRequest#split(DataSplitter) split(ValueSplitter)} on the returned
 	 * {@link WriteRequest} if data should be automatically split into multiple packets.
-	 * If the descriptor is null the {@link Request#fail(FailCallback) fail(FailCallback)}
+	 * If the descriptor is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
 	 * callback will be called.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @param descriptor the descriptor to write to.
 	 * @param data       data to be written to the descriptor.
@@ -1225,8 +1279,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * Use {@link WriteRequest#split() split()} or
 	 * {@link WriteRequest#split(DataSplitter) split(ValueSplitter)} on the returned
 	 * {@link WriteRequest} if data should be automatically split into multiple packets.
-	 * If the descriptor is null the {@link Request#fail(FailCallback) fail(FailCallback)}
+	 * If the descriptor is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
 	 * callback will be called.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @param descriptor the descriptor to write to.
 	 * @param data       data to be written to the descriptor.
@@ -1369,6 +1426,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * device. On older versions of Android the
 	 * {@link MtuCallback#onMtuChanged(BluetoothDevice, int)} set with
 	 * {@link MtuRequest#with(MtuCallback)} will be called with current MTU value.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @return The request.
 	 */
@@ -1433,6 +1493,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * {@link FailCallback#REASON_REQUEST_FAILED} status if called synchronously.
 	 * Starting from Android Oreo you may get a callback with the interval, latency and timeout
 	 * using {@link ConnectionPriorityRequest#with(ConnectionPriorityCallback)}.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @param priority one of: {@link BluetoothGatt#CONNECTION_PRIORITY_HIGH},
 	 *                 {@link BluetoothGatt#CONNECTION_PRIORITY_BALANCED},
@@ -1478,6 +1541,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * PHY LE 2M and PHY LE Coded are supported only on Android Oreo or newer.
 	 * You may safely request other PHYs on older platforms, but  you will get PHY LE 1M
 	 * as TX and RX PHY in the callback.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @param txPhy preferred transmitter PHY. Bitwise OR of any of
 	 *             {@link PhyRequest#PHY_LE_1M_MASK}, {@link PhyRequest#PHY_LE_2M_MASK},
@@ -1516,6 +1582,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * PHY LE 2M and PHY LE Coded are supported only on Android Oreo or newer.
 	 * You may safely read PHY on older platforms, but you will get PHY LE 1M as TX and RX PHY
 	 * in the callback.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @return The request.
 	 */
@@ -1537,6 +1606,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 	/**
 	 * Reads the current RSSI (Received Signal Strength Indication).
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @return The request.
 	 */
@@ -1565,6 +1637,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * {@link BleManager.BleManagerGattCallback#isRequiredServiceSupported(BluetoothGatt)} and
 	 * {@link BleManager.BleManagerGattCallback#isOptionalServiceSupported(BluetoothGatt)} will
 	 * be called and the initialization will be performed as if the device has just connected.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @return The request.
 	 */
@@ -1603,6 +1678,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	/**
 	 * Enqueues a sleep operation with given duration. The next request will be performed after
 	 * at least given number of milliseconds.
+     * <p>
+     * The returned request must be either enqueued using {@link Request#enqueue()} for
+     * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
 	 *
 	 * @param delay the delay in milliseconds.
 	 * @return The request.

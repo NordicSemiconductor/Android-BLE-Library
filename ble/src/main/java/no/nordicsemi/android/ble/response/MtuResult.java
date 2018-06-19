@@ -47,7 +47,8 @@ public class MtuResult implements MtuCallback, Parcelable {
 
 	/**
 	 * Returns the agreed MTU. The maximum packet size is 3 bytes less then MTU.
-	 * @return the MTU.
+	 *
+	 * @return The MTU.
 	 */
 	public int getMtu() {
 		return mtu;

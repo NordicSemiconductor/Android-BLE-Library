@@ -30,9 +30,12 @@ import android.bluetooth.BluetoothGatt;
  */
 public class GattError {
 	/**
-	 * Converts the connection status given by the {@link android.bluetooth.BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)} to error name.
-	 * @param error the status number
-	 * @return the error name as stated in the gatt_api.h file
+	 * Converts the connection status given by the
+	 * {@link android.bluetooth.BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)}
+	 * to error name.
+	 *
+	 * @param error the status number.
+	 * @return The error name as stated in the links in {@link GattError} documentation.
 	 */
 	public static String parseConnectionError(final int error) {
 		switch (error) {
@@ -60,9 +63,11 @@ public class GattError {
 	}
 
 	/**
-	 * Converts the bluetooth communication status given by other BluetoothGattCallbacks to error name. It also parses the DFU errors.
-	 * @param error the status number
-	 * @return the error name as stated in the gatt_api.h file
+	 * Converts the bluetooth communication status given by other BluetoothGattCallbacks to error
+	 * name. It also parses the DFU errors.
+	 *
+	 * @param error the status number.
+	 * @return The error name as stated in the links in {@link GattError} documentation.
 	 */
 	public static String parse(final int error) {
 		switch (error) {
