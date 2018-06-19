@@ -2719,7 +2719,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			// on the device, or the feature is not supported on the Android.
 			// In that case, proceed with next operation and ignore the one that failed.
 			if (!result) {
-				log(Level.WARNING, "Request failed");
 				mRequest.notifyFail(mBluetoothDevice,
 						mConnected ?
 							FailCallback.REASON_NULL_ATTRIBUTE :
