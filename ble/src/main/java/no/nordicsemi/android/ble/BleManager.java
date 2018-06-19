@@ -78,31 +78,36 @@ import no.nordicsemi.android.log.Logger;
  * The manager handles connection events and initializes the device after establishing the connection.
  * <ol>
  * <li>For bonded devices it ensures that the Service Changed indications, if this characteristic
- * is present, are enabled. Android does not enable them by default, leaving this to the
- * developers.</li>
- * <li>The manager tries to read the Battery Level characteristic. No matter the result of this
- * operation (for example the Battery Level characteristic may not have the READ property)
- * it tries to enable Battery Level notifications, to get battery updates from the device.</li>
- * <li>Afterwards, the manager initializes the device using given queue of commands.
- * See {@link BleManagerGattCallback#initGatt(BluetoothGatt)} method for more details.</li>
+ * is present, are enabled. Before Android Marshmallow, Android did not enable them by default,
+ * leaving this to the developers.</li>
+ * <li><strike>The manager tries to read the Battery Level characteristic. No matter the result of
+ * this operation (for example the Battery Level characteristic may not have the READ property)
+ * it tries to enable Battery Level notifications to get battery updates from the device.</strike>
+ * This feature is now deprecated and will not work with the new API. Instead, read or enabledBattery Level
+ * notifications just like any other.</li>
+ * <li>After connecting and service discovery, the manager initializes the device using given queue
+ * of commands. See {@link BleManagerGattCallback#initialize()} method for more details.</li>
  * <li>When initialization complete, the {@link BleManagerCallbacks#onDeviceReady(BluetoothDevice)}
  * callback is called.</li>
  * </ol>
- * The manager also is responsible for parsing the Battery Level values and calling
- * {@link BleManagerCallbacks#onBatteryValueReceived(BluetoothDevice, int)} method.
+ * <p>
+ * <strike>The manager also is responsible for parsing the Battery Level values and calling
+ * {@link BleManagerCallbacks#onBatteryValueReceived(BluetoothDevice, int)} method.</strike>
  * <p>
  * If {@link #setLogger(ILogSession)} was called, the events are logged into the nRF Logger
  * application, which may be downloaded from Google Play:
  * <a href="https://play.google.com/store/apps/details?id=no.nordicsemi.android.log">
  *     https://play.google.com/store/apps/details?id=no.nordicsemi.android.log</a>
+ * The nRF Logger application allows you to see application logs without need to connect it to
+ * the computer.
  * <p>
- * The nRF Logger application allows you to see application logs without need to connect it to the computer.
+ * If you want to log on LogCat, override the {@link #log(int, String)} method.
  * <p>
  * The BleManager should be overridden in your app and all the 'high level' callbacks should
  * be called from there. Keeping this file as is (and {@link BleManagerCallbacks} as well)
  * will allow to quickly update it when an update is posted here.
  *
- * @param <E> The profile callbacks type
+ * @param <E> The profile callbacks type.
  */
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue", "DeprecatedIsStillUsed", "deprecation"})
 public abstract class BleManager<E extends BleManagerCallbacks> implements ILogger, TaskQueue {
@@ -154,7 +159,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	/**
 	 * Last received battery value or -1 if value wasn't received.
 	 *
-	 * @deprecated Battery value should be kept in the profile manager instead.
+	 * @deprecated Battery value should be kept in the profile manager instead. See BatteryManager
+	 * class in Android nRF Toolbox app.
 	 */
 	@Deprecated
 	private int mBatteryValue = -1;
@@ -927,16 +933,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		if (gatt == null || characteristic == null)
 			return false;
 
-		// Check characteristic property
-		final int properties = characteristic.getProperties();
-		if ((properties & BluetoothGattCharacteristic.PROPERTY_NOTIFY) == 0)
-			return false;
-
-		log(Level.DEBUG, "gatt.setCharacteristicNotification(" + characteristic.getUuid() + ", true)");
-		gatt.setCharacteristicNotification(characteristic, true);
-		final BluetoothGattDescriptor descriptor =
-				characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID);
+		final BluetoothGattDescriptor descriptor = getCccd(characteristic, BluetoothGattCharacteristic.PROPERTY_NOTIFY);
 		if (descriptor != null) {
+			log(Level.DEBUG, "gatt.setCharacteristicNotification(" + characteristic.getUuid() + ", true)");
+			gatt.setCharacteristicNotification(characteristic, true);
+
 			descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
 			log(Level.VERBOSE, "Enabling notifications for " + characteristic.getUuid());
 			log(Level.DEBUG, "gatt.writeDescriptor(" + CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID + ", value=0x01-00)");
@@ -963,15 +964,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		if (gatt == null || characteristic == null)
 			return false;
 
-		// Check characteristic property
-		final int properties = characteristic.getProperties();
-		if ((properties & BluetoothGattCharacteristic.PROPERTY_NOTIFY) == 0)
-			return false;
-
-		log(Level.DEBUG, "gatt.setCharacteristicNotification(" + characteristic.getUuid() + ", false)");
-		gatt.setCharacteristicNotification(characteristic, false);
-		final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID);
+		final BluetoothGattDescriptor descriptor = getCccd(characteristic, BluetoothGattCharacteristic.PROPERTY_NOTIFY);
 		if (descriptor != null) {
+			log(Level.DEBUG, "gatt.setCharacteristicNotification(" + characteristic.getUuid() + ", false)");
+			gatt.setCharacteristicNotification(characteristic, false);
+
 			descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
 			log(Level.VERBOSE, "Disabling notifications and indications for " + characteristic.getUuid());
 			log(Level.DEBUG, "gatt.writeDescriptor(" + CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID + ", value=0x00-00)");
@@ -998,15 +995,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		if (gatt == null || characteristic == null)
 			return false;
 
-		// Check characteristic property
-		final int properties = characteristic.getProperties();
-		if ((properties & BluetoothGattCharacteristic.PROPERTY_INDICATE) == 0)
-			return false;
-
-		log(Level.DEBUG, "gatt.setCharacteristicNotification(" + characteristic.getUuid() + ", true)");
-		gatt.setCharacteristicNotification(characteristic, true);
-		final BluetoothGattDescriptor descriptor = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID);
+		final BluetoothGattDescriptor descriptor = getCccd(characteristic, BluetoothGattCharacteristic.PROPERTY_INDICATE);
 		if (descriptor != null) {
+			log(Level.DEBUG, "gatt.setCharacteristicNotification(" + characteristic.getUuid() + ", true)");
+			gatt.setCharacteristicNotification(characteristic, true);
+
 			descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
 			log(Level.VERBOSE, "Enabling indications for " + characteristic.getUuid());
 			log(Level.DEBUG, "gatt.writeDescriptor(" + CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID + ", value=0x02-00)");
@@ -1031,6 +1024,29 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	private boolean internalDisableIndications(final BluetoothGattCharacteristic characteristic) {
 		// This writes exactly the same settings so do not duplicate code
 		return internalDisableNotifications(characteristic);
+	}
+
+	/**
+	 * Returns the Client Characteristic Config Descriptor if the characteristic has the
+	 * required property. It may return null if the CCCD is not there.
+	 *
+	 * @param characteristic the characteristic to look the CCCD in.
+	 * @param requiredProperty the required property: {@link BluetoothGattCharacteristic#PROPERTY_NOTIFY}
+	 *                         or {@link BluetoothGattCharacteristic#PROPERTY_INDICATE}.
+	 * @return The CCC descriptor or null if characteristic is null, if it doesn't have the
+	 * required property, or if the CCCD is missing.
+	 */
+	private BluetoothGattDescriptor getCccd(@Nullable final BluetoothGattCharacteristic characteristic,
+											final int requiredProperty) {
+		if (characteristic == null)
+			return null;
+
+		// Check characteristic property
+		final int properties = characteristic.getProperties();
+		if ((properties & requiredProperty) == 0)
+			return null;
+
+		return characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID);
 	}
 
 	/**
@@ -2512,13 +2528,16 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			boolean result = false;
 
 			// The WAIT_FOR_* request types may override the request with a trigger.
-			// This is to ensure that the trigger is done after the value change callback was set.
+			// This is to ensure that the trigger is done after the mValueChangedRequest was set.
+			int requiredProperty = BluetoothGattCharacteristic.PROPERTY_NOTIFY;
 			switch (request.type) {
-				case WAIT_FOR_NOTIFICATION:
-				case WAIT_FOR_INDICATION: {
-					result = mGattCallback != null;
+				case WAIT_FOR_INDICATION:
+					requiredProperty = BluetoothGattCharacteristic.PROPERTY_INDICATE;
+					// fall-through intended
+				case WAIT_FOR_NOTIFICATION: {
+					final WaitForValueChangedRequest r = (WaitForValueChangedRequest) request;
+					result = mGattCallback != null && getCccd(r.characteristic, requiredProperty) != null;
 					if (result) {
-						final WaitForValueChangedRequest r = (WaitForValueChangedRequest) request;
 						mValueChangedRequest = r;
 						if (r.getTrigger() != null) {
 							request = r.getTrigger();
@@ -2869,7 +2888,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				return "LE 1M or LE Coded";
 			case BluetoothDevice.PHY_LE_2M_MASK | BluetoothDevice.PHY_LE_CODED_MASK:
 				return "LE 2M or LE Coded";
-			case BluetoothDevice.PHY_LE_1M_MASK | BluetoothDevice.PHY_LE_2M_MASK | BluetoothDevice.PHY_LE_CODED_MASK:
+			case BluetoothDevice.PHY_LE_1M_MASK | BluetoothDevice.PHY_LE_2M_MASK
+					| BluetoothDevice.PHY_LE_CODED_MASK:
 				return "LE 1M, LE 2M or LE Coded";
 			default:
 				return "UNKNOWN (" + mask + ")";
