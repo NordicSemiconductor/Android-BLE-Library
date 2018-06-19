@@ -79,7 +79,7 @@ public class GattError {
 	public static final int GATT_PROCEDURE_IN_PROGRESS = 0x00FE;
 	public static final int GATT_VALUE_OUT_OF_RANGE = 0x00FF;
 	public static final int TOO_MANY_OPEN_CONNECTIONS = 0x0101;
-	
+
 	/**
 	 * Converts the connection status given by the
 	 * {@link android.bluetooth.BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)}
