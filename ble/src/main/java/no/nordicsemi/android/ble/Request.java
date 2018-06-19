@@ -41,13 +41,10 @@ import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 /**
  * On Android, when multiple BLE operations needs to be done, it is required to wait for a proper
- * {@link BluetoothGattCallback BluetoothGattCallback} callback before calling another operation.
+ * {@link BluetoothGattCallback} callback before calling another operation.
  * In order to make BLE operations easier the BleManager allows to enqueue a request containing all
  * data necessary for a given operation. Requests are performed one after another until the queue
  * is empty.
- * <p>
- * Use static methods from below to instantiate a request and then enqueue them using
- * {@link BleManager#enqueue(Request)}.
  */
 @SuppressWarnings({"unused", "WeakerAccess", "deprecation", "DeprecatedIsStillUsed"})
 public class Request {
@@ -152,7 +149,7 @@ public class Request {
 	/**
 	 * Creates a new request that will start pairing with the device.
 	 *
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#createBond()} instead.
 	 */
@@ -170,7 +167,7 @@ public class Request {
 	 * after the device got disconnected, when the {@link BluetoothDevice#getBondState()} changes
 	 * to {@link BluetoothDevice#BOND_NONE}.
 	 *
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#removeBond()} instead.
 	 */
@@ -186,13 +183,14 @@ public class Request {
 	 * After the operation is complete a proper callback will be invoked.
 	 *
 	 * @param characteristic characteristic to be read.
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#readCharacteristic(BluetoothGattCharacteristic)} instead.
 	 */
 	@Deprecated
 	@NonNull
-	public static ReadRequest newReadRequest(@Nullable final BluetoothGattCharacteristic characteristic) {
+	public static ReadRequest newReadRequest(
+	        @Nullable final BluetoothGattCharacteristic characteristic) {
 		return new ReadRequest(Type.READ, characteristic);
 	}
 
@@ -204,17 +202,20 @@ public class Request {
 	 * @param characteristic characteristic to be written.
 	 * @param value          value to be written. The array is copied into another buffer so it's
 	 *                       safe to reuse the array again.
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#writeCharacteristic(BluetoothGattCharacteristic, byte[])} instead.
 	 */
 	@Deprecated
 	@NonNull
-	public static WriteRequest newWriteRequest(@Nullable final BluetoothGattCharacteristic characteristic,
-											   @Nullable final byte[] value) {
+	public static WriteRequest newWriteRequest(
+	        @Nullable final BluetoothGattCharacteristic characteristic,
+            @Nullable final byte[] value) {
 		return new WriteRequest(Type.WRITE, characteristic, value, 0,
 				value != null ? value.length : 0,
-				characteristic != null ? characteristic.getWriteType() : BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+				characteristic != null ?
+                        characteristic.getWriteType() :
+                        BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
 	}
 
 	/**
@@ -228,14 +229,15 @@ public class Request {
 	 * @param writeType      write type to be used, one of
 	 *                       {@link BluetoothGattCharacteristic#WRITE_TYPE_DEFAULT},
 	 *                       {@link BluetoothGattCharacteristic#WRITE_TYPE_NO_RESPONSE}.
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#writeCharacteristic(BluetoothGattCharacteristic, Data)} instead.
 	 */
 	@Deprecated
 	@NonNull
-	public static WriteRequest newWriteRequest(@Nullable final BluetoothGattCharacteristic characteristic,
-											   @Nullable final byte[] value, final int writeType) {
+	public static WriteRequest newWriteRequest(
+	        @Nullable final BluetoothGattCharacteristic characteristic,
+            @Nullable final byte[] value, final int writeType) {
 		return new WriteRequest(Type.WRITE, characteristic, value, 0,
 				value != null ? value.length : 0, writeType);
 	}
@@ -250,17 +252,20 @@ public class Request {
 	 *                       safe to reuse the array again.
 	 * @param offset         the offset from which value has to be copied.
 	 * @param length         number of bytes to be copied from the value buffer.
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#writeCharacteristic(BluetoothGattCharacteristic, byte[], int, int)}
 	 * instead.
 	 */
 	@Deprecated
 	@NonNull
-	public static WriteRequest newWriteRequest(@Nullable final BluetoothGattCharacteristic characteristic,
-											   @Nullable final byte[] value, final int offset, final int length) {
+	public static WriteRequest newWriteRequest(
+	        @Nullable final BluetoothGattCharacteristic characteristic,
+			@Nullable final byte[] value, final int offset, final int length) {
 		return new WriteRequest(Type.WRITE, characteristic, value, offset, length,
-				characteristic != null ? characteristic.getWriteType() : BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+				characteristic != null ?
+                        characteristic.getWriteType() :
+                        BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
 	}
 
 	/**
@@ -276,15 +281,16 @@ public class Request {
 	 * @param writeType      write type to be used, one of
 	 *                       {@link BluetoothGattCharacteristic#WRITE_TYPE_DEFAULT},
 	 *                       {@link BluetoothGattCharacteristic#WRITE_TYPE_NO_RESPONSE}.
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
-	 * Use {@link BleManager#writeCharacteristic(BluetoothGattCharacteristic, byte[], int, int)} instead.
+	 * Use {@link BleManager#writeCharacteristic(BluetoothGattCharacteristic, byte[], int, int)}
+     * instead.
 	 */
 	@Deprecated
 	@NonNull
-	public static WriteRequest newWriteRequest(@Nullable final BluetoothGattCharacteristic characteristic,
-											   @Nullable final byte[] value, final int offset,
-											   final int length, final int writeType) {
+	public static WriteRequest newWriteRequest(
+	        @Nullable final BluetoothGattCharacteristic characteristic,
+            @Nullable final byte[] value, final int offset, final int length, final int writeType) {
 		return new WriteRequest(Type.WRITE, characteristic, value, offset, length, writeType);
 	}
 
@@ -293,7 +299,7 @@ public class Request {
 	 * is null. After the operation is complete a proper callback will be invoked.
 	 *
 	 * @param descriptor descriptor to be read.
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#readDescriptor(BluetoothGattDescriptor)} instead.
 	 */
@@ -310,7 +316,7 @@ public class Request {
 	 * @param descriptor descriptor to be written.
 	 * @param value      value to be written. The array is copied into another buffer so it's safe
 	 *                   to reuse the array again.
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#writeDescriptor(BluetoothGattDescriptor, byte[])} instead.
 	 */
@@ -331,14 +337,15 @@ public class Request {
 	 *                   to reuse the array again.
 	 * @param offset     the offset from which value has to be copied.
 	 * @param length     number of bytes to be copied from the value buffer.
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#writeDescriptor(BluetoothGattDescriptor, byte[], int, int)} instead.
 	 */
 	@Deprecated
 	@NonNull
-	public static WriteRequest newWriteRequest(@Nullable final BluetoothGattDescriptor descriptor,
-											   final byte[] value, final int offset, final int length) {
+	public static WriteRequest newWriteRequest(
+	        @Nullable final BluetoothGattDescriptor descriptor,
+			final byte[] value, final int offset, final int length) {
 		return new WriteRequest(Type.WRITE_DESCRIPTOR, descriptor, value, offset, length);
 	}
 
@@ -348,13 +355,14 @@ public class Request {
 	 * After the operation is complete a proper callback will be invoked.
 	 *
 	 * @param characteristic characteristic to have notifications enabled.
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#enableNotifications(BluetoothGattCharacteristic)} instead.
 	 */
 	@Deprecated
 	@NonNull
-	public static WriteRequest newEnableNotificationsRequest(@Nullable final BluetoothGattCharacteristic characteristic) {
+	public static WriteRequest newEnableNotificationsRequest(
+	        @Nullable final BluetoothGattCharacteristic characteristic) {
 		return new WriteRequest(Type.ENABLE_NOTIFICATIONS, characteristic);
 	}
 
@@ -364,13 +372,14 @@ public class Request {
 	 * After the operation is complete a proper callback will be invoked.
 	 *
 	 * @param characteristic characteristic to have notifications disabled.
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#disableNotifications(BluetoothGattCharacteristic)} instead.
 	 */
 	@Deprecated
 	@NonNull
-	public static WriteRequest newDisableNotificationsRequest(@Nullable final BluetoothGattCharacteristic characteristic) {
+	public static WriteRequest newDisableNotificationsRequest(
+	        @Nullable final BluetoothGattCharacteristic characteristic) {
 		return new WriteRequest(Type.DISABLE_NOTIFICATIONS, characteristic);
 	}
 
@@ -380,13 +389,14 @@ public class Request {
 	 * After the operation is complete a proper callback will be invoked.
 	 *
 	 * @param characteristic characteristic to have indications enabled.
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#enableIndications(BluetoothGattCharacteristic)} instead.
 	 */
 	@Deprecated
 	@NonNull
-	public static WriteRequest newEnableIndicationsRequest(@Nullable final BluetoothGattCharacteristic characteristic) {
+	public static WriteRequest newEnableIndicationsRequest(
+	        @Nullable final BluetoothGattCharacteristic characteristic) {
 		return new WriteRequest(Type.ENABLE_INDICATIONS, characteristic);
 	}
 
@@ -396,13 +406,14 @@ public class Request {
 	 * After the operation is complete a proper callback will be invoked.
 	 *
 	 * @param characteristic characteristic to have indications disabled.
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#disableNotifications(BluetoothGattCharacteristic)} instead.
 	 */
 	@Deprecated
 	@NonNull
-	public static WriteRequest newDisableIndicationsRequest(@Nullable final BluetoothGattCharacteristic characteristic) {
+	public static WriteRequest newDisableIndicationsRequest(
+	        @Nullable final BluetoothGattCharacteristic characteristic) {
 		return new WriteRequest(Type.DISABLE_INDICATIONS, characteristic);
 	}
 
@@ -415,13 +426,14 @@ public class Request {
 	 * op code), set it with {@link WaitForValueChangedRequest#trigger(Request)}.
 	 *
 	 * @param characteristic characteristic from which a notification should be received.
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#waitForNotification(BluetoothGattCharacteristic)} instead.
 	 */
 	@Deprecated
 	@NonNull
-	public static WaitForValueChangedRequest newWaitForNotificationRequest(@Nullable final BluetoothGattCharacteristic characteristic) {
+	public static WaitForValueChangedRequest newWaitForNotificationRequest(
+	        @Nullable final BluetoothGattCharacteristic characteristic) {
 		return new WaitForValueChangedRequest(Type.WAIT_FOR_NOTIFICATION, characteristic);
 	}
 
@@ -434,13 +446,14 @@ public class Request {
 	 * op code), set it with {@link WaitForValueChangedRequest#trigger(Request)}.
 	 *
 	 * @param characteristic characteristic from which a notification should be received.
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#waitForIndication(BluetoothGattCharacteristic)} instead.
 	 */
 	@Deprecated
 	@NonNull
-	public static WaitForValueChangedRequest newWaitForIndicationRequest(@Nullable final BluetoothGattCharacteristic characteristic) {
+	public static WaitForValueChangedRequest newWaitForIndicationRequest(
+	        @Nullable final BluetoothGattCharacteristic characteristic) {
 		return new WaitForValueChangedRequest(Type.WAIT_FOR_INDICATION, characteristic);
 	}
 
@@ -449,7 +462,7 @@ public class Request {
 	 * from the first found Battery Service. If any of them is not found, or the characteristic
 	 * does not have the READ property this operation will not execute.
 	 *
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Use {@link #newReadRequest(BluetoothGattCharacteristic)} with
 	 * BatteryLevelDataCallback from Android BLE Common Library instead.
 	 */
@@ -464,7 +477,7 @@ public class Request {
 	 * first found Battery Service. If any of them is not found, or the characteristic does not
 	 * have the NOTIFY property this operation will not execute.
 	 *
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Use {@link #newEnableNotificationsRequest(BluetoothGattCharacteristic)} with
 	 * BatteryLevelDataCallback from Android BLE Common Library instead.
 	 */
@@ -479,7 +492,7 @@ public class Request {
 	 * first found Battery Service. If any of them is not found, or the characteristic does not
 	 * have the NOTIFY property this operation will not execute.
 	 *
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Use {@link #newDisableNotificationsRequest(BluetoothGattCharacteristic)} instead.
 	 */
 	@NonNull
@@ -495,7 +508,7 @@ public class Request {
 	 * be informed about attributes changes.
 	 * Android 7+ (or 6+) handles this automatically and no action is required.
 	 *
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 */
 	@NonNull
 	static WriteRequest newEnableServiceChangedIndicationsRequest() {
@@ -509,7 +522,7 @@ public class Request {
 	 * The target device may reject requested value and set a smaller MTU.
 	 *
 	 * @param mtu the new MTU. Acceptable values are &lt;23, 517&gt;.
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#requestMtu(int)} instead.
 	 */
@@ -537,7 +550,7 @@ public class Request {
 	 * @param priority one of: {@link ConnectionPriorityRequest#CONNECTION_PRIORITY_HIGH},
 	 *                 {@link ConnectionPriorityRequest#CONNECTION_PRIORITY_BALANCED},
 	 *                 {@link ConnectionPriorityRequest#CONNECTION_PRIORITY_LOW_POWER}.
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#requestConnectionPriority(int)} instead.
 	 */
@@ -563,7 +576,7 @@ public class Request {
 	 * @param phyOptions preferred coding to use when transmitting on the LE Coded PHY. Can be one
 	 *             of {@link PhyRequest#PHY_OPTION_NO_PREFERRED},
 	 *             {@link PhyRequest#PHY_OPTION_S2} or {@link PhyRequest#PHY_OPTION_S8}.
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#setPreferredPhy(int, int, int)} instead.
 	 */
@@ -581,7 +594,7 @@ public class Request {
 	 * You may safely read PHY on older platforms, but the request will not be executed
 	 * and you will get PHY LE 1M as TX and RX PHY in the callback.
 	 *
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#readPhy()} instead.
 	 */
@@ -594,7 +607,7 @@ public class Request {
 	/**
 	 * Reads the current RSSI (Received Signal Strength Indication).
 	 *
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#readRssi()} instead.
 	 */
@@ -616,7 +629,7 @@ public class Request {
 	 * {@link BleManager.BleManagerGattCallback#isOptionalServiceSupported(BluetoothGatt)} will
 	 * be called and the initialization will be performed as if the device has just connected.
 	 *
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#refreshDeviceCache()} instead.
 	 */
@@ -631,7 +644,7 @@ public class Request {
 	 * Creates new Sleep request that will postpone next request for given number of milliseconds.
 	 *
 	 * @param delay the delay in milliseconds.
-	 * @return The new request that can be enqueued using {@link BleManager#enqueue(Request)} method.
+	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#sleep(long)} instead.
 	 */
@@ -642,9 +655,9 @@ public class Request {
 	}
 
 	/**
-	 * Use to add a completion callback. The callback will be invoked when the operation has finished
-	 * successfully unless {@link #await(int)} or its variant was used, in which case this callback
-	 * will be ignored.
+	 * Use to add a completion callback. The callback will be invoked when the operation has
+     * finished successfully unless {@link #await(int)} or its variant was used, in which case this
+     * callback will be ignored.
 	 *
 	 * @param callback the callback
 	 * @return The request.
@@ -715,10 +728,10 @@ public class Request {
 	 * <p>
 	 * This method may not be called from the main (UI) thread.
 	 *
-	 * @throws RequestFailedException      thrown when the BLE request finished with status other than
-	 *                                     {@link BluetoothGatt#GATT_SUCCESS}.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
+	 * @throws RequestFailedException      thrown when the BLE request finished with status other
+	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main
+	 *                                     (UI) thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
@@ -740,12 +753,12 @@ public class Request {
 	 * This method may not be called from the main (UI) thread.
 	 *
 	 * @param timeout optional timeout in milliseconds
-	 * @throws RequestFailedException      thrown when the BLE request finished with status other than
-	 *                                     {@link BluetoothGatt#GATT_SUCCESS}.
+	 * @throws RequestFailedException      thrown when the BLE request finished with status other
+	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
 	 * @throws InterruptedException        thrown if the timeout occurred before the request has
 	 *                                     finished.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main
+	 *                                     (UI) thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.

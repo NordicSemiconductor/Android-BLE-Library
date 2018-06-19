@@ -52,7 +52,8 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	private int triggerStatus;
 	private int count = 0;
 
-	WaitForValueChangedRequest(@NonNull final Type type, @Nullable final BluetoothGattCharacteristic characteristic) {
+	WaitForValueChangedRequest(@NonNull final Type type,
+							   @Nullable final BluetoothGattCharacteristic characteristic) {
 		super(type, characteristic);
 	}
 

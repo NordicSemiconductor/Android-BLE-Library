@@ -44,9 +44,9 @@ public class ConnectRequest extends Request {
 	}
 
 	/**
-	 * Use to add a completion callback. The callback will be invoked when the operation has finished
-	 * successfully unless {@link #await(int)} or its variant was used, in which case this callback
-	 * will be ignored.
+	 * Use to add a completion callback. The callback will be invoked when the operation has
+	 * finished successfully unless {@link #await(int)} or its variant was used, in which case this
+	 * callback will be ignored.
 	 * <p>
 	 * The done callback will also be called when one or more of initialization requests has
 	 * failed due to a reason other than disconnect event. This is because

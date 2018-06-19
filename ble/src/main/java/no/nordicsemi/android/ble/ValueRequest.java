@@ -48,11 +48,13 @@ public abstract class ValueRequest<T> extends Request {
 		super(type);
 	}
 
-	ValueRequest(@NonNull final Type type, @Nullable final BluetoothGattCharacteristic characteristic) {
+	ValueRequest(@NonNull final Type type,
+                 @Nullable final BluetoothGattCharacteristic characteristic) {
 		super(type, characteristic);
 	}
 
-	ValueRequest(@NonNull final Type type, @Nullable final BluetoothGattDescriptor descriptor) {
+	ValueRequest(@NonNull final Type type,
+                 @Nullable final BluetoothGattDescriptor descriptor) {
 		super(type, descriptor);
 	}
 
@@ -98,13 +100,13 @@ public abstract class ValueRequest<T> extends Request {
 	 * <p>
 	 * This method may not be called from the main (UI) thread.
 	 *
-	 * @param responseClass the response class. This class will be instantiate, therefore it has to have
-	 *                      a default constructor.
+	 * @param responseClass the response class. This class will be instantiate, therefore it has
+     *                      to have a default constructor.
 	 * @return The response with a response.
-	 * @throws RequestFailedException      thrown when the BLE request finished with status other than
-	 *                                     {@link BluetoothGatt#GATT_SUCCESS}.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
+	 * @throws RequestFailedException      thrown when the BLE request finished with status other
+	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main
+	 *                                     (UI) thread.
 	 * @throws IllegalArgumentException    thrown when the response class could not be instantiated.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
@@ -130,10 +132,10 @@ public abstract class ValueRequest<T> extends Request {
 	 *
 	 * @param response the response object.
 	 * @return The response with a response.
-	 * @throws RequestFailedException      thrown when the BLE request finished with status other than
-	 *                                     {@link BluetoothGatt#GATT_SUCCESS}.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
+	 * @throws RequestFailedException      thrown when the BLE request finished with status other
+	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main
+	 *                                     (UI) thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
@@ -164,8 +166,8 @@ public abstract class ValueRequest<T> extends Request {
 	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
 	 * @throws InterruptedException        thrown if the timeout occurred before the request has
 	 *                                     finished.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main
+	 *                                     (UI) thread.
 	 * @throws IllegalArgumentException    thrown when the response class could not be instantiated.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
@@ -186,10 +188,12 @@ public abstract class ValueRequest<T> extends Request {
 				response = responseClass.newInstance();
 			return await(response, timeout);
 		} catch (IllegalAccessException e) {
-			throw new IllegalArgumentException("Couldn't instantiate " + responseClass.getCanonicalName()
+			throw new IllegalArgumentException("Couldn't instantiate "
+                    + responseClass.getCanonicalName()
 					+ " class. Is the default constructor accessible?");
 		} catch (InstantiationException e) {
-			throw new IllegalArgumentException("Couldn't instantiate " + responseClass.getCanonicalName()
+			throw new IllegalArgumentException("Couldn't instantiate "
+                    + responseClass.getCanonicalName()
 					+ " class. Does it have a default constructor with no arguments?");
 		}
 	}
@@ -208,8 +212,8 @@ public abstract class ValueRequest<T> extends Request {
 	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
 	 * @throws InterruptedException        thrown if the timeout occurred before the request has
 	 *                                     finished.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main (UI)
-	 *                                     thread.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main
+     *                                     (UI) thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
