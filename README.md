@@ -98,18 +98,19 @@ See changes in [Android nRF Toolbox](https://github.com/NordicSemiconductor/Andr
 Remember to call `.enqueue()` method for asynchronous operations!
 
 2. Move your callback implementation from BleManagerGattCallback to request callbacks.
-3. To split logic from parsing, we recomend to extend DataReceivedCallback interface in a calss, parse your data there, and return higher-level values. For a sample, check out nRF Toolbox and [Android BLE Common Library](https://github.com/NordicSemiconductor/Android-BLE-Common-Library/). If you are depending on a SIG adopted profile, like Heart Rate Monitor, Proximity, etc., feel free to include the BLE Common Library in your project. It has all the parsers implemented. If your profile isn't there, we are happy to accept PRs. 
+3. To split logic from parsing, we recomend to extend DataReceivedCallback interface in a class where your parse your data, and return higher-level values. For a sample, check out nRF Toolbox and [Android BLE Common Library](https://github.com/NordicSemiconductor/Android-BLE-Common-Library/). If you are depending on a SIG adopted profile, like Heart Rate Monitor, Proximity, etc., feel free to include the BLE Common Library in your project. It has all the parsers implemented. If your profile isn't there, we are happy to accept PRs. 
+4. Since version 2.0-alpha2 the `connect()` and `disconnect()` methods also require calling `.enqueue()` in asynchronous use.
 
 #### How to test it:
 
 The new version is compatible with [nRF Toolbox](https://github.com/NordicSemiconductor/Android-nRF-Toolbox) 
 and [BLE Common Library](https://github.com/NordicSemiconductor/Android-BLE-Common-Library). The latter one is a set of useful parsers and callbacks for common Bluetooth SIG adopted profiles.
 
-The libraries are available on jcenter, but if you need to make some changes, clone all 3 projects, check out *develop* branches on each of them, ensure the path to :ble and :ble-common modules are correct in *settings.gradle* file, and sync the project.
+The libraries are available on jcenter, but if you need to make some changes, clone all 3 projects, check out *develop* branches on each of them, ensure the path to *:ble* and *:ble-common* modules are correct in *settings.gradle* file, and sync the project.
 
 ### Version 1.x
 
-The BLE library v 1.x is still supported, but will be deprecated when version 2 goes out of alpha stage.
+The BLE library v 1.x is still supported, but will be deprecated when version 2 goes out of alpha stage. It will not reveive any new features.
 
 #### Maven or jcenter
 
