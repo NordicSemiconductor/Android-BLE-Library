@@ -54,7 +54,7 @@ Version 2 has many more features comparing to 1.x:
 The library may be found on jcenter and Maven Central repository. Add it to your project by adding the following dependency:
 
 ```grovy
-implementation 'no.nordicsemi.android:ble:2.0-alpha1'
+implementation 'no.nordicsemi.android:ble:2.0-alpha3'
 ```
 
 #### Changes:
