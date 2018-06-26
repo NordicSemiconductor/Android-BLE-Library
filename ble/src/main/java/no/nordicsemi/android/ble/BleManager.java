@@ -545,6 +545,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				mRequest.notifyFail(device, bluetoothEnabled ?
 						FailCallback.REASON_REQUEST_FAILED : FailCallback.REASON_BLUETOOTH_DISABLED);
 			}
+			mConnectRequest = null;
 			mGattCallback.nextRequest(true);
 			return true;
 		}
@@ -2186,7 +2187,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 						mValueChangedRequest = null;
 					}
 					if (mConnectRequest != null) {
-						mConnectRequest.notifyFail(gatt.getDevice(), FailCallback.REASON_DEVICE_NOT_SUPPORTED);
+						mConnectRequest.notifyFail(gatt.getDevice(), mServicesDiscovered ?
+								FailCallback.REASON_DEVICE_NOT_SUPPORTED :
+								FailCallback.REASON_DEVICE_DISCONNECTED);
 						mConnectRequest = null;
 					}
 
