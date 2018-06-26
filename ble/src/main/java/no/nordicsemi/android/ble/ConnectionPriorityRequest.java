@@ -27,6 +27,7 @@ import android.os.Build;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 
+import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
@@ -91,6 +92,13 @@ public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPrio
 	@NonNull
 	public ConnectionPriorityRequest fail(@NonNull final FailCallback callback) {
 		this.failCallback = callback;
+		return this;
+	}
+
+	@Override
+	@NonNull
+	public ConnectionPriorityRequest before(@NonNull final BeforeCallback callback) {
+		this.beforeCallback = callback;
 		return this;
 	}
 

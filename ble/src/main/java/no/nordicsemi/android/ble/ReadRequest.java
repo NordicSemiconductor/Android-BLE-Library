@@ -29,6 +29,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.DataReceivedCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.ReadProgressCallback;
@@ -79,6 +80,13 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 	@NonNull
 	public ReadRequest fail(@NonNull final FailCallback callback) {
 		this.failCallback = callback;
+		return this;
+	}
+
+	@Override
+	@NonNull
+	public ReadRequest before(@NonNull final BeforeCallback callback) {
+		this.beforeCallback = callback;
 		return this;
 	}
 

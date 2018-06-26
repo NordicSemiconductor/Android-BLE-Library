@@ -30,6 +30,7 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
 
 /**
@@ -58,20 +59,25 @@ abstract class MainThreadBluetoothGattCallback extends BluetoothGattCallback {
 	abstract void onServicesDiscoveredSafe(@NonNull final BluetoothGatt gatt, final int status);
 	abstract void onCharacteristicReadSafe(@NonNull final BluetoothGatt gatt,
 										   @NonNull final BluetoothGattCharacteristic characteristic,
+										   @Nullable final byte[] data,
 										   final int status);
 	abstract void onCharacteristicWriteSafe(@NonNull final BluetoothGatt gatt,
 											@NonNull final BluetoothGattCharacteristic characteristic,
+											@Nullable final byte[] data,
 											final int status);
 	abstract void onCharacteristicChangedSafe(@NonNull final BluetoothGatt gatt,
-											  @NonNull final BluetoothGattCharacteristic characteristic);
+											  @NonNull final BluetoothGattCharacteristic characteristic,
+											  @Nullable final byte[] data);
 	abstract void onDescriptorReadSafe(@NonNull final BluetoothGatt gatt,
 									   @NonNull final BluetoothGattDescriptor descriptor,
-									   final int status);
-	abstract void onReadRemoteRssiSafe(@NonNull final BluetoothGatt gatt, final int rssi,
+									   @Nullable final byte[] data,
 									   final int status);
 	abstract void onDescriptorWriteSafe(@NonNull final BluetoothGatt gatt,
 										@NonNull final BluetoothGattDescriptor descriptor,
+										@Nullable final byte[] data,
 										final int status);
+	abstract void onReadRemoteRssiSafe(@NonNull final BluetoothGatt gatt, final int rssi,
+									   final int status);
 	abstract void onReliableWriteCompletedSafe(@NonNull final BluetoothGatt gatt, final int status);
 	@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 	abstract void onMtuChangedSafe(@NonNull final BluetoothGatt gatt, final int mtu, final int status);
@@ -101,32 +107,37 @@ abstract class MainThreadBluetoothGattCallback extends BluetoothGattCallback {
 	public final void onCharacteristicRead(final BluetoothGatt gatt,
 										   final BluetoothGattCharacteristic characteristic,
 										   final int status) {
-		runOnUiThread(() -> onCharacteristicReadSafe(gatt, characteristic, status));
+		final byte[] data = characteristic.getValue();
+		runOnUiThread(() -> onCharacteristicReadSafe(gatt, characteristic, data, status));
 	}
 
 	@Override
 	public final void onCharacteristicWrite(final BluetoothGatt gatt,
 											final BluetoothGattCharacteristic characteristic,
 											final int status) {
-		runOnUiThread(() -> onCharacteristicWriteSafe(gatt, characteristic, status));
+		final byte[] data = characteristic.getValue();
+		runOnUiThread(() -> onCharacteristicWriteSafe(gatt, characteristic, data, status));
 	}
 
 	@Override
 	public final void onCharacteristicChanged(final BluetoothGatt gatt,
 											  final BluetoothGattCharacteristic characteristic) {
-		runOnUiThread(() -> onCharacteristicChangedSafe(gatt, characteristic));
+		final byte[] data = characteristic.getValue();
+		runOnUiThread(() -> onCharacteristicChangedSafe(gatt, characteristic, data));
 	}
 
 	@Override
 	public final void onDescriptorRead(final BluetoothGatt gatt,
 									   final BluetoothGattDescriptor descriptor, final int status) {
-		runOnUiThread(() -> onDescriptorReadSafe(gatt, descriptor, status));
+		final byte[] data = descriptor.getValue();
+		runOnUiThread(() -> onDescriptorReadSafe(gatt, descriptor, data, status));
 	}
 
 	@Override
 	public final void onDescriptorWrite(final BluetoothGatt gatt,
 										final BluetoothGattDescriptor descriptor, final int status) {
-		runOnUiThread(() -> onDescriptorWriteSafe(gatt, descriptor, status));
+		final byte[] data = descriptor.getValue();
+		runOnUiThread(() -> onDescriptorWriteSafe(gatt, descriptor, data, status));
 	}
 
 	@Override

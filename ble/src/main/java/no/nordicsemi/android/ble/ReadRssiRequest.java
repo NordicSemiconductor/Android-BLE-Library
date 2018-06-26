@@ -25,6 +25,7 @@ package no.nordicsemi.android.ble;
 import android.bluetooth.BluetoothDevice;
 import android.support.annotation.NonNull;
 
+import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.RssiCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
@@ -53,6 +54,13 @@ public final class ReadRssiRequest extends ValueRequest<RssiCallback> {
 	@NonNull
 	public ReadRssiRequest fail(@NonNull final FailCallback callback) {
 		this.failCallback = callback;
+		return this;
+	}
+
+	@Override
+	@NonNull
+	public ReadRssiRequest before(@NonNull final BeforeCallback callback) {
+		this.beforeCallback = callback;
 		return this;
 	}
 

@@ -25,6 +25,7 @@ package no.nordicsemi.android.ble;
 import android.bluetooth.BluetoothDevice;
 import android.support.annotation.NonNull;
 
+import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.MtuCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
@@ -59,6 +60,13 @@ public final class MtuRequest extends ValueRequest<MtuCallback> {
 	@NonNull
 	public MtuRequest fail(@NonNull final FailCallback callback) {
 		this.failCallback = callback;
+		return this;
+	}
+
+	@Override
+	@NonNull
+	public MtuRequest before(@NonNull final BeforeCallback callback) {
+		this.beforeCallback = callback;
 		return this;
 	}
 

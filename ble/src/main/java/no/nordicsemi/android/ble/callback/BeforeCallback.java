@@ -20,46 +20,17 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package no.nordicsemi.android.ble;
+package no.nordicsemi.android.ble.callback;
 
+import android.bluetooth.BluetoothDevice;
 import android.support.annotation.NonNull;
 
-import no.nordicsemi.android.ble.callback.BeforeCallback;
-import no.nordicsemi.android.ble.callback.FailCallback;
-import no.nordicsemi.android.ble.callback.SuccessCallback;
+public interface BeforeCallback {
 
-@SuppressWarnings("WeakerAccess")
-public class DisconnectRequest extends Request {
-
-	DisconnectRequest(@NonNull final Type type) {
-		super(type);
-	}
-
-	@NonNull
-	@Override
-	DisconnectRequest setManager(@NonNull final BleManager manager) {
-		super.setManager(manager);
-		return this;
-	}
-
-	@NonNull
-	@Override
-	public DisconnectRequest done(@NonNull final SuccessCallback callback) {
-		super.done(callback);
-		return this;
-	}
-
-	@NonNull
-	@Override
-	public DisconnectRequest fail(@NonNull final FailCallback callback) {
-		super.fail(callback);
-		return this;
-	}
-
-	@Override
-	@NonNull
-	public DisconnectRequest before(@NonNull final BeforeCallback callback) {
-		this.beforeCallback = callback;
-		return this;
-	}
+	/**
+	 * A callback invoked when the request is about to start.
+	 *
+	 * @param device the target device.
+	 */
+	void onRequestStarted(@NonNull final BluetoothDevice device);
 }

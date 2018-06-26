@@ -32,6 +32,7 @@ import android.os.Looper;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.data.Data;
@@ -89,8 +90,10 @@ public class Request {
 	final BluetoothGattDescriptor descriptor;
 	SuccessCallback successCallback;
 	FailCallback failCallback;
+	BeforeCallback beforeCallback;
 	FailCallback internalFailCallback;
 	boolean enqueued;
+	boolean finished;
 
 	Request(@NonNull final Type type) {
 		this.type = type;
@@ -125,14 +128,19 @@ public class Request {
 	}
 
 	/**
-	 * Creates a new connect request. This allows to set a callback to a connect event,
+	 * Creates a new connect request. This allows to set a callback to the connect event,
 	 * just like any other request.
 	 *
+	 * @param device the device to connect to.
+	 * @param phy preferred PHY for connections to remote LE device. Bitwise OR of any of
+	 *             {@link ConnectRequest#PHY_LE_1M_MASK}, {@link ConnectRequest#PHY_LE_2M_MASK},
+	 *             and {@link ConnectRequest#PHY_LE_CODED_MASK}. This option does not take effect
+	 *             if {@code autoConnect} is set to true.
 	 * @return The new connect request.
 	 */
 	@NonNull
-	static ConnectRequest connect() {
-		return new ConnectRequest(Type.CONNECT);
+	static ConnectRequest connect(@NonNull final BluetoothDevice device, final int phy) {
+		return new ConnectRequest(Type.CONNECT, device, phy);
 	}
 
 	/**
@@ -683,6 +691,18 @@ public class Request {
 	}
 
 	/**
+	 * Sets a callback that will be executed before the execution of this operation starts.
+	 *
+	 * @param callback the callback.
+	 * @return The request.
+	 */
+	@NonNull
+	public Request before(@NonNull final BeforeCallback callback) {
+		this.beforeCallback = callback;
+		return this;
+	}
+
+	/**
 	 * Used to set internal fail callback. The callback will be notified in case the request
 	 * has failed.
 	 *
@@ -793,22 +813,29 @@ public class Request {
 		}
 	}
 
-	void notifySuccess(final BluetoothDevice device) {
+	void notifySuccess(@NonNull final BluetoothDevice device) {
 		manager.mHandler.removeCallbacks(timeoutHandler);
 		timeoutHandler = null;
+		finished = true;
 
 		if (successCallback != null)
 			successCallback.onRequestCompleted(device);
 	}
 
-	void notifyFail(final BluetoothDevice device, final int status) {
+	void notifyFail(@NonNull final BluetoothDevice device, final int status) {
 		manager.mHandler.removeCallbacks(timeoutHandler);
 		timeoutHandler = null;
+		finished = true;
 
 		if (failCallback != null)
 			failCallback.onRequestFailed(device, status);
 		if (internalFailCallback != null)
 			internalFailCallback.onRequestFailed(device, status);
+	}
+
+	void notifyStarted(@NonNull final BluetoothDevice device) {
+		if (beforeCallback != null)
+			beforeCallback.onRequestStarted(device);
 	}
 
 	/**

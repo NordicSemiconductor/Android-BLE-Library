@@ -25,15 +25,37 @@ package no.nordicsemi.android.ble;
 import android.bluetooth.BluetoothDevice;
 import android.support.annotation.NonNull;
 
+import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
-@SuppressWarnings("WeakerAccess")
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class ConnectRequest extends Request {
+	/**
+	 * Bluetooth LE 1M PHY mask. Used to specify LE 1M Physical Channel as one of many available
+	 * options in a bitmask.
+	 */
+	public static final int PHY_LE_1M_MASK = 1;
 
-	ConnectRequest(@NonNull final Type type) {
+	/**
+	 * Bluetooth LE 2M PHY mask. Used to specify LE 2M Physical Channel as one of many available
+	 * options in a bitmask.
+	 */
+	public static final int PHY_LE_2M_MASK = 2;
+
+	/**
+	 * Bluetooth LE Coded PHY mask. Used to specify LE Coded Physical Channel as one of many
+	 * available options in a bitmask.
+	 */
+	public static final int PHY_LE_CODED_MASK = 4;
+
+	private BluetoothDevice device;
+	private int preferredPhy;
+
+	ConnectRequest(@NonNull final Type type, @NonNull final BluetoothDevice device, final int phy) {
 		super(type);
-		enqueued = true;
+		this.device = device;
+		this.preferredPhy = phy;
 	}
 
 	@NonNull
@@ -69,5 +91,20 @@ public class ConnectRequest extends Request {
 	public ConnectRequest fail(@NonNull final FailCallback callback) {
 		super.fail(callback);
 		return this;
+	}
+
+	@Override
+	@NonNull
+	public ConnectRequest before(@NonNull final BeforeCallback callback) {
+		this.beforeCallback = callback;
+		return this;
+	}
+
+	public BluetoothDevice getDevice() {
+		return device;
+	}
+
+	int getPreferredPhy() {
+		return preferredPhy;
 	}
 }

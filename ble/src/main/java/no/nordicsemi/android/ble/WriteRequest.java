@@ -28,6 +28,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.DataSentCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
@@ -44,6 +45,7 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 	private DataSplitter dataSplitter;
 	private final byte[] data;
 	private final int writeType;
+	private byte[] nextChunk;
 	private int count = 0;
 	private boolean complete = false;
 
@@ -101,6 +103,13 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 	@NonNull
 	public WriteRequest fail(@NonNull final FailCallback callback) {
 		this.failCallback = callback;
+		return this;
+	}
+
+	@Override
+	@NonNull
+	public WriteRequest before(@NonNull final BeforeCallback callback) {
+		this.beforeCallback = callback;
 		return this;
 	}
 
@@ -178,9 +187,19 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 			return data;
 		}
 
-		final byte[] chunk = dataSplitter.chunk(data, count, mtu - 3);
-		if (chunk == null) // all data were sent
+		byte[] chunk = nextChunk;
+		// Get the first chunk.
+		if (chunk == null) {
+			chunk = dataSplitter.chunk(data, count, mtu - 3);
+		}
+		// If there's something to send, check if there are any more packets to be sent later.
+		if (chunk != null) {
+			nextChunk = dataSplitter.chunk(data, count + 1, mtu - 3);
+		}
+		// If there's no next packet left, we are done.
+		if (nextChunk == null) {
 			complete = true;
+		}
 		return chunk;
 	}
 

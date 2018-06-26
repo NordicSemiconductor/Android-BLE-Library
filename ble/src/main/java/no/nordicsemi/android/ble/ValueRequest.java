@@ -28,6 +28,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.exception.BluetoothDisabledException;
@@ -76,6 +77,13 @@ public abstract class ValueRequest<T> extends Request {
 	@Override
 	public ValueRequest<T> fail(@NonNull final FailCallback callback) {
 		super.fail(callback);
+		return this;
+	}
+
+	@Override
+	@NonNull
+	public ValueRequest<T> before(@NonNull final BeforeCallback callback) {
+		this.beforeCallback = callback;
 		return this;
 	}
 

@@ -25,6 +25,7 @@ package no.nordicsemi.android.ble;
 import android.bluetooth.BluetoothDevice;
 import android.support.annotation.NonNull;
 
+import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.PhyCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
@@ -106,6 +107,13 @@ public final class PhyRequest extends ValueRequest<PhyCallback> {
 	@NonNull
 	public PhyRequest fail(@NonNull final FailCallback callback) {
 		this.failCallback = callback;
+		return this;
+	}
+
+	@Override
+	@NonNull
+	public PhyRequest before(@NonNull final BeforeCallback callback) {
+		this.beforeCallback = callback;
 		return this;
 	}
 

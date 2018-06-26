@@ -28,6 +28,7 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.DataReceivedCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.ReadProgressCallback;
@@ -75,6 +76,13 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	@Override
 	public WaitForValueChangedRequest fail(@NonNull final FailCallback callback) {
 		super.fail(callback);
+		return this;
+	}
+
+	@Override
+	@NonNull
+	public WaitForValueChangedRequest before(@NonNull final BeforeCallback callback) {
+		this.beforeCallback = callback;
 		return this;
 	}
 
