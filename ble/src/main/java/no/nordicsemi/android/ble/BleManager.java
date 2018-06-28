@@ -2206,6 +2206,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					// autoConnect true).
 					if (mInitialConnection) {
 						internalConnect(gatt.getDevice(), 0 /* unused */);
+					} else {
+						nextRequest(false);
 					}
 
 					if (wasConnected || status == BluetoothGatt.GATT_SUCCESS)
