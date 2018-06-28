@@ -82,6 +82,7 @@ public class Request {
 	}
 
 	private Runnable timeoutHandler;
+	private long timeout;
 	private BleManager manager;
 
 	final ConditionVariable syncLock;
@@ -713,32 +714,22 @@ public class Request {
 	}
 
 	/**
-	 * Enqueues the request to asynchronous execution.
+	 * Enqueues the request for asynchronous execution.
 	 */
 	public void enqueue() {
+		this.timeout = 0;
 		manager.enqueue(this);
 	}
 
 	/**
-	 * Enqueues the request to asynchronous execution and sets a timeout.
+	 * Enqueues the request for asynchronous execution with a timeout.
 	 * When the timeout occurs, the request will fail with {@link FailCallback#REASON_TIMEOUT}.
 	 *
-	 * @param timeout the request timeout in milliseconds.
+	 * @param timeout the request timeout in milliseconds, 0 to disable timeout.
 	 */
 	public void enqueue(final long timeout) {
-		if (timeoutHandler != null) {
-			manager.mHandler.removeCallbacks(timeoutHandler);
-			timeoutHandler = null;
-		}
-		if (timeout > 0L) {
-			timeoutHandler = () -> {
-				timeoutHandler = null;
-				notifyFail(manager.getBluetoothDevice(), FailCallback.REASON_TIMEOUT);
-				manager.onRequestTimeout();
-			};
-			manager.mHandler.postDelayed(timeoutHandler, timeout);
-		}
-		enqueue();
+		this.timeout = timeout;
+		manager.enqueue(this);
 	}
 
 	/**
@@ -813,29 +804,40 @@ public class Request {
 		}
 	}
 
+	void notifyStarted(@NonNull final BluetoothDevice device) {
+		if (timeout > 0L) {
+			timeoutHandler = () -> {
+				timeoutHandler = null;
+				if (!finished) {
+					notifyFail(manager.getBluetoothDevice(), FailCallback.REASON_TIMEOUT);
+					manager.onRequestTimeout();
+				}
+			};
+			manager.mHandler.postDelayed(timeoutHandler, timeout);
+		}
+
+		if (beforeCallback != null)
+			beforeCallback.onRequestStarted(device);
+	}
+
 	void notifySuccess(@NonNull final BluetoothDevice device) {
+		finished = true;
 		manager.mHandler.removeCallbacks(timeoutHandler);
 		timeoutHandler = null;
-		finished = true;
 
 		if (successCallback != null)
 			successCallback.onRequestCompleted(device);
 	}
 
 	void notifyFail(@NonNull final BluetoothDevice device, final int status) {
+		finished = true;
 		manager.mHandler.removeCallbacks(timeoutHandler);
 		timeoutHandler = null;
-		finished = true;
 
 		if (failCallback != null)
 			failCallback.onRequestFailed(device, status);
 		if (internalFailCallback != null)
 			internalFailCallback.onRequestFailed(device, status);
-	}
-
-	void notifyStarted(@NonNull final BluetoothDevice device) {
-		if (beforeCallback != null)
-			beforeCallback.onRequestStarted(device);
 	}
 
 	/**
