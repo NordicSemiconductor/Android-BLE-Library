@@ -29,6 +29,17 @@ import android.bluetooth.BluetoothGatt;
  * See also: https://android.googlesource.com/platform/external/libnfc-nci/+/master/src/include/hcidefs.h#447 for other possible HCI errors.
  */
 public class GattError {
+
+	public static final int GATT_SUCCESS = BluetoothGatt.GATT_SUCCESS;
+	public static final int GATT_CONN_L2C_FAILURE = 0x01;
+	public static final int GATT_CONN_TIMEOUT = 0x08;
+	public static final int GATT_CONN_TERMINATE_PEER_USER = 0x13;
+	public static final int GATT_CONN_TERMINATE_LOCAL_HOST = 0x16;
+	public static final int GATT_CONN_FAIL_ESTABLISH = 0x3E;
+	public static final int GATT_CONN_LMP_TIMEOUT = 0x22;
+	public static final int GATT_CONN_CANCEL = 0x0100;
+	public static final int GATT_ERROR = 0x0085; // Device not reachable
+	
 	/**
 	 * Converts the connection status given by the
 	 * {@link android.bluetooth.BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)}
@@ -39,23 +50,23 @@ public class GattError {
 	 */
 	public static String parseConnectionError(final int error) {
 		switch (error) {
-			case BluetoothGatt.GATT_SUCCESS:
+			case GATT_SUCCESS:
 				return "SUCCESS";
-			case 0x01:
+			case GATT_CONN_L2C_FAILURE:
 				return "GATT CONN L2C FAILURE";
-			case 0x08:
+			case GATT_CONN_TIMEOUT:
 				return "GATT CONN TIMEOUT";
-			case 0x13:
+			case GATT_CONN_TERMINATE_PEER_USER:
 				return "GATT CONN TERMINATE PEER USER";
-			case 0x16:
+			case GATT_CONN_TERMINATE_LOCAL_HOST:
 				return "GATT CONN TERMINATE LOCAL HOST";
-			case 0x3E:
+			case GATT_CONN_FAIL_ESTABLISH:
 				return "GATT CONN FAIL ESTABLISH";
-			case 0x22:
+			case GATT_CONN_LMP_TIMEOUT:
 				return "GATT CONN LMP TIMEOUT";
-			case 0x0100:
+			case GATT_CONN_CANCEL:
 				return "GATT CONN CANCEL ";
-			case 0x0085:
+			case GATT_ERROR:
 				return "GATT ERROR"; // Device not reachable
 			default:
 				return "UNKNOWN (" + error + ")";
