@@ -1,5 +1,6 @@
 # Android BLE Library
 
+[ ![Download](https://api.bintray.com/packages/nordic/android/ble-library/images/download.svg?version=1.2.0) ](https://bintray.com/nordic/android/ble-library/1.2.0/link)
 [ ![Download](https://api.bintray.com/packages/nordic/android/ble-library/images/download.svg) ](https://bintray.com/nordic/android/ble-library/_latestVersion)
 
 This library has been extracted from [nRF Toolbox](https://github.com/NordicSemiconductor/Android-nRF-Toolbox)
@@ -31,40 +32,31 @@ If autoConnect option is to be used, the manager also handles initial connection
 which is much faster, and then reconnects in case of link loss with this parameter set to true.
 Just return *true* from `shouldAutoConnect()` method in your manager.
 
-### Version 1.0
+### Version 1.x
 
 The library is finally on jcenter. See below how to include it in your project.
 
 #### Changes:
 
-Some things has changed before the lib graduated to 1.0. Those are:
+Some things has changed before the lib graduated to 1.x. Those are:
 1. Request class has been extracted to a standalone class, importing this class may be required.
-2. Current MTU is now available in the BleManager. Use getMtu() to get the value. Request change using requestMtu(int) as before.
+2. Current MTU is now available in the BleManager. Use `getMtu()` to get the value. Request change using `requestMtu(int)` as before.
 
 ### Version 2.0-alpha
 
-Please, check version 2.0 (alpha) on *develop* branch. Version 2 adds more features (for example synchronous requests, and more), is "almost" backwards compatible (a lot of API has been deprecated).
-This version is under constant development and API may change any time without a notice.
+Please, check version 2.0 (alpha) on *develop* branch. Version 2 adds more features (for example synchronous requests, and more), is "almost" backwards compatible (a lot of old API has been deprecated).
+This version is now well tested and the API should not change. More features may, however, be added.
 
 #### Changes and migration guide:
 
-1. BLE opearation methods (i.e. writeCharacteristic(...), etc.) return the Request class now, instead of boolean.
-2. onLinklossOccur callback has been renamed to onLinkLossOccurred.
-3. GATT callbacks (for example: onCharacteristicRead, onCharacteristicNotified, etc) inside BleManagerGattCallback has been deprecated. Use Request callbacks instead.
-4. Build-in Battery Level support has been deprecated. Request Battery Level as any other value.
-5. A new callbacks method: onBondingFailed has been added to BleManagerCallbacks.
-
-#### To be added:
-
-1. Requesting PHY (for Android Oreo devices that support it).
-2. More.
+See the README on develop branch for migration details.
 
 #### How to test it:
 
 The new version is compatible with [nRF Toolbox/develop](https://github.com/NordicSemiconductor/Android-nRF-Toolbox/tree/develop) 
 and [BLE Common Library/develop](https://github.com/NordicSemiconductor/Android-BLE-Common-Library/tree/develop). The latter is a set of useful parsers and callbacks for common Bluetooth SIG adopted profiles.
 
-Clone all 3 projects, check out *develop* branches on each of them, ensure the path to :ble and :ble-common modules are correct in *settings.gradle* file, and sync the project.
+Alpha releases of this and BLE Common Library are available on jcenter and Maven Central.
 
 ### How to include it in your project
 
@@ -73,8 +65,9 @@ Clone all 3 projects, check out *develop* branches on each of them, ensure the p
 The library may be found on jcenter and Maven Central repository. Add it to your project by adding the following dependency:
 
 ```grovy
-implementation 'no.nordicsemi.android:ble:1.1.0'
+implementation 'no.nordicsemi.android:ble:1.2.0'
 ```
+ For information how to add the new version, change to *develop* branch.
 
 #### Manual
 
