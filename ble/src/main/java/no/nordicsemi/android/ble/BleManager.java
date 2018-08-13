@@ -2134,10 +2134,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				 */
 				final boolean bonded = gatt.getDevice().getBondState() == BluetoothDevice.BOND_BONDED;
 				final int delay = bonded ? 1600 : 300;
-                //noinspection ConstantConditions
-                if (delay > 0)
+				//noinspection ConstantConditions
+				if (delay > 0)
 					log(Level.DEBUG, "wait(" + delay + ")");
-                if (!mServiceDiscoveryRequested) {
+				if (!mServiceDiscoveryRequested) {
 					final int connectionCount = ++mConnectionCount;
 					mHandler.postDelayed(() -> {
 						if (connectionCount != mConnectionCount) {
@@ -2330,8 +2330,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					Log.w(TAG, ERROR_AUTH_ERROR_WHILE_BONDED);
 					mCallbacks.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status);
 				}
-                // The request will be repeated when the bond state changes to BONDED.
-                return;
+				// The request will be repeated when the bond state changes to BONDED.
+				return;
 			} else {
 				Log.e(TAG, "onCharacteristicRead error " + status);
 				if (mRequest != null && mRequest instanceof ReadRequest) {
@@ -2370,8 +2370,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					Log.w(TAG, ERROR_AUTH_ERROR_WHILE_BONDED);
 					mCallbacks.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status);
 				}
-                // The request will be repeated when the bond state changes to BONDED.
-                return;
+				// The request will be repeated when the bond state changes to BONDED.
+				return;
 			} else {
 				Log.e(TAG, "onCharacteristicWrite error " + status);
 				if (mRequest != null && mRequest instanceof WriteRequest) {
@@ -2415,8 +2415,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					Log.w(TAG, ERROR_AUTH_ERROR_WHILE_BONDED);
 					mCallbacks.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status);
 				}
-                // The request will be repeated when the bond state changes to BONDED.
-                return;
+				// The request will be repeated when the bond state changes to BONDED.
+				return;
 			} else {
 				Log.e(TAG, "onDescriptorRead error " + status);
 				if (mRequest != null && mRequest instanceof ReadRequest) {
