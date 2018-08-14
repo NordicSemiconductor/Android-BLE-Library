@@ -71,13 +71,14 @@ public interface BleManagerCallbacks {
 	 * Otherwise the {@link #onLinkLossOccurred(BluetoothDevice)} method will be called instead.
 	 *
 	 * @param device the device that got disconnected.
+	 * @param status status on disconnect.
 	 */
-	void onDeviceDisconnected(final BluetoothDevice device);
+	void onDeviceDisconnected(final BluetoothDevice device, final int status);
 
 	/**
 	 * This callback is invoked when the Ble Manager lost connection to a device that has been
 	 * connected with autoConnect option (see {@link BleManager#shouldAutoConnect()}.
-	 * Otherwise a {@link #onDeviceDisconnected(BluetoothDevice)} method will be called on such
+	 * Otherwise a {@link #onDeviceDisconnected(BluetoothDevice, int)} method will be called on such
 	 * event.
 	 *
 	 * @param device the device that got disconnected due to a link loss.
