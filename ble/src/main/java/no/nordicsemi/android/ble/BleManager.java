@@ -2313,7 +2313,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 						", value: " + ParserUtils.parse(data));
 
 				onCharacteristicRead(gatt, characteristic);
-				if (mRequest != null && mRequest instanceof ReadRequest) {
+				if (mRequest instanceof ReadRequest) {
 					final ReadRequest request = (ReadRequest) mRequest;
 					request.notifyValueChanged(gatt.getDevice(), data);
 					if (request.hasMore()) {
@@ -2334,7 +2334,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				return;
 			} else {
 				Log.e(TAG, "onCharacteristicRead error " + status);
-				if (mRequest != null && mRequest instanceof ReadRequest) {
+				if (mRequest instanceof ReadRequest) {
 					mRequest.notifyFail(gatt.getDevice(), status);
 				}
 				mValueChangedRequest = null;
@@ -2353,7 +2353,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 						", value: " + ParserUtils.parse(data));
 
 				onCharacteristicWrite(gatt, characteristic);
-				if (mRequest != null && mRequest instanceof WriteRequest) {
+				if (mRequest instanceof WriteRequest) {
 					final WriteRequest request = (WriteRequest) mRequest;
 					request.notifyPacketSent(gatt.getDevice(), data);
 					if (request.hasMore()) {
@@ -2374,7 +2374,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				return;
 			} else {
 				Log.e(TAG, "onCharacteristicWrite error " + status);
-				if (mRequest != null && mRequest instanceof WriteRequest) {
+				if (mRequest instanceof WriteRequest) {
 					mRequest.notifyFail(gatt.getDevice(), status);
 				}
 				mValueChangedRequest = null;
@@ -2398,7 +2398,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 						", value: " + ParserUtils.parse(data));
 
 				onDescriptorRead(gatt, descriptor);
-				if (mRequest != null && mRequest instanceof ReadRequest) {
+				if (mRequest instanceof ReadRequest) {
 					final ReadRequest request = (ReadRequest) mRequest;
 					request.notifyValueChanged(gatt.getDevice(), data);
 					if (request.hasMore()) {
@@ -2419,7 +2419,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				return;
 			} else {
 				Log.e(TAG, "onDescriptorRead error " + status);
-				if (mRequest != null && mRequest instanceof ReadRequest) {
+				if (mRequest instanceof ReadRequest) {
 					mRequest.notifyFail(gatt.getDevice(), status);
 				}
 				mValueChangedRequest = null;
@@ -2458,7 +2458,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				} else {
 					onDescriptorWrite(gatt, descriptor);
 				}
-				if (mRequest != null && mRequest instanceof WriteRequest) {
+				if (mRequest instanceof WriteRequest) {
 					final WriteRequest request = (WriteRequest) mRequest;
 					request.notifyPacketSent(gatt.getDevice(), data);
 					if (request.hasMore()) {
@@ -2479,7 +2479,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				return;
 			} else {
 				Log.e(TAG, "onDescriptorWrite error " + status);
-				if (mRequest != null && mRequest instanceof WriteRequest) {
+				if (mRequest instanceof WriteRequest) {
 					mRequest.notifyFail(gatt.getDevice(), status);
 				}
 				mValueChangedRequest = null;
@@ -2546,13 +2546,13 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				log(Level.INFO, "MTU changed to: " + mtu);
 				mMtu = mtu;
 				onMtuChanged(gatt, mtu);
-				if (mRequest != null && mRequest instanceof MtuRequest) {
+				if (mRequest instanceof MtuRequest) {
 					((MtuRequest) mRequest).notifyMtuChanged(gatt.getDevice(), mtu);
 					mRequest.notifySuccess(gatt.getDevice());
 				}
 			} else {
 				Log.e(TAG, "onMtuChanged error: " + status + ", mtu: " + mtu);
-				if (mRequest != null && mRequest instanceof MtuRequest) {
+				if (mRequest instanceof MtuRequest) {
 					mRequest.notifyFail(gatt.getDevice(), status);
 					mValueChangedRequest = null;
 				}
@@ -2586,7 +2586,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				onConnectionUpdated(gatt, interval, latency, timeout);
 
 				// This callback may be called af any time, also when some other request is executed
-				if (mRequest != null && mRequest instanceof ConnectionPriorityRequest) {
+				if (mRequest instanceof ConnectionPriorityRequest) {
 					((ConnectionPriorityRequest) mRequest)
 							.notifyConnectionPriorityChanged(gatt.getDevice(), interval, latency, timeout);
 					mRequest.notifySuccess(gatt.getDevice());
@@ -2599,7 +2599,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 						"latency: " + latency + ", timeout: " + (timeout * 10) + "ms)");
 
 				// This callback may be called af any time, also when some other request is executed
-				if (mRequest != null && mRequest instanceof ConnectionPriorityRequest) {
+				if (mRequest instanceof ConnectionPriorityRequest) {
 					mRequest.notifyFail(gatt.getDevice(), status);
 					mValueChangedRequest = null;
 				}
@@ -2611,7 +2611,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 						"latency: " + latency + ", timeout: " + (timeout * 10) + "ms)");
 
 				// This callback may be called af any time, also when some other request is executed
-				if (mRequest != null && mRequest instanceof ConnectionPriorityRequest) {
+				if (mRequest instanceof ConnectionPriorityRequest) {
 					mRequest.notifyFail(gatt.getDevice(), status);
 					mValueChangedRequest = null;
 				}
@@ -2630,13 +2630,13 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Level.INFO, "PHY updated (TX: " + phyToString(txPhy) +
 						", RX: " + phyToString(rxPhy) + ")");
-				if (mRequest != null && mRequest instanceof PhyRequest) {
+				if (mRequest instanceof PhyRequest) {
 					((PhyRequest) mRequest).notifyPhyChanged(gatt.getDevice(), txPhy, rxPhy);
 					mRequest.notifySuccess(gatt.getDevice());
 				}
 			} else {
 				log(Level.WARNING, "PHY updated failed with status " + status);
-				if (mRequest != null && mRequest instanceof PhyRequest) {
+				if (mRequest instanceof PhyRequest) {
 					mRequest.notifyFail(gatt.getDevice(), status);
 					mValueChangedRequest = null;
 				}
@@ -2644,7 +2644,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			}
 			// PHY update may be requested by the other side, or the Android, without explicitly
 			// requesting it. Proceed with the queue only when update was requested.
-			if (mRequest != null && mRequest instanceof PhyRequest) {
+			if (mRequest instanceof PhyRequest) {
 				nextRequest(true);
 			}
 		}
@@ -2656,13 +2656,13 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Level.INFO, "PHY read (TX: " + phyToString(txPhy) +
 						", RX: " + phyToString(rxPhy) + ")");
-				if (mRequest != null && mRequest instanceof PhyRequest) {
+				if (mRequest instanceof PhyRequest) {
 					((PhyRequest) mRequest).notifyPhyChanged(gatt.getDevice(), txPhy, rxPhy);
 					mRequest.notifySuccess(gatt.getDevice());
 				}
 			} else {
 				log(Level.WARNING, "PHY read failed with status " + status);
-				if (mRequest != null && mRequest instanceof PhyRequest) {
+				if (mRequest instanceof PhyRequest) {
 					mRequest.notifyFail(gatt.getDevice(), status);
 				}
 				mValueChangedRequest = null;
@@ -2676,13 +2676,13 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 										final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Level.INFO, "Remote RSSI received: " + rssi + " dBm");
-				if (mRequest != null && mRequest instanceof ReadRssiRequest) {
+				if (mRequest instanceof ReadRssiRequest) {
 					((ReadRssiRequest) mRequest).notifyRssiRead(gatt.getDevice(), rssi);
 					mRequest.notifySuccess(gatt.getDevice());
 				}
 			} else {
 				log(Level.WARNING, "Reading remote RSSI failed with status " + status);
-				if (mRequest != null && mRequest instanceof ReadRssiRequest) {
+				if (mRequest instanceof ReadRssiRequest) {
 					mRequest.notifyFail(gatt.getDevice(), status);
 				}
 				mValueChangedRequest = null;
