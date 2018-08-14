@@ -239,7 +239,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 						// The connection is killed by the system, no need to disconnect gently.
 						mUserDisconnected = true;
-						mGattCallback.notifyDeviceDisconnected(mBluetoothDevice);
+						mGattCallback.notifyDeviceDisconnected(mBluetoothDevice, GattError.GATT_CONN_TERMINATE_LOCAL_HOST);
 					}
 					// Calling close() will prevent the STATE_OFF event from being logged
 					// (this receiver will be unregistered). But it doesn't matter.
@@ -421,7 +421,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * to connect to it. When the connection is lost, the system will keep trying to reconnect to
 	 * it in. If true is returned, and the connection to the device is lost the
 	 * {@link BleManagerCallbacks#onLinkLossOccurred(BluetoothDevice)} callback is called instead of
-	 * {@link BleManagerCallbacks#onDeviceDisconnected(BluetoothDevice)}.
+	 * {@link BleManagerCallbacks#onDeviceDisconnected(BluetoothDevice, int)}.
 	 * <p>
 	 * This feature works much better on newer Android phone models and many not work on older
 	 * phones.
@@ -637,7 +637,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		return Request.disconnect().setManager(this);
 	}
 
-	private boolean internalDisconnect() {
+	private boolean internalDisconnect(final int status) {
 		mUserDisconnected = true;
 		mInitialConnection = false;
 		mReady = false;
@@ -657,7 +657,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			// gatt.disconnect(), the connection attempt will be stopped.
 			mConnectionState = BluetoothGatt.STATE_DISCONNECTED;
 			log(Level.INFO, "Disconnected");
-			mCallbacks.onDeviceDisconnected(mBluetoothGatt.getDevice());
+			mCallbacks.onDeviceDisconnected(mBluetoothGatt.getDevice(), status);
 		}
 		// mRequest may be of type DISCONNECT or CONNECT (timeout).
 		// For the latter, it has already been notified with REASON_TIMEOUT.
@@ -1929,7 +1929,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 */
 		protected abstract void onDeviceDisconnected();
 
-		private void notifyDeviceDisconnected(@NonNull final BluetoothDevice device) {
+		private void notifyDeviceDisconnected(@NonNull final BluetoothDevice device, final int status) {
 			mConnected = false;
 			mServicesDiscovered = false;
 			mServiceDiscoveryRequested = false;
@@ -1937,7 +1937,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			mConnectionState = BluetoothGatt.STATE_DISCONNECTED;
 			if (mUserDisconnected) {
 				log(Level.INFO, "Disconnected");
-				mCallbacks.onDeviceDisconnected(device);
+				mCallbacks.onDeviceDisconnected(device, status);
 				close();
 				if (mRequest != null && mRequest.type == Request.Type.DISCONNECT) {
 					mRequest.notifySuccess(device);
@@ -2196,7 +2196,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					// Store the current value of the mConnected flag...
 					final boolean wasConnected = mConnected;
 					// ...because this method sets the mConnected flag to false.
-					notifyDeviceDisconnected(gatt.getDevice());
+					notifyDeviceDisconnected(gatt.getDevice(), status);
 
 					// Reset flag, so the next Connect could be enqueued.
 					mOperationInProgress = false;
@@ -2290,7 +2290,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				} else {
 					log(Level.WARNING, "Device is not supported");
 					mCallbacks.onDeviceNotSupported(gatt.getDevice());
-					internalDisconnect();
+					internalDisconnect(status);
 				}
 			} else {
 				Log.e(TAG, "onServicesDiscovered error " + status);
@@ -2299,7 +2299,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					mConnectRequest.notifyFail(gatt.getDevice(), FailCallback.REASON_REQUEST_FAILED);
 					mConnectRequest = null;
 				}
-				internalDisconnect();
+				internalDisconnect(status);
 			}
 		}
 
@@ -2798,7 +2798,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					break;
 				}
 				case DISCONNECT: {
-					result = internalDisconnect();
+					result = internalDisconnect(GattError.GATT_CONN_TERMINATE_LOCAL_HOST);
 					break;
 				}
 				case CREATE_BOND: {
