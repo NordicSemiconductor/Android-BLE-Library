@@ -37,7 +37,7 @@ Just return *true* from `shouldAutoConnect()` method in your manager.
 ### Version 2.x
 
 This library is now in alpha stage. It has been tested in several projects and no issues were found so far.
-Feedback is highy appreciated. 
+Feedback is highly appreciated. 
 
 Version 2 has many more features comparing to 1.x:
 1. Support for synchronous operations.
@@ -54,7 +54,7 @@ Version 2 has many more features comparing to 1.x:
 The library may be found on jcenter and Maven Central repository. Add it to your project by adding the following dependency:
 
 ```grovy
-implementation 'no.nordicsemi.android:ble:2.0-alpha6'
+implementation 'no.nordicsemi.android:ble:2.0-beta1'
 ```
 
 #### Changes:
