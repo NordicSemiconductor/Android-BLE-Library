@@ -214,6 +214,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			log(Level.DEBUG, stateString);
 
 			switch (state) {
+				case BluetoothAdapter.STATE_ON:
+					if (mGattCallback != null) {
+						mGattCallback.nextRequest(true);
+					}
+					break;
 				case BluetoothAdapter.STATE_TURNING_OFF:
 				case BluetoothAdapter.STATE_OFF:
 					if (mConnected && previousState != BluetoothAdapter.STATE_TURNING_OFF
