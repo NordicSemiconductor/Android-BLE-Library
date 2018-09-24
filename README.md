@@ -54,12 +54,12 @@ Version 2 has many more features comparing to 1.x:
 The library may be found on jcenter and Maven Central repository. Add it to your project by adding the following dependency:
 
 ```grovy
-implementation 'no.nordicsemi.android:ble:2.0-beta1'
+implementation 'no.nordicsemi.android:ble:2.0-beta2'
 ```
 
 #### Changes:
 
-1. BLE opearation methods (i.e. writeCharacteristic(...), etc.) return the Request class now, instead of boolean.
+1. BLE operation methods (i.e. writeCharacteristic(...), etc.) return the Request class now, instead of boolean.
 2. onLinklossOccur callback has been renamed to onLinkLossOccurred.
 3. GATT callbacks (for example: onCharacteristicRead, onCharacteristicNotified, etc) inside BleManagerGattCallback has been deprecated. Use Request callbacks instead.
 4. Build-in Battery Level support has been deprecated. Request Battery Level as any other value.
