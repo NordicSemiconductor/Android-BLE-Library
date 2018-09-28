@@ -839,7 +839,7 @@ public class Request {
 				timeoutHandler = null;
 				if (!finished) {
 					notifyFail(manager.getBluetoothDevice(), FailCallback.REASON_TIMEOUT);
-					manager.onRequestTimeout();
+					manager.onRequestTimeout(this);
 				}
 			};
 			manager.mHandler.postDelayed(timeoutHandler, timeout);

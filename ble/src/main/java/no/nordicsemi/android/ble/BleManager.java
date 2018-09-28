@@ -37,6 +37,7 @@ import android.content.IntentFilter;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.os.SystemClock;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -150,6 +151,20 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * Flag set to true when the device is connected.
 	 */
 	private boolean mConnected;
+	/**
+	 * A timestamp when the last connection attempt was made. This is distinguish two situations
+	 * when the 133 error happens during a connection attempt: a timeout (when ~30 sec passed since
+	 * connection was requested), or an error (packet collision, packet missed, etc.)
+	 */
+	private long mConnectionTime;
+	/**
+	 * A time after which receiving 133 error is considered a timeout, instead of a
+	 * different reason.
+	 * A {@link BluetoothDevice#connectGatt(Context, boolean, BluetoothGattCallback)} call will
+	 * fail after 30 seconds if the device won't be found until then. Other errors happen much
+	 * earlier. 20 sec should be OK here.
+	 */
+	private final static long CONNECTION_TIMEOUT_THRESHOLD = 20000; // ms
 	/**
 	 * Flag set to true when the initialization queue is complete.
 	 */
@@ -581,6 +596,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					// This method forces autoConnect = true even if the gatt was created with this
 					// flag set to false.
 					mInitialConnection = false;
+					mConnectionTime = 0L; // no timeout possible when autoConnect used
 					log(Level.VERBOSE, "Connecting...");
 					mCallbacks.onDeviceConnecting(device);
 					log(Level.DEBUG, "gatt.connect()");
@@ -612,6 +628,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		mGattCallback.setHandler(mHandler);
 		log(Level.VERBOSE, "Connecting...");
 		mCallbacks.onDeviceConnecting(device);
+		mConnectionTime = SystemClock.elapsedRealtime();
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			log(Level.DEBUG, "gatt = device.connectGatt(autoConnect = false, TRANSPORT_LE, "
 					+ phyMaskToString(preferredPhy) + ")");
@@ -1803,9 +1820,15 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	@MainThread
-	void onRequestTimeout() {
+	void onRequestTimeout(final Request request) {
 		mRequest = null;
 		mValueChangedRequest = null;
+		if (request.type == Request.Type.CONNECT) {
+			mConnectRequest = null;
+			internalDisconnect();
+			// The method above will call mGattCallback.nextRequest(true) so we have to return here.
+			return;
+		}
 		mGattCallback.nextRequest(true);
 	}
 
@@ -1939,12 +1962,18 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		protected abstract void onDeviceDisconnected();
 
 		private void notifyDeviceDisconnected(@NonNull final BluetoothDevice device) {
+			final boolean wasConnected = mConnected;
 			mConnected = false;
 			mServicesDiscovered = false;
 			mServiceDiscoveryRequested = false;
 			mInitInProgress = false;
 			mConnectionState = BluetoothGatt.STATE_DISCONNECTED;
-			if (mUserDisconnected) {
+			if (!wasConnected) {
+				log(Level.WARNING, "Connection attempt timed out");
+				mCallbacks.onDeviceDisconnected(device);
+				// ConnectRequest was already notified
+				close();
+			} else if (mUserDisconnected) {
 				log(Level.INFO, "Disconnected");
 				mCallbacks.onDeviceDisconnected(device);
 				final Request request = mRequest;
@@ -2114,6 +2143,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				// Notify the parent activity/service.
 				log(Level.INFO, "Connected to " + gatt.getDevice().getAddress());
 				mConnected = true;
+				mConnectionTime = 0L;
 				mConnectionState = BluetoothGatt.STATE_CONNECTED;
 				mCallbacks.onDeviceConnected(gatt.getDevice());
 
@@ -2168,6 +2198,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				}
 			} else {
 				if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+					final long now = SystemClock.elapsedRealtime();
+
 					if (status != BluetoothGatt.GATT_SUCCESS)
 						log(Level.WARNING, "Error: (0x" + Integer.toHexString(status) + "): " +
 								GattError.parseConnectionError(status));
@@ -2196,10 +2228,17 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 						mValueChangedRequest = null;
 					}
 					if (mConnectRequest != null) {
-						mConnectRequest.notifyFail(gatt.getDevice(), mServicesDiscovered ?
-								FailCallback.REASON_DEVICE_NOT_SUPPORTED :
-								status == BluetoothGatt.GATT_SUCCESS ?
-									FailCallback.REASON_DEVICE_DISCONNECTED : status);
+						int reason;
+						if (mServicesDiscovered)
+							reason = FailCallback.REASON_DEVICE_NOT_SUPPORTED;
+						else if (status == BluetoothGatt.GATT_SUCCESS)
+							reason = FailCallback.REASON_DEVICE_DISCONNECTED;
+						else if (status == GattError.GATT_ERROR
+								&& mConnectionTime > 0 && now > mConnectionTime + CONNECTION_TIMEOUT_THRESHOLD)
+							reason = FailCallback.REASON_TIMEOUT;
+						else
+							reason = status;
+						mConnectRequest.notifyFail(gatt.getDevice(), reason);
 						mConnectRequest = null;
 					}
 
