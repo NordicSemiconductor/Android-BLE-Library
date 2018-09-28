@@ -31,6 +31,7 @@ import android.support.annotation.Nullable;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.DataSentCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
+import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.callback.WriteProgressCallback;
 import no.nordicsemi.android.ble.data.Data;
@@ -95,28 +96,35 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 	@Override
 	@NonNull
 	public WriteRequest done(@NonNull final SuccessCallback callback) {
-		this.successCallback = callback;
+		super.done(callback);
 		return this;
 	}
 
 	@Override
 	@NonNull
 	public WriteRequest fail(@NonNull final FailCallback callback) {
-		this.failCallback = callback;
+		super.fail(callback);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public WriteRequest invalid(@NonNull final InvalidRequestCallback callback) {
+		super.invalid(callback);
 		return this;
 	}
 
 	@Override
 	@NonNull
 	public WriteRequest before(@NonNull final BeforeCallback callback) {
-		this.beforeCallback = callback;
+		super.before(callback);
 		return this;
 	}
 
 	@Override
 	@NonNull
 	public WriteRequest with(@NonNull final DataSentCallback callback) {
-		this.valueCallback = callback;
+		super.with(callback);
 		return this;
 	}
 

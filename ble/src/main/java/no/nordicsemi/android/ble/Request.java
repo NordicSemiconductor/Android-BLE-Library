@@ -34,10 +34,12 @@ import android.support.annotation.Nullable;
 
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
+import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.exception.BluetoothDisabledException;
 import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
+import no.nordicsemi.android.ble.exception.InvalidRequestException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 /**
@@ -91,6 +93,7 @@ public class Request {
 	final BluetoothGattDescriptor descriptor;
 	SuccessCallback successCallback;
 	FailCallback failCallback;
+	InvalidRequestCallback invalidRequestCallback;
 	BeforeCallback beforeCallback;
 	FailCallback internalFailCallback;
 	boolean enqueued;
@@ -664,7 +667,7 @@ public class Request {
 	}
 
 	/**
-	 * Use to add a completion callback. The callback will be invoked when the operation has
+	 * Use to set a completion callback. The callback will be invoked when the operation has
      * finished successfully unless {@link #await(int)} or its variant was used, in which case this
      * callback will be ignored.
 	 *
@@ -678,9 +681,13 @@ public class Request {
 	}
 
 	/**
-	 * Use to add a callback that will be called in case of the request has failed.
+	 * Use to set a callback that will be called in case the request has failed.
+	 * If the target device wasn't set before executing this request
+	 * ({@link BleManager#connect(BluetoothDevice)} was never called), the
+	 * {@link #invalid(InvalidRequestCallback)} will be used instead, as the
+	 * {@link BluetoothDevice} is not known.
 	 * This callback will be ignored if {@link #await(int)} or its variant was used, in which case
-	 * it will be ignored and the error will be returned as an exception.
+	 * the error will be returned as an exception.
 	 *
 	 * @param callback the callback.
 	 * @return The request.
@@ -688,6 +695,21 @@ public class Request {
 	@NonNull
 	public Request fail(@NonNull final FailCallback callback) {
 		this.failCallback = callback;
+		return this;
+	}
+
+	/**
+	 * Use to set a callback that will be called in case the request was invalid, for example
+	 * called before the device was connected.
+	 * This callback will be ignored if {@link #await(int)} or its variant was used, in which case
+	 * the error will be returned as an exception.
+	 *
+	 * @param callback the callback.
+	 * @return The request.
+	 */
+	@NonNull
+	public Request invalid(@NonNull final InvalidRequestCallback callback) {
+		this.invalidRequestCallback = callback;
 		return this;
 	}
 
@@ -746,9 +768,11 @@ public class Request {
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
+	 * @throws InvalidRequestException     thrown when the request was called before the device was
+	 *                                     connected at least once (unknown device).
 	 */
 	public void await() throws RequestFailedException, DeviceDisconnectedException,
-			BluetoothDisabledException {
+			BluetoothDisabledException, InvalidRequestException {
 		try {
 			await(0);
 		} catch (final InterruptedException e) {
@@ -773,10 +797,12 @@ public class Request {
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
+	 * @throws InvalidRequestException     thrown when the request was called before the device was
+	 *                                     connected at least once (unknown device).
 	 */
 	public void await(final int timeout)
 			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
-			BluetoothDisabledException {
+			BluetoothDisabledException, InvalidRequestException {
 		assertNotMainThread();
 
 		final SuccessCallback sc = successCallback;
@@ -784,7 +810,7 @@ public class Request {
 		try {
 			syncLock.close();
 			final RequestCallback callback = new RequestCallback();
-			done(callback).fail(callback).enqueue();
+			done(callback).fail(callback).invalid(callback).enqueue();
 
 			if (!syncLock.block(timeout)) {
 				throw new InterruptedException();
@@ -795,6 +821,9 @@ public class Request {
 				}
 				if (callback.status == FailCallback.REASON_BLUETOOTH_DISABLED) {
 					throw new BluetoothDisabledException();
+				}
+				if (callback.status == RequestCallback.REASON_REQUEST_INVALID) {
+					throw new InvalidRequestException(this);
 				}
 				throw new RequestFailedException(this, callback.status);
 			}
@@ -840,6 +869,15 @@ public class Request {
 			internalFailCallback.onRequestFailed(device, status);
 	}
 
+	void notifyInvalidRequest() {
+		finished = true;
+		manager.mHandler.removeCallbacks(timeoutHandler);
+		timeoutHandler = null;
+
+		if (invalidRequestCallback != null)
+			invalidRequestCallback.onInvalidRequest();
+	}
+
 	/**
 	 * Asserts that the synchronous method was not called from the UI thread.
 	 *
@@ -851,7 +889,8 @@ public class Request {
 		}
 	}
 
-	final class RequestCallback implements SuccessCallback, FailCallback {
+	final class RequestCallback implements SuccessCallback, FailCallback, InvalidRequestCallback {
+		final static int REASON_REQUEST_INVALID = -1000000;
 		int status = BluetoothGatt.GATT_SUCCESS;
 
 		@Override
@@ -862,6 +901,12 @@ public class Request {
 		@Override
 		public void onRequestFailed(@NonNull final BluetoothDevice device, final int status) {
 			this.status = status;
+			syncLock.open();
+		}
+
+		@Override
+		public void onInvalidRequest() {
+			this.status = REASON_REQUEST_INVALID;
 			syncLock.open();
 		}
 

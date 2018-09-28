@@ -30,9 +30,11 @@ import android.support.annotation.Nullable;
 
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
+import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.exception.BluetoothDisabledException;
 import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
+import no.nordicsemi.android.ble.exception.InvalidRequestException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 /**
@@ -80,10 +82,17 @@ public abstract class ValueRequest<T> extends Request {
 		return this;
 	}
 
+	@NonNull
+	@Override
+	public ValueRequest<T> invalid(@NonNull final InvalidRequestCallback callback) {
+		super.invalid(callback);
+		return this;
+	}
+
 	@Override
 	@NonNull
 	public ValueRequest<T> before(@NonNull final BeforeCallback callback) {
-		this.beforeCallback = callback;
+		super.before(callback);
 		return this;
 	}
 
@@ -119,10 +128,13 @@ public abstract class ValueRequest<T> extends Request {
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
+	 * @throws InvalidRequestException     thrown when the request was called before the device was
+	 *                                     connected at least once (unknown device).
 	 */
 	@NonNull
 	public <E extends T> E await(final Class<E> responseClass)
-			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException {
+			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
+			InvalidRequestException {
 		try {
 			return await(responseClass, 0);
 		} catch (final InterruptedException e) {
@@ -147,10 +159,13 @@ public abstract class ValueRequest<T> extends Request {
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
+	 * @throws InvalidRequestException     thrown when the request was called before the device was
+	 *                                     connected at least once (unknown device).
 	 */
 	@NonNull
 	public <E extends T> E await(final E response)
-			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException {
+			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
+			InvalidRequestException {
 		try {
 			return await(response, 0);
 		} catch (final InterruptedException e) {
@@ -180,12 +195,14 @@ public abstract class ValueRequest<T> extends Request {
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
+	 * @throws InvalidRequestException     thrown when the request was called before the device was
+	 *                                     connected at least once (unknown device).
 	 */
 	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
 	public <E extends T> E await(@NonNull final Class<E> responseClass, final int timeout)
 			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
-			BluetoothDisabledException {
+			BluetoothDisabledException, InvalidRequestException {
 		assertNotMainThread();
 
 		try {
@@ -225,12 +242,14 @@ public abstract class ValueRequest<T> extends Request {
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
+	 * @throws InvalidRequestException     thrown when the request was called before the device was
+	 *                                     connected at least once (unknown device).
 	 */
 	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
 	public <E extends T> E await(@NonNull final E response, final int timeout)
 			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
-			BluetoothDisabledException {
+			BluetoothDisabledException, InvalidRequestException {
 		assertNotMainThread();
 
 		final SuccessCallback sc = successCallback;
@@ -250,6 +269,9 @@ public abstract class ValueRequest<T> extends Request {
 				}
 				if (callback.status == FailCallback.REASON_BLUETOOTH_DISABLED) {
 					throw new BluetoothDisabledException();
+				}
+				if (callback.status == RequestCallback.REASON_REQUEST_INVALID) {
+					throw new InvalidRequestException(this);
 				}
 				throw new RequestFailedException(this, callback.status);
 			}

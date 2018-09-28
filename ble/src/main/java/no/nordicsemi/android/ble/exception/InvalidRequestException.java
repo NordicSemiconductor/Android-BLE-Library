@@ -20,16 +20,24 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package no.nordicsemi.android.ble;
+package no.nordicsemi.android.ble.exception;
 
-import android.support.annotation.NonNull;
+import no.nordicsemi.android.ble.Request;
 
-public interface TaskQueue {
+@SuppressWarnings({"WeakerAccess", "unused"})
+public final class InvalidRequestException extends Exception {
+	private final Request request;
 
-    /**
-     * Enqueues a new request.
-     *
-     * @param request the new request to be added to the end of the queue.
-     */
-    void enqueue(@NonNull final Request request);
+	public InvalidRequestException(final Request request) {
+		super("Invalid request");
+		this.request = request;
+	}
+
+	/**
+	 * Returns the invalid request.
+	 * @return The invalid request.
+	 */
+	public Request getRequest() {
+		return request;
+	}
 }
