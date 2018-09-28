@@ -2249,13 +2249,14 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 					// Reset flag, so the next Connect could be enqueued.
 					mOperationInProgress = false;
-					// Try to reconnect if the initial connection was lost because of a link loss
-					// or timeout, and shouldAutoConnect() returned true during connection attempt.
+					// Try to reconnect if the initial connection was lost because of a link loss,
+					// and shouldAutoConnect() returned true during connection attempt.
 					// This time it will set the autoConnect flag to true (gatt.connect() forces
 					// autoConnect true).
-					if (mInitialConnection) {
+					if (wasConnected && mInitialConnection) {
 						internalConnect(gatt.getDevice(), 0 /* unused */);
 					} else {
+						mInitialConnection = false;
 						nextRequest(false);
 					}
 
