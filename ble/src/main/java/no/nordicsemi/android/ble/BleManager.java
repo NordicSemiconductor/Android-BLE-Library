@@ -947,8 +947,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return The callback.
 	 */
 	@NonNull
-	protected final ValueChangedCallback setNotificationCallback(
-			@Nullable final BluetoothGattCharacteristic characteristic) {
+	protected final ValueChangedCallback setNotificationCallback(@Nullable final BluetoothGattCharacteristic characteristic) {
 		ValueChangedCallback callback = mNotificationCallbacks.get(characteristic);
 		if (callback == null) {
 			callback = new ValueChangedCallback();
@@ -973,8 +972,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return The callback.
 	 */
 	@NonNull
-	protected final ValueChangedCallback setIndicationCallback(
-			@Nullable final BluetoothGattCharacteristic characteristic) {
+	protected final ValueChangedCallback setIndicationCallback(@Nullable final BluetoothGattCharacteristic characteristic) {
 		return setNotificationCallback(characteristic);
 	}
 
@@ -1211,8 +1209,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest writeCharacteristic(
-			@Nullable final BluetoothGattCharacteristic characteristic, @Nullable final Data data) {
+	protected final WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic,
+													 @Nullable final Data data) {
 		return Request.newWriteRequest(characteristic, data != null ? data.getValue() : null)
 				.setManager(this);
 	}
@@ -1234,9 +1232,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest writeCharacteristic(
-			@Nullable final BluetoothGattCharacteristic characteristic,
-			@Nullable final byte[] data) {
+	protected final WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic,
+													 @Nullable final byte[] data) {
 		return Request.newWriteRequest(characteristic, data).setManager(this);
 	}
 
@@ -1260,9 +1257,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest writeCharacteristic(
-			@Nullable final BluetoothGattCharacteristic characteristic,
-			@Nullable final byte[] data, final int offset, final int length) {
+	protected final WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic,
+													 @Nullable final byte[] data, final int offset, final int length) {
 		return Request.newWriteRequest(characteristic, data, offset, length).setManager(this);
 	}
 
@@ -1637,14 +1633,12 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 *                   {@link PhyRequest#PHY_OPTION_S2} or {@link PhyRequest#PHY_OPTION_S8}.
 	 * @return The request.
 	 */
-	protected final PhyRequest setPreferredPhy(final int txPhy, final int rxPhy,
-											   final int phyOptions) {
+	protected final PhyRequest setPreferredPhy(final int txPhy, final int rxPhy, final int phyOptions) {
 		return Request.newSetPreferredPhyRequest(txPhy, rxPhy, phyOptions).setManager(this);
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.O)
-	private boolean internalSetPreferredPhy(final int txPhy, final int rxPhy,
-											final int phyOptions) {
+	private boolean internalSetPreferredPhy(final int txPhy, final int rxPhy, final int phyOptions) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || !mConnected)
 			return false;
@@ -2105,8 +2099,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		}
 
 		@Override
-		final void onConnectionStateChangeSafe(@NonNull final BluetoothGatt gatt, final int status,
-											   final int newState) {
+		final void onConnectionStateChangeSafe(@NonNull final BluetoothGatt gatt, final int status, final int newState) {
 			log(Level.DEBUG, "[Callback] Connection state changed with status: " +
 					status + " and new state: " + newState + " (" + stateToString(newState) + ")");
 
@@ -2232,8 +2225,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		}
 
 		@Override
-		final void onServicesDiscoveredSafe(@NonNull final BluetoothGatt gatt,
-											final int status) {
+		final void onServicesDiscoveredSafe(@NonNull final BluetoothGatt gatt, final int status) {
 			mServiceDiscoveryRequested = false;
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Level.INFO, "Services discovered");
@@ -2316,8 +2308,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		@Override
 		final void onCharacteristicReadSafe(@NonNull final BluetoothGatt gatt,
 											@NonNull final BluetoothGattCharacteristic characteristic,
-											@Nullable final byte[] data,
-											final int status) {
+											@Nullable final byte[] data, final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Level.INFO, "Read Response received from " + characteristic.getUuid() +
 						", value: " + ParserUtils.parse(data));
@@ -2356,8 +2347,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		@Override
 		final void onCharacteristicWriteSafe(@NonNull final BluetoothGatt gatt,
 											 @NonNull final BluetoothGattCharacteristic characteristic,
-											 @Nullable final byte[] data,
-											 final int status) {
+											 @Nullable final byte[] data, final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Level.INFO, "Data written to " + characteristic.getUuid() +
 						", value: " + ParserUtils.parse(data));
@@ -2441,8 +2431,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		@Override
 		final void onDescriptorWriteSafe(@NonNull final BluetoothGatt gatt,
 										 @NonNull final BluetoothGattDescriptor descriptor,
-										 @Nullable final byte[] data,
-										 final int status) {
+										 @Nullable final byte[] data, final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Level.INFO, "Data written to descr. " + descriptor.getUuid() +
 						", value: " + ParserUtils.parse(data));
@@ -2682,8 +2671,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		}
 
 		@Override
-		final void onReadRemoteRssiSafe(@NonNull final BluetoothGatt gatt, final int rssi,
-										final int status) {
+		final void onReadRemoteRssiSafe(@NonNull final BluetoothGatt gatt,
+										final int rssi, final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Level.INFO, "Remote RSSI received: " + rssi + " dBm");
 				if (mRequest instanceof ReadRssiRequest) {
@@ -2707,7 +2696,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 *
 		 * @param request the request to be added.
 		 */
-		private void enqueueFirst(final Request request) {
+		private void enqueueFirst(@NonNull final Request request) {
 			final Deque<Request> queue = mInitInProgress ? mInitQueue : mTaskQueue;
 			queue.addFirst(request);
 			request.enqueued = true;
@@ -2719,7 +2708,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 *
 		 * @param request the request to be added.
 		 */
-		private void enqueue(final Request request) {
+		private void enqueue(@NonNull final Request request) {
 			final Deque<Request> queue = mInitInProgress ? mInitQueue : mTaskQueue;
 			queue.add(request);
 			request.enqueued = true;
@@ -3001,7 +2990,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @param descriptor the descriptor to be checked
 		 * @return true if the descriptor belongs to the Service Changed characteristic
 		 */
-		private boolean isServiceChangedCCCD(final BluetoothGattDescriptor descriptor) {
+		private boolean isServiceChangedCCCD(@Nullable final BluetoothGattDescriptor descriptor) {
 			return descriptor != null &&
 					SERVICE_CHANGED_CHARACTERISTIC.equals(descriptor.getCharacteristic().getUuid());
 		}
@@ -3012,8 +3001,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @param characteristic the characteristic to be checked
 		 * @return true if it is the Service Changed characteristic
 		 */
-		private boolean isServiceChangedCharacteristic(
-				final BluetoothGattCharacteristic characteristic) {
+		private boolean isServiceChangedCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic) {
 			return characteristic != null &&
 					SERVICE_CHANGED_CHARACTERISTIC.equals(characteristic.getUuid());
 		}
@@ -3025,8 +3013,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @return true if the characteristic is the Battery Level characteristic.
 		 */
 		@Deprecated
-		private boolean isBatteryLevelCharacteristic(
-				final BluetoothGattCharacteristic characteristic) {
+		private boolean isBatteryLevelCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic) {
 			return characteristic != null &&
 					BATTERY_LEVEL_CHARACTERISTIC.equals(characteristic.getUuid());
 		}
