@@ -2306,14 +2306,15 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					// need to be done.
 					// Note, that operations are added in reverse order to the front of the queue.
 
-					// 1. On devices running Android 4.3-5.x and 8.x the Service Changed
+					// 1. On devices running Android 4.3-5.x, 8.x and 9.0 the Service Changed
 					//    characteristic needs to be enabled by the app (for bonded devices).
 					//    The request will be ignored if there is no Service Changed characteristic.
 					// This "fix" broke this in Android 8:
 					// https://android-review.googlesource.com/c/platform/system/bt/+/239970
 					if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M
 							|| Build.VERSION.SDK_INT == Build.VERSION_CODES.O
-							|| Build.VERSION.SDK_INT == Build.VERSION_CODES.O_MR1)
+							|| Build.VERSION.SDK_INT == Build.VERSION_CODES.O_MR1
+							|| Build.VERSION.SDK_INT == Build.VERSION_CODES.P)
 						enqueueFirst(Request.newEnableServiceChangedIndicationsRequest()
 								.setManager(BleManager.this));
 
