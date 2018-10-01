@@ -54,7 +54,7 @@ Version 2 has many more features comparing to 1.x:
 The library may be found on jcenter and Maven Central repository. Add it to your project by adding the following dependency:
 
 ```grovy
-implementation 'no.nordicsemi.android:ble:2.0-beta2'
+implementation 'no.nordicsemi.android:ble:2.0-beta3'
 ```
 
 #### Changes:
@@ -100,6 +100,7 @@ Remember to call `.enqueue()` method for asynchronous operations!
 2. Move your callback implementation from BleManagerGattCallback to request callbacks.
 3. To split logic from parsing, we recomend to extend DataReceivedCallback interface in a class where your parse your data, and return higher-level values. For a sample, check out nRF Toolbox and [Android BLE Common Library](https://github.com/NordicSemiconductor/Android-BLE-Common-Library/). If you are depending on a SIG adopted profile, like Heart Rate Monitor, Proximity, etc., feel free to include the BLE Common Library in your project. It has all the parsers implemented. If your profile isn't there, we are happy to accept PRs. 
 4. Since version 2.0-alpha2 the `connect()` and `disconnect()` methods also require calling `.enqueue()` in asynchronous use.
+5. Version 2.0-beta3 added `InvalidRequestException` that must be caught on synchronous calls. It will only be called when you try to perform a BLE operation before the `connect(...)` was called and the target device is not known.
 
 #### How to test it:
 
