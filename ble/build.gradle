@@ -6,7 +6,7 @@ apply plugin: 'com.jfrog.bintray'
 ext {
     PUBLISH_GROUP_ID = 'no.nordicsemi.android'
     PUBLISH_ARTIFACT_ID = 'ble'
-    PUBLISH_VERSION = '2.0-beta2'
+    PUBLISH_VERSION = '2.0-beta3'
 
     bintrayRepo = 'android'
     bintrayName = 'ble-library'
@@ -36,8 +36,8 @@ android {
     defaultConfig {
         minSdkVersion 18
         targetSdkVersion 28
-        versionCode 11
-        versionName "2.0-beta2"
+        versionCode 12
+        versionName "2.0-beta3"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -57,7 +57,7 @@ android {
 
 dependencies {
     //noinspection GradleDependency
-    api 'com.android.support:support-annotations:27.1.1'
+    api 'com.android.support:support-annotations:28.0.0'
     // Log Bluetooth LE events in nRF Logger
     api 'no.nordicsemi.android:log:2.1.1'
 
