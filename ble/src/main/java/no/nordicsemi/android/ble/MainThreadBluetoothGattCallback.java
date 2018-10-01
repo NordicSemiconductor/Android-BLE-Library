@@ -42,7 +42,7 @@ import android.support.annotation.RequiresApi;
 abstract class MainThreadBluetoothGattCallback extends BluetoothGattCallback {
 	private Handler mHandler;
 
-	void setHandler(final Handler handler) {
+	void setHandler(@NonNull final Handler handler) {
 		mHandler = handler;
 	}
 

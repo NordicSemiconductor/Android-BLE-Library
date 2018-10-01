@@ -31,6 +31,7 @@ import android.support.annotation.Nullable;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.DataReceivedCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
+import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.ReadProgressCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.callback.profile.ProfileReadResponse;
@@ -40,6 +41,7 @@ import no.nordicsemi.android.ble.data.DataStream;
 import no.nordicsemi.android.ble.exception.BluetoothDisabledException;
 import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
 import no.nordicsemi.android.ble.exception.InvalidDataException;
+import no.nordicsemi.android.ble.exception.InvalidRequestException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
@@ -76,6 +78,13 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	@Override
 	public WaitForValueChangedRequest fail(@NonNull final FailCallback callback) {
 		super.fail(callback);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public WaitForValueChangedRequest invalid(@NonNull final InvalidRequestCallback callback) {
+		super.invalid(callback);
 		return this;
 	}
 
@@ -204,12 +213,14 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	 *                                     {@link ProfileReadResponse#onDataReceived(BluetoothDevice, Data)}
 	 *                                     failed to parse the data correctly and called
 	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}).
+	 * @throws InvalidRequestException     thrown when the request was called before the device was
+	 *                                     connected at least once (unknown device).
 	 */
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass)
 			throws RequestFailedException, InvalidDataException, DeviceDisconnectedException,
-			BluetoothDisabledException {
+			BluetoothDisabledException, InvalidRequestException {
 		try {
 			return awaitValid(responseClass, 0);
 		} catch (final InterruptedException e) {
@@ -272,13 +283,15 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	 *                                     {@link ProfileReadResponse#onDataReceived(BluetoothDevice, Data)}
 	 *                                     failed to parse the data correctly and called
 	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}).
+	 * @throws InvalidRequestException     thrown when the request was called before the device was
+	 *                                     connected at least once (unknown device).
 	 */
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass,
 														final int timeout)
 			throws InterruptedException, InvalidDataException, RequestFailedException,
-			DeviceDisconnectedException, BluetoothDisabledException {
+			DeviceDisconnectedException, BluetoothDisabledException, InvalidRequestException {
 		final E response = await(responseClass, timeout);
 		if (response != null && !response.isValid()) {
 			throw new InvalidDataException(response);

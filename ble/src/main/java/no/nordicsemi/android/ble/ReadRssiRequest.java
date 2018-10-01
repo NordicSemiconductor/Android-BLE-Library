@@ -27,6 +27,7 @@ import android.support.annotation.NonNull;
 
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
+import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.RssiCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
@@ -54,6 +55,13 @@ public final class ReadRssiRequest extends ValueRequest<RssiCallback> {
 	@NonNull
 	public ReadRssiRequest fail(@NonNull final FailCallback callback) {
 		this.failCallback = callback;
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public ReadRssiRequest invalid(@NonNull final InvalidRequestCallback callback) {
+		super.invalid(callback);
 		return this;
 	}
 

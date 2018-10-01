@@ -26,6 +26,7 @@ import android.support.annotation.NonNull;
 
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
+import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
 @SuppressWarnings("WeakerAccess")
@@ -53,6 +54,13 @@ public class DisconnectRequest extends Request {
 	@Override
 	public DisconnectRequest fail(@NonNull final FailCallback callback) {
 		super.fail(callback);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public DisconnectRequest invalid(@NonNull final InvalidRequestCallback callback) {
+		super.invalid(callback);
 		return this;
 	}
 

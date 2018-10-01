@@ -27,6 +27,7 @@ import android.support.annotation.NonNull;
 
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
+import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.MtuCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
@@ -60,6 +61,13 @@ public final class MtuRequest extends ValueRequest<MtuCallback> {
 	@NonNull
 	public MtuRequest fail(@NonNull final FailCallback callback) {
 		this.failCallback = callback;
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public MtuRequest invalid(@NonNull final InvalidRequestCallback callback) {
+		super.invalid(callback);
 		return this;
 	}
 

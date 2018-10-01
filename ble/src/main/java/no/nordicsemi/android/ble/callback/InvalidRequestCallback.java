@@ -20,27 +20,13 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package no.nordicsemi.android.ble;
+package no.nordicsemi.android.ble.callback;
 
-import android.support.annotation.NonNull;
+public interface InvalidRequestCallback {
 
-@SuppressWarnings({"unused", "WeakerAccess"})
-public final class SleepRequest extends Request {
-	private long delay;
-
-	SleepRequest(@NonNull final Type type, final long delay) {
-		super(type);
-		this.delay = delay;
-	}
-
-    @NonNull
-    @Override
-    SleepRequest setManager(@NonNull final BleManager manager) {
-        super.setManager(manager);
-        return this;
-    }
-
-	long getDelay() {
-		return delay;
-	}
+	/**
+	 * A callback invoked when the request was invalid, for example when was called before the
+	 * device was connected.
+	 */
+	void onInvalidRequest();
 }

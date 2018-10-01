@@ -30,9 +30,11 @@ import android.support.annotation.RequiresApi;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
+import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.exception.BluetoothDisabledException;
 import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
+import no.nordicsemi.android.ble.exception.InvalidRequestException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
@@ -95,6 +97,13 @@ public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPrio
 		return this;
 	}
 
+	@NonNull
+	@Override
+	public ConnectionPriorityRequest invalid(@NonNull final InvalidRequestCallback callback) {
+		super.invalid(callback);
+		return this;
+	}
+
 	@Override
 	@NonNull
 	public ConnectionPriorityRequest before(@NonNull final BeforeCallback callback) {
@@ -115,7 +124,8 @@ public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPrio
 	@NonNull
 	@Override
 	public <E extends ConnectionPriorityCallback> E await(final Class<E> responseClass)
-			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException {
+			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
+			InvalidRequestException {
 		// The BluetoothGattCallback#onConnectionUpdated callback was introduced in Android Oreo.
 		return super.await(responseClass);
 	}
@@ -126,7 +136,7 @@ public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPrio
 	public <E extends ConnectionPriorityCallback> E await(@NonNull final Class<E> responseClass,
 														  final int timeout)
 			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
-			BluetoothDisabledException {
+			BluetoothDisabledException, InvalidRequestException {
 		// The BluetoothGattCallback#onConnectionUpdated callback was introduced in Android Oreo.
 		return super.await(responseClass, timeout);
 	}
