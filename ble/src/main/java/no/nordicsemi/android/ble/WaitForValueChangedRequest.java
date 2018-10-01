@@ -140,6 +140,11 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	@NonNull
 	public WaitForValueChangedRequest trigger(@NonNull final Request trigger) {
 		this.trigger = trigger;
+		// The trigger will never receive invalid request event.
+		// If the BluetoothDevice wasn't set, the whole WaitForValueChangedRequest would be invalid.
+		/*this.trigger.invalid(() -> {
+			// never called
+		});*/
 		this.trigger.internalFail((device, status) -> {
 			triggerStatus = status;
 			syncLock.open();
@@ -153,7 +158,7 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	public <E extends DataReceivedCallback> E await(@NonNull final E response,
 													final int timeout)
 			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
-			BluetoothDisabledException {
+			BluetoothDisabledException, InvalidRequestException {
 		assertNotMainThread();
 
 		final SuccessCallback sc = successCallback;
@@ -180,7 +185,14 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 				if (callback.status == FailCallback.REASON_BLUETOOTH_DISABLED) {
 					throw new BluetoothDisabledException();
 				}
+				if (callback.status == RequestCallback.REASON_REQUEST_INVALID) {
+					throw new InvalidRequestException(this);
+				}
 				if (triggerStatus != BluetoothGatt.GATT_SUCCESS) {
+					// Trigger will never have invalid request status. The outer request will.
+					/*if (triggerStatus == RequestCallback.REASON_REQUEST_INVALID) {
+						throw new InvalidRequestException(trigger);
+					}*/
 					throw new RequestFailedException(trigger, triggerStatus);
 				}
 				throw new RequestFailedException(this, callback.status);
@@ -209,12 +221,12 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
+	 * @throws InvalidRequestException     thrown when the request was called before the device was
+	 *                                     connected at least once (unknown device).
 	 * @throws InvalidDataException        thrown when the received data were not valid (that is when
 	 *                                     {@link ProfileReadResponse#onDataReceived(BluetoothDevice, Data)}
 	 *                                     failed to parse the data correctly and called
 	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}).
-	 * @throws InvalidRequestException     thrown when the request was called before the device was
-	 *                                     connected at least once (unknown device).
 	 */
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
@@ -243,6 +255,8 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
+	 * @throws InvalidRequestException     thrown when the request was called before the device was
+	 *                                     connected at least once (unknown device).
 	 * @throws InvalidDataException        thrown when the received data were not valid (that is when
 	 *                                     {@link ProfileReadResponse#onDataReceived(BluetoothDevice, Data)}
 	 *                                     failed to parse the data correctly and called
@@ -252,7 +266,7 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final E response)
 			throws RequestFailedException, InvalidDataException, DeviceDisconnectedException,
-			BluetoothDisabledException {
+			BluetoothDisabledException, InvalidRequestException {
 		try {
 			return awaitValid(response, 0);
 		} catch (final InterruptedException e) {
@@ -279,12 +293,12 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
+	 * @throws InvalidRequestException     thrown when the request was called before the device was
+	 *                                     connected at least once (unknown device).
 	 * @throws InvalidDataException        thrown when the received data were not valid (that is when
 	 *                                     {@link ProfileReadResponse#onDataReceived(BluetoothDevice, Data)}
 	 *                                     failed to parse the data correctly and called
 	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}).
-	 * @throws InvalidRequestException     thrown when the request was called before the device was
-	 *                                     connected at least once (unknown device).
 	 */
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
@@ -315,6 +329,8 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
+	 * @throws InvalidRequestException     thrown when the request was called before the device was
+	 *                                     connected at least once (unknown device).
 	 * @throws InvalidDataException        thrown when the received data were not valid (that is when
 	 *                                     {@link ProfileReadResponse#onDataReceived(BluetoothDevice, Data)}
 	 *                                     failed to parse the data correctly and called
@@ -325,7 +341,7 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final E response,
 														final int timeout)
 			throws InterruptedException, InvalidDataException, DeviceDisconnectedException,
-			RequestFailedException, BluetoothDisabledException {
+			RequestFailedException, BluetoothDisabledException, InvalidRequestException {
 		final E result = await(response, timeout);
 		if (result != null && !result.isValid()) {
 			throw new InvalidDataException(result);
