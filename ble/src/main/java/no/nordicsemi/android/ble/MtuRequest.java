@@ -53,14 +53,14 @@ public final class MtuRequest extends ValueRequest<MtuCallback> {
 	@Override
 	@NonNull
 	public MtuRequest done(@NonNull final SuccessCallback callback) {
-		this.successCallback = callback;
+		super.done(callback);
 		return this;
 	}
 
 	@Override
 	@NonNull
 	public MtuRequest fail(@NonNull final FailCallback callback) {
-		this.failCallback = callback;
+		super.fail(callback);
 		return this;
 	}
 
@@ -74,14 +74,14 @@ public final class MtuRequest extends ValueRequest<MtuCallback> {
 	@Override
 	@NonNull
 	public MtuRequest before(@NonNull final BeforeCallback callback) {
-		this.beforeCallback = callback;
+		super.before(callback);
 		return this;
 	}
 
 	@Override
 	@NonNull
 	public MtuRequest with(@NonNull final MtuCallback callback) {
-		this.valueCallback = callback;
+		super.with(callback);
 		return this;
 	}
 

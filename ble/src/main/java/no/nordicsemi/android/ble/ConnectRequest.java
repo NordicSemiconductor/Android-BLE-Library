@@ -104,7 +104,7 @@ public class ConnectRequest extends Request {
 	@Override
 	@NonNull
 	public ConnectRequest before(@NonNull final BeforeCallback callback) {
-		this.beforeCallback = callback;
+		super.before(callback);
 		return this;
 	}
 

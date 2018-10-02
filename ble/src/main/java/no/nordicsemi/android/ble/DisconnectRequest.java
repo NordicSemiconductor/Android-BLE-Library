@@ -67,7 +67,7 @@ public class DisconnectRequest extends Request {
 	@Override
 	@NonNull
 	public DisconnectRequest before(@NonNull final BeforeCallback callback) {
-		this.beforeCallback = callback;
+		super.before(callback);
 		return this;
 	}
 }

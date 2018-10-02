@@ -47,14 +47,14 @@ public final class ReadRssiRequest extends ValueRequest<RssiCallback> {
 	@Override
 	@NonNull
 	public ReadRssiRequest done(@NonNull final SuccessCallback callback) {
-		this.successCallback = callback;
+		super.done(callback);
 		return this;
 	}
 
 	@Override
 	@NonNull
 	public ReadRssiRequest fail(@NonNull final FailCallback callback) {
-		this.failCallback = callback;
+		super.fail(callback);
 		return this;
 	}
 
@@ -68,14 +68,14 @@ public final class ReadRssiRequest extends ValueRequest<RssiCallback> {
 	@Override
 	@NonNull
 	public ReadRssiRequest before(@NonNull final BeforeCallback callback) {
-		this.beforeCallback = callback;
+		super.before(callback);
 		return this;
 	}
 
 	@Override
 	@NonNull
 	public ReadRssiRequest with(@NonNull final RssiCallback callback) {
-		this.valueCallback = callback;
+		super.with(callback);
 		return this;
 	}
 

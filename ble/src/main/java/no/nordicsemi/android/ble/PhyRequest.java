@@ -100,14 +100,14 @@ public final class PhyRequest extends ValueRequest<PhyCallback> {
 	@Override
 	@NonNull
 	public PhyRequest done(@NonNull final SuccessCallback callback) {
-		this.successCallback = callback;
+		super.done(callback);
 		return this;
 	}
 
 	@Override
 	@NonNull
 	public PhyRequest fail(@NonNull final FailCallback callback) {
-		this.failCallback = callback;
+		super.fail(callback);
 		return this;
 	}
 
@@ -121,14 +121,14 @@ public final class PhyRequest extends ValueRequest<PhyCallback> {
 	@Override
 	@NonNull
 	public PhyRequest before(@NonNull final BeforeCallback callback) {
-		this.beforeCallback = callback;
+		super.before(callback);
 		return this;
 	}
 
 	@Override
 	@NonNull
 	public PhyRequest with(@NonNull final PhyCallback callback) {
-		this.valueCallback = callback;
+		super.with(callback);
 		return this;
 	}
 
