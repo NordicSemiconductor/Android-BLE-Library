@@ -298,8 +298,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					if (previousBondState == BluetoothDevice.BOND_BONDING) {
 						mCallbacks.onBondingFailed(device);
 						log(Level.WARNING, "Bonding failed");
-						if (mRequest != null) // CREATE_BOND request
+						if (mRequest != null) { // CREATE_BOND request
 							mRequest.notifyFail(device, FailCallback.REASON_REQUEST_FAILED);
+							mRequest = null;
+						}
 					} else if (previousBondState == BluetoothDevice.BOND_BONDED) {
 						if (mRequest != null && mRequest.type == Request.Type.REMOVE_BOND) {
 							// The device has already disconnected by now.
@@ -315,8 +317,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				case BluetoothDevice.BOND_BONDED:
 					log(Level.INFO, "Device bonded");
 					mCallbacks.onBonded(device);
-					if (mRequest != null && mRequest.type == Request.Type.CREATE_BOND)
+					if (mRequest != null && mRequest.type == Request.Type.CREATE_BOND) {
 						mRequest.notifySuccess(device);
+						mRequest = null;
+					}
 					// If the device started to pair just after the connection was
 					// established the services were not discovered.
 					if (!mServicesDiscovered && !mServiceDiscoveryRequested) {
@@ -404,7 +408,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @param context the context.
 	 */
 	public BleManager(@NonNull final Context context) {
-		mContext = context;
+		mContext = context.getApplicationContext();
 		mHandler = new Handler(Looper.getMainLooper());
 	}
 
@@ -453,7 +457,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * autoConnect to true.
 	 *
 	 * @return The AutoConnect flag value.
+	 * @deprecated Use {@link ConnectRequest#useAutoConnect(boolean)} instead.
 	 */
+	@Deprecated
 	protected boolean shouldAutoConnect() {
 		return false;
 	}
@@ -485,6 +491,38 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	/**
+	 * The onConnectionStateChange event is triggered just after the Android connects to a device.
+	 * In case of bonded devices, the encryption is reestablished AFTER this callback is called.
+	 * Moreover, when the device has Service Changed indication enabled, and the list of services
+	 * has changed (e.g. using the DFU), the indication is received few hundred milliseconds later,
+	 * depending on the connection interval.
+	 * When received, Android will start performing a service discovery operation, internally,
+	 * and will NOT notify the app that services has changed.
+	 * <p>
+	 * If the gatt.discoverServices() method would be invoked here with no delay, if would return
+	 * cached services, as the SC indication wouldn't be received yet. Therefore, we have to
+	 * postpone the service discovery operation until we are (almost, as there is no such callback)
+	 * sure, that it has been handled. It should be greater than the time from
+	 * LLCP Feature Exchange to ATT Write for Service Change indication.
+	 * <p>
+	 * If your device does not use Service Change indication (for example does not have DFU)
+	 * the delay may be 0.
+	 * <p>
+	 * Please calculate the proper delay that will work in your solution.
+	 * <p>
+	 * For devices that are not bonded, but support paiing, a small delay is required on some
+	 * older Android versions (Nexus 4 with Android 5.1.1) when the device will send pairing
+	 * request just after connection. If so, we want to wait with the service discovery until
+	 * bonding is complete.
+	 * <p>
+	 * The default implementation returns 1600 ms for bonded and 300 ms when the device is not
+	 * bonded to be compatible with older versions of the library.
+	 */
+	protected int getServiceDiscoveryDelay(final boolean bonded) {
+		return bonded ? 1600 : 300;
+	}
+
+	/**
 	 * Creates a Connect request that will try to connect to the given Bluetooth LE device.
 	 * Call {@link ConnectRequest#enqueue()} or {@link ConnectRequest#await()} in order to execute
 	 * the request.
@@ -509,7 +547,15 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	@NonNull
 	public ConnectRequest connect(@NonNull final BluetoothDevice device) {
-		return connect(device, ConnectRequest.PHY_LE_1M_MASK);
+		if (mCallbacks == null) {
+			throw new NullPointerException("Set callbacks using setGattCallbacks(E callbacks) before connecting");
+		}
+		if (device == null) {
+			throw new NullPointerException("Bluetooth device not specified");
+		}
+		return Request.connect(device)
+				.useAutoConnect(shouldAutoConnect())
+				.setManager(this);
 	}
 
 	/**
@@ -539,9 +585,12 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 *               if {@code autoConnect} is set to true. PHY 2M and Coded are supported
 	 *               on newer devices running Android Oreo or newer.
 	 * @return The connect request.
+	 * @deprecated Use {@link #connect(BluetoothDevice)} instead and set preferred PHY using
+	 * {@link ConnectRequest#usePreferredPhy(int)}.
 	 */
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
+	@Deprecated
 	public ConnectRequest connect(@NonNull final BluetoothDevice device, final int phy) {
 		if (mCallbacks == null) {
 			throw new NullPointerException("Set callbacks using setGattCallbacks(E callbacks) before connecting");
@@ -549,10 +598,13 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		if (device == null) {
 			throw new NullPointerException("Bluetooth device not specified");
 		}
-		return Request.connect(device, phy).setManager(this);
+		return Request.connect(device)
+				.usePreferredPhy(phy)
+				.useAutoConnect(shouldAutoConnect())
+				.setManager(this);
 	}
 
-	private boolean internalConnect(@NonNull final BluetoothDevice device, final int preferredPhy) {
+	private boolean internalConnect(@NonNull final BluetoothDevice device, @Nullable ConnectRequest connectRequest) {
 		final boolean bluetoothEnabled = BluetoothAdapter.getDefaultAdapter().isEnabled();
 		if (mConnected || !bluetoothEnabled) {
 			final BluetoothDevice currentDevice = mBluetoothDevice;
@@ -615,7 +667,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			}
 		}
 
-		final boolean shouldAutoConnect = shouldAutoConnect();
+		final boolean shouldAutoConnect = connectRequest.shouldAutoConnect();
 		// We will receive Link Loss events only when the device is connected with autoConnect=true.
 		mUserDisconnected = !shouldAutoConnect;
 		// The first connection will always be done with autoConnect = false to make the connection quick.
@@ -626,10 +678,12 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		}
 		mBluetoothDevice = device;
 		mGattCallback.setHandler(mHandler);
-		log(Level.VERBOSE, "Connecting...");
+		log(Level.VERBOSE, connectRequest.isFirstAttempt() ? "Connecting..." : "Retrying...");
 		mCallbacks.onDeviceConnecting(device);
 		mConnectionTime = SystemClock.elapsedRealtime();
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			// connectRequest will never be null here.
+			final int preferredPhy = connectRequest.getPreferredPhy();
 			log(Level.DEBUG, "gatt = device.connectGatt(autoConnect = false, TRANSPORT_LE, "
 					+ phyMaskToString(preferredPhy) + ")");
 			mBluetoothGatt = device.connectGatt(mContext, false, mGattCallback,
@@ -773,9 +827,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			}
 			mConnected = false;
 			mInitialConnection = false;
-			if (mRequest != null && mRequest.type != Request.Type.REMOVE_BOND)
-				mRequest = null;
-			mValueChangedRequest = null;
 			mNotificationCallbacks.clear();
 			mConnectionState = BluetoothGatt.STATE_DISCONNECTED;
 			if (mGattCallback != null) {
@@ -865,10 +916,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			 */
 			try {
 				final Method createBond = device.getClass().getMethod("createBond");
-				if (createBond != null) {
-					log(Level.DEBUG, "device.createBond() (hidden)");
-					return (Boolean) createBond.invoke(device);
-				}
+				log(Level.DEBUG, "device.createBond() (hidden)");
+				return (Boolean) createBond.invoke(device);
 			} catch (final Exception e) {
 				Log.w(TAG, "An exception occurred while creating bond", e);
 			}
@@ -915,10 +964,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 */
 		try {
 			final Method removeBond = device.getClass().getMethod("removeBond");
-			if (removeBond != null) {
-				log(Level.DEBUG, "device.removeBond() (hidden)");
-				return (Boolean) removeBond.invoke(device);
-			}
+			log(Level.DEBUG, "device.removeBond() (hidden)");
+			return (Boolean) removeBond.invoke(device);
 		} catch (final Exception e) {
 			Log.w(TAG, "An exception occurred while removing bond", e);
 		}
@@ -1764,9 +1811,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 */
 		try {
 			final Method refresh = gatt.getClass().getMethod("refresh");
-			if (refresh != null) {
-				return (Boolean) refresh.invoke(gatt);
-			}
+			return (Boolean) refresh.invoke(gatt);
 		} catch (final Exception e) {
 			Log.w(TAG, "An exception occurred while refreshing device", e);
 			log(Level.WARNING, "gatt.refresh() method not found");
@@ -1970,14 +2015,14 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			mConnectionState = BluetoothGatt.STATE_DISCONNECTED;
 			if (!wasConnected) {
 				log(Level.WARNING, "Connection attempt timed out");
+				close();
 				mCallbacks.onDeviceDisconnected(device);
 				// ConnectRequest was already notified
-				close();
 			} else if (mUserDisconnected) {
 				log(Level.INFO, "Disconnected");
+				close();
 				mCallbacks.onDeviceDisconnected(device);
 				final Request request = mRequest;
-				close();
 				if (request != null && request.type == Request.Type.DISCONNECT) {
 					request.notifySuccess(device);
 				}
@@ -2147,36 +2192,12 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				mConnectionState = BluetoothGatt.STATE_CONNECTED;
 				mCallbacks.onDeviceConnected(gatt.getDevice());
 
-				/*
-				 * The onConnectionStateChange event is triggered just after the Android connects
-				 * to a device. In case of bonded devices, the encryption is reestablished AFTER
-				 * this callback is called.
-				 * Moreover, when the device has Service Changed indication enabled, and the list
-				 * of services has changed (e.g. using the DFU), the indication is received few
-				 * hundred milliseconds later, depending on the connection interval.
-				 * When received, Android will start performing a service discovery operation,
-				 * internally, and will NOT notify the app that services has changed.
-				 *
-				 * If the gatt.discoverServices() method would be invoked here with no delay,
-				 * if would return cached services, as the SC indication wouldn't be received yet.
-				 * Therefore we have to postpone the service discovery operation until we are
-				 * (almost, as there is no such callback) sure, that it has been handled.
-				 * TODO: Please calculate the proper delay that will work in your solution.
-				 * It should be greater than the time from LLCP Feature Exchange to ATT Write
-				 * for Service Change indication. If your device does not use Service Change
-				 * indication (for example does not have DFU) the delay may be 0.
-				 *
-				 * For devices that are not bonded, a small delay is required on some older Android
-				 * versions (Nexus 4 with Android 5.1.1) when the device will send pairing request
-				 * just after connection. If so, we want to wait with the service discovery after
-				 * bonding is complete.
-				 */
-				final boolean bonded = gatt.getDevice().getBondState() == BluetoothDevice.BOND_BONDED;
-				final int delay = bonded ? 1600 : 300;
-				//noinspection ConstantConditions
-				if (delay > 0)
-					log(Level.DEBUG, "wait(" + delay + ")");
 				if (!mServiceDiscoveryRequested) {
+					final boolean bonded = gatt.getDevice().getBondState() == BluetoothDevice.BOND_BONDED;
+					final int delay = getServiceDiscoveryDelay(bonded);
+					if (delay > 0)
+						log(Level.DEBUG, "wait(" + delay + ")");
+
 					final int connectionCount = ++mConnectionCount;
 					mHandler.postDelayed(() -> {
 						if (connectionCount != mConnectionCount) {
@@ -2199,15 +2220,34 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			} else {
 				if (newState == BluetoothProfile.STATE_DISCONNECTED) {
 					final long now = SystemClock.elapsedRealtime();
+					final boolean canTimeout = mConnectionTime > 0;
+					final boolean timeout = canTimeout && now > mConnectionTime + CONNECTION_TIMEOUT_THRESHOLD;
 
 					if (status != BluetoothGatt.GATT_SUCCESS)
 						log(Level.WARNING, "Error: (0x" + Integer.toHexString(status) + "): " +
 								GattError.parseConnectionError(status));
 
+					// In case of a connection error, retry if requred.
+					if (status != BluetoothGatt.GATT_SUCCESS && canTimeout && !timeout
+							&& mConnectRequest != null && mConnectRequest.canRetry()) {
+						final int delay = mConnectRequest.getRetryDelay();
+						if (delay > 0)
+							log(Level.DEBUG, "wait(" + delay + ")");
+						mHandler.postDelayed(() -> {
+							internalConnect(gatt.getDevice(), mConnectRequest);
+						}, delay);
+						return;
+					}
+
 					mOperationInProgress = true; // no more calls are possible
 					cancelQueue();
 					mInitQueue = null;
 					mReady = false;
+
+					// Store the current value of the mConnected flag...
+					final boolean wasConnected = mConnected;
+					// ...because this method sets the mConnected flag to false.
+					notifyDeviceDisconnected(gatt.getDevice()); // this may call close()
 
 					// Signal the current request, if any.
 					if (mRequest != null) {
@@ -2233,19 +2273,13 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 							reason = FailCallback.REASON_DEVICE_NOT_SUPPORTED;
 						else if (status == BluetoothGatt.GATT_SUCCESS)
 							reason = FailCallback.REASON_DEVICE_DISCONNECTED;
-						else if (status == GattError.GATT_ERROR
-								&& mConnectionTime > 0 && now > mConnectionTime + CONNECTION_TIMEOUT_THRESHOLD)
+						else if (status == GattError.GATT_ERROR && timeout)
 							reason = FailCallback.REASON_TIMEOUT;
 						else
 							reason = status;
 						mConnectRequest.notifyFail(gatt.getDevice(), reason);
 						mConnectRequest = null;
 					}
-
-					// Store the current value of the mConnected flag...
-					final boolean wasConnected = mConnected;
-					// ...because this method sets the mConnected flag to false.
-					notifyDeviceDisconnected(gatt.getDevice());
 
 					// Reset flag, so the next Connect could be enqueued.
 					mOperationInProgress = false;
@@ -2254,7 +2288,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					// This time it will set the autoConnect flag to true (gatt.connect() forces
 					// autoConnect true).
 					if (wasConnected && mInitialConnection) {
-						internalConnect(gatt.getDevice(), 0 /* unused */);
+						internalConnect(gatt.getDevice(), null);
 					} else {
 						mInitialConnection = false;
 						nextRequest(false);
@@ -2774,7 +2808,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * been executed the {@link #onDeviceReady()} callback is called.
 		 */
 		@SuppressWarnings("ConstantConditions")
-		private void nextRequest(final boolean force) {
+		private synchronized void nextRequest(final boolean force) {
 			if (force) {
 				mOperationInProgress = mValueChangedRequest != null;
 			}
@@ -2869,7 +2903,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					final ConnectRequest cr = (ConnectRequest) request;
 					mConnectRequest = cr;
 					mRequest = null;
-					result = internalConnect(cr.getDevice(), cr.getPreferredPhy());
+					result = internalConnect(cr.getDevice(), cr);
 					break;
 				}
 				case DISCONNECT: {

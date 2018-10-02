@@ -86,14 +86,14 @@ public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPrio
 	@Override
 	@NonNull
 	public ConnectionPriorityRequest done(@NonNull final SuccessCallback callback) {
-		this.successCallback = callback;
+		super.done(callback);
 		return this;
 	}
 
 	@Override
 	@NonNull
 	public ConnectionPriorityRequest fail(@NonNull final FailCallback callback) {
-		this.failCallback = callback;
+		super.fail(callback);
 		return this;
 	}
 
@@ -107,7 +107,7 @@ public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPrio
 	@Override
 	@NonNull
 	public ConnectionPriorityRequest before(@NonNull final BeforeCallback callback) {
-		this.beforeCallback = callback;
+		super.before(callback);
 		return this;
 	}
 
@@ -116,7 +116,7 @@ public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPrio
 	@NonNull
 	public ConnectionPriorityRequest with(@NonNull final ConnectionPriorityCallback callback) {
 		// The BluetoothGattCallback#onConnectionUpdated callback was introduced in Android Oreo.
-		this.valueCallback = callback;
+		super.with(callback);
 		return this;
 	}
 

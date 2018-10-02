@@ -136,15 +136,11 @@ public class Request {
 	 * just like any other request.
 	 *
 	 * @param device the device to connect to.
-	 * @param phy preferred PHY for connections to remote LE device. Bitwise OR of any of
-	 *             {@link ConnectRequest#PHY_LE_1M_MASK}, {@link ConnectRequest#PHY_LE_2M_MASK},
-	 *             and {@link ConnectRequest#PHY_LE_CODED_MASK}. This option does not take effect
-	 *             if {@code autoConnect} is set to true.
 	 * @return The new connect request.
 	 */
 	@NonNull
-	static ConnectRequest connect(@NonNull final BluetoothDevice device, final int phy) {
-		return new ConnectRequest(Type.CONNECT, device, phy);
+	static ConnectRequest connect(@NonNull final BluetoothDevice device) {
+		return new ConnectRequest(Type.CONNECT, device);
 	}
 
 	/**

@@ -74,14 +74,14 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 	@Override
 	@NonNull
 	public ReadRequest done(@NonNull final SuccessCallback callback) {
-		this.successCallback = callback;
+		super.done(callback);
 		return this;
 	}
 
 	@Override
 	@NonNull
 	public ReadRequest fail(@NonNull final FailCallback callback) {
-		this.failCallback = callback;
+		super.fail(callback);
 		return this;
 	}
 
@@ -95,14 +95,14 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 	@Override
 	@NonNull
 	public ReadRequest before(@NonNull final BeforeCallback callback) {
-		this.beforeCallback = callback;
+		super.before(callback);
 		return this;
 	}
 
 	@Override
 	@NonNull
 	public ReadRequest with(@NonNull final DataReceivedCallback callback) {
-		this.valueCallback = callback;
+		super.with(callback);
 		return this;
 	}
 

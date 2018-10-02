@@ -91,7 +91,7 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	@Override
 	@NonNull
 	public WaitForValueChangedRequest before(@NonNull final BeforeCallback callback) {
-		this.beforeCallback = callback;
+		super.before(callback);
 		return this;
 	}
 

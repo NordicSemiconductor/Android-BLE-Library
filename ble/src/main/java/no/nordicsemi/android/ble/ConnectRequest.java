@@ -22,7 +22,11 @@
 
 package no.nordicsemi.android.ble;
 
+import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
+import android.content.Context;
 import android.support.annotation.NonNull;
 
 import no.nordicsemi.android.ble.callback.BeforeCallback;
@@ -52,11 +56,14 @@ public class ConnectRequest extends Request {
 
 	private BluetoothDevice device;
 	private int preferredPhy;
+	private int attempt = 0, retries = 0;
+	private int delay = 0;
+	private boolean autoConnect = false;
 
-	ConnectRequest(@NonNull final Type type, @NonNull final BluetoothDevice device, final int phy) {
+	ConnectRequest(@NonNull final Type type, @NonNull final BluetoothDevice device) {
 		super(type);
 		this.device = device;
-		this.preferredPhy = phy;
+		this.preferredPhy = PHY_LE_1M_MASK;
 	}
 
 	@NonNull
@@ -67,7 +74,7 @@ public class ConnectRequest extends Request {
 	}
 
 	/**
-	 * Use to add a completion callback. The callback will be invoked when the operation has
+	 * Use to set a completion callback. The callback will be invoked when the operation has
 	 * finished successfully unless {@link #await(int)} or its variant was used, in which case this
 	 * callback will be ignored.
 	 * <p>
@@ -104,7 +111,96 @@ public class ConnectRequest extends Request {
 	@Override
 	@NonNull
 	public ConnectRequest before(@NonNull final BeforeCallback callback) {
-		this.beforeCallback = callback;
+		super.before(callback);
+		return this;
+	}
+
+	/**
+	 * Sets an optional retry count. The BleManager will do that many attempts to connect to the
+	 * device in case of an error. The library will not retry if the device is not reachable,
+	 * that is when the 30 sec timeout occurs.
+	 *
+	 * @param count how many times should the BleManager retry to connect.
+	 * @return The request.
+	 * @see #retry(int, int)
+	 */
+	public ConnectRequest retry(final int count) {
+		this.retries = count;
+		this.delay = 0;
+		return this;
+	}
+
+	/**
+	 * Sets an optional retry count and a delay that the process will wait before next connection
+	 * attempt. The library will not retry if the device is not reachable, that is when the 30 sec
+	 * timeout occurs.
+	 *
+	 * @param count how many times should the BleManager retry to connect.
+	 * @param delay the delay between each connection attempt.
+	 *              The real delay will be 200 ms longer than specified, as
+	 *              {@link BluetoothGatt#clone()} is estimated to last
+	 *              {@link BleManager#internalConnect(BluetoothDevice, ConnectRequest) 200 ms}.
+	 * @return The request.
+	 * @see #retry(int)
+	 */
+	public ConnectRequest retry(final int count, final int delay) {
+		this.retries = count;
+		this.delay = delay;
+		return this;
+	}
+
+	/**
+	 * This method replaces the {@link BleManager#shouldAutoConnect()} method.
+	 * <p>
+	 * Sets whether to connect to the remote device just once (false) or to add the address to
+	 * white list of devices that will be automatically connect as soon as they become available
+	 * (true). In the latter case, if Bluetooth adapter is enabled, Android scans periodically
+	 * for devices from the white list and, if an advertising packet is received from such, it tries
+	 * to connect to it. When the connection is lost, the system will keep trying to reconnect to
+	 * it. If method is called with parameter set to true, and the connection to the device is
+	 * lost, the {@link BleManagerCallbacks#onLinkLossOccurred(BluetoothDevice)} callback is
+	 * called instead of {@link BleManagerCallbacks#onDeviceDisconnected(BluetoothDevice)}.
+	 * <p>
+	 * This feature works much better on newer Android phone models and have issues on older
+	 * phones.
+	 * <p>
+	 * This method should only be used with bonded devices, as otherwise the device may change
+	 * it's address. It will however work also with non-bonded devices with private static address.
+	 * A connection attempt to a non-bonded device with private resolvable address will fail.
+	 * <p>
+	 * The first connection to a device will always be created with autoConnect flag to false
+	 * (see {@link BluetoothDevice#connectGatt(Context, boolean, BluetoothGattCallback)}). This is
+	 * to make it quick as the user most probably waits for a quick response. If autoConnect is
+	 * used (true), the following connections will be done using {@link BluetoothGatt#connect()},
+	 * which forces the autoConnect parameter to true.
+	 *
+	 * @param autoConnect true to use autoConnect feature on the second and following connections.
+	 *                    The first connection is always done with autoConnect parameter equal to
+	 *                    false, to make it faster and allow to timeout it the device is unreachable.
+	 * @return The request.
+	 */
+	public ConnectRequest useAutoConnect(final boolean autoConnect) {
+		this.autoConnect = autoConnect;
+		return this;
+	}
+
+	/**
+	 * Sets the preferred PHY used for connection. Th value should be a bitmask composed of
+	 * {@link #PHY_LE_1M_MASK}, {@link #PHY_LE_2M_MASK} or {@link #PHY_LE_CODED_MASK}.
+	 * <p>
+	 * Different PHYs are available only on more recent devices with Android 8+.
+	 * Check {@link BluetoothAdapter#isLe2MPhySupported()} and
+	 * {@link BluetoothAdapter#isLeCodedPhySupported()} if required PHYs are supported by this
+	 * Android device. The default PHY is {@link #PHY_LE_1M_MASK}.
+	 *
+	 * @param phy preferred PHY for connections to remote LE device. Bitwise OR of any of
+	 *            {@link ConnectRequest#PHY_LE_1M_MASK}, {@link ConnectRequest#PHY_LE_2M_MASK},
+	 *            and {@link ConnectRequest#PHY_LE_CODED_MASK}. This option does not take effect
+	 *            if {@code autoConnect} is set to true.
+	 * @return The request.
+	 */
+	public ConnectRequest usePreferredPhy(final int phy) {
+		this.preferredPhy = phy;
 		return this;
 	}
 
@@ -114,5 +210,25 @@ public class ConnectRequest extends Request {
 
 	int getPreferredPhy() {
 		return preferredPhy;
+	}
+
+	boolean canRetry() {
+		if (retries > 0) {
+			retries -= 1;
+			return true;
+		}
+		return false;
+	}
+
+	boolean isFirstAttempt() {
+		return attempt++ == 0;
+	}
+
+	int getRetryDelay() {
+		return delay;
+	}
+
+	boolean shouldAutoConnect() {
+		return autoConnect;
 	}
 }

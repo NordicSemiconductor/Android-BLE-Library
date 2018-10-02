@@ -29,6 +29,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
+import android.support.annotation.Keep;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 import android.support.annotation.RequiresApi;
@@ -170,10 +171,11 @@ abstract class MainThreadBluetoothGattCallback extends BluetoothGattCallback {
 		runOnUiThread(() -> onPhyUpdateSafe(gatt, txPhy, rxPhy, status));
 	}
 
-	// This method is still hidden in Android Oreo
+	// This method is hidden in Android Oreo and Pie
 	// @Override
 	@SuppressWarnings("unused")
 	@RequiresApi(api = Build.VERSION_CODES.O)
+	@Keep
 	public final void onConnectionUpdated(final BluetoothGatt gatt,
 										  final int interval, final int latency, final int timeout,
 										  final int status) {
