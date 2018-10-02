@@ -773,9 +773,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			}
 			mConnected = false;
 			mInitialConnection = false;
-			if (mRequest != null && mRequest.type != Request.Type.REMOVE_BOND)
-				mRequest = null;
-			mValueChangedRequest = null;
 			mNotificationCallbacks.clear();
 			mConnectionState = BluetoothGatt.STATE_DISCONNECTED;
 			if (mGattCallback != null) {
@@ -1970,14 +1967,14 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			mConnectionState = BluetoothGatt.STATE_DISCONNECTED;
 			if (!wasConnected) {
 				log(Level.WARNING, "Connection attempt timed out");
+				close();
 				mCallbacks.onDeviceDisconnected(device);
 				// ConnectRequest was already notified
-				close();
 			} else if (mUserDisconnected) {
 				log(Level.INFO, "Disconnected");
+				close();
 				mCallbacks.onDeviceDisconnected(device);
 				final Request request = mRequest;
-				close();
 				if (request != null && request.type == Request.Type.DISCONNECT) {
 					request.notifySuccess(device);
 				}
@@ -2209,6 +2206,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					mInitQueue = null;
 					mReady = false;
 
+					// Store the current value of the mConnected flag...
+					final boolean wasConnected = mConnected;
+					// ...because this method sets the mConnected flag to false.
+					notifyDeviceDisconnected(gatt.getDevice()); // this may call close()
+
 					// Signal the current request, if any.
 					if (mRequest != null) {
 						if (mRequest.type != Request.Type.DISCONNECT && mRequest.type != Request.Type.REMOVE_BOND) {
@@ -2241,11 +2243,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 						mConnectRequest.notifyFail(gatt.getDevice(), reason);
 						mConnectRequest = null;
 					}
-
-					// Store the current value of the mConnected flag...
-					final boolean wasConnected = mConnected;
-					// ...because this method sets the mConnected flag to false.
-					notifyDeviceDisconnected(gatt.getDevice());
 
 					// Reset flag, so the next Connect could be enqueued.
 					mOperationInProgress = false;
@@ -2774,7 +2771,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * been executed the {@link #onDeviceReady()} callback is called.
 		 */
 		@SuppressWarnings("ConstantConditions")
-		private void nextRequest(final boolean force) {
+		private synchronized void nextRequest(final boolean force) {
 			if (force) {
 				mOperationInProgress = mValueChangedRequest != null;
 			}
