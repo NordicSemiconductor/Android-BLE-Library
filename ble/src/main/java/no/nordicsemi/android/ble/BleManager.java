@@ -457,7 +457,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * autoConnect to true.
 	 *
 	 * @return The AutoConnect flag value.
+	 * @deprecated Use {@link ConnectRequest#useAutoConnect(boolean)} instead.
 	 */
+	@Deprecated
 	protected boolean shouldAutoConnect() {
 		return false;
 	}
@@ -545,7 +547,15 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	@NonNull
 	public ConnectRequest connect(@NonNull final BluetoothDevice device) {
-		return connect(device, ConnectRequest.PHY_LE_1M_MASK);
+		if (mCallbacks == null) {
+			throw new NullPointerException("Set callbacks using setGattCallbacks(E callbacks) before connecting");
+		}
+		if (device == null) {
+			throw new NullPointerException("Bluetooth device not specified");
+		}
+		return Request.connect(device)
+				.useAutoConnect(shouldAutoConnect())
+				.setManager(this);
 	}
 
 	/**
@@ -575,9 +585,12 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 *               if {@code autoConnect} is set to true. PHY 2M and Coded are supported
 	 *               on newer devices running Android Oreo or newer.
 	 * @return The connect request.
+	 * @deprecated Use {@link #connect(BluetoothDevice)} instead and set preferred PHY using
+	 * {@link ConnectRequest#usePreferredPhy(int)}.
 	 */
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
+	@Deprecated
 	public ConnectRequest connect(@NonNull final BluetoothDevice device, final int phy) {
 		if (mCallbacks == null) {
 			throw new NullPointerException("Set callbacks using setGattCallbacks(E callbacks) before connecting");
@@ -585,10 +598,13 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		if (device == null) {
 			throw new NullPointerException("Bluetooth device not specified");
 		}
-		return Request.connect(device, phy).setManager(this);
+		return Request.connect(device)
+				.usePreferredPhy(phy)
+				.useAutoConnect(shouldAutoConnect())
+				.setManager(this);
 	}
 
-	private boolean internalConnect(@NonNull final BluetoothDevice device, final int preferredPhy) {
+	private boolean internalConnect(@NonNull final BluetoothDevice device, @Nullable ConnectRequest connectRequest) {
 		final boolean bluetoothEnabled = BluetoothAdapter.getDefaultAdapter().isEnabled();
 		if (mConnected || !bluetoothEnabled) {
 			final BluetoothDevice currentDevice = mBluetoothDevice;
@@ -651,7 +667,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			}
 		}
 
-		final boolean shouldAutoConnect = shouldAutoConnect();
+		final boolean shouldAutoConnect = connectRequest.shouldAutoConnect();
 		// We will receive Link Loss events only when the device is connected with autoConnect=true.
 		mUserDisconnected = !shouldAutoConnect;
 		// The first connection will always be done with autoConnect = false to make the connection quick.
@@ -662,10 +678,12 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		}
 		mBluetoothDevice = device;
 		mGattCallback.setHandler(mHandler);
-		log(Level.VERBOSE, "Connecting...");
+		log(Level.VERBOSE, connectRequest.isFirstAttempt() ? "Connecting..." : "Retrying...");
 		mCallbacks.onDeviceConnecting(device);
 		mConnectionTime = SystemClock.elapsedRealtime();
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+			// connectRequest will never be null here.
+			final int preferredPhy = connectRequest.getPreferredPhy();
 			log(Level.DEBUG, "gatt = device.connectGatt(autoConnect = false, TRANSPORT_LE, "
 					+ phyMaskToString(preferredPhy) + ")");
 			mBluetoothGatt = device.connectGatt(mContext, false, mGattCallback,
@@ -2202,10 +2220,24 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			} else {
 				if (newState == BluetoothProfile.STATE_DISCONNECTED) {
 					final long now = SystemClock.elapsedRealtime();
+					final boolean canTimeout = mConnectionTime > 0;
+					final boolean timeout = canTimeout && now > mConnectionTime + CONNECTION_TIMEOUT_THRESHOLD;
 
 					if (status != BluetoothGatt.GATT_SUCCESS)
 						log(Level.WARNING, "Error: (0x" + Integer.toHexString(status) + "): " +
 								GattError.parseConnectionError(status));
+
+					// In case of a connection error, retry if requred.
+					if (status != BluetoothGatt.GATT_SUCCESS && canTimeout && !timeout
+							&& mConnectRequest != null && mConnectRequest.canRetry()) {
+						final int delay = mConnectRequest.getRetryDelay();
+						if (delay > 0)
+							log(Level.DEBUG, "wait(" + delay + ")");
+						mHandler.postDelayed(() -> {
+							internalConnect(gatt.getDevice(), mConnectRequest);
+						}, delay);
+						return;
+					}
 
 					mOperationInProgress = true; // no more calls are possible
 					cancelQueue();
@@ -2241,8 +2273,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 							reason = FailCallback.REASON_DEVICE_NOT_SUPPORTED;
 						else if (status == BluetoothGatt.GATT_SUCCESS)
 							reason = FailCallback.REASON_DEVICE_DISCONNECTED;
-						else if (status == GattError.GATT_ERROR
-								&& mConnectionTime > 0 && now > mConnectionTime + CONNECTION_TIMEOUT_THRESHOLD)
+						else if (status == GattError.GATT_ERROR && timeout)
 							reason = FailCallback.REASON_TIMEOUT;
 						else
 							reason = status;
@@ -2257,7 +2288,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					// This time it will set the autoConnect flag to true (gatt.connect() forces
 					// autoConnect true).
 					if (wasConnected && mInitialConnection) {
-						internalConnect(gatt.getDevice(), 0 /* unused */);
+						internalConnect(gatt.getDevice(), null);
 					} else {
 						mInitialConnection = false;
 						nextRequest(false);
@@ -2872,7 +2903,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					final ConnectRequest cr = (ConnectRequest) request;
 					mConnectRequest = cr;
 					mRequest = null;
-					result = internalConnect(cr.getDevice(), cr.getPreferredPhy());
+					result = internalConnect(cr.getDevice(), cr);
 					break;
 				}
 				case DISCONNECT: {
