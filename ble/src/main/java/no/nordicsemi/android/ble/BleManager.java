@@ -862,10 +862,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			 */
 			try {
 				final Method createBond = device.getClass().getMethod("createBond");
-				if (createBond != null) {
-					log(Level.DEBUG, "device.createBond() (hidden)");
-					return (Boolean) createBond.invoke(device);
-				}
+				log(Level.DEBUG, "device.createBond() (hidden)");
+				return (Boolean) createBond.invoke(device);
 			} catch (final Exception e) {
 				Log.w(TAG, "An exception occurred while creating bond", e);
 			}
@@ -912,10 +910,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 */
 		try {
 			final Method removeBond = device.getClass().getMethod("removeBond");
-			if (removeBond != null) {
-				log(Level.DEBUG, "device.removeBond() (hidden)");
-				return (Boolean) removeBond.invoke(device);
-			}
+			log(Level.DEBUG, "device.removeBond() (hidden)");
+			return (Boolean) removeBond.invoke(device);
 		} catch (final Exception e) {
 			Log.w(TAG, "An exception occurred while removing bond", e);
 		}
@@ -1761,9 +1757,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 */
 		try {
 			final Method refresh = gatt.getClass().getMethod("refresh");
-			if (refresh != null) {
-				return (Boolean) refresh.invoke(gatt);
-			}
+			return (Boolean) refresh.invoke(gatt);
 		} catch (final Exception e) {
 			Log.w(TAG, "An exception occurred while refreshing device", e);
 			log(Level.WARNING, "gatt.refresh() method not found");
