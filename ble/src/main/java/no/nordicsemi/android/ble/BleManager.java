@@ -489,6 +489,38 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	/**
+	 * The onConnectionStateChange event is triggered just after the Android connects to a device.
+	 * In case of bonded devices, the encryption is reestablished AFTER this callback is called.
+	 * Moreover, when the device has Service Changed indication enabled, and the list of services
+	 * has changed (e.g. using the DFU), the indication is received few hundred milliseconds later,
+	 * depending on the connection interval.
+	 * When received, Android will start performing a service discovery operation, internally,
+	 * and will NOT notify the app that services has changed.
+	 * <p>
+	 * If the gatt.discoverServices() method would be invoked here with no delay, if would return
+	 * cached services, as the SC indication wouldn't be received yet. Therefore, we have to
+	 * postpone the service discovery operation until we are (almost, as there is no such callback)
+	 * sure, that it has been handled. It should be greater than the time from
+	 * LLCP Feature Exchange to ATT Write for Service Change indication.
+	 * <p>
+	 * If your device does not use Service Change indication (for example does not have DFU)
+	 * the delay may be 0.
+	 * <p>
+	 * Please calculate the proper delay that will work in your solution.
+	 * <p>
+	 * For devices that are not bonded, but support paiing, a small delay is required on some
+	 * older Android versions (Nexus 4 with Android 5.1.1) when the device will send pairing
+	 * request just after connection. If so, we want to wait with the service discovery until
+	 * bonding is complete.
+	 * <p>
+	 * The default implementation returns 1600 ms for bonded and 300 ms when the device is not
+	 * bonded to be compatible with older versions of the library.
+	 */
+	protected int getServiceDiscoveryDelay(final boolean bonded) {
+		return bonded ? 1600 : 300;
+	}
+
+	/**
 	 * Creates a Connect request that will try to connect to the given Bluetooth LE device.
 	 * Call {@link ConnectRequest#enqueue()} or {@link ConnectRequest#await()} in order to execute
 	 * the request.
@@ -2142,36 +2174,12 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				mConnectionState = BluetoothGatt.STATE_CONNECTED;
 				mCallbacks.onDeviceConnected(gatt.getDevice());
 
-				/*
-				 * The onConnectionStateChange event is triggered just after the Android connects
-				 * to a device. In case of bonded devices, the encryption is reestablished AFTER
-				 * this callback is called.
-				 * Moreover, when the device has Service Changed indication enabled, and the list
-				 * of services has changed (e.g. using the DFU), the indication is received few
-				 * hundred milliseconds later, depending on the connection interval.
-				 * When received, Android will start performing a service discovery operation,
-				 * internally, and will NOT notify the app that services has changed.
-				 *
-				 * If the gatt.discoverServices() method would be invoked here with no delay,
-				 * if would return cached services, as the SC indication wouldn't be received yet.
-				 * Therefore we have to postpone the service discovery operation until we are
-				 * (almost, as there is no such callback) sure, that it has been handled.
-				 * TODO: Please calculate the proper delay that will work in your solution.
-				 * It should be greater than the time from LLCP Feature Exchange to ATT Write
-				 * for Service Change indication. If your device does not use Service Change
-				 * indication (for example does not have DFU) the delay may be 0.
-				 *
-				 * For devices that are not bonded, a small delay is required on some older Android
-				 * versions (Nexus 4 with Android 5.1.1) when the device will send pairing request
-				 * just after connection. If so, we want to wait with the service discovery after
-				 * bonding is complete.
-				 */
-				final boolean bonded = gatt.getDevice().getBondState() == BluetoothDevice.BOND_BONDED;
-				final int delay = bonded ? 1600 : 300;
-				//noinspection ConstantConditions
-				if (delay > 0)
-					log(Level.DEBUG, "wait(" + delay + ")");
 				if (!mServiceDiscoveryRequested) {
+					final boolean bonded = gatt.getDevice().getBondState() == BluetoothDevice.BOND_BONDED;
+					final int delay = getServiceDiscoveryDelay(bonded);
+					if (delay > 0)
+						log(Level.DEBUG, "wait(" + delay + ")");
+
 					final int connectionCount = ++mConnectionCount;
 					mHandler.postDelayed(() -> {
 						if (connectionCount != mConnectionCount) {
