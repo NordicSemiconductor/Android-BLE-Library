@@ -298,8 +298,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					if (previousBondState == BluetoothDevice.BOND_BONDING) {
 						mCallbacks.onBondingFailed(device);
 						log(Level.WARNING, "Bonding failed");
-						if (mRequest != null) // CREATE_BOND request
+						if (mRequest != null) { // CREATE_BOND request
 							mRequest.notifyFail(device, FailCallback.REASON_REQUEST_FAILED);
+							mRequest = null;
+						}
 					} else if (previousBondState == BluetoothDevice.BOND_BONDED) {
 						if (mRequest != null && mRequest.type == Request.Type.REMOVE_BOND) {
 							// The device has already disconnected by now.
@@ -315,8 +317,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				case BluetoothDevice.BOND_BONDED:
 					log(Level.INFO, "Device bonded");
 					mCallbacks.onBonded(device);
-					if (mRequest != null && mRequest.type == Request.Type.CREATE_BOND)
+					if (mRequest != null && mRequest.type == Request.Type.CREATE_BOND) {
 						mRequest.notifySuccess(device);
+						mRequest = null;
+					}
 					// If the device started to pair just after the connection was
 					// established the services were not discovered.
 					if (!mServicesDiscovered && !mServiceDiscoveryRequested) {
