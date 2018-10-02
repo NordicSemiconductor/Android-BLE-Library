@@ -43,27 +43,29 @@ Version 2 has many more features comparing to 1.x:
 1. Support for synchronous operations.
 2. Operation timeouts.
 3. New operations: reading PHY, setting preferred PHY, reading RSSI, clearing device cache, removing bond information.
-4. Improved API. Each operation now have its own completion and failure callbacks. Inclding connection and disconnection.
+4. Improved API. Each operation now have its own completion and failure callbacks. Including connection and disconnection.
 5. Splitting long packets into MTU-3-byte long packets is automatically supported, also merging long packets to single message.
 6. All callbacks are guaranteed to be called from the UI thread.
 7. Battery Service support has been deprecated and will be removed in some future version.
 8. All previously used callbacks in BleManagerGattCallback (for example `onCharacteristicNotified`) will still work, but are now deprecated and may be removed in the future.
+9. Automatic connection retries, if set in ConnectRequest (since 2.0-beta5).
 
 #### Maven or jcenter
 
 The library may be found on jcenter and Maven Central repository. Add it to your project by adding the following dependency:
 
 ```grovy
-implementation 'no.nordicsemi.android:ble:2.0-beta4'
+implementation 'no.nordicsemi.android:ble:2.0-beta5'
 ```
 
 #### Changes:
 
-1. BLE operation methods (i.e. writeCharacteristic(...), etc.) return the Request class now, instead of boolean.
-2. onLinklossOccur callback has been renamed to onLinkLossOccurred.
-3. GATT callbacks (for example: onCharacteristicRead, onCharacteristicNotified, etc) inside BleManagerGattCallback has been deprecated. Use Request callbacks instead.
+1. BLE operation methods (i.e. `writeCharacteristic(...)`, etc.) return the `Request` class now, instead of boolean.
+2. `onLinklossOccur` callback has been renamed to `onLinkLossOccurred`.
+3. GATT callbacks (for example: `onCharacteristicRead`, `onCharacteristicNotified`, etc.) inside `BleManagerGattCallback` has been deprecated. Use `Request` callbacks instead.
 4. Build-in Battery Level support has been deprecated. Request Battery Level as any other value.
-5. A new callbacks method: onBondingFailed has been added to BleManagerCallbacks.
+5. A new callbacks method: `onBondingFailed` has been added to `BleManagerCallbacks`.
+6. `shouldAutoConnect()` has ben deprecated, use `useAutoConnect(boolean)` in `ConnectRequest` instead.
 
 #### Migration guide:
 
@@ -95,12 +97,15 @@ protected void initialize() {
 ```
 See changes in [Android nRF Toolbox](https://github.com/NordicSemiconductor/Android-nRF-Toolbox/) for more examples.
 
-Remember to call `.enqueue()` method for asynchronous operations!
+Remember to call `.enqueue()` method for initialization requests!
+
+Connect's completion callback is called after the initialization is done (without or with errors).
 
 2. Move your callback implementation from BleManagerGattCallback to request callbacks.
-3. To split logic from parsing, we recomend to extend DataReceivedCallback interface in a class where your parse your data, and return higher-level values. For a sample, check out nRF Toolbox and [Android BLE Common Library](https://github.com/NordicSemiconductor/Android-BLE-Common-Library/). If you are depending on a SIG adopted profile, like Heart Rate Monitor, Proximity, etc., feel free to include the BLE Common Library in your project. It has all the parsers implemented. If your profile isn't there, we are happy to accept PRs. 
+3. To split logic from parsing, we recommend to extend DataReceivedCallback interface in a class where your parse your data, and return higher-level values. For a sample, check out nRF Toolbox and [Android BLE Common Library](https://github.com/NordicSemiconductor/Android-BLE-Common-Library/). If you are depending on a SIG adopted profile, like Heart Rate Monitor, Proximity, etc., feel free to include the BLE Common Library in your project. It has all the parsers implemented. If your profile isn't there, we are happy to accept PRs.
 4. Since version 2.0-alpha2 the `connect()` and `disconnect()` methods also require calling `.enqueue()` in asynchronous use.
 5. Version 2.0-beta3 added `InvalidRequestException` that must be caught on synchronous calls. It will only be called when you try to perform a BLE operation before the `connect(...)` was called and the target device is not known.
+6. Replace the `shouldAutoConnect()` method in the manager with `connect(device).useAutConnect(true).enqueue()/await()`.
 
 #### How to test it:
 
