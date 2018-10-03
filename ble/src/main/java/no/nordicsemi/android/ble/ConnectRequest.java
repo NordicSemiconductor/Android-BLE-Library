@@ -117,8 +117,9 @@ public class ConnectRequest extends Request {
 
 	/**
 	 * Sets an optional retry count. The BleManager will do that many attempts to connect to the
-	 * device in case of an error. The library will not retry if the device is not reachable,
-	 * that is when the 30 sec timeout occurs.
+	 * device in case of an error. The library will NOT retry if the device is not reachable,
+	 * that is when the 30 sec. timeout occurs. In that case the app should scan before
+	 * connecting, to make sure the target is in range.
 	 *
 	 * @param count how many times should the BleManager retry to connect.
 	 * @return The request.
@@ -131,12 +132,13 @@ public class ConnectRequest extends Request {
 	}
 
 	/**
-	 * Sets an optional retry count and a delay that the process will wait before next connection
-	 * attempt. The library will not retry if the device is not reachable, that is when the 30 sec
-	 * timeout occurs.
+	 * Sets an optional retry count and a delay that the process will wait before each connection
+	 * attempt. The library will NOT retry if the device is not reachable, that is when the 30 sec.
+	 * timeout occurs. In that case the app should scan before connecting, to make sure the
+	 * target is in range.
 	 *
 	 * @param count how many times should the BleManager retry to connect.
-	 * @param delay the delay between each connection attempt.
+	 * @param delay the delay between each connection attempt, in milliseconds.
 	 *              The real delay will be 200 ms longer than specified, as
 	 *              {@link BluetoothGatt#clone()} is estimated to last
 	 *              {@link BleManager#internalConnect(BluetoothDevice, ConnectRequest) 200 ms}.
