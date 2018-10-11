@@ -314,6 +314,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					if (mRequest != null && mRequest.type == Request.Type.CREATE_BOND) {
 						mRequest.notifySuccess(device);
 						mRequest = null;
+						break;
 					}
 					// If the device started to pair just after the connection was
 					// established the services were not discovered.
@@ -2397,6 +2398,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					}
 				}
 			} else if (status == BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION
+					|| status == 8 /* GATT INSUF AUTHORIZATION */
 					|| status == 137 /* GATT AUTH FAIL */) {
 				log(Log.WARN, "Authentication required (" + status + ")");
 				if (gatt.getDevice().getBondState() != BluetoothDevice.BOND_NONE) {
@@ -2436,6 +2438,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					}
 				}
 			} else if (status == BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION
+					|| status == 8 /* GATT INSUF AUTHORIZATION */
 					|| status == 137 /* GATT AUTH FAIL */) {
 				log(Log.WARN, "Authentication required (" + status + ")");
 				if (gatt.getDevice().getBondState() != BluetoothDevice.BOND_NONE) {
@@ -2481,6 +2484,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					}
 				}
 			} else if (status == BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION
+					|| status == 8 /* GATT INSUF AUTHORIZATION */
 					|| status == 137 /* GATT AUTH FAIL */) {
 				log(Log.WARN, "Authentication required (" + status + ")");
 				if (gatt.getDevice().getBondState() != BluetoothDevice.BOND_NONE) {
@@ -2540,6 +2544,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					}
 				}
 			} else if (status == BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION
+					|| status == 8 /* GATT INSUF AUTHORIZATION */
 					|| status == 137 /* GATT AUTH FAIL */) {
 				log(Log.WARN, "Authentication required (" + status + ")");
 				if (gatt.getDevice().getBondState() != BluetoothDevice.BOND_NONE) {
