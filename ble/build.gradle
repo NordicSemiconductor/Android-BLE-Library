@@ -58,8 +58,6 @@ android {
 dependencies {
     //noinspection GradleDependency
     api 'com.android.support:support-annotations:28.0.0'
-    // Log Bluetooth LE events in nRF Logger
-    api 'no.nordicsemi.android:log:2.1.1'
 
     testImplementation 'junit:junit:4.12'
     androidTestImplementation 'com.android.support.test:runner:1.0.2'

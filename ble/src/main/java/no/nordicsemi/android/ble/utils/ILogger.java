@@ -29,19 +29,19 @@ import android.support.annotation.StringRes;
 public interface ILogger {
 
 	/**
-	 * Logs the given message with given log level into the all managed devices' log session.
+	 * Logs the given message with given log priority into the all managed devices' log session.
 	 *
-	 * @param level   the log level.
-	 * @param message the message to be logged.
+	 * @param priority the log priority.
+	 * @param message  the message to be logged.
 	 */
-	void log(final int level, @NonNull final String message);
+	void log(final int priority, @NonNull final String message);
 
 	/**
-	 * Logs the given message with given log level into the all managed devices' log session.
+	 * Logs the given message with given log priority into the all managed devices' log session.
 	 *
-	 * @param level      the log level.
+	 * @param priority   the log priority.
 	 * @param messageRes string resource id.
 	 * @param params     additional (optional) parameters used to fill the message.
 	 */
-	void log(final int level, @StringRes final int messageRes, @Nullable final Object... params);
+	void log(final int priority, @StringRes final int messageRes, @Nullable final Object... params);
 }
