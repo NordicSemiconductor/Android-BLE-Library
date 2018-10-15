@@ -27,8 +27,10 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.content.Context;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 
+import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
@@ -36,25 +38,9 @@ import no.nordicsemi.android.ble.callback.SuccessCallback;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class ConnectRequest extends Request {
-	/**
-	 * Bluetooth LE 1M PHY mask. Used to specify LE 1M Physical Channel as one of many available
-	 * options in a bitmask.
-	 */
-	public static final int PHY_LE_1M_MASK = 1;
-
-	/**
-	 * Bluetooth LE 2M PHY mask. Used to specify LE 2M Physical Channel as one of many available
-	 * options in a bitmask.
-	 */
-	public static final int PHY_LE_2M_MASK = 2;
-
-	/**
-	 * Bluetooth LE Coded PHY mask. Used to specify LE Coded Physical Channel as one of many
-	 * available options in a bitmask.
-	 */
-	public static final int PHY_LE_CODED_MASK = 4;
 
 	private BluetoothDevice device;
+	@PhyMask
 	private int preferredPhy;
 	private int attempt = 0, retries = 0;
 	private int delay = 0;
@@ -63,7 +49,7 @@ public class ConnectRequest extends Request {
 	ConnectRequest(@NonNull final Type type, @NonNull final BluetoothDevice device) {
 		super(type);
 		this.device = device;
-		this.preferredPhy = PHY_LE_1M_MASK;
+		this.preferredPhy = PhyRequest.PHY_LE_1M_MASK;
 	}
 
 	@NonNull
@@ -125,7 +111,7 @@ public class ConnectRequest extends Request {
 	 * @return The request.
 	 * @see #retry(int, int)
 	 */
-	public ConnectRequest retry(final int count) {
+	public ConnectRequest retry(@IntRange(from = 0) final int count) {
 		this.retries = count;
 		this.delay = 0;
 		return this;
@@ -145,7 +131,8 @@ public class ConnectRequest extends Request {
 	 * @return The request.
 	 * @see #retry(int)
 	 */
-	public ConnectRequest retry(final int count, final int delay) {
+	public ConnectRequest retry(@IntRange(from = 0) final int count,
+								@IntRange(from = 0) final int delay) {
 		this.retries = count;
 		this.delay = delay;
 		return this;
@@ -188,28 +175,31 @@ public class ConnectRequest extends Request {
 
 	/**
 	 * Sets the preferred PHY used for connection. Th value should be a bitmask composed of
-	 * {@link #PHY_LE_1M_MASK}, {@link #PHY_LE_2M_MASK} or {@link #PHY_LE_CODED_MASK}.
+	 * {@link PhyRequest#PHY_LE_1M_MASK}, {@link PhyRequest#PHY_LE_2M_MASK} or
+	 * {@link PhyRequest#PHY_LE_CODED_MASK}.
 	 * <p>
 	 * Different PHYs are available only on more recent devices with Android 8+.
 	 * Check {@link BluetoothAdapter#isLe2MPhySupported()} and
 	 * {@link BluetoothAdapter#isLeCodedPhySupported()} if required PHYs are supported by this
-	 * Android device. The default PHY is {@link #PHY_LE_1M_MASK}.
+	 * Android device. The default PHY is {@link PhyRequest#PHY_LE_1M_MASK}.
 	 *
 	 * @param phy preferred PHY for connections to remote LE device. Bitwise OR of any of
-	 *            {@link ConnectRequest#PHY_LE_1M_MASK}, {@link ConnectRequest#PHY_LE_2M_MASK},
-	 *            and {@link ConnectRequest#PHY_LE_CODED_MASK}. This option does not take effect
+	 *            {@link PhyRequest#PHY_LE_1M_MASK}, {@link PhyRequest#PHY_LE_2M_MASK},
+	 *            and {@link PhyRequest#PHY_LE_CODED_MASK}. This option does not take effect
 	 *            if {@code autoConnect} is set to true.
 	 * @return The request.
 	 */
-	public ConnectRequest usePreferredPhy(final int phy) {
+	public ConnectRequest usePreferredPhy(@PhyMask final int phy) {
 		this.preferredPhy = phy;
 		return this;
 	}
 
+	@NonNull
 	public BluetoothDevice getDevice() {
 		return device;
 	}
 
+	@PhyMask
 	int getPreferredPhy() {
 		return preferredPhy;
 	}
@@ -226,6 +216,7 @@ public class ConnectRequest extends Request {
 		return attempt++ == 0;
 	}
 
+	@IntRange(from = 0)
 	int getRetryDelay() {
 		return delay;
 	}

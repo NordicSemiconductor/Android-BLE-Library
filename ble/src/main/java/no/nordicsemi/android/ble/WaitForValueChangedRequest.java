@@ -25,6 +25,7 @@ package no.nordicsemi.android.ble;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -156,7 +157,7 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	@NonNull
 	@Override
 	public <E extends DataReceivedCallback> E await(@NonNull final E response,
-													final int timeout)
+													@IntRange(from = 0) final int timeout)
 			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
 			BluetoothDisabledException, InvalidRequestException {
 		assertNotMainThread();
@@ -303,7 +304,7 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass,
-														final int timeout)
+														@IntRange(from = 0) final int timeout)
 			throws InterruptedException, InvalidDataException, RequestFailedException,
 			DeviceDisconnectedException, BluetoothDisabledException, InvalidRequestException {
 		final E response = await(responseClass, timeout);
@@ -339,7 +340,7 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final E response,
-														final int timeout)
+														@IntRange(from = 0) final int timeout)
 			throws InterruptedException, InvalidDataException, DeviceDisconnectedException,
 			RequestFailedException, BluetoothDisabledException, InvalidRequestException {
 		final E result = await(response, timeout);
@@ -378,6 +379,7 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 		return count > 0;
 	}
 
+	@Nullable
 	Request getTrigger() {
 		return trigger;
 	}

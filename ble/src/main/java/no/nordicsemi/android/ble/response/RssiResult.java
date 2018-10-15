@@ -25,6 +25,7 @@ package no.nordicsemi.android.ble.response;
 import android.bluetooth.BluetoothDevice;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 
 import no.nordicsemi.android.ble.callback.RssiCallback;
@@ -32,10 +33,13 @@ import no.nordicsemi.android.ble.callback.RssiCallback;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class RssiResult implements RssiCallback, Parcelable {
 	private BluetoothDevice device;
+
+	@IntRange(from = -128, to = 20)
 	private int rssi;
 
 	@Override
-	public void onRssiRead(@NonNull final BluetoothDevice device, final int rssi) {
+	public void onRssiRead(@NonNull final BluetoothDevice device,
+						   @IntRange(from = -128, to = 20) final int rssi) {
 		this.device = device;
 		this.rssi = rssi;
 	}
@@ -45,6 +49,7 @@ public class RssiResult implements RssiCallback, Parcelable {
 		return device;
 	}
 
+	@IntRange(from = -128, to = 20)
 	public int getRssi() {
 		return rssi;
 	}

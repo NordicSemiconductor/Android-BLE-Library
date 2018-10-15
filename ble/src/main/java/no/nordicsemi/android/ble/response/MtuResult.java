@@ -25,17 +25,22 @@ package no.nordicsemi.android.ble.response;
 import android.bluetooth.BluetoothDevice;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 
 import no.nordicsemi.android.ble.callback.MtuCallback;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class MtuResult implements MtuCallback, Parcelable {
+	@NonNull
 	private BluetoothDevice device;
+
+	@IntRange(from = 23, to = 517)
 	private int mtu;
 
 	@Override
-	public void onMtuChanged(@NonNull final BluetoothDevice device, final int mtu) {
+	public void onMtuChanged(@NonNull final BluetoothDevice device,
+							 @IntRange(from = 23, to = 517) final int mtu) {
 		this.device = device;
 		this.mtu = mtu;
 	}
@@ -50,6 +55,7 @@ public class MtuResult implements MtuCallback, Parcelable {
 	 *
 	 * @return The MTU.
 	 */
+	@IntRange(from = 23, to = 517)
 	public int getMtu() {
 		return mtu;
 	}

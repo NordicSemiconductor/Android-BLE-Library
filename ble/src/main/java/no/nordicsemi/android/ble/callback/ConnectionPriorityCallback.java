@@ -23,6 +23,7 @@
 package no.nordicsemi.android.ble.callback;
 
 import android.bluetooth.BluetoothDevice;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 
 /**
@@ -53,10 +54,12 @@ public interface ConnectionPriorityCallback {
 	 * @param interval Connection interval used on this connection, 1.25ms unit. Valid range is from
 	 *                 6 (7.5ms) to 3200 (4000ms).
 	 * @param latency  Slave latency for the connection in number of connection events. Valid range
-	 *                 is from 0 to 499
+	 *                 is from 0 to 499.
 	 * @param timeout  Supervision timeout for this connection, in 10ms unit. Valid range is from 10
-	 *                 (0.1s) to 3200 (32s)
+	 *                 (100 ms = 0.1s) to 3200 (32s).
 	 */
-	void onConnectionUpdated(@NonNull final BluetoothDevice device, final int interval,
-							 final int latency, final int timeout);
+	void onConnectionUpdated(@NonNull final BluetoothDevice device,
+							 @IntRange(from = 6, to = 3200) final int interval,
+							 @IntRange(from = 0, to = 499) final int latency,
+							 @IntRange(from = 10, to = 3200) final int timeout);
 }

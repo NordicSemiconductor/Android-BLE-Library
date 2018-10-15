@@ -22,13 +22,14 @@
 
 package no.nordicsemi.android.ble;
 
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 public final class SleepRequest extends Request {
 	private long delay;
 
-	SleepRequest(@NonNull final Type type, final long delay) {
+	SleepRequest(@NonNull final Type type, @IntRange(from = 0) final long delay) {
 		super(type);
 		this.delay = delay;
 	}

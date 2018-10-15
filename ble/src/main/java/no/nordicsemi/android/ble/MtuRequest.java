@@ -23,6 +23,7 @@
 package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 
 import no.nordicsemi.android.ble.callback.BeforeCallback;
@@ -34,7 +35,7 @@ import no.nordicsemi.android.ble.callback.SuccessCallback;
 public final class MtuRequest extends ValueRequest<MtuCallback> {
 	private final int value;
 
-	MtuRequest(@NonNull final Type type, int mtu) {
+	MtuRequest(@NonNull final Type type, @IntRange(from = 23, to = 517) int mtu) {
 		super(type);
 		if (mtu < 23)
 			mtu = 23;
@@ -85,7 +86,8 @@ public final class MtuRequest extends ValueRequest<MtuCallback> {
 		return this;
 	}
 
-	void notifyMtuChanged(@NonNull final BluetoothDevice device, final int mtu) {
+	void notifyMtuChanged(@NonNull final BluetoothDevice device,
+						  @IntRange(from = 23, to = 517) final int mtu) {
 		if (valueCallback != null)
 			valueCallback.onMtuChanged(device, mtu);
 	}

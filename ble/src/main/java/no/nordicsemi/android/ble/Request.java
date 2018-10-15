@@ -29,9 +29,14 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.os.ConditionVariable;
 import android.os.Looper;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import no.nordicsemi.android.ble.annotation.ConnectionPriority;
+import no.nordicsemi.android.ble.annotation.PhyMask;
+import no.nordicsemi.android.ble.annotation.PhyOption;
+import no.nordicsemi.android.ble.annotation.WriteType;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
@@ -245,7 +250,7 @@ public class Request {
 	@NonNull
 	public static WriteRequest newWriteRequest(
 	        @Nullable final BluetoothGattCharacteristic characteristic,
-            @Nullable final byte[] value, final int writeType) {
+            @Nullable final byte[] value, @WriteType final int writeType) {
 		return new WriteRequest(Type.WRITE, characteristic, value, 0,
 				value != null ? value.length : 0, writeType);
 	}
@@ -269,7 +274,8 @@ public class Request {
 	@NonNull
 	public static WriteRequest newWriteRequest(
 	        @Nullable final BluetoothGattCharacteristic characteristic,
-			@Nullable final byte[] value, final int offset, final int length) {
+			@Nullable final byte[] value,
+			@IntRange(from = 0) final int offset, @IntRange(from = 0) final int length) {
 		return new WriteRequest(Type.WRITE, characteristic, value, offset, length,
 				characteristic != null ?
                         characteristic.getWriteType() :
@@ -288,7 +294,8 @@ public class Request {
 	 * @param length         number of bytes to be copied from the value buffer.
 	 * @param writeType      write type to be used, one of
 	 *                       {@link BluetoothGattCharacteristic#WRITE_TYPE_DEFAULT},
-	 *                       {@link BluetoothGattCharacteristic#WRITE_TYPE_NO_RESPONSE}.
+	 *                       {@link BluetoothGattCharacteristic#WRITE_TYPE_NO_RESPONSE} or
+	 *                       {@link BluetoothGattCharacteristic#WRITE_TYPE_SIGNED}.
 	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#writeCharacteristic(BluetoothGattCharacteristic, byte[], int, int)}
@@ -298,7 +305,9 @@ public class Request {
 	@NonNull
 	public static WriteRequest newWriteRequest(
 	        @Nullable final BluetoothGattCharacteristic characteristic,
-            @Nullable final byte[] value, final int offset, final int length, final int writeType) {
+            @Nullable final byte[] value,
+			@IntRange(from = 0) final int offset, @IntRange(from = 0) final int length,
+			@WriteType final int writeType) {
 		return new WriteRequest(Type.WRITE, characteristic, value, offset, length, writeType);
 	}
 
@@ -353,7 +362,8 @@ public class Request {
 	@NonNull
 	public static WriteRequest newWriteRequest(
 	        @Nullable final BluetoothGattDescriptor descriptor,
-			final byte[] value, final int offset, final int length) {
+			@Nullable final byte[] value,
+			@IntRange(from = 0) final int offset, @IntRange(from = 0) final int length) {
 		return new WriteRequest(Type.WRITE_DESCRIPTOR, descriptor, value, offset, length);
 	}
 
@@ -536,7 +546,7 @@ public class Request {
 	 */
 	@Deprecated
 	@NonNull
-	public static MtuRequest newMtuRequest(final int mtu) {
+	public static MtuRequest newMtuRequest(@IntRange(from = 23, to = 517) final int mtu) {
 		return new MtuRequest(Type.REQUEST_MTU, mtu);
 	}
 
@@ -564,7 +574,8 @@ public class Request {
 	 */
 	@Deprecated
 	@NonNull
-	public static ConnectionPriorityRequest newConnectionPriorityRequest(final int priority) {
+	public static ConnectionPriorityRequest newConnectionPriorityRequest(
+			@ConnectionPriority final int priority) {
 		return new ConnectionPriorityRequest(Type.REQUEST_CONNECTION_PRIORITY, priority);
 	}
 
@@ -590,8 +601,9 @@ public class Request {
 	 */
 	@Deprecated
 	@NonNull
-	public static PhyRequest newSetPreferredPhyRequest(final int txPhy, final int rxPhy,
-													   final int phyOptions) {
+	public static PhyRequest newSetPreferredPhyRequest(@PhyMask final int txPhy,
+													   @PhyMask final int rxPhy,
+													   @PhyOption final int phyOptions) {
 		return new PhyRequest(Type.SET_PREFERRED_PHY, txPhy, rxPhy, phyOptions);
 	}
 
@@ -658,7 +670,7 @@ public class Request {
 	 */
 	@Deprecated
 	@NonNull
-	public static SleepRequest newSleepRequest(final long delay) {
+	public static SleepRequest newSleepRequest(@IntRange(from = 0) final long delay) {
 		return new SleepRequest(Type.SLEEP, delay);
 	}
 
@@ -745,7 +757,7 @@ public class Request {
 	 *
 	 * @param timeout the request timeout in milliseconds, 0 to disable timeout.
 	 */
-	public void enqueue(final long timeout) {
+	public void enqueue(@IntRange(from = 0) final long timeout) {
 		this.timeout = timeout;
 		manager.enqueue(this);
 	}
@@ -796,7 +808,7 @@ public class Request {
 	 * @throws InvalidRequestException     thrown when the request was called before the device was
 	 *                                     connected at least once (unknown device).
 	 */
-	public void await(final int timeout)
+	public void await(@IntRange(from = 0) final int timeout)
 			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
 			BluetoothDisabledException, InvalidRequestException {
 		assertNotMainThread();

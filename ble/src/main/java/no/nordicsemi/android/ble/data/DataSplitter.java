@@ -22,6 +22,7 @@
 
 package no.nordicsemi.android.ble.data;
 
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -40,5 +41,6 @@ public interface DataSplitter {
 	 * @return The packet to be sent, or null, if the whole message was already split.
 	 */
 	@Nullable
-	byte[] chunk(@NonNull final byte[] message, final int index, final int maxLength);
+	byte[] chunk(@NonNull final byte[] message,
+				 @IntRange(from = 0) final int index, @IntRange(from = 20) final int maxLength);
 }

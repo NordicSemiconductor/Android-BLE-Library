@@ -25,9 +25,11 @@ package no.nordicsemi.android.ble;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import no.nordicsemi.android.ble.annotation.WriteType;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.DataSentCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
@@ -64,14 +66,17 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 	}
 
 	WriteRequest(@NonNull final Type type, @Nullable final BluetoothGattCharacteristic characteristic,
-				 @Nullable final byte[] data, final int offset, final int length, final int writeType) {
+				 @Nullable final byte[] data,
+				 @IntRange(from = 0) final int offset, @IntRange(from = 0) final int length,
+				 @WriteType final int writeType) {
 		super(type, characteristic);
 		this.data = copy(data, offset, length);
 		this.writeType = writeType;
 	}
 
 	WriteRequest(@NonNull final Type type, @Nullable final BluetoothGattDescriptor descriptor,
-				 @Nullable final byte[] data, final int offset, final int length) {
+				 @Nullable final byte[] data,
+				 @IntRange(from = 0) final int offset, @IntRange(from = 0) final int length) {
 		super(type, descriptor);
 		this.data = copy(data, offset, length);
 		this.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
@@ -84,7 +89,9 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 		return this;
 	}
 
-	private static byte[] copy(@Nullable final byte[] value, final int offset, final int length) {
+	private static byte[] copy(@Nullable final byte[] value,
+							   @IntRange(from = 0) final int offset,
+							   @IntRange(from = 0) final int length) {
 		if (value == null || offset > value.length)
 			return null;
 		final int maxLength = Math.min(value.length - offset, length);
@@ -189,7 +196,7 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 		return this;
 	}
 
-	byte[] getData(final int mtu) {
+	byte[] getData(@IntRange(from = 23, to = 517) final int mtu) {
 		if (dataSplitter == null || data == null) {
 			complete = true;
 			return data;
@@ -211,7 +218,7 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 		return chunk;
 	}
 
-	void notifyPacketSent(@NonNull final BluetoothDevice device, final byte[] data) {
+	void notifyPacketSent(@NonNull final BluetoothDevice device, @Nullable final byte[] data) {
 		if (progressCallback != null)
 			progressCallback.onPacketSent(device, data, count);
 		count++;
@@ -223,6 +230,7 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 		return !complete;
 	}
 
+	@WriteType
 	int getWriteType() {
 		return writeType;
 	}

@@ -24,6 +24,7 @@ package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import no.nordicsemi.android.ble.callback.DataReceivedCallback;
 import no.nordicsemi.android.ble.callback.ReadProgressCallback;
@@ -91,7 +92,7 @@ public class ValueChangedCallback {
 		return this;
 	}
 
-	void notifyValueChanged(final BluetoothDevice device, final byte[] value) {
+	void notifyValueChanged(@NonNull final BluetoothDevice device, @Nullable final byte[] value) {
 		// Keep a reference to the value callback, as it may change during execution
 		final DataReceivedCallback valueCallback = this.valueCallback;
 

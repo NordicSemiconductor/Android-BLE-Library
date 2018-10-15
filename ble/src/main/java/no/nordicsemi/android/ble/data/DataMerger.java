@@ -22,7 +22,9 @@
 
 package no.nordicsemi.android.ble.data;
 
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 public interface DataMerger {
 
@@ -35,5 +37,6 @@ public interface DataMerger {
 	 *                   called with indexes 0, 1, 2).
 	 * @return True, if the message is complete, false if more data are expected.
 	 */
-	boolean merge(@NonNull final DataStream output, @NonNull final byte[] lastPacket, final int index);
+	boolean merge(@NonNull final DataStream output,
+				  @Nullable final byte[] lastPacket, @IntRange(from = 0) final int index);
 }

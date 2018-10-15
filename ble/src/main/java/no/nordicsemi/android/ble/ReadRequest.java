@@ -26,6 +26,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -230,7 +231,7 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 	 */
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass,
-														final int timeout)
+														@IntRange(from = 0) final int timeout)
 			throws RequestFailedException, InterruptedException, InvalidDataException,
 			DeviceDisconnectedException, BluetoothDisabledException, InvalidRequestException {
 		E response = await(responseClass, timeout);
@@ -267,7 +268,7 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 	 */
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final E response,
-														final int timeout)
+														@IntRange(from = 0) final int timeout)
 			throws RequestFailedException, InterruptedException, InvalidDataException,
 			DeviceDisconnectedException, BluetoothDisabledException, InvalidRequestException {
 		await(response, timeout);
@@ -277,7 +278,7 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 		return response;
 	}
 
-	void notifyValueChanged(@NonNull final BluetoothDevice device, final byte[] value) {
+	void notifyValueChanged(@NonNull final BluetoothDevice device, @Nullable final byte[] value) {
 		// Keep a reference to the value callback, as it may change during execution
 		final DataReceivedCallback valueCallback = this.valueCallback;
 

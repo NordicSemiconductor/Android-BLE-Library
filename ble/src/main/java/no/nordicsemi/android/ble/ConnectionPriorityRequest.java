@@ -24,9 +24,11 @@ package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
 import android.os.Build;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.RequiresApi;
 
+import no.nordicsemi.android.ble.annotation.ConnectionPriority;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
@@ -39,6 +41,7 @@ import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPriorityCallback> {
+
 	/**
 	 * Connection parameter update - Use the connection parameters recommended by the
 	 * Bluetooth SIG. This is the default value if no connection parameter update
@@ -69,7 +72,7 @@ public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPrio
 
 	private final int value;
 
-	ConnectionPriorityRequest(@NonNull final Type type, int priority) {
+	ConnectionPriorityRequest(@NonNull final Type type, @ConnectionPriority int priority) {
 		super(type);
 		if (priority < 0 || priority > 2)
 			priority = CONNECTION_PRIORITY_BALANCED;
@@ -123,7 +126,7 @@ public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPrio
 	@RequiresApi(value = Build.VERSION_CODES.O)
 	@NonNull
 	@Override
-	public <E extends ConnectionPriorityCallback> E await(final Class<E> responseClass)
+	public <E extends ConnectionPriorityCallback> E await(@NonNull final Class<E> responseClass)
 			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
 			InvalidRequestException {
 		// The BluetoothGattCallback#onConnectionUpdated callback was introduced in Android Oreo.
@@ -143,11 +146,14 @@ public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPrio
 
 	@RequiresApi(api = Build.VERSION_CODES.O)
 	void notifyConnectionPriorityChanged(@NonNull final BluetoothDevice device,
-										 final int interval, final int latency, final int timeout) {
+										 @IntRange(from = 6, to = 3200) final int interval,
+										 @IntRange(from = 0, to = 499) final int latency,
+										 @IntRange(from = 10, to = 3200) final int timeout) {
 		if (valueCallback != null)
 			valueCallback.onConnectionUpdated(device, interval, latency, timeout);
 	}
 
+	@ConnectionPriority
 	int getRequiredPriority() {
 		return value;
 	}

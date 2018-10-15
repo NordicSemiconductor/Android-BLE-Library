@@ -22,8 +22,13 @@
 
 package no.nordicsemi.android.ble.data;
 
+import android.support.annotation.IntRange;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
+
 import java.io.ByteArrayOutputStream;
 
+@SuppressWarnings("WeakerAccess")
 public class DataStream {
 	private ByteArrayOutputStream buffer;
 
@@ -32,14 +37,15 @@ public class DataStream {
 	}
 
 	@SuppressWarnings("SimplifiableIfStatement")
-	public boolean write(final byte[] data) {
+	public boolean write(@Nullable final byte[] data) {
 		if (data == null)
 			return false;
 
 		return write(data, 0, data.length);
 	}
 
-	public boolean write(final byte[] data, final int offset, final int length) {
+	public boolean write(@Nullable final byte[] data,
+						 @IntRange(from = 0) final int offset, @IntRange(from = 0) final int length) {
 		if (data == null || data.length < offset)
 			return false;
 
@@ -48,18 +54,21 @@ public class DataStream {
 		return true;
 	}
 
-	public boolean write(final Data data) {
+	public boolean write(@Nullable final Data data) {
 		return data != null && write(data.getValue());
 	}
 
+	@IntRange(from = 0)
 	public int size() {
 		return buffer.size();
 	}
 
+	@NonNull
 	public byte[] toByteArray() {
 		return buffer.toByteArray();
 	}
 
+	@NonNull
 	public Data toData() {
 		return new Data(buffer.toByteArray());
 	}

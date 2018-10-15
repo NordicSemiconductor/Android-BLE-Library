@@ -22,6 +22,7 @@
 
 package no.nordicsemi.android.ble.data;
 
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -32,7 +33,9 @@ public final class DefaultMtuSplitter implements DataSplitter {
 
 	@Nullable
 	@Override
-	public byte[] chunk(@NonNull final byte[] message, final int index, final int maxLength) {
+	public byte[] chunk(@NonNull final byte[] message,
+						@IntRange(from = 0) final int index,
+						@IntRange(from = 20) final int maxLength) {
 		final int offset = index * maxLength;
 		final int length = Math.min(maxLength, message.length - offset);
 

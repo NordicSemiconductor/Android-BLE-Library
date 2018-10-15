@@ -23,6 +23,7 @@
 package no.nordicsemi.android.ble.callback;
 
 import android.bluetooth.BluetoothDevice;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 
 public interface RssiCallback {
@@ -33,5 +34,6 @@ public interface RssiCallback {
 	 * @param device the target device.
 	 * @param rssi the current RSSI value, in dBm.
 	 */
-	void onRssiRead(@NonNull final BluetoothDevice device, final int rssi);
+	void onRssiRead(@NonNull final BluetoothDevice device,
+					@IntRange(from = -128, to = 20) final int rssi);
 }

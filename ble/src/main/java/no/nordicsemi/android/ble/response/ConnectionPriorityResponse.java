@@ -25,6 +25,7 @@ package no.nordicsemi.android.ble.response;
 import android.bluetooth.BluetoothDevice;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 
 import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
@@ -36,14 +37,23 @@ import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class ConnectionPriorityResponse implements ConnectionPriorityCallback, Parcelable {
+	@NonNull
 	private BluetoothDevice device;
+
+	@IntRange(from = 6, to = 3200)
 	private int interval;
+
+	@IntRange(from = 0, to = 499)
 	private int latency;
+
+	@IntRange(from = 10, to = 3200)
 	private int supervisionTimeout;
 
 	@Override
 	public void onConnectionUpdated(@NonNull final BluetoothDevice device,
-									final int interval, final int latency, final int timeout) {
+									@IntRange(from = 6, to = 3200) final int interval,
+									@IntRange(from = 0, to = 499) final int latency,
+									@IntRange(from = 10, to = 3200) final int timeout) {
 		this.device = device;
 		this.interval = interval;
 		this.latency = latency;
@@ -60,8 +70,10 @@ public class ConnectionPriorityResponse implements ConnectionPriorityCallback, P
 	 * When the Peripheral requests an update, it supplies a maximum and a minimum wanted interval.
 	 * The connection interval must be between 7.5 ms and 4 s.
 	 *
-	 * @return The current connection interval, in milliseconds.
+	 * @return Connection interval used on this connection, 1.25ms unit.
+	 * Valid range is from 6 (7.5ms) to 3200 (4000ms).
 	 */
+	@IntRange(from = 6, to = 3200)
 	public int getConnectionInterval() {
 		return interval;
 	}
@@ -76,8 +88,10 @@ public class ConnectionPriorityResponse implements ConnectionPriorityCallback, P
 	 * no data to send, but still have low latency (and for the mouse: low connection interval)
 	 * when needed.
 	 *
-	 * @return The current slave latency.
+	 * @return Slave latency for the connection in number of connection events.
+	 * Valid range is from 0 to 499.
 	 */
+	@IntRange(from = 0, to = 499)
 	public int getSlaveLatency() {
 		return latency;
 	}
@@ -88,8 +102,10 @@ public class ConnectionPriorityResponse implements ConnectionPriorityCallback, P
 	 * so if you have a device which goes in and out of range often, and you need to notice when
 	 * that happens, it might make sense to have a short timeout.
 	 *
-	 * @return The current supervision timeout.
+	 * @return Supervision timeout for this connection, in 10ms unit.
+	 * Valid range is from 10 (100 ms = 0.1s) to 3200 (32s).
 	 */
+	@IntRange(from = 10, to = 3200)
 	public int getSupervisionTimeout() {
 		return supervisionTimeout;
 	}

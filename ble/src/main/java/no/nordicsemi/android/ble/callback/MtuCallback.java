@@ -23,6 +23,7 @@
 package no.nordicsemi.android.ble.callback;
 
 import android.bluetooth.BluetoothDevice;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 
 public interface MtuCallback {
@@ -34,5 +35,6 @@ public interface MtuCallback {
 	 * @param device the target device.
 	 * @param mtu the new MTU (Maximum Transfer Unit).
 	 */
-	void onMtuChanged(@NonNull final BluetoothDevice device, final int mtu);
+	void onMtuChanged(@NonNull final BluetoothDevice device,
+					  @IntRange(from = 23, to = 517) final int mtu);
 }

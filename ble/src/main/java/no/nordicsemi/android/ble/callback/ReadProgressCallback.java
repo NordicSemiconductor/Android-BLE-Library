@@ -23,9 +23,10 @@
 package no.nordicsemi.android.ble.callback;
 
 import android.bluetooth.BluetoothDevice;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
-import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.data.DataMerger;
 
 public interface ReadProgressCallback {
@@ -38,5 +39,6 @@ public interface ReadProgressCallback {
 	 * @param data the last packet received.
 	 * @param index the index of a packet that will be merged into a single Data.
 	 */
-	void onPacketReceived(@NonNull final BluetoothDevice device, final byte[] data, final int index);
+	void onPacketReceived(@NonNull final BluetoothDevice device,
+						  @Nullable final byte[] data, @IntRange(from = 0) final int index);
 }

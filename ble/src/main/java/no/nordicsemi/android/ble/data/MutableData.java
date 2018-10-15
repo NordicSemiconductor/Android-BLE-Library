@@ -24,8 +24,11 @@ package no.nordicsemi.android.ble.data;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.support.annotation.IntRange;
+import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
-@SuppressWarnings({"unused", "SameParameterValue"})
+@SuppressWarnings({"unused", "SameParameterValue", "WeakerAccess", "UnusedReturnValue"})
 public class MutableData extends Data {
 	// Values required to convert float to IEEE-11073 SFLOAT
 	private final static int SFLOAT_POSITIVE_INFINITY = 0x07FE;
@@ -57,15 +60,15 @@ public class MutableData extends Data {
 		super();
 	}
 
-	public MutableData(final byte[] data) {
+	public MutableData(@Nullable final byte[] data) {
 		super(data);
 	}
 
-	public static MutableData from(final BluetoothGattCharacteristic characteristic) {
+	public static MutableData from(@NonNull final BluetoothGattCharacteristic characteristic) {
 		return new MutableData(characteristic.getValue());
 	}
 
-	public static MutableData from(final BluetoothGattDescriptor descriptor) {
+	public static MutableData from(@NonNull final BluetoothGattDescriptor descriptor) {
 		return new MutableData(descriptor.getValue());
 	}
 
@@ -76,7 +79,7 @@ public class MutableData extends Data {
 	 * @return true if the locally stored value has been set, false if the
 	 * requested value could not be stored locally.
 	 */
-	public boolean setValue(final byte[] value) {
+	public boolean setValue(@Nullable final byte[] value) {
 		mValue = value;
 		return true;
 	}
@@ -89,7 +92,7 @@ public class MutableData extends Data {
 	 * @return true if the locally stored value has been set, false if the
 	 * requested value could not be stored locally.
 	 */
-	public boolean setByte(final int value, final int offset) {
+	public boolean setByte(final int value, @IntRange(from = 0) final int offset) {
 		final int len = offset + 1;
 		if (mValue == null) mValue = new byte[len];
 		if (len > mValue.length) return false;
@@ -106,7 +109,7 @@ public class MutableData extends Data {
 	 * @param offset     Offset at which the value should be placed
 	 * @return true if the locally stored value has been set
 	 */
-	public boolean setValue(int value, int formatType, int offset) {
+	public boolean setValue(int value, @IntFormat int formatType, @IntRange(from = 0) int offset) {
 		final int len = offset + getTypeLen(formatType);
 		if (mValue == null) mValue = new byte[len];
 		if (len > mValue.length) return false;
@@ -162,7 +165,8 @@ public class MutableData extends Data {
 	 * @param offset     Offset at which the value should be placed
 	 * @return true if the locally stored value has been set
 	 */
-	public boolean setValue(int mantissa, int exponent, int formatType, int offset) {
+	public boolean setValue(int mantissa, int exponent,
+							@FloatFormat int formatType, @IntRange(from = 0) int offset) {
 		final int len = offset + getTypeLen(formatType);
 		if (mValue == null) mValue = new byte[len];
 		if (len > mValue.length) return false;
@@ -201,7 +205,7 @@ public class MutableData extends Data {
 	 * @param offset     Offset at which the value should be placed
 	 * @return true if the locally stored value has been set
 	 */
-	public boolean setValue(long value, int formatType, int offset) {
+	public boolean setValue(long value, @LongFormat int formatType, @IntRange(from = 0) int offset) {
 		final int len = offset + getTypeLen(formatType);
 		if (mValue == null) mValue = new byte[len];
 		if (len > mValue.length) return false;
@@ -232,7 +236,8 @@ public class MutableData extends Data {
 	 * @param offset     Offset at which the value should be placed
 	 * @return true if the locally stored value has been set
 	 */
-	public boolean setValue(float value, int formatType, int offset) {
+	public boolean setValue(float value,
+							@FloatFormat int formatType, @IntRange(from = 0) int offset) {
 		final int len = offset + getTypeLen(formatType);
 		if (mValue == null) mValue = new byte[len];
 		if (len > mValue.length) return false;

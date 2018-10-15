@@ -38,6 +38,8 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
 import android.os.SystemClock;
+import android.support.annotation.IntDef;
+import android.support.annotation.IntRange;
 import android.support.annotation.MainThread;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
@@ -45,12 +47,18 @@ import android.support.annotation.RequiresApi;
 import android.support.annotation.StringRes;
 import android.util.Log;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
 import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.UUID;
 
+import no.nordicsemi.android.ble.annotation.ConnectionPriority;
+import no.nordicsemi.android.ble.annotation.PhyMask;
+import no.nordicsemi.android.ble.annotation.PhyOption;
+import no.nordicsemi.android.ble.annotation.PhyValue;
 import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
 import no.nordicsemi.android.ble.callback.DataReceivedCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
@@ -181,6 +189,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @deprecated Battery value should be kept in the profile manager instead. See BatteryManager
 	 * class in Android nRF Toolbox app.
 	 */
+	@IntRange(from = -1, to = 100)
 	@Deprecated
 	private int mBatteryValue = -1;
 	/**
@@ -362,7 +371,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
 			// Skip other devices.
-			if (mBluetoothDevice == null || !device.getAddress().equals(mBluetoothDevice.getAddress()))
+			if (mBluetoothDevice == null || device == null
+					|| !device.getAddress().equals(mBluetoothDevice.getAddress()))
 				return;
 
 			// String values are used as the constants are not available for Android 4.3.
@@ -381,7 +391,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @param device  the device.
 	 * @param variant pairing variant.
 	 */
-	protected void onPairingRequestReceived(final BluetoothDevice device, final int variant) {
+	protected void onPairingRequestReceived(@NonNull final BluetoothDevice device,
+											@PairingVariant final int variant) {
 		// The API below is available for Android 4.4 or newer.
 
 		// An app may set the PIN here or set pairing confirmation (depending on the variant) using:
@@ -513,6 +524,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * The default implementation returns 1600 ms for bonded and 300 ms when the device is not
 	 * bonded to be compatible with older versions of the library.
 	 */
+	@IntRange(from = 0)
 	protected int getServiceDiscoveryDelay(final boolean bonded) {
 		return bonded ? 1600 : 300;
 	}
@@ -575,8 +587,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 *
 	 * @param device a device to connect to.
 	 * @param phy    preferred PHY for connections to remote LE device. Bitwise OR of any of
-	 *               {@link ConnectRequest#PHY_LE_1M_MASK}, {@link ConnectRequest#PHY_LE_2M_MASK},
-	 *               and {@link ConnectRequest#PHY_LE_CODED_MASK}. This option does not take effect
+	 *               {@link PhyRequest#PHY_LE_1M_MASK}, {@link PhyRequest#PHY_LE_2M_MASK},
+	 *               and {@link PhyRequest#PHY_LE_CODED_MASK}. This option does not take effect
 	 *               if {@code autoConnect} is set to true. PHY 2M and Coded are supported
 	 *               on newer devices running Android Oreo or newer.
 	 * @return The connect request.
@@ -586,7 +598,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
 	@Deprecated
-	public ConnectRequest connect(@NonNull final BluetoothDevice device, final int phy) {
+	public ConnectRequest connect(@NonNull final BluetoothDevice device, @PhyMask final int phy) {
 		if (mCallbacks == null) {
 			throw new NullPointerException("Set callbacks using setGattCallbacks(E callbacks) before connecting");
 		}
@@ -599,7 +611,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				.setManager(this);
 	}
 
-	private boolean internalConnect(@NonNull final BluetoothDevice device, @Nullable ConnectRequest connectRequest) {
+	private boolean internalConnect(@NonNull final BluetoothDevice device,
+									@Nullable final ConnectRequest connectRequest) {
 		final boolean bluetoothEnabled = BluetoothAdapter.getDefaultAdapter().isEnabled();
 		if (mConnected || !bluetoothEnabled) {
 			final BluetoothDevice currentDevice = mBluetoothDevice;
@@ -789,6 +802,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return The last battery level value in percent.
 	 * @deprecated Keep the battery level in your manager instead.
 	 */
+	@IntRange(from = -1, to = 100)
 	@Deprecated
 	public int getBatteryValue() {
 		return mBatteryValue;
@@ -1572,7 +1586,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 *
 	 * @return The request.
 	 */
-	protected final MtuRequest requestMtu(final int mtu) {
+	protected final MtuRequest requestMtu(@IntRange(from = 23, to = 517) final int mtu) {
 		return Request.newMtuRequest(mtu).setManager(this);
 	}
 
@@ -1588,6 +1602,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 *
 	 * @return the current MTU value. Default to 23.
 	 */
+	@IntRange(from = 23, to = 517)
 	protected final int getMtu() {
 		return mMtu;
 	}
@@ -1600,14 +1615,14 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 *
 	 * @param mtu the MTU value set by the peripheral.
 	 */
-	protected final void overrideMtu(final int mtu) {
+	protected final void overrideMtu(@IntRange(from = 23, to = 517) final int mtu) {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 			mMtu = mtu;
 		}
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-	private boolean internalRequestMtu(final int mtu) {
+	private boolean internalRequestMtu(@IntRange(from = 23, to = 517) final int mtu) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || !mConnected)
 			return false;
@@ -1643,12 +1658,13 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return The request.
 	 */
 	@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-	protected final ConnectionPriorityRequest requestConnectionPriority(final int priority) {
+	protected final ConnectionPriorityRequest requestConnectionPriority(
+			@ConnectionPriority final int priority) {
 		return Request.newConnectionPriorityRequest(priority).setManager(this);
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-	private boolean internalRequestConnectionPriority(final int priority) {
+	private boolean internalRequestConnectionPriority(@ConnectionPriority final int priority) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || !mConnected)
 			return false;
@@ -1696,12 +1712,14 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 *                   {@link PhyRequest#PHY_OPTION_S2} or {@link PhyRequest#PHY_OPTION_S8}.
 	 * @return The request.
 	 */
-	protected final PhyRequest setPreferredPhy(final int txPhy, final int rxPhy, final int phyOptions) {
+	protected final PhyRequest setPreferredPhy(@PhyMask final int txPhy, @PhyMask final int rxPhy,
+											   @PhyOption final int phyOptions) {
 		return Request.newSetPreferredPhyRequest(txPhy, rxPhy, phyOptions).setManager(this);
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.O)
-	private boolean internalSetPreferredPhy(final int txPhy, final int rxPhy, final int phyOptions) {
+	private boolean internalSetPreferredPhy(@PhyMask final int txPhy, @PhyMask final int rxPhy,
+											@PhyOption final int phyOptions) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || !mConnected)
 			return false;
@@ -1821,7 +1839,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @param delay the delay in milliseconds.
 	 * @return The request.
 	 */
-	protected final SleepRequest sleep(final long delay) {
+	protected final SleepRequest sleep(@IntRange(from = 0) final long delay) {
 		return Request.newSleepRequest(delay).setManager(this);
 	}
 
@@ -1837,8 +1855,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			mGattCallback = getGattCallback();
 		}
 		// Add the new task to the end of the queue.
-		mGattCallback.enqueue(request);
-		runOnUiThread(() -> mGattCallback.nextRequest(false));
+		final BleManagerGattCallback callback = mGattCallback;
+		callback.enqueue(request);
+		runOnUiThread(() -> callback.nextRequest(false));
 	}
 
 	/**
@@ -2103,7 +2122,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * BatteryLevelDataCallback from BLE-Common-Library instead.
 		 */
 		@Deprecated
-		protected void onBatteryValueReceived(@NonNull final BluetoothGatt gatt, final int value) {
+		protected void onBatteryValueReceived(@NonNull final BluetoothGatt gatt,
+											  @IntRange(from = 0, to = 100) final int value) {
 			// do nothing
 		}
 
@@ -2142,7 +2162,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * @deprecated Use {@link MtuRequest#with(MtuCallback)} instead.
 		 */
 		@Deprecated
-		protected void onMtuChanged(@NonNull final BluetoothGatt gatt, final int mtu) {
+		protected void onMtuChanged(@NonNull final BluetoothGatt gatt,
+									@IntRange(from = 23, to = 517) final int mtu) {
 			// do nothing
 		}
 
@@ -2161,7 +2182,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		@Deprecated
 		@TargetApi(Build.VERSION_CODES.O)
 		protected void onConnectionUpdated(@NonNull final BluetoothGatt gatt,
-										   final int interval, final int latency, final int timeout) {
+										   @IntRange(from = 6, to = 3200) final int interval,
+										   @IntRange(from = 0, to = 499) final int latency,
+										   @IntRange(from = 10, to = 3200) final int timeout) {
 			// do nothing
 		}
 
@@ -2618,7 +2641,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 		@Override
 		final void onMtuChangedSafe(@NonNull final BluetoothGatt gatt,
-									final int mtu, final int status) {
+									@IntRange(from = 23, to = 517) final int mtu,
+									final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, "MTU changed to: " + mtu);
 				mMtu = mtu;
@@ -2654,7 +2678,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		@RequiresApi(api = Build.VERSION_CODES.O)
 		@Override
 		final void onConnectionUpdatedSafe(@NonNull final BluetoothGatt gatt,
-										   final int interval, final int latency, final int timeout,
+										   @IntRange(from = 6, to = 3200) final int interval,
+										   @IntRange(from = 0, to = 499) final int latency,
+										   @IntRange(from = 10, to = 3200) final int timeout,
 										   final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, "Connection parameters updated " +
@@ -2703,7 +2729,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		@RequiresApi(api = Build.VERSION_CODES.O)
 		@Override
 		final void onPhyUpdateSafe(@NonNull final BluetoothGatt gatt,
-								   final int txPhy, final int rxPhy, final int status) {
+								   @PhyValue final int txPhy, @PhyValue final int rxPhy,
+								   final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, "PHY updated (TX: " + phyToString(txPhy) +
 						", RX: " + phyToString(rxPhy) + ")");
@@ -2729,7 +2756,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		@RequiresApi(api = Build.VERSION_CODES.O)
 		@Override
 		final void onPhyReadSafe(@NonNull final BluetoothGatt gatt,
-								 final int txPhy, final int rxPhy, final int status) {
+								 @PhyValue final int txPhy, @PhyValue final int rxPhy,
+								 final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, "PHY read (TX: " + phyToString(txPhy) +
 						", RX: " + phyToString(rxPhy) + ")");
@@ -2750,7 +2778,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 		@Override
 		final void onReadRemoteRssiSafe(@NonNull final BluetoothGatt gatt,
-										final int rssi, final int status) {
+										@IntRange(from = -128, to = 20) final int rssi,
+										final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, "Remote RSSI received: " + rssi + " dBm");
 				if (mRequest instanceof ReadRssiRequest) {
@@ -3157,7 +3186,19 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	protected static final int PAIRING_VARIANT_DISPLAY_PIN = 5;
 	protected static final int PAIRING_VARIANT_OOB_CONSENT = 6;
 
-	protected String pairingVariantToString(final int variant) {
+	@Retention(RetentionPolicy.SOURCE)
+	@IntDef(value = {
+			PAIRING_VARIANT_PIN,
+			PAIRING_VARIANT_PASSKEY,
+			PAIRING_VARIANT_PASSKEY_CONFIRMATION,
+			PAIRING_VARIANT_CONSENT,
+			PAIRING_VARIANT_DISPLAY_PASSKEY,
+			PAIRING_VARIANT_DISPLAY_PIN,
+			PAIRING_VARIANT_OOB_CONSENT
+	})
+	public @interface PairingVariant {}
+
+	protected String pairingVariantToString(@PairingVariant final int variant) {
 		switch (variant) {
 			case PAIRING_VARIANT_PIN:
 				return "PAIRING_VARIANT_PIN";

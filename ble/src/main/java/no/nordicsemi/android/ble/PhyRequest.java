@@ -25,6 +25,9 @@ package no.nordicsemi.android.ble;
 import android.bluetooth.BluetoothDevice;
 import android.support.annotation.NonNull;
 
+import no.nordicsemi.android.ble.annotation.PhyMask;
+import no.nordicsemi.android.ble.annotation.PhyOption;
+import no.nordicsemi.android.ble.annotation.PhyValue;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
@@ -33,6 +36,7 @@ import no.nordicsemi.android.ble.callback.SuccessCallback;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
 public final class PhyRequest extends ValueRequest<PhyCallback> {
+
 	/**
 	 * Bluetooth LE 1M PHY mask. Used to specify LE 1M Physical Channel as one of many available
 	 * options in a bitmask.
@@ -77,7 +81,8 @@ public final class PhyRequest extends ValueRequest<PhyCallback> {
 		this.phyOptions = 0;
 	}
 
-	PhyRequest(@NonNull final Type type, int txPhy, int rxPhy, int phyOptions) {
+	PhyRequest(@NonNull final Type type,
+			   @PhyMask int txPhy, @PhyMask int rxPhy, @PhyOption int phyOptions) {
 		super(type);
 		if ((txPhy & ~(PHY_LE_1M_MASK | PHY_LE_2M_MASK | PHY_LE_CODED_MASK)) > 0)
 			txPhy = PHY_LE_1M_MASK;
@@ -132,7 +137,8 @@ public final class PhyRequest extends ValueRequest<PhyCallback> {
 		return this;
 	}
 
-	void notifyPhyChanged(@NonNull final BluetoothDevice device, final int txPhy, final int rxPhy) {
+	void notifyPhyChanged(@NonNull final BluetoothDevice device,
+						  @PhyValue final int txPhy, @PhyValue final int rxPhy) {
 		if (valueCallback != null)
 			valueCallback.onPhyChanged(device, txPhy, rxPhy);
 	}
@@ -142,14 +148,17 @@ public final class PhyRequest extends ValueRequest<PhyCallback> {
 			valueCallback.onPhyChanged(device, PhyCallback.PHY_LE_1M, PhyCallback.PHY_LE_1M);
 	}
 
+	@PhyMask
 	int getPreferredTxPhy() {
 		return txPhy;
 	}
 
+	@PhyMask
 	int getPreferredRxPhy() {
 		return rxPhy;
 	}
 
+	@PhyOption
 	int getPreferredPhyOptions() {
 		return phyOptions;
 	}

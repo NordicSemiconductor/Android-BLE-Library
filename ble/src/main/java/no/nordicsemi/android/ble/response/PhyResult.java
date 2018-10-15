@@ -27,17 +27,23 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
 
+import no.nordicsemi.android.ble.annotation.PhyValue;
 import no.nordicsemi.android.ble.callback.PhyCallback;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class PhyResult implements PhyCallback, Parcelable {
+	@NonNull
 	private BluetoothDevice device;
+
+	@PhyValue
 	private int txPhy;
+
+	@PhyValue
 	private int rxPhy;
 
 	@Override
 	public void onPhyChanged(@NonNull final BluetoothDevice device,
-							 final int txPhy, final int rxPhy) {
+							 @PhyValue final int txPhy, @PhyValue final int rxPhy) {
 		this.device = device;
 		this.txPhy = txPhy;
 		this.rxPhy = rxPhy;
@@ -48,10 +54,12 @@ public class PhyResult implements PhyCallback, Parcelable {
 		return device;
 	}
 
+	@PhyValue
 	public int getTxPhy() {
 		return txPhy;
 	}
 
+	@PhyValue
 	public int getRxPhy() {
 		return rxPhy;
 	}

@@ -26,11 +26,58 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.os.Parcel;
 import android.os.Parcelable;
+import android.support.annotation.IntDef;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
+
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
 public class Data implements Parcelable {
+	@Retention(RetentionPolicy.SOURCE)
+	@IntDef(value = {
+			FORMAT_UINT8,
+			FORMAT_UINT16,
+			FORMAT_UINT24,
+			FORMAT_UINT32,
+			FORMAT_SINT8,
+			FORMAT_SINT16,
+			FORMAT_SINT24,
+			FORMAT_SINT32,
+			FORMAT_FLOAT,
+			FORMAT_SFLOAT
+	})
+	public @interface ValueFormat {}
+
+	@Retention(RetentionPolicy.SOURCE)
+	@IntDef(value = {
+			FORMAT_UINT8,
+			FORMAT_UINT16,
+			FORMAT_UINT24,
+			FORMAT_UINT32,
+			FORMAT_SINT8,
+			FORMAT_SINT16,
+			FORMAT_SINT24,
+			FORMAT_SINT32
+	})
+	public @interface IntFormat {}
+
+	@Retention(RetentionPolicy.SOURCE)
+	@IntDef(value = {
+			FORMAT_UINT32,
+			FORMAT_SINT32
+	})
+	public @interface LongFormat {}
+
+	@Retention(RetentionPolicy.SOURCE)
+	@IntDef(value = {
+			FORMAT_FLOAT,
+			FORMAT_SFLOAT
+	})
+	public @interface FloatFormat {}
+
 	private static char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 
 	/**
@@ -131,7 +178,7 @@ public class Data implements Parcelable {
 	 * @return Cached value of the characteristic
 	 */
 	@Nullable
-	public String getStringValue(final int offset) {
+	public String getStringValue(@IntRange(from = 0) final int offset) {
 		if (mValue == null || offset > mValue.length)
 			return null;
 		final byte[] strBytes = new byte[mValue.length - offset];
@@ -172,7 +219,7 @@ public class Data implements Parcelable {
 	 * @return Cached value or null of offset exceeds value size.
 	 */
 	@Nullable
-	public Byte getByte(final int offset) {
+	public Byte getByte(@IntRange(from = 0) final int offset) {
 		if (offset + 1 > size()) return null;
 
 		return mValue[offset];
@@ -192,7 +239,8 @@ public class Data implements Parcelable {
 	 * @return Cached value or null of offset exceeds value size.
 	 */
 	@Nullable
-	public Integer getIntValue(final int formatType, final int offset) {
+	public Integer getIntValue(@IntFormat final int formatType,
+							   @IntRange(from = 0) final int offset) {
 		if ((offset + getTypeLen(formatType)) > size()) return null;
 
 		switch (formatType) {
@@ -243,7 +291,8 @@ public class Data implements Parcelable {
 	 * @return Cached value or null of offset exceeds value size.
 	 */
 	@Nullable
-	public Long getLongValue(final int formatType, final int offset) {
+	public Long getLongValue(@LongFormat final int formatType,
+							 @IntRange(from = 0) final int offset) {
 		if ((offset + getTypeLen(formatType)) > size()) return null;
 
 		switch (formatType) {
@@ -267,7 +316,8 @@ public class Data implements Parcelable {
 	 * @return Cached value at a given offset or null if the requested offset exceeds the value size.
 	 */
 	@Nullable
-	public Float getFloatValue(final int formatType, final int offset) {
+	public Float getFloatValue(@FloatFormat final int formatType,
+							   @IntRange(from = 0) final int offset) {
 		if ((offset + getTypeLen(formatType)) > size()) return null;
 
 		switch (formatType) {
@@ -308,7 +358,7 @@ public class Data implements Parcelable {
 	/**
 	 * Returns the size of a give value type.
 	 */
-	public static int getTypeLen(final int formatType) {
+	public static int getTypeLen(@ValueFormat final int formatType) {
 		return formatType & 0xF;
 	}
 

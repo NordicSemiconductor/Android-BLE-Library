@@ -25,6 +25,8 @@ package no.nordicsemi.android.ble.callback;
 import android.bluetooth.BluetoothDevice;
 import android.support.annotation.NonNull;
 
+import no.nordicsemi.android.ble.annotation.PhyValue;
+
 @SuppressWarnings("unused")
 public interface PhyCallback {
 	/**
@@ -54,5 +56,6 @@ public interface PhyCallback {
 	 * @param rxPhy the receiver PHY in use. One of {@link #PHY_LE_1M},
 	 *             {@link #PHY_LE_2M}, and {@link #PHY_LE_CODED}.
 	 */
-	void onPhyChanged(@NonNull final BluetoothDevice device, final int txPhy, final int rxPhy);
+	void onPhyChanged(@NonNull final BluetoothDevice device,
+					  @PhyValue final int txPhy, @PhyValue final int rxPhy);
 }

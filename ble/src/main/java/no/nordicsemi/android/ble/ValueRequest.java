@@ -25,6 +25,7 @@ package no.nordicsemi.android.ble;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -132,7 +133,7 @@ public abstract class ValueRequest<T> extends Request {
 	 *                                     connected at least once (unknown device).
 	 */
 	@NonNull
-	public <E extends T> E await(final Class<E> responseClass)
+	public <E extends T> E await(@NonNull final Class<E> responseClass)
 			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
 			InvalidRequestException {
 		try {
@@ -163,7 +164,7 @@ public abstract class ValueRequest<T> extends Request {
 	 *                                     connected at least once (unknown device).
 	 */
 	@NonNull
-	public <E extends T> E await(final E response)
+	public <E extends T> E await(@NonNull final E response)
 			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
 			InvalidRequestException {
 		try {
@@ -200,7 +201,8 @@ public abstract class ValueRequest<T> extends Request {
 	 */
 	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
-	public <E extends T> E await(@NonNull final Class<E> responseClass, final int timeout)
+	public <E extends T> E await(@NonNull final Class<E> responseClass,
+								 @IntRange(from = 0) final int timeout)
 			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
 			BluetoothDisabledException, InvalidRequestException {
 		assertNotMainThread();
@@ -247,7 +249,7 @@ public abstract class ValueRequest<T> extends Request {
 	 */
 	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
-	public <E extends T> E await(@NonNull final E response, final int timeout)
+	public <E extends T> E await(@NonNull final E response, @IntRange(from = 0) final int timeout)
 			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
 			BluetoothDisabledException, InvalidRequestException {
 		assertNotMainThread();

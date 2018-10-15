@@ -23,6 +23,7 @@
 package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 
 import no.nordicsemi.android.ble.callback.BeforeCallback;
@@ -79,7 +80,8 @@ public final class ReadRssiRequest extends ValueRequest<RssiCallback> {
 		return this;
 	}
 
-	void notifyRssiRead(@NonNull final BluetoothDevice device, final int rssi) {
+	void notifyRssiRead(@NonNull final BluetoothDevice device,
+						@IntRange(from = -128, to = 20) final int rssi) {
 		if (valueCallback != null)
 			valueCallback.onRssiRead(device, rssi);
 	}
