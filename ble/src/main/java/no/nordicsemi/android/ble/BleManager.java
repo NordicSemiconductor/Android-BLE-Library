@@ -773,6 +773,18 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	/**
+	 * Returns whether the target device is bonded. The device does not have to be connected,
+	 * but must have been set prior to call this method.
+	 *
+	 * @return True, if the Android has bonds information of the device. This does not mean that
+	 * the target device also has such information, or that the link is in fact encrypted.
+	 */
+	protected final boolean isBonded() {
+		return mBluetoothDevice != null
+				&& mBluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED;
+	}
+
+	/**
 	 * Returns true if the device is connected and the initialization has finished,
 	 * that is when {@link BleManagerGattCallback#onDeviceReady()} was called.
 	 */
