@@ -130,7 +130,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	private final Object mLock = new Object();
 	private final Context mContext;
 	final Handler mHandler;
-	
+
 	private BluetoothGatt mBluetoothGatt;
 	private BluetoothDevice mBluetoothDevice;
 	private BleManagerGattCallback mGattCallback;
@@ -553,7 +553,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @return The connect request.
 	 */
 	@NonNull
-	public ConnectRequest connect(@NonNull final BluetoothDevice device) {
+	public final ConnectRequest connect(@NonNull final BluetoothDevice device) {
 		if (mCallbacks == null) {
 			throw new NullPointerException("Set callbacks using setGattCallbacks(E callbacks) before connecting");
 		}
@@ -598,7 +598,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
 	@Deprecated
-	public ConnectRequest connect(@NonNull final BluetoothDevice device, @PhyMask final int phy) {
+	public final ConnectRequest connect(@NonNull final BluetoothDevice device, @PhyMask final int phy) {
 		if (mCallbacks == null) {
 			throw new NullPointerException("Set callbacks using setGattCallbacks(E callbacks) before connecting");
 		}
@@ -716,7 +716,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * the completion callback will be called immediately with device parameter set to null.
 	 */
 	@NonNull
-	public DisconnectRequest disconnect() {
+	public final DisconnectRequest disconnect() {
 		return Request.disconnect().setManager(this);
 	}
 
@@ -759,7 +759,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 *
 	 * @return The Bluetooth device or null, if {@link #connect(BluetoothDevice)} wasn't called.
 	 */
-	public BluetoothDevice getBluetoothDevice() {
+	@Nullable
+	public final BluetoothDevice getBluetoothDevice() {
 		return mBluetoothDevice;
 	}
 
@@ -767,7 +768,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * This method returns true if the device is connected. Services could have not been
 	 * discovered yet.
 	 */
-	public boolean isConnected() {
+	public final boolean isConnected() {
 		return mConnected;
 	}
 
@@ -775,7 +776,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * Returns true if the device is connected and the initialization has finished,
 	 * that is when {@link BleManagerGattCallback#onDeviceReady()} was called.
 	 */
-	public boolean isReady() {
+	public final boolean isReady() {
 		return mReady;
 	}
 
@@ -788,7 +789,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 *
 	 * @return The connection state.
 	 */
-	public int getConnectionState() {
+	public final int getConnectionState() {
 		return mConnectionState;
 	}
 
@@ -804,7 +805,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	@IntRange(from = -1, to = 100)
 	@Deprecated
-	public int getBatteryValue() {
+	public final int getBatteryValue() {
 		return mBatteryValue;
 	}
 
