@@ -197,6 +197,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * a single packet is MTU-3.
 	 */
 	private int mMtu = 23;
+	/** A flag indicating that Reliable Write is in progress. */
+	private boolean mReliableWriteInProgress;
 	/**
 	 * The connect request. This is instantiated in {@link #connect(BluetoothDevice, int)}
 	 * and nullified after the device is ready.
@@ -851,6 +853,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			}
 			mConnected = false;
 			mInitialConnection = false;
+			mReliableWriteInProgress = false;
 			mNotificationCallbacks.clear();
 			mConnectionState = BluetoothGatt.STATE_DISCONNECTED;
 			if (mGattCallback != null) {
@@ -1489,6 +1492,102 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	/**
+	 * Begins the Reliable Write sub-procedure. All Write request operations done when RW is in
+	 * prorgess will use Prepare Write, instead of Write. The peer will acknowlede each packet by
+	 * sending the received data back to the sender for verification.
+	 * <p>
+	 * Long Write will not work when Reliable Write is in progress.
+	 * <p>
+	 * Reliable write operation must be executed or aborted when all data were sent.
+	 * At least one Write operation must be executed before executing or aborting, otherwise the
+	 * {@link GattError#GATT_INVALID_OFFSET} error will be reported.
+	 * <p>
+	 * When Write operation reported incorrect data, the already enqueued writes may be cancelled
+	 * using {@link #clearQueue()} and {@link #abortReliableWrite()} should be enqueued instead.
+	 *
+	 * @return The request.
+	 */
+	@NonNull
+	protected final Request beginReliableWrite() {
+		return Request.newBeginReliableWriteRequest().setManager(this);
+	}
+
+	@MainThread
+	private boolean internalBeginReliableWrite() {
+		final BluetoothGatt gatt = mBluetoothGatt;
+		if (gatt == null || !mConnected)
+			return false;
+
+		// Reliable Write can't be before the old one isn't executed or aborted.
+		if (mReliableWriteInProgress)
+			return true;
+
+		log(Log.VERBOSE, "Beginning reliable write...");
+		log(Log.DEBUG, "gatt.beginReliableWrite()");
+		return mReliableWriteInProgress = gatt.beginReliableWrite();
+	}
+
+	/**
+	 * Executes the ongoing Reliable Write sub-procedure. All data sent since RW was started
+	 * will be executed and delivered in the same order.
+	 *
+	 * @return The request.
+	 */
+	@NonNull
+	protected final Request executeReliableWrite() {
+		return Request.newExecuteReliableWriteRequest().setManager(this);
+	}
+
+	@MainThread
+	private boolean internalExecuteReliableWrite() {
+		final BluetoothGatt gatt = mBluetoothGatt;
+		if (gatt == null || !mConnected)
+			return false;
+
+		if (!mReliableWriteInProgress)
+			return false;
+
+		log(Log.VERBOSE, "Executing reliable write...");
+		log(Log.DEBUG, "gatt.executeReliableWrite()");
+		return gatt.executeReliableWrite();
+	}
+
+	/**
+	 * Aborts the ongoing Reliable Write sub-procedure. All data sent since RW was started
+	 * will be disregarded.
+	 *
+	 * @return The request.
+	 */
+	@NonNull
+	protected final Request abortReliableWrite() {
+		return Request.newExecuteReliableWriteRequest().setManager(this);
+	}
+
+	@MainThread
+	private boolean internalAbortReliableWrite() {
+		final BluetoothGatt gatt = mBluetoothGatt;
+		if (gatt == null || !mConnected)
+			return false;
+
+		if (!mReliableWriteInProgress)
+			return false;
+
+		log(Log.VERBOSE, "Aborting reliable write...");
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+			log(Log.DEBUG, "gatt.abortReliableWrite()");
+			gatt.abortReliableWrite();
+		} else {
+			log(Log.DEBUG, "gatt.abortReliableWrite(device)");
+			gatt.abortReliableWrite(mBluetoothDevice);
+		}
+		return true;
+	}
+
+	protected final boolean isReliableWriteInProgress() {
+		return mReliableWriteInProgress;
+	}
+
+	/**
 	 * Reads the battery level from the device.
 	 *
 	 * @deprecated Use {@link #readCharacteristic(BluetoothGattCharacteristic)} instead.
@@ -1950,6 +2049,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		private final static String ERROR_READ_RSSI = "Error on RSSI read";
 		private final static String ERROR_READ_PHY = "Error on PHY read";
 		private final static String ERROR_PHY_UPDATE = "Error on PHY update";
+		private final static String ERROR_RELIABLE_WRITE = "Error on Execute Reliable Write";
 
 		private final Deque<Request> mTaskQueue = new LinkedList<>();
 		private Deque<Request> mInitQueue;
@@ -2533,7 +2633,17 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		@Override
 		final void onReliableWriteCompletedSafe(@NonNull final BluetoothGatt gatt,
 												final int status) {
-			// TODO implement request
+			final boolean execute = mRequest.type == Request.Type.EXECUTE_RELIABLE_WRITE;
+			mReliableWriteInProgress = false;
+			if (status == BluetoothGatt.GATT_SUCCESS) {
+				log(Log.INFO, execute ? "Reliable Write executed" : "Reliable Write aborted");
+				mRequest.notifySuccess(gatt.getDevice());
+			} else {
+				Log.e(TAG, "onReliableWriteCompleted execute " + execute + ", error " + status);
+				mRequest.notifyFail(gatt.getDevice(), status);
+				onError(gatt.getDevice(), ERROR_RELIABLE_WRITE, status);
+			}
+			nextRequest(true);
 		}
 
 		@Override
@@ -3037,6 +3147,25 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 						descriptor.setValue(wr.getData(mMtu));
 					}
 					result = internalWriteDescriptor(descriptor);
+					break;
+				}
+				case BEGIN_RELIABLE_WRITE: {
+					result = internalBeginReliableWrite();
+					// There is no callback for begin reliable write request.
+					// Notify success and start next request immediately.
+					if (result) {
+						mRequest.notifySuccess(mBluetoothDevice);
+						nextRequest(true);
+						return;
+					}
+					break;
+				}
+				case EXECUTE_RELIABLE_WRITE: {
+					result = internalExecuteReliableWrite();
+					break;
+				}
+				case ABORT_RELIABLE_WRITE: {
+					result = internalAbortReliableWrite();
 					break;
 				}
 				case ENABLE_NOTIFICATIONS: {

@@ -66,6 +66,9 @@ public class Request {
 		READ,
 		WRITE_DESCRIPTOR,
 		READ_DESCRIPTOR,
+		BEGIN_RELIABLE_WRITE,
+		EXECUTE_RELIABLE_WRITE,
+		ABORT_RELIABLE_WRITE,
 		ENABLE_NOTIFICATIONS,
 		ENABLE_INDICATIONS,
 		DISABLE_NOTIFICATIONS,
@@ -365,6 +368,49 @@ public class Request {
 			@Nullable final byte[] value,
 			@IntRange(from = 0) final int offset, @IntRange(from = 0) final int length) {
 		return new WriteRequest(Type.WRITE_DESCRIPTOR, descriptor, value, offset, length);
+	}
+
+	/**
+	 * Creates new Begin Reliable Write request. The begin reliable write operation is
+	 * instantaneous, a proper callback will be invoked after that.
+	 * <p>
+	 * All Write Requests invoked when Reliable Write is in progress will use Prepare Write
+	 * procedure, instead of Write. Each packet sent is acknowledged by the peer by replying the
+	 * received data back for verification. When all data were sent and verified the Reliable
+	 * Write may be Executed using {@link #newExecuteReliableWriteRequest()} request.
+	 * When validation has failed, Reliable Write may be aborted using
+	 * {@link #newAbortReliableWriteRequest()}.
+	 *
+	 * @return The new request.
+	 */
+	@NonNull
+	static Request newBeginReliableWriteRequest() {
+		return new Request(Type.BEGIN_RELIABLE_WRITE);
+	}
+
+	/**
+	 * Executes Reliable Write sub-procedure. At lease one Write Request must be performed
+	 * before the Reliable Write is to be executed, otherwise error
+	 * {@link no.nordicsemi.android.ble.error.GattError#GATT_INVALID_OFFSET} will be returned.
+	 *
+	 * @return The new request.
+	 */
+	@NonNull
+	static Request newExecuteReliableWriteRequest() {
+		return new Request(Type.EXECUTE_RELIABLE_WRITE);
+	}
+
+	/**
+	 * Aborts Reliable Write sub-procedure. All write requests performed during Reliable Write will
+	 * be cancelled. At lease one Write Request must be performed before the Reliable Write
+	 * is to be executed, otherwise error
+	 * {@link no.nordicsemi.android.ble.error.GattError#GATT_INVALID_OFFSET} will be returned.
+	 *
+	 * @return The new request.
+	 */
+	@NonNull
+	static Request newAbortReliableWriteRequest() {
+		return new Request(Type.ABORT_RELIABLE_WRITE);
 	}
 
 	/**
