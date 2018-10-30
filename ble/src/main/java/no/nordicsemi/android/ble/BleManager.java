@@ -611,6 +611,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				.setManager(this);
 	}
 
+	@MainThread
 	private boolean internalConnect(@NonNull final BluetoothDevice device,
 									@Nullable final ConnectRequest connectRequest) {
 		final boolean bluetoothEnabled = BluetoothAdapter.getDefaultAdapter().isEnabled();
@@ -720,6 +721,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		return Request.disconnect().setManager(this);
 	}
 
+	@MainThread
 	private boolean internalDisconnect() {
 		mUserDisconnected = true;
 		mInitialConnection = false;
@@ -911,6 +913,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		return Request.createBond().setManager(this);
 	}
 
+	@MainThread
 	private boolean internalCreateBond() {
 		final BluetoothDevice device = mBluetoothDevice;
 		if (device == null)
@@ -963,6 +966,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	@SuppressWarnings("JavaReflectionMemberAccess")
+	@MainThread
 	private boolean internalRemoveBond() {
 		final BluetoothDevice device = mBluetoothDevice;
 		if (device == null)
@@ -1036,6 +1040,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 *                       callback will not be null, but will not be used.
 	 * @return The callback.
 	 */
+	@MainThread
 	@NonNull
 	protected final ValueChangedCallback setNotificationCallback(@Nullable final BluetoothGattCharacteristic characteristic) {
 		ValueChangedCallback callback = mNotificationCallbacks.get(characteristic);
@@ -1121,6 +1126,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		return Request.newEnableNotificationsRequest(characteristic).setManager(this);
 	}
 
+	@MainThread
 	private boolean internalEnableNotifications(final BluetoothGattCharacteristic characteristic) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || characteristic == null || !mConnected)
@@ -1155,6 +1161,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		return Request.newDisableNotificationsRequest(characteristic).setManager(this);
 	}
 
+	@MainThread
 	private boolean internalDisableNotifications(final BluetoothGattCharacteristic characteristic) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || characteristic == null || !mConnected)
@@ -1189,6 +1196,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		return Request.newEnableIndicationsRequest(characteristic).setManager(this);
 	}
 
+	@MainThread
 	private boolean internalEnableIndications(final BluetoothGattCharacteristic characteristic) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || characteristic == null || !mConnected)
@@ -1223,6 +1231,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		return Request.newDisableIndicationsRequest(characteristic).setManager(this);
 	}
 
+	@MainThread
 	private boolean internalDisableIndications(final BluetoothGattCharacteristic characteristic) {
 		// This writes exactly the same settings so do not duplicate code.
 		return internalDisableNotifications(characteristic);
@@ -1267,6 +1276,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		return Request.newReadRequest(characteristic).setManager(this);
 	}
 
+	@MainThread
 	private boolean internalReadCharacteristic(final BluetoothGattCharacteristic characteristic) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || characteristic == null || !mConnected)
@@ -1352,6 +1362,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		return Request.newWriteRequest(characteristic, data, offset, length).setManager(this);
 	}
 
+	@MainThread
 	private boolean internalWriteCharacteristic(final BluetoothGattCharacteristic characteristic) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || characteristic == null || !mConnected)
@@ -1385,6 +1396,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		return Request.newReadRequest(descriptor).setManager(this);
 	}
 
+	@MainThread
 	private boolean internalReadDescriptor(final BluetoothGattDescriptor descriptor) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || descriptor == null || !mConnected)
@@ -1465,6 +1477,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		return Request.newWriteRequest(descriptor, data, offset, length).setManager(this);
 	}
 
+	@MainThread
 	private boolean internalWriteDescriptor(final BluetoothGattDescriptor descriptor) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || descriptor == null || !mConnected)
@@ -1499,6 +1512,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				.enqueue();
 	}
 
+	@MainThread
 	@Deprecated
 	private boolean internalReadBatteryLevel() {
 		final BluetoothGatt gatt = mBluetoothGatt;
@@ -1554,6 +1568,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				.enqueue();
 	}
 
+	@MainThread
 	@Deprecated
 	private boolean internalSetBatteryNotifications(final boolean enable) {
 		final BluetoothGatt gatt = mBluetoothGatt;
@@ -1581,6 +1596,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @param descriptor the descriptor to be written
 	 * @return the result of {@link BluetoothGatt#writeDescriptor(BluetoothGattDescriptor)}
 	 */
+	@MainThread
 	private boolean internalWriteDescriptorWorkaround(final BluetoothGattDescriptor descriptor) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || descriptor == null || !mConnected)
@@ -1641,6 +1657,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+	@MainThread
 	private boolean internalRequestMtu(@IntRange(from = 23, to = 517) final int mtu) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || !mConnected)
@@ -1683,6 +1700,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
+	@MainThread
 	private boolean internalRequestConnectionPriority(@ConnectionPriority final int priority) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || !mConnected)
@@ -1737,6 +1755,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.O)
+	@MainThread
 	private boolean internalSetPreferredPhy(@PhyMask final int txPhy, @PhyMask final int rxPhy,
 											@PhyOption final int phyOptions) {
 		final BluetoothGatt gatt = mBluetoothGatt;
@@ -1768,6 +1787,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.O)
+	@MainThread
 	private boolean internalReadPhy() {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || !mConnected)
@@ -1791,6 +1811,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		return Request.newReadRssiRequest().setManager(this);
 	}
 
+	@MainThread
 	private boolean internalReadRssi() {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || !mConnected)
@@ -1827,6 +1848,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * Clears the device cache.
 	 */
 	@SuppressWarnings("JavaReflectionMemberAccess")
+	@MainThread
 	private boolean internalRefreshDeviceCache() {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null) // no need to be connected
@@ -2859,6 +2881,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 * been executed the {@link #onDeviceReady()} callback is called.
 		 */
 		@SuppressWarnings("ConstantConditions")
+		@MainThread
 		private synchronized void nextRequest(final boolean force) {
 			// Is the manager closed()?
 			if (mGattCallback == null) {
