@@ -2856,7 +2856,15 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			}
 
 			// Get the first request from the init queue
-			Request request = mInitQueue != null ? mInitQueue.poll() : null;
+			Request request = null;
+			try {
+				request = mInitQueue != null ? mInitQueue.poll() : null;
+			} catch (final Exception e) {
+				// On older Android versions poll() may in some cases throw NoSuchElementException,
+				// as it's using removeFirst() intermally.
+				// See: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/37
+				request = null;
+			}
 
 			// Are we done with initializing?
 			if (request == null) {
@@ -2874,7 +2882,14 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					}
 				}
 				// If so, we can continue with the task queue
-				request = mTaskQueue.poll();
+				try {
+					request = mTaskQueue.poll();
+				} catch (final Exception e) {
+					// On older Android versions poll() may in some cases throw NoSuchElementException,
+					// as it's using removeFirst() intermally.
+					// See: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/37
+					request = null;
+				}
 				if (request == null) {
 					mOperationInProgress = false;
 					mRequest = null;
