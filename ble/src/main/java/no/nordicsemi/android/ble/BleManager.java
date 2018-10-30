@@ -1489,7 +1489,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 						final int batteryLevel = data.getIntValue(Data.FORMAT_UINT8, 0);
 						log(Log.INFO, "Battery Level received: " + batteryLevel + "%");
 						mBatteryValue = batteryLevel;
-						mGattCallback.onBatteryValueReceived(mBluetoothGatt, batteryLevel);
+						final BleManagerGattCallback callback = mGattCallback;
+						if (callback != null) {
+							callback.onBatteryValueReceived(mBluetoothGatt, batteryLevel);
+						}
 						mCallbacks.onBatteryValueReceived(device, batteryLevel);
 					}
 				})
@@ -1526,7 +1529,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 						if (data.size() == 1) {
 							final int batteryLevel = data.getIntValue(Data.FORMAT_UINT8, 0);
 							mBatteryValue = batteryLevel;
-							mGattCallback.onBatteryValueReceived(mBluetoothGatt, batteryLevel);
+							final BleManagerGattCallback callback = mGattCallback;
+							if (callback != null) {
+								callback.onBatteryValueReceived(mBluetoothGatt, batteryLevel);
+							}
 							mCallbacks.onBatteryValueReceived(device, batteryLevel);
 						}
 					});
@@ -1864,20 +1870,24 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	@Deprecated
 	protected final void enqueue(@NonNull final Request request) {
-		if (mGattCallback == null) {
-			mGattCallback = getGattCallback();
+		BleManagerGattCallback callback = mGattCallback;
+		if (callback == null) {
+			callback = mGattCallback = getGattCallback();
 		}
 		// Add the new task to the end of the queue.
-		final BleManagerGattCallback callback = mGattCallback;
-		callback.enqueue(request);
-		runOnUiThread(() -> callback.nextRequest(false));
+		final BleManagerGattCallback finalCallback = callback;
+		finalCallback.enqueue(request);
+		runOnUiThread(() -> finalCallback.nextRequest(false));
 	}
 
 	/**
 	 * Cancels all the enqueued operations. The one currently executed will be finished.
 	 */
 	protected final void clearQueue() {
-		mGattCallback.cancelQueue();
+		final BleManagerGattCallback callback = mGattCallback;
+		if (callback != null) {
+			callback.cancelQueue();
+		}
 	}
 
 	private void runOnUiThread(final Runnable runnable) {
@@ -1898,7 +1908,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			// The method above will call mGattCallback.nextRequest(true) so we have to return here.
 			return;
 		}
-		mGattCallback.nextRequest(true);
+		final BleManagerGattCallback callback = mGattCallback;
+		if (callback != null) {
+			callback.nextRequest(true);
+		}
 	}
 
 	@SuppressWarnings({"WeakerAccess", "DeprecatedIsStillUsed"})
@@ -2847,6 +2860,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		 */
 		@SuppressWarnings("ConstantConditions")
 		private synchronized void nextRequest(final boolean force) {
+			// Is the manager closed()?
+			if (mGattCallback == null) {
+				return;
+			}
+
 			if (force) {
 				mOperationInProgress = mValueChangedRequest != null;
 			}
@@ -2911,7 +2929,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					// fall-through intended
 				case WAIT_FOR_NOTIFICATION: {
 					final WaitForValueChangedRequest r = (WaitForValueChangedRequest) request;
-					result = mConnected && mBluetoothDevice != null && mGattCallback != null
+					result = mConnected && mBluetoothDevice != null
 							&& getCccd(r.characteristic, requiredProperty) != null;
 					if (result) {
 						mValueChangedRequest = r;
