@@ -45,6 +45,12 @@ public final class ReadRssiRequest extends ValueRequest<RssiCallback> {
 		return this;
 	}
 
+	@NonNull
+	@Override
+	ReadRssiRequest timeout(@IntRange(from = 0) final long timeout) {
+		throw new UnsupportedOperationException("Read RSSI request may not have timeout");
+	}
+
 	@Override
 	@NonNull
 	public ReadRssiRequest done(@NonNull final SuccessCallback callback) {

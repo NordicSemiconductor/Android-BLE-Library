@@ -23,6 +23,7 @@
 package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 
 import no.nordicsemi.android.ble.annotation.PhyMask;
@@ -100,6 +101,12 @@ public final class PhyRequest extends ValueRequest<PhyCallback> {
 	PhyRequest setManager(@NonNull final BleManager manager) {
 		super.setManager(manager);
 		return this;
+	}
+
+	@NonNull
+	@Override
+	PhyRequest timeout(@IntRange(from = 0) final long timeout) {
+		throw new UnsupportedOperationException("PHY request may not have timeout");
 	}
 
 	@Override

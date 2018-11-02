@@ -98,6 +98,13 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 
 	@NonNull
 	@Override
+	public WaitForValueChangedRequest timeout(@IntRange(from = 0) final long timeout) {
+		super.timeout(timeout);
+		return this;
+	}
+
+	@NonNull
+	@Override
 	public WaitForValueChangedRequest with(@NonNull final DataReceivedCallback callback) {
 		super.with(callback);
 		return this;
@@ -139,7 +146,7 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	 * @return The request.
 	 */
 	@NonNull
-	public WaitForValueChangedRequest trigger(@NonNull final Request trigger) {
+	public WaitForValueChangedRequest trigger(@NonNull final ConnectionRequest trigger) {
 		this.trigger = trigger;
 		// The trigger will never receive invalid request event.
 		// If the BluetoothDevice wasn't set, the whole WaitForValueChangedRequest would be invalid.
@@ -154,10 +161,21 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 		return this;
 	}
 
+	/**
+	 * Enqueues the request for asynchronous execution with a timeout.
+	 * When the timeout occurs, the request will fail with {@link FailCallback#REASON_TIMEOUT}.
+	 *
+	 * @param timeout the request timeout in milliseconds, 0 to disable timeout.
+	 * @deprecated Use {@link #timeout(long)} and {@link #enqueue()} instead.
+	 */
+	@Deprecated
+	public void enqueue(@IntRange(from = 0) final long timeout) {
+		timeout(timeout).enqueue();
+	}
+
 	@NonNull
 	@Override
-	public <E extends DataReceivedCallback> E await(@NonNull final E response,
-													@IntRange(from = 0) final int timeout)
+	public <E extends DataReceivedCallback> E await(@NonNull final E response)
 			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
 			BluetoothDisabledException, InvalidRequestException {
 		assertNotMainThread();
@@ -207,6 +225,74 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	}
 
 	/**
+	 * Synchronously waits until the request is done, for at most given number of milliseconds.
+	 * Callbacks set using {@link #done(SuccessCallback)}, {@link #fail(FailCallback)} and
+	 * {@link #with(DataReceivedCallback)} will be ignored.
+	 * <p>
+	 * This method may not be called from the main (UI) thread.
+	 *
+	 * @param responseClass the response class. This class will be instantiate, therefore it has
+	 *                      to have a default constructor.
+	 * @param timeout       optional timeout in milliseconds.
+	 * @param <E>           a response class that extends {@link DataReceivedCallback}.
+	 * @return The object with a response.
+	 * @throws RequestFailedException      thrown when the BLE request finished with status other
+	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
+	 * @throws InterruptedException        thrown if the timeout occurred before the request has
+	 *                                     finished.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main
+	 *                                     (UI) thread.
+	 * @throws IllegalArgumentException    thrown when the response class could not be instantiated.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
+	 *                                     was completed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
+	 * @throws InvalidRequestException     thrown when the request was called before the device was
+	 *                                     connected at least once (unknown device).
+	 * @deprecated Use {@link #timeout(long)} and {@link #await(Class)} instead.
+	 */
+	@NonNull
+	@Deprecated
+	public <E extends DataReceivedCallback> E await(@NonNull final Class<E> responseClass,
+													@IntRange(from = 0) final long timeout)
+			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
+			BluetoothDisabledException, InvalidRequestException {
+		return timeout(timeout).await(responseClass);
+	}
+
+	/**
+	 * Synchronously waits until the request is done, for at most given number of milliseconds.
+	 * Callbacks set using {@link #done(SuccessCallback)}, {@link #fail(FailCallback)} and
+	 * {@link #with(DataReceivedCallback)} will be ignored.
+	 * <p>
+	 * This method may not be called from the main (UI) thread.
+	 *
+	 * @param response the response object.
+	 * @param timeout  optional timeout in milliseconds.
+	 * @param <E>      a response class that extends {@link DataReceivedCallback}.
+	 * @return The object with a response.
+	 * @throws RequestFailedException      thrown when the BLE request finished with status other
+	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
+	 * @throws InterruptedException        thrown if the timeout occurred before the request has
+	 *                                     finished.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main
+	 *                                     (UI) thread.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
+	 *                                     was completed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
+	 * @throws InvalidRequestException     thrown when the request was called before the device was
+	 *                                     connected at least once (unknown device).
+	 * @deprecated Use {@link #timeout(long)} and {@link #await(Object)} instead.
+	 */
+	@NonNull
+	@Deprecated
+	public <E extends DataReceivedCallback> E await(@NonNull final E response,
+													@IntRange(from = 0) final long timeout)
+			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
+			BluetoothDisabledException, InvalidRequestException {
+		return timeout(timeout).await(response);
+	}
+
+	/**
 	 * Similar to {@link #await(Class)}, but if the response class extends
 	 * {@link ProfileReadResponse} and the received response is invalid, an exception is thrown.
 	 * This allows to keep all error handling in one place.
@@ -217,6 +303,8 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	 * @return Object with a valid response.
 	 * @throws IllegalStateException       thrown when you try to call this method from
 	 *                                     the main (UI) thread.
+	 * @throws InterruptedException        thrown when the timeout occurred before the
+	 *                                     characteristic value has changed.
 	 * @throws IllegalArgumentException    thrown when the response class could not be instantiated.
 	 * @throws RequestFailedException      thrown when the trigger request has failed.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
@@ -233,13 +321,12 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass)
 			throws RequestFailedException, InvalidDataException, DeviceDisconnectedException,
-			BluetoothDisabledException, InvalidRequestException {
-		try {
-			return awaitValid(responseClass, 0);
-		} catch (final InterruptedException e) {
-			// never happen
-			throw new IllegalStateException("This should never happen");
+			BluetoothDisabledException, InvalidRequestException, InterruptedException {
+		final E response = await(responseClass);
+		if (response != null && !response.isValid()) {
+			throw new InvalidDataException(response);
 		}
+		return response;
 	}
 
 	/**
@@ -252,6 +339,8 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	 * @return Object with a valid response.
 	 * @throws IllegalStateException       thrown when you try to call this method from
 	 *                                     the main (UI) thread.
+	 * @throws InterruptedException        thrown when the timeout occurred before the
+	 *                                     characteristic value has changed.
 	 * @throws RequestFailedException      thrown when the trigger request has failed.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
@@ -267,17 +356,16 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final E response)
 			throws RequestFailedException, InvalidDataException, DeviceDisconnectedException,
-			BluetoothDisabledException, InvalidRequestException {
-		try {
-			return awaitValid(response, 0);
-		} catch (final InterruptedException e) {
-			// never happen
-			throw new IllegalStateException("This should never happen");
+			BluetoothDisabledException, InvalidRequestException, InterruptedException {
+		final E result = await(response);
+		if (result != null && !result.isValid()) {
+			throw new InvalidDataException(result);
 		}
+		return result;
 	}
 
 	/**
-	 * Same as {@link #await(Class, int)}, but if received response is not valid, this method will
+	 * Same as {@link #await(Class, long)}, but if received response is not valid, this method will
 	 * thrown an exception.
 	 *
 	 * @param responseClass the result class. This class will be instantiate, therefore it
@@ -300,23 +388,21 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	 *                                     {@link ProfileReadResponse#onDataReceived(BluetoothDevice, Data)}
 	 *                                     failed to parse the data correctly and called
 	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}).
+	 * @deprecated Use {@link #timeout(long)} and {@link #awaitValid(Class)} instead.
 	 */
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
+	@Deprecated
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass,
-														@IntRange(from = 0) final int timeout)
+														@IntRange(from = 0) final long timeout)
 			throws InterruptedException, InvalidDataException, RequestFailedException,
 			DeviceDisconnectedException, BluetoothDisabledException, InvalidRequestException {
-		final E response = await(responseClass, timeout);
-		if (response != null && !response.isValid()) {
-			throw new InvalidDataException(response);
-		}
-		return response;
+		return timeout(timeout).awaitValid(responseClass);
 	}
 
 	/**
-	 * Same as {@link #await(Object, int)}, but if received response is not valid, this method will
-	 * thrown an exception.
+	 * Same as {@link #await(DataReceivedCallback, long)}, but if received response is not valid,
+	 * this method will thrown an exception.
 	 *
 	 * @param response the result object.
 	 * @param timeout  optional timeout in milliseconds.
@@ -336,18 +422,16 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	 *                                     {@link ProfileReadResponse#onDataReceived(BluetoothDevice, Data)}
 	 *                                     failed to parse the data correctly and called
 	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}).
+	 * @deprecated Use {@link #timeout(long)} and {@link #awaitValid(E)} instead.
 	 */
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
+	@Deprecated
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final E response,
-														@IntRange(from = 0) final int timeout)
+														@IntRange(from = 0) final long timeout)
 			throws InterruptedException, InvalidDataException, DeviceDisconnectedException,
 			RequestFailedException, BluetoothDisabledException, InvalidRequestException {
-		final E result = await(response, timeout);
-		if (result != null && !result.isValid()) {
-			throw new InvalidDataException(result);
-		}
-		return result;
+		return timeout(timeout).awaitValid(response);
 	}
 
 	void notifyValueChanged(final BluetoothDevice device, final byte[] value) {

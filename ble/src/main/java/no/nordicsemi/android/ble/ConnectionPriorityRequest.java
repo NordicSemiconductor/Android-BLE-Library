@@ -86,6 +86,12 @@ public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPrio
 		return this;
 	}
 
+	@NonNull
+	@Override
+	ConnectionPriorityRequest timeout(@IntRange(from = 0) final long timeout) {
+		throw new UnsupportedOperationException("Connection priority request may not have timeout");
+	}
+
 	@Override
 	@NonNull
 	public ConnectionPriorityRequest done(@NonNull final SuccessCallback callback) {
@@ -128,7 +134,7 @@ public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPrio
 	@Override
 	public <E extends ConnectionPriorityCallback> E await(@NonNull final Class<E> responseClass)
 			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
-			InvalidRequestException {
+			InvalidRequestException, InterruptedException {
 		// The BluetoothGattCallback#onConnectionUpdated callback was introduced in Android Oreo.
 		return super.await(responseClass);
 	}
@@ -136,12 +142,11 @@ public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPrio
 	@RequiresApi(value = Build.VERSION_CODES.O)
 	@NonNull
 	@Override
-	public <E extends ConnectionPriorityCallback> E await(@NonNull final Class<E> responseClass,
-														  final int timeout)
-			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
-			BluetoothDisabledException, InvalidRequestException {
+	public <E extends ConnectionPriorityCallback> E await(@NonNull final E response)
+			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
+			InvalidRequestException, InterruptedException {
 		// The BluetoothGattCallback#onConnectionUpdated callback was introduced in Android Oreo.
-		return super.await(responseClass, timeout);
+		return super.await(response);
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.O)

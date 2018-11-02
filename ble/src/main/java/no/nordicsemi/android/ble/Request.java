@@ -56,8 +56,9 @@ import no.nordicsemi.android.ble.exception.RequestFailedException;
  */
 @SuppressWarnings({"unused", "WeakerAccess", "deprecation", "DeprecatedIsStillUsed"})
 public class Request {
-	@SuppressWarnings("DeprecatedIsStillUsed")
+
 	enum Type {
+		SET,
 		CONNECT,
 		DISCONNECT,
 		CREATE_BOND,
@@ -92,7 +93,7 @@ public class Request {
 	}
 
 	private Runnable timeoutHandler;
-	private long timeout;
+	protected long timeout;
 	private BleManager manager;
 
 	final ConditionVariable syncLock;
@@ -206,7 +207,7 @@ public class Request {
 	@Deprecated
 	@NonNull
 	public static ReadRequest newReadRequest(
-	        @Nullable final BluetoothGattCharacteristic characteristic) {
+			@Nullable final BluetoothGattCharacteristic characteristic) {
 		return new ReadRequest(Type.READ, characteristic);
 	}
 
@@ -225,13 +226,13 @@ public class Request {
 	@Deprecated
 	@NonNull
 	public static WriteRequest newWriteRequest(
-	        @Nullable final BluetoothGattCharacteristic characteristic,
-            @Nullable final byte[] value) {
+			@Nullable final BluetoothGattCharacteristic characteristic,
+			@Nullable final byte[] value) {
 		return new WriteRequest(Type.WRITE, characteristic, value, 0,
 				value != null ? value.length : 0,
 				characteristic != null ?
-                        characteristic.getWriteType() :
-                        BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+						characteristic.getWriteType() :
+						BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
 	}
 
 	/**
@@ -252,8 +253,8 @@ public class Request {
 	@Deprecated
 	@NonNull
 	public static WriteRequest newWriteRequest(
-	        @Nullable final BluetoothGattCharacteristic characteristic,
-            @Nullable final byte[] value, @WriteType final int writeType) {
+			@Nullable final BluetoothGattCharacteristic characteristic,
+			@Nullable final byte[] value, @WriteType final int writeType) {
 		return new WriteRequest(Type.WRITE, characteristic, value, 0,
 				value != null ? value.length : 0, writeType);
 	}
@@ -276,13 +277,13 @@ public class Request {
 	@Deprecated
 	@NonNull
 	public static WriteRequest newWriteRequest(
-	        @Nullable final BluetoothGattCharacteristic characteristic,
+			@Nullable final BluetoothGattCharacteristic characteristic,
 			@Nullable final byte[] value,
 			@IntRange(from = 0) final int offset, @IntRange(from = 0) final int length) {
 		return new WriteRequest(Type.WRITE, characteristic, value, offset, length,
 				characteristic != null ?
-                        characteristic.getWriteType() :
-                        BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+						characteristic.getWriteType() :
+						BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
 	}
 
 	/**
@@ -302,13 +303,13 @@ public class Request {
 	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#writeCharacteristic(BluetoothGattCharacteristic, byte[], int, int)}
-     * instead.
+	 * instead.
 	 */
 	@Deprecated
 	@NonNull
 	public static WriteRequest newWriteRequest(
-	        @Nullable final BluetoothGattCharacteristic characteristic,
-            @Nullable final byte[] value,
+			@Nullable final BluetoothGattCharacteristic characteristic,
+			@Nullable final byte[] value,
 			@IntRange(from = 0) final int offset, @IntRange(from = 0) final int length,
 			@WriteType final int writeType) {
 		return new WriteRequest(Type.WRITE, characteristic, value, offset, length, writeType);
@@ -364,22 +365,26 @@ public class Request {
 	@Deprecated
 	@NonNull
 	public static WriteRequest newWriteRequest(
-	        @Nullable final BluetoothGattDescriptor descriptor,
+			@Nullable final BluetoothGattDescriptor descriptor,
 			@Nullable final byte[] value,
 			@IntRange(from = 0) final int offset, @IntRange(from = 0) final int length) {
 		return new WriteRequest(Type.WRITE_DESCRIPTOR, descriptor, value, offset, length);
 	}
 
 	/**
-	 * Creates new Begin Reliable Write request. The begin reliable write operation is
-	 * instantaneous, a proper callback will be invoked after that.
-	 * <p>
-	 * All Write Requests invoked when Reliable Write is in progress will use Prepare Write
-	 * procedure, instead of Write. Each packet sent is acknowledged by the peer by replying the
-	 * received data back for verification. When all data were sent and verified the Reliable
-	 * Write may be Executed using {@link #newExecuteReliableWriteRequest()} request.
-	 * When validation has failed, Reliable Write may be aborted using
-	 * {@link #newAbortReliableWriteRequest()}.
+	 * Creates new Reliable Write request. All operations that need to be executed
+	 * reliably should be enqueued inside the returned request before enqueuing it in the
+	 * BleManager. The library will automatically verify the data sent
+	 *
+	 * @return The new request.
+	 */
+	@NonNull
+	static ReliableWriteRequest newReliableWriteRequest() {
+		return new ReliableWriteRequest();
+	}
+
+	/**
+	 * Creates new Begin Reliable Write request.
 	 *
 	 * @return The new request.
 	 */
@@ -426,7 +431,7 @@ public class Request {
 	@Deprecated
 	@NonNull
 	public static WriteRequest newEnableNotificationsRequest(
-	        @Nullable final BluetoothGattCharacteristic characteristic) {
+			@Nullable final BluetoothGattCharacteristic characteristic) {
 		return new WriteRequest(Type.ENABLE_NOTIFICATIONS, characteristic);
 	}
 
@@ -443,7 +448,7 @@ public class Request {
 	@Deprecated
 	@NonNull
 	public static WriteRequest newDisableNotificationsRequest(
-	        @Nullable final BluetoothGattCharacteristic characteristic) {
+			@Nullable final BluetoothGattCharacteristic characteristic) {
 		return new WriteRequest(Type.DISABLE_NOTIFICATIONS, characteristic);
 	}
 
@@ -460,7 +465,7 @@ public class Request {
 	@Deprecated
 	@NonNull
 	public static WriteRequest newEnableIndicationsRequest(
-	        @Nullable final BluetoothGattCharacteristic characteristic) {
+			@Nullable final BluetoothGattCharacteristic characteristic) {
 		return new WriteRequest(Type.ENABLE_INDICATIONS, characteristic);
 	}
 
@@ -477,7 +482,7 @@ public class Request {
 	@Deprecated
 	@NonNull
 	public static WriteRequest newDisableIndicationsRequest(
-	        @Nullable final BluetoothGattCharacteristic characteristic) {
+			@Nullable final BluetoothGattCharacteristic characteristic) {
 		return new WriteRequest(Type.DISABLE_INDICATIONS, characteristic);
 	}
 
@@ -487,7 +492,7 @@ public class Request {
 	 * After the operation is complete a proper callback will be invoked.
 	 * <p>
 	 * If the notification should be triggered by another operation (for example writing an
-	 * op code), set it with {@link WaitForValueChangedRequest#trigger(Request)}.
+	 * op code), set it with {@link WaitForValueChangedRequest#trigger(ConnectionRequest)}.
 	 *
 	 * @param characteristic characteristic from which a notification should be received.
 	 * @return The new request.
@@ -497,7 +502,7 @@ public class Request {
 	@Deprecated
 	@NonNull
 	public static WaitForValueChangedRequest newWaitForNotificationRequest(
-	        @Nullable final BluetoothGattCharacteristic characteristic) {
+			@Nullable final BluetoothGattCharacteristic characteristic) {
 		return new WaitForValueChangedRequest(Type.WAIT_FOR_NOTIFICATION, characteristic);
 	}
 
@@ -507,7 +512,7 @@ public class Request {
 	 * After the operation is complete a proper callback will be invoked.
 	 * <p>
 	 * If the indication should be triggered by another operation (for example writing an
-	 * op code), set it with {@link WaitForValueChangedRequest#trigger(Request)}.
+	 * op code), set it with {@link WaitForValueChangedRequest#trigger(ConnectionRequest)}.
 	 *
 	 * @param characteristic characteristic from which a notification should be received.
 	 * @return The new request.
@@ -517,7 +522,7 @@ public class Request {
 	@Deprecated
 	@NonNull
 	public static WaitForValueChangedRequest newWaitForIndicationRequest(
-	        @Nullable final BluetoothGattCharacteristic characteristic) {
+			@Nullable final BluetoothGattCharacteristic characteristic) {
 		return new WaitForValueChangedRequest(Type.WAIT_FOR_INDICATION, characteristic);
 	}
 
@@ -601,7 +606,7 @@ public class Request {
 	 * <ol>
 	 * <li>{@link ConnectionPriorityRequest#CONNECTION_PRIORITY_HIGH}
 	 * - Interval: 11.25 -15 ms (Android 6+) and 7.5 - 10 ms (older), latency: 0,
-	 *   supervision timeout: 20 sec,</li>
+	 * supervision timeout: 20 sec,</li>
 	 * <li>{@link ConnectionPriorityRequest#CONNECTION_PRIORITY_BALANCED}
 	 * - Interval: 30 - 50 ms, latency: 0, supervision timeout: 20 sec,</li>
 	 * <li>{@link ConnectionPriorityRequest#CONNECTION_PRIORITY_LOW_POWER}
@@ -632,15 +637,15 @@ public class Request {
 	 * You may safely request other PHYs on older platforms, but the request will not be executed
 	 * and you will get PHY LE 1M as TX and RX PHY in the callback.
 	 *
-	 * @param txPhy preferred transmitter PHY. Bitwise OR of any of
-	 *             {@link PhyRequest#PHY_LE_1M_MASK}, {@link PhyRequest#PHY_LE_2M_MASK},
-	 *             and {@link PhyRequest#PHY_LE_CODED_MASK}.
-	 * @param rxPhy preferred receiver PHY. Bitwise OR of any of
-	 *             {@link PhyRequest#PHY_LE_1M_MASK}, {@link PhyRequest#PHY_LE_2M_MASK},
-	 *             and {@link PhyRequest#PHY_LE_CODED_MASK}.
+	 * @param txPhy      preferred transmitter PHY. Bitwise OR of any of
+	 *                   {@link PhyRequest#PHY_LE_1M_MASK}, {@link PhyRequest#PHY_LE_2M_MASK},
+	 *                   and {@link PhyRequest#PHY_LE_CODED_MASK}.
+	 * @param rxPhy      preferred receiver PHY. Bitwise OR of any of
+	 *                   {@link PhyRequest#PHY_LE_1M_MASK}, {@link PhyRequest#PHY_LE_2M_MASK},
+	 *                   and {@link PhyRequest#PHY_LE_CODED_MASK}.
 	 * @param phyOptions preferred coding to use when transmitting on the LE Coded PHY. Can be one
-	 *             of {@link PhyRequest#PHY_OPTION_NO_PREFERRED},
-	 *             {@link PhyRequest#PHY_OPTION_S2} or {@link PhyRequest#PHY_OPTION_S8}.
+	 *                   of {@link PhyRequest#PHY_OPTION_NO_PREFERRED},
+	 *                   {@link PhyRequest#PHY_OPTION_S2} or {@link PhyRequest#PHY_OPTION_S8}.
 	 * @return The new request.
 	 * @deprecated Access to this method will change to package-only.
 	 * Use {@link BleManager#setPreferredPhy(int, int, int)} instead.
@@ -722,10 +727,10 @@ public class Request {
 
 	/**
 	 * Use to set a completion callback. The callback will be invoked when the operation has
-     * finished successfully unless {@link #await(int)} or its variant was used, in which case this
-     * callback will be ignored.
+	 * finished successfully unless {@link #await()} or its variant was used, in which case this
+	 * callback will be ignored.
 	 *
-	 * @param callback the callback
+	 * @param callback the callback.
 	 * @return The request.
 	 */
 	@NonNull
@@ -740,7 +745,7 @@ public class Request {
 	 * ({@link BleManager#connect(BluetoothDevice)} was never called), the
 	 * {@link #invalid(InvalidRequestCallback)} will be used instead, as the
 	 * {@link BluetoothDevice} is not known.
-	 * This callback will be ignored if {@link #await(int)} or its variant was used, in which case
+	 * This callback will be ignored if {@link #await()} or its variant was used, in which case
 	 * the error will be returned as an exception.
 	 *
 	 * @param callback the callback.
@@ -753,9 +758,19 @@ public class Request {
 	}
 
 	/**
+	 * Used to set internal fail callback. The callback will be notified in case the request
+	 * has failed.
+	 *
+	 * @param callback the callback.
+	 */
+	void internalFail(@NonNull final FailCallback callback) {
+		this.internalFailCallback = callback;
+	}
+
+	/**
 	 * Use to set a callback that will be called in case the request was invalid, for example
 	 * called before the device was connected.
-	 * This callback will be ignored if {@link #await(int)} or its variant was used, in which case
+	 * This callback will be ignored if {@link #await()} or its variant was used, in which case
 	 * the error will be returned as an exception.
 	 *
 	 * @param callback the callback.
@@ -780,31 +795,29 @@ public class Request {
 	}
 
 	/**
-	 * Used to set internal fail callback. The callback will be notified in case the request
-	 * has failed.
+	 * Sets the operation timeout.
+	 * When the timeout occurs, the request will fail with {@link FailCallback#REASON_TIMEOUT}.
 	 *
-	 * @param callback the callback.
+	 * @param timeout the request timeout in milliseconds, 0 to disable timeout.
+	 * @return the callback.
+	 * @throws IllegalStateException         thrown when the request has already been started.
+	 * @throws UnsupportedOperationException thrown when the timeout is not allowed for this request,
+	 *                                       as the callback from the system is required.
 	 */
-	void internalFail(@NonNull final FailCallback callback) {
-		this.internalFailCallback = callback;
+	@NonNull
+	Request timeout(@IntRange(from = 0) final long timeout) {
+		// This method is package-private, as not all requests support timeout. The access
+		// modifier may be widened to public where timeout is supported.
+		if (timeoutHandler != null)
+			throw new IllegalStateException("Request already started");
+		this.timeout = timeout;
+		return this;
 	}
 
 	/**
 	 * Enqueues the request for asynchronous execution.
 	 */
 	public void enqueue() {
-		this.timeout = 0;
-		manager.enqueue(this);
-	}
-
-	/**
-	 * Enqueues the request for asynchronous execution with a timeout.
-	 * When the timeout occurs, the request will fail with {@link FailCallback#REASON_TIMEOUT}.
-	 *
-	 * @param timeout the request timeout in milliseconds, 0 to disable timeout.
-	 */
-	public void enqueue(@IntRange(from = 0) final long timeout) {
-		this.timeout = timeout;
 		manager.enqueue(this);
 	}
 
@@ -817,33 +830,6 @@ public class Request {
 	 *
 	 * @throws RequestFailedException      thrown when the BLE request finished with status other
 	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main
-	 *                                     (UI) thread.
-	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
-	 *                                     was completed.
-	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
-	 * @throws InvalidRequestException     thrown when the request was called before the device was
-	 *                                     connected at least once (unknown device).
-	 */
-	public void await() throws RequestFailedException, DeviceDisconnectedException,
-			BluetoothDisabledException, InvalidRequestException {
-		try {
-			await(0);
-		} catch (final InterruptedException e) {
-			// never happen
-		}
-	}
-
-	/**
-	 * Synchronously waits until the request is done, for at most given number of milliseconds.
-	 * Callbacks set using {@link #done(SuccessCallback)}, {@link #fail(FailCallback)}
-	 * will be ignored.
-	 * <p>
-	 * This method may not be called from the main (UI) thread.
-	 *
-	 * @param timeout optional timeout in milliseconds
-	 * @throws RequestFailedException      thrown when the BLE request finished with status other
-	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
 	 * @throws InterruptedException        thrown if the timeout occurred before the request has
 	 *                                     finished.
 	 * @throws IllegalStateException       thrown when you try to call this method from the main
@@ -854,9 +840,8 @@ public class Request {
 	 * @throws InvalidRequestException     thrown when the request was called before the device was
 	 *                                     connected at least once (unknown device).
 	 */
-	public void await(@IntRange(from = 0) final int timeout)
-			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
-			BluetoothDisabledException, InvalidRequestException {
+	public void await() throws RequestFailedException, DeviceDisconnectedException,
+			BluetoothDisabledException, InvalidRequestException, InterruptedException {
 		assertNotMainThread();
 
 		final SuccessCallback sc = successCallback;
@@ -904,32 +889,38 @@ public class Request {
 	}
 
 	void notifySuccess(@NonNull final BluetoothDevice device) {
-		finished = true;
-		manager.mHandler.removeCallbacks(timeoutHandler);
-		timeoutHandler = null;
+		if (!finished) {
+			finished = true;
+			manager.mHandler.removeCallbacks(timeoutHandler);
+			timeoutHandler = null;
 
-		if (successCallback != null)
-			successCallback.onRequestCompleted(device);
+			if (successCallback != null)
+				successCallback.onRequestCompleted(device);
+		}
 	}
 
 	void notifyFail(@NonNull final BluetoothDevice device, final int status) {
-		finished = true;
-		manager.mHandler.removeCallbacks(timeoutHandler);
-		timeoutHandler = null;
+		if (!finished) {
+			finished = true;
+			manager.mHandler.removeCallbacks(timeoutHandler);
+			timeoutHandler = null;
 
-		if (failCallback != null)
-			failCallback.onRequestFailed(device, status);
-		if (internalFailCallback != null)
-			internalFailCallback.onRequestFailed(device, status);
+			if (failCallback != null)
+				failCallback.onRequestFailed(device, status);
+			if (internalFailCallback != null)
+				internalFailCallback.onRequestFailed(device, status);
+		}
 	}
 
 	void notifyInvalidRequest() {
-		finished = true;
-		manager.mHandler.removeCallbacks(timeoutHandler);
-		timeoutHandler = null;
+		if (!finished) {
+			finished = true;
+			manager.mHandler.removeCallbacks(timeoutHandler);
+			timeoutHandler = null;
 
-		if (invalidRequestCallback != null)
-			invalidRequestCallback.onInvalidRequest();
+			if (invalidRequestCallback != null)
+				invalidRequestCallback.onInvalidRequest();
+		}
 	}
 
 	/**
