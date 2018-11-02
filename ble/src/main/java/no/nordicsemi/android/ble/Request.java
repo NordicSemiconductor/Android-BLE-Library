@@ -55,7 +55,7 @@ import no.nordicsemi.android.ble.exception.RequestFailedException;
  * is empty.
  */
 @SuppressWarnings({"unused", "WeakerAccess", "deprecation", "DeprecatedIsStillUsed"})
-public class Request {
+public abstract class Request {
 
 	enum Type {
 		SET,
@@ -172,8 +172,8 @@ public class Request {
 	 */
 	@Deprecated
 	@NonNull
-	public static Request createBond() {
-		return new Request(Type.CREATE_BOND);
+	public static SimpleRequest createBond() {
+		return new SimpleRequest(Type.CREATE_BOND);
 	}
 
 	/**
@@ -190,8 +190,8 @@ public class Request {
 	 */
 	@Deprecated
 	@NonNull
-	public static Request removeBond() {
-		return new Request(Type.REMOVE_BOND);
+	public static SimpleRequest removeBond() {
+		return new SimpleRequest(Type.REMOVE_BOND);
 	}
 
 	/**
@@ -389,8 +389,8 @@ public class Request {
 	 * @return The new request.
 	 */
 	@NonNull
-	static Request newBeginReliableWriteRequest() {
-		return new Request(Type.BEGIN_RELIABLE_WRITE);
+	static SimpleRequest newBeginReliableWriteRequest() {
+		return new SimpleRequest(Type.BEGIN_RELIABLE_WRITE);
 	}
 
 	/**
@@ -401,8 +401,8 @@ public class Request {
 	 * @return The new request.
 	 */
 	@NonNull
-	static Request newExecuteReliableWriteRequest() {
-		return new Request(Type.EXECUTE_RELIABLE_WRITE);
+	static SimpleRequest newExecuteReliableWriteRequest() {
+		return new SimpleRequest(Type.EXECUTE_RELIABLE_WRITE);
 	}
 
 	/**
@@ -414,8 +414,8 @@ public class Request {
 	 * @return The new request.
 	 */
 	@NonNull
-	static Request newAbortReliableWriteRequest() {
-		return new Request(Type.ABORT_RELIABLE_WRITE);
+	static SimpleRequest newAbortReliableWriteRequest() {
+		return new SimpleRequest(Type.ABORT_RELIABLE_WRITE);
 	}
 
 	/**
@@ -707,8 +707,8 @@ public class Request {
 	@Deprecated
 	@SuppressWarnings("JavadocReference")
 	@NonNull
-	public static Request newRefreshCacheRequest() {
-		return new Request(Type.REFRESH_CACHE);
+	public static SimpleRequest newRefreshCacheRequest() {
+		return new SimpleRequest(Type.REFRESH_CACHE);
 	}
 
 	/**
@@ -727,7 +727,7 @@ public class Request {
 
 	/**
 	 * Use to set a completion callback. The callback will be invoked when the operation has
-	 * finished successfully unless {@link #await()} or its variant was used, in which case this
+	 * finished successfully unless the request was executed synchronously, in which case this
 	 * callback will be ignored.
 	 *
 	 * @param callback the callback.
@@ -745,7 +745,8 @@ public class Request {
 	 * ({@link BleManager#connect(BluetoothDevice)} was never called), the
 	 * {@link #invalid(InvalidRequestCallback)} will be used instead, as the
 	 * {@link BluetoothDevice} is not known.
-	 * This callback will be ignored if {@link #await()} or its variant was used, in which case
+	 * <p>
+	 * This callback will be ignored if request was executed synchronously, in which case
 	 * the error will be returned as an exception.
 	 *
 	 * @param callback the callback.
@@ -770,7 +771,7 @@ public class Request {
 	/**
 	 * Use to set a callback that will be called in case the request was invalid, for example
 	 * called before the device was connected.
-	 * This callback will be ignored if {@link #await()} or its variant was used, in which case
+	 * This callback will be ignored if request was executed synchronously, in which case
 	 * the error will be returned as an exception.
 	 *
 	 * @param callback the callback.
@@ -821,26 +822,16 @@ public class Request {
 		manager.enqueue(this);
 	}
 
-	/**
-	 * Synchronously waits until the request is done.
-	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)}
-	 * will be ignored.
-	 * <p>
-	 * This method may not be called from the main (UI) thread.
-	 *
-	 * @throws RequestFailedException      thrown when the BLE request finished with status other
-	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
-	 * @throws InterruptedException        thrown if the timeout occurred before the request has
-	 *                                     finished.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main
-	 *                                     (UI) thread.
-	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
-	 *                                     was completed.
-	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
-	 * @throws InvalidRequestException     thrown when the request was called before the device was
-	 *                                     connected at least once (unknown device).
-	 */
-	public void await() throws RequestFailedException, DeviceDisconnectedException,
+	void awaitWithoutTimeout() throws RequestFailedException, DeviceDisconnectedException,
+			BluetoothDisabledException, InvalidRequestException {
+		try {
+			awaitWithTimeout();
+		} catch (final InterruptedException e) {
+			// never happen
+		}
+	}
+
+	void awaitWithTimeout() throws RequestFailedException, DeviceDisconnectedException,
 			BluetoothDisabledException, InvalidRequestException, InterruptedException {
 		assertNotMainThread();
 

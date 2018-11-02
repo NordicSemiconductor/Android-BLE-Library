@@ -61,8 +61,7 @@ public abstract class ValueRequest<T> extends ConnectionRequest {
 
 	/**
 	 * Sets the value callback. When the request is invoked synchronously, this callback will
-	 * be ignored and the received value will be returned by {@link #await(Class)}
-	 * (or any of its variants).
+	 * be ignored and the received value will be returned by the <code>await(...)</code> method;
 	 *
 	 * @param callback the callback.
 	 * @return The request.
@@ -73,39 +72,41 @@ public abstract class ValueRequest<T> extends ConnectionRequest {
 		return this;
 	}
 
-	/**
-	 * Synchronously waits until the request is done.
-	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)} and
-	 * {@link #with(T)} will be ignored.
-	 * <p>
-	 * This method may not be called from the main (UI) thread.
-	 *
-	 * @param responseClass the response class. This class will be instantiate, therefore it has
-     *                      to have a default constructor.
-	 * @return The response with a response.
-	 * @throws RequestFailedException      thrown when the BLE request finished with status other
-	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
-	 * @throws InterruptedException        thrown if the timeout occurred before the request has
-	 *                                     finished.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main
-	 *                                     (UI) thread.
-	 * @throws IllegalArgumentException    thrown when the response class could not be instantiated.
-	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
-	 *                                     was completed.
-	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
-	 * @throws InvalidRequestException     thrown when the request was called before the device was
-	 *                                     connected at least once (unknown device).
-	 */
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
-	public <E extends T> E await(@NonNull final Class<E> responseClass)
+	<E extends T> E awaitWithoutTimeout(@NonNull final Class<E> responseClass)
+			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
+			InvalidRequestException {
+		try {
+			return awaitWithTimeout(responseClass);
+		} catch (final InterruptedException e) {
+			// never happen
+			throw new IllegalStateException("This should never happen");
+		}
+	}
+
+	@NonNull
+	<E extends T> E awaitWithoutTimeout(@NonNull final E response)
+			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
+			InvalidRequestException {
+		try {
+			return awaitWithTimeout(response);
+		} catch (final InterruptedException e) {
+			// never happen
+			throw new IllegalStateException("This should never happen");
+		}
+	}
+
+	@SuppressWarnings("ConstantConditions")
+	@NonNull
+	<E extends T> E awaitWithTimeout(@NonNull final Class<E> responseClass)
 			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
 			InvalidRequestException, InterruptedException {
 		assertNotMainThread();
 
 		try {
 			final E response = responseClass.newInstance();
-			return await(response);
+			return awaitWithTimeout(response);
 		} catch (IllegalAccessException e) {
 			throw new IllegalArgumentException("Couldn't instantiate "
 					+ responseClass.getCanonicalName()
@@ -117,30 +118,8 @@ public abstract class ValueRequest<T> extends ConnectionRequest {
 		}
 	}
 
-	/**
-	 * Synchronously waits until the request is done.
-	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)} and
-	 * {@link #with(T)} will be ignored.
-	 * <p>
-	 * This method may not be called from the main (UI) thread.
-	 *
-	 * @param response the response object.
-	 * @param <E>      a response class.
-	 * @return The response with a response.
-	 * @throws RequestFailedException      thrown when the BLE request finished with status other
-	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
-	 * @throws InterruptedException        thrown if the timeout occurred before the request has
-	 *                                     finished.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main
-	 *                                     (UI) thread.
-	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
-	 *                                     was completed.
-	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
-	 * @throws InvalidRequestException     thrown when the request was called before the device was
-	 *                                     connected at least once (unknown device).
-	 */
 	@NonNull
-	public <E extends T> E await(@NonNull final E response)
+	<E extends T> E awaitWithTimeout(@NonNull final E response)
 			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
 			InvalidRequestException, InterruptedException {
 		assertNotMainThread();

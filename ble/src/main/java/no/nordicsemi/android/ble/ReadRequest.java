@@ -47,7 +47,7 @@ import no.nordicsemi.android.ble.exception.InvalidRequestException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
-public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
+public final class ReadRequest extends SimpleValueRequest<DataReceivedCallback> {
 	private ReadProgressCallback progressCallback;
 	private DataMerger dataMerger;
 	private DataStream buffer;
@@ -151,8 +151,6 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 	 * @return The object with the response.
 	 * @throws RequestFailedException      thrown when the BLE request finished with status other
      *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
-	 * @throws InterruptedException        thrown if the timeout occurred before the request has
-	 *                                     finished.
 	 * @throws IllegalStateException       thrown when you try to call this method from the main
      *                                     (UI) thread.
 	 * @throws IllegalArgumentException    thrown when the response class could not be instantiated.
@@ -169,8 +167,8 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass)
 			throws RequestFailedException, InvalidDataException, DeviceDisconnectedException,
-			BluetoothDisabledException, InvalidRequestException, InterruptedException {
-		E response = await(responseClass);
+			BluetoothDisabledException, InvalidRequestException {
+		final E response = await(responseClass);
 		if (!response.isValid()) {
 			throw new InvalidDataException(response);
 		}
@@ -187,8 +185,6 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 	 * @return The object with the response.
      * @throws RequestFailedException      thrown when the BLE request finished with status other
      *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
-	 * @throws InterruptedException        thrown if the timeout occurred before the request has
-	 *                                     finished.
      * @throws IllegalStateException       thrown when you try to call this method from the main
      *                                     (UI) thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
@@ -204,7 +200,7 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final E response)
 			throws RequestFailedException, InvalidDataException, DeviceDisconnectedException,
-			BluetoothDisabledException, InvalidRequestException, InterruptedException {
+			BluetoothDisabledException, InvalidRequestException {
 		await(response);
 		if (!response.isValid()) {
 			throw new InvalidDataException(response);

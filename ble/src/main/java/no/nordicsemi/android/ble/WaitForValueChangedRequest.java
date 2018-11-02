@@ -142,7 +142,7 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	 * This is to ensure that the characteristic value won't change before the callback was set.
 	 *
 	 * @param trigger the operation that triggers the notification, usually a write characteristic
-	 *                request that write some OP CODE>
+	 *                request that write some OP CODE.
 	 * @return The request.
 	 */
 	@NonNull
@@ -162,10 +162,23 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	}
 
 	/**
+	 * Enqueues the request for asynchronous execution.
+	 * <p>
+	 * Use {@link #timeout(long)} to set the maximum time the manager should wait until the
+	 * characteristic value has changed. When the timeout occurs, the request will fail with
+	 * {@link FailCallback#REASON_TIMEOUT}.
+	 */
+	@Override
+	public void enqueue() {
+		super.enqueue();
+	}
+
+	/**
 	 * Enqueues the request for asynchronous execution with a timeout.
 	 * When the timeout occurs, the request will fail with {@link FailCallback#REASON_TIMEOUT}.
 	 *
-	 * @param timeout the request timeout in milliseconds, 0 to disable timeout.
+	 * @param timeout the request timeout in milliseconds, 0 to disable timeout. This value will
+	 *                override one set in {@link #timeout(long)}.
 	 * @deprecated Use {@link #timeout(long)} and {@link #enqueue()} instead.
 	 */
 	@Deprecated
@@ -173,59 +186,77 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 		timeout(timeout).enqueue();
 	}
 
+	/**
+	 * Synchronously waits until the request is done.
+	 * <p>
+	 * When the timeout, set with {@link #timeout(long)} occurs, the {@link InterruptedException}
+	 * will be thrown.
+	 * <p>
+	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)} and
+	 * {@link #with(DataReceivedCallback)} will be ignored.
+	 * <p>
+	 * This method may not be called from the main (UI) thread.
+	 *
+	 * @param response the response object.
+	 * @param <E>      a response class.
+	 * @return The response with a response.
+	 * @throws RequestFailedException      thrown when the BLE request finished with status other
+	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
+	 * @throws InterruptedException        thrown if the timeout occurred before the request has
+	 *                                     finished.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main
+	 *                                     (UI) thread, or when the trigger was already enqueued.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
+	 *                                     was completed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
+	 * @throws InvalidRequestException     thrown when the request was called before the device was
+	 *                                     connected at least once (unknown device).
+	 */
 	@NonNull
-	@Override
 	public <E extends DataReceivedCallback> E await(@NonNull final E response)
 			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
 			BluetoothDisabledException, InvalidRequestException {
-		assertNotMainThread();
-
-		final SuccessCallback sc = successCallback;
-		final FailCallback fc = failCallback;
-		final DataReceivedCallback vc = valueCallback;
-		try {
-			// Ensure the trigger request it enqueued after the callback has been set.
-			triggerStatus = BluetoothGatt.GATT_SUCCESS;
-			if (trigger != null && trigger.enqueued) {
-				throw new IllegalStateException("Trigger request already enqueued");
-			}
-
-			syncLock.close();
-			final RequestCallback callback = new RequestCallback();
-			with(response).done(callback).fail(callback).enqueue();
-
-			if (!syncLock.block(timeout)) {
-				throw new InterruptedException();
-			}
-			if (!callback.isSuccess()) {
-				if (callback.status == FailCallback.REASON_DEVICE_DISCONNECTED) {
-					throw new DeviceDisconnectedException();
-				}
-				if (callback.status == FailCallback.REASON_BLUETOOTH_DISABLED) {
-					throw new BluetoothDisabledException();
-				}
-				if (callback.status == RequestCallback.REASON_REQUEST_INVALID) {
-					throw new InvalidRequestException(this);
-				}
-				if (triggerStatus != BluetoothGatt.GATT_SUCCESS) {
-					// Trigger will never have invalid request status. The outer request will.
-					/*if (triggerStatus == RequestCallback.REASON_REQUEST_INVALID) {
-						throw new InvalidRequestException(trigger);
-					}*/
-					throw new RequestFailedException(trigger, triggerStatus);
-				}
-				throw new RequestFailedException(this, callback.status);
-			}
-			return response;
-		} finally {
-			successCallback = sc;
-			failCallback = fc;
-			valueCallback = vc;
-		}
+		return awaitWithTimeout(response);
 	}
 
 	/**
-	 * Synchronously waits until the request is done, for at most given number of milliseconds.
+	 * Synchronously waits until the request is done.
+	 * <p>
+	 * When the timeout, set with {@link #timeout(long)} occurs, the {@link InterruptedException}
+	 * will be thrown.
+	 * <p>
+	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)} and
+	 * {@link #with(DataReceivedCallback)} will be ignored.
+	 * <p>
+	 * This method may not be called from the main (UI) thread.
+	 *
+	 * @param responseClass the response class. This class will be instantiate, therefore it has
+	 *                      to have a default constructor.
+	 * @param <E>           a response class.
+	 * @return The response with a response.
+	 * @throws RequestFailedException      thrown when the BLE request finished with status other
+	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
+	 * @throws InterruptedException        thrown if the timeout occurred before the request has
+	 *                                     finished.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main
+	 *                                     (UI) thread, or when the trigger was already enqueued.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
+	 *                                     was completed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
+	 * @throws InvalidRequestException     thrown when the request was called before the device was
+	 *                                     connected at least once (unknown device).
+	 */
+	@NonNull
+	public <E extends DataReceivedCallback> E await(@NonNull final Class<E> responseClass)
+			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
+			BluetoothDisabledException, InvalidRequestException {
+		return awaitWithTimeout(responseClass);
+	}
+
+	/**
+	 * Synchronously waits until the request is done, for at most given number of milliseconds
+	 * after which the {@link InterruptedException} will be thrown.
+	 * <p>
 	 * Callbacks set using {@link #done(SuccessCallback)}, {@link #fail(FailCallback)} and
 	 * {@link #with(DataReceivedCallback)} will be ignored.
 	 * <p>
@@ -233,7 +264,8 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	 *
 	 * @param responseClass the response class. This class will be instantiate, therefore it has
 	 *                      to have a default constructor.
-	 * @param timeout       optional timeout in milliseconds.
+	 * @param timeout       optional timeout in milliseconds. This value will override one set
+	 *                      in {@link #timeout(long)}.
 	 * @param <E>           a response class that extends {@link DataReceivedCallback}.
 	 * @return The object with a response.
 	 * @throws RequestFailedException      thrown when the BLE request finished with status other
@@ -256,11 +288,13 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 													@IntRange(from = 0) final long timeout)
 			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
 			BluetoothDisabledException, InvalidRequestException {
-		return timeout(timeout).await(responseClass);
+		return timeout(timeout).awaitWithTimeout(responseClass);
 	}
 
 	/**
-	 * Synchronously waits until the request is done, for at most given number of milliseconds.
+	 * Synchronously waits until the request is done, for at most given number of milliseconds
+	 * after which the {@link InterruptedException} will be thrown.
+	 * <p>
 	 * Callbacks set using {@link #done(SuccessCallback)}, {@link #fail(FailCallback)} and
 	 * {@link #with(DataReceivedCallback)} will be ignored.
 	 * <p>
@@ -281,7 +315,7 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
 	 * @throws InvalidRequestException     thrown when the request was called before the device was
 	 *                                     connected at least once (unknown device).
-	 * @deprecated Use {@link #timeout(long)} and {@link #await(Object)} instead.
+	 * @deprecated Use {@link #timeout(long)} and {@link #await(E)} instead.
 	 */
 	@NonNull
 	@Deprecated
@@ -289,7 +323,7 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 													@IntRange(from = 0) final long timeout)
 			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
 			BluetoothDisabledException, InvalidRequestException {
-		return timeout(timeout).await(response);
+		return timeout(timeout).awaitWithTimeout(response);
 	}
 
 	/**
@@ -432,6 +466,57 @@ public class WaitForValueChangedRequest extends ValueRequest<DataReceivedCallbac
 			throws InterruptedException, InvalidDataException, DeviceDisconnectedException,
 			RequestFailedException, BluetoothDisabledException, InvalidRequestException {
 		return timeout(timeout).awaitValid(response);
+	}
+
+	@NonNull
+	@Override
+	<E extends DataReceivedCallback> E awaitWithTimeout(@NonNull final E response)
+			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
+			InvalidRequestException, InterruptedException {
+		assertNotMainThread();
+
+		final SuccessCallback sc = successCallback;
+		final FailCallback fc = failCallback;
+		final DataReceivedCallback vc = valueCallback;
+		try {
+			// Ensure the trigger request it enqueued after the callback has been set.
+			triggerStatus = BluetoothGatt.GATT_SUCCESS;
+			if (trigger != null && trigger.enqueued) {
+				throw new IllegalStateException("Trigger request already enqueued");
+			}
+
+			syncLock.close();
+			final RequestCallback callback = new RequestCallback();
+			with(response).done(callback).fail(callback).enqueue();
+
+			if (!syncLock.block(timeout)) {
+				throw new InterruptedException();
+			}
+			if (!callback.isSuccess()) {
+				if (callback.status == FailCallback.REASON_DEVICE_DISCONNECTED) {
+					throw new DeviceDisconnectedException();
+				}
+				if (callback.status == FailCallback.REASON_BLUETOOTH_DISABLED) {
+					throw new BluetoothDisabledException();
+				}
+				if (callback.status == RequestCallback.REASON_REQUEST_INVALID) {
+					throw new InvalidRequestException(this);
+				}
+				if (triggerStatus != BluetoothGatt.GATT_SUCCESS) {
+					// Trigger will never have invalid request status. The outer request will.
+					/*if (triggerStatus == RequestCallback.REASON_REQUEST_INVALID) {
+						throw new InvalidRequestException(trigger);
+					}*/
+					throw new RequestFailedException(trigger, triggerStatus);
+				}
+				throw new RequestFailedException(this, callback.status);
+			}
+			return response;
+		} finally {
+			successCallback = sc;
+			failCallback = fc;
+			valueCallback = vc;
+		}
 	}
 
 	void notifyValueChanged(final BluetoothDevice device, final byte[] value) {

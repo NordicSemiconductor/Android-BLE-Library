@@ -13,7 +13,7 @@ import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
 @SuppressWarnings("WeakerAccess")
-public class RequestQueue extends Request {
+public class RequestQueue extends SimpleRequest {
 	/** A list of operations that will be executed together. */
 	@NonNull
 	private final Queue<ConnectionRequest> requests;

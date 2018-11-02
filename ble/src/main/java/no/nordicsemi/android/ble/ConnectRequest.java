@@ -108,7 +108,7 @@ public class ConnectRequest extends Request {
 	}
 
 	/**
-	 * Sets the connection timeout. During that timeout the library will connect, discover
+	 * Sets the connection timeout. During that timeout the manager will connect, discover
 	 * services, bond, if bonding requested by remote side, and perform initialization,
 	 * as specified in {@link BleManager.BleManagerGattCallback#initialize()}.
 	 * When the timeout occurs, the request will fail with {@link FailCallback#REASON_TIMEOUT}
@@ -222,10 +222,31 @@ public class ConnectRequest extends Request {
 	}
 
 	/**
-	 * Enqueues the request for asynchronous execution with a timeout.
-	 * When the timeout occurs, the request will fail with {@link FailCallback#REASON_TIMEOUT}.
+	 * Enqueues the connect request for asynchronous execution. The {@link #done(SuccessCallback)}
+	 * callback will be executed when the device is connected, the service discovery is complete
+	 * and the required services were found, and the initialization has completed (without
+	 * or with errors).
+	 * <p>
+	 * Use {@link #timeout(long)} to set the maximum time the manager should wait until the device
+	 * is ready. When the timeout occurs, the request will fail with
+	 * {@link FailCallback#REASON_TIMEOUT} and the device will get disconnected.
+	 */
+	@Override
+	public void enqueue() {
+		super.enqueue();
+	}
+
+	/**
+	 * Enqueues the connect request for synchronous execution. The {@link #done(SuccessCallback)}
+	 * callback will be executed when the device is connected, the service discovery is complete
+	 * and the required services were found, and the initialization has completed (without
+	 * or with errors).
+	 * <p>
+	 * When the timeout occurs, the request will fail with {@link FailCallback#REASON_TIMEOUT}
+	 * and the device will get disconnected.
 	 *
-	 * @param timeout the request timeout in milliseconds, 0 to disable timeout.
+	 * @param timeout the request timeout in milliseconds, 0 to disable timeout. This value will
+	 *                override one set in {@link #timeout(long)}.
 	 * @deprecated Use {@link #timeout(long)} and {@link #enqueue()} instead.
 	 */
 	@Deprecated
@@ -234,8 +255,46 @@ public class ConnectRequest extends Request {
 	}
 
 	/**
-	 * Synchronously waits until the request is done, for at most given number of milliseconds.
-	 * Callbacks set using {@link #done(SuccessCallback)}, {@link #fail(FailCallback)}
+	 * Synchronously waits until the manager connects to the given device, the service discovery
+	 * is complete and the required services were found, and the initialization has completed
+	 * (without or with errors).
+	 * <p>
+	 * Use {@link #timeout(long)} to set the maximum time the manager should wait until the device
+	 * is ready. When the timeout occurs, the {@link InterruptedException} will be thrown and
+	 * the device will get disconnected.
+	 * <p>
+	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)}
+	 * will be ignored.
+	 * <p>
+	 * This method may not be called from the main (UI) thread.
+	 *
+	 * @throws RequestFailedException      thrown when the BLE request finished with status other
+	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
+	 * @throws InterruptedException        thrown if the timeout occurred before the request has
+	 *                                     finished.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main
+	 *                                     (UI) thread.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
+	 *                                     was completed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
+	 * @throws InvalidRequestException     thrown when the request was called before the device was
+	 *                                     connected at least once (unknown device).
+	 * @see #enqueue()
+	 */
+	public void await() throws RequestFailedException, DeviceDisconnectedException,
+			BluetoothDisabledException, InvalidRequestException, InterruptedException {
+		awaitWithTimeout();
+	}
+
+	/**
+	 * Synchronously waits, for as most as the given number of milliseconds, until the manager
+	 * connects to the given device, the service discovery is complete and the required services
+	 * were found, and the initialization has completed (without or with errors).
+	 * <p>
+	 * When the timeout occurs, the {@link InterruptedException} will be thrown and the device
+	 * will get disconnected.
+	 * <p>
+	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)}
 	 * will be ignored.
 	 * <p>
 	 * This method may not be called from the main (UI) thread.
@@ -258,7 +317,7 @@ public class ConnectRequest extends Request {
 	public void await(@IntRange(from = 0) final long timeout) throws RequestFailedException,
 			InterruptedException, DeviceDisconnectedException, BluetoothDisabledException,
 			InvalidRequestException {
-		timeout(timeout).await();
+		timeout(timeout).awaitWithTimeout();
 	}
 
 	@NonNull
