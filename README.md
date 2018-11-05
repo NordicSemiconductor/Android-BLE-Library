@@ -55,17 +55,24 @@ Version 2 has many more features comparing to 1.x:
 The library may be found on jcenter and Maven Central repository. Add it to your project by adding the following dependency:
 
 ```grovy
-implementation 'no.nordicsemi.android:ble:2.0-beta7'
+implementation 'no.nordicsemi.android:ble:2.0-beta8'
 ```
 
 #### Changes:
 
-1. BLE operation methods (i.e. `writeCharacteristic(...)`, etc.) return the `Request` class now, instead of boolean.
+1. BLE operation methods (i.e. `writeCharacteristic(...)`, etc.) return the `Request` class now, 
+instead of boolean.
 2. `onLinklossOccur` callback has been renamed to `onLinkLossOccurred`.
-3. GATT callbacks (for example: `onCharacteristicRead`, `onCharacteristicNotified`, etc.) inside `BleManagerGattCallback` has been deprecated. Use `Request` callbacks instead.
+3. GATT callbacks (for example: `onCharacteristicRead`, `onCharacteristicNotified`, etc.) inside 
+`BleManagerGattCallback` has been deprecated. Use `Request` callbacks instead.
 4. Build-in Battery Level support has been deprecated. Request Battery Level as any other value.
 5. A new callbacks method: `onBondingFailed` has been added to `BleManagerCallbacks`.
 6. `shouldAutoConnect()` has ben deprecated, use `useAutoConnect(boolean)` in `ConnectRequest` instead.
+7. In version 2.0-beta8 timeout setting has been moved to a separate method `timeout(long)`. Also,
+most BLE operations do not support setting timeout, as receiving the `BluetoothGattCallback` is required
+in order to perform the next operation. Only Connect, Disconnect and WaitForValueChangedRequest are 
+timeoutable. `enqueue(long)` and `await(long)` are deprecated now.
+8. Version 2.0-beta8 added atomic `RequestQueue` and `ReliableWriteRequest`.  
 
 #### Migration guide:
 
@@ -76,7 +83,7 @@ Old code:
 @Override
 protected Deque<Request> initGatt(final BluetoothGatt gatt) {
   final LinkedList<Request> requests = new LinkedList<>();
-  requests.add(Request.newEnableNotificationsRequest(mCharacteristic));
+  requests.add(Request.newEnableNotificationsRequest(characteristic));
   return requests;
 }
 ```
@@ -84,14 +91,14 @@ New code:
 ```java
 @Override
 protected void initialize() {
-  setNotificationCallback(mCharacteristic)
+  setNotificationCallback(characteristic)
     .with(new DataReceivedCallback() {
       @Override
       public void onDataReceived(@NonNull final BluetoothDevice device, @NonNull final Data data) {
         ...
       }
     });
-  enableNotifications(mCharacteristic)
+  enableNotifications(characteristic)
     .enqueue();
 }
 ```

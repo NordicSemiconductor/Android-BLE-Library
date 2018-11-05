@@ -6,7 +6,7 @@ apply plugin: 'com.jfrog.bintray'
 ext {
     PUBLISH_GROUP_ID = 'no.nordicsemi.android'
     PUBLISH_ARTIFACT_ID = 'ble'
-    PUBLISH_VERSION = '2.0-beta7'
+    PUBLISH_VERSION = '2.0-beta8'
 
     bintrayRepo = 'android'
     bintrayName = 'ble-library'
@@ -36,8 +36,8 @@ android {
     defaultConfig {
         minSdkVersion 18
         targetSdkVersion 28
-        versionCode 16
-        versionName "2.0-beta7"
+        versionCode 17
+        versionName "2.0-beta8"
 
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
