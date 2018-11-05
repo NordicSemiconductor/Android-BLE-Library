@@ -99,9 +99,8 @@ public abstract class SimpleValueRequest<T> extends SimpleRequest {
 		assertNotMainThread();
 
 		final T vc = valueCallback;
-		with(response);
 		try {
-			await();
+			with(response).await();
 			return response;
 		} finally {
 			valueCallback = vc;

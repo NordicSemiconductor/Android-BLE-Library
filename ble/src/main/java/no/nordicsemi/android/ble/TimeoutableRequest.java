@@ -75,7 +75,7 @@ abstract class TimeoutableRequest extends Request {
 	}
 
 	/**
-	 * Enqueues the request for synchronous execution.
+	 * Enqueues the request for asynchronous execution.
 	 * <p>
 	 * When the timeout occurs, the request will fail with {@link FailCallback#REASON_TIMEOUT}
 	 * and the device will get disconnected.
@@ -90,13 +90,10 @@ abstract class TimeoutableRequest extends Request {
 	}
 
 	/**
-	 * Synchronously waits until the manager connects to the given device, the service discovery
-	 * is complete and the required services were found, and the initialization has completed
-	 * (without or with errors).
+	 * Synchronously waits until the request is done.
 	 * <p>
-	 * Use {@link #timeout(long)} to set the maximum time the manager should wait until the device
-	 * is ready. When the timeout occurs, the {@link InterruptedException} will be thrown and
-	 * the device will get disconnected.
+	 * Use {@link #timeout(long)} to set the maximum time the manager should wait until the request
+	 * is ready. When the timeout occurs, the {@link InterruptedException} will be thrown.
 	 * <p>
 	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)}
 	 * will be ignored.
@@ -149,19 +146,18 @@ abstract class TimeoutableRequest extends Request {
 	}
 
 	/**
-	 * Synchronously waits, for as most as the given number of milliseconds, until the manager
-	 * connects to the given device, the service discovery is complete and the required services
-	 * were found, and the initialization has completed (without or with errors).
+	 * Synchronously waits, for as most as the given number of milliseconds, until the request
+	 * is ready.
 	 * <p>
-	 * When the timeout occurs, the {@link InterruptedException} will be thrown and the device
-	 * will get disconnected.
+	 * When the timeout occurs, the {@link InterruptedException} will be thrown.
 	 * <p>
 	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)}
 	 * will be ignored.
 	 * <p>
 	 * This method may not be called from the main (UI) thread.
 	 *
-	 * @param timeout optional timeout in milliseconds, 0 to disable timeout.
+	 * @param timeout optional timeout in milliseconds, 0 to disable timeout. This will
+	 *                override the timeout set using {@link #timeout(long)}.
 	 * @throws RequestFailedException      thrown when the BLE request finished with status other
 	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
 	 * @throws InterruptedException        thrown if the timeout occurred before the request has
@@ -194,7 +190,6 @@ abstract class TimeoutableRequest extends Request {
 			};
 			handler.postDelayed(timeoutCallback, timeout);
 		}
-
 		super.notifyStarted(device);
 	}
 

@@ -36,7 +36,9 @@ import no.nordicsemi.android.ble.callback.SuccessCallback;
 
 @SuppressWarnings("WeakerAccess")
 public class RequestQueue extends SimpleRequest {
-	/** A list of operations that will be executed together. */
+	/**
+	 * A list of operations that will be executed together.
+	 */
 	@NonNull
 	private final Queue<Request> requests;
 
@@ -85,7 +87,8 @@ public class RequestQueue extends SimpleRequest {
 	 * added.
 	 *
 	 * @param operation the new operation to be enqueued.
-	 * @throws IllegalStateException if the operation was enqueued before.
+	 * @throws IllegalStateException    if the operation was enqueued before.
+	 * @throws IllegalArgumentException if the operation is not a {@link Request}.
 	 */
 	@NonNull
 	public RequestQueue add(@NonNull final Operation operation) {
@@ -137,6 +140,7 @@ public class RequestQueue extends SimpleRequest {
 
 	/**
 	 * Returns the next {@link Request} to be enqueued.
+	 *
 	 * @return the next request.
 	 */
 	@Nullable
@@ -152,6 +156,7 @@ public class RequestQueue extends SimpleRequest {
 
 	/**
 	 * Returns whether there are more operations to be executed.
+	 *
 	 * @return true, if not all operations were completed.
 	 */
 	boolean hasMore() {

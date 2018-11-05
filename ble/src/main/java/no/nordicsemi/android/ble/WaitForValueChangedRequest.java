@@ -71,6 +71,13 @@ public class WaitForValueChangedRequest extends TimeoutableValueRequest<DataRece
 
 	@NonNull
 	@Override
+	public WaitForValueChangedRequest timeout(@IntRange(from = 0) final long timeout) {
+		super.timeout(timeout);
+		return this;
+	}
+
+	@NonNull
+	@Override
 	public WaitForValueChangedRequest done(@NonNull final SuccessCallback callback) {
 		super.done(callback);
 		return this;
@@ -94,13 +101,6 @@ public class WaitForValueChangedRequest extends TimeoutableValueRequest<DataRece
 	@NonNull
 	public WaitForValueChangedRequest before(@NonNull final BeforeCallback callback) {
 		super.before(callback);
-		return this;
-	}
-
-	@NonNull
-	@Override
-	public WaitForValueChangedRequest timeout(@IntRange(from = 0) final long timeout) {
-		super.timeout(timeout);
 		return this;
 	}
 
