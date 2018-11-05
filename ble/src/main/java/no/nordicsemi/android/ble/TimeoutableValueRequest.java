@@ -22,16 +22,13 @@
 
 package no.nordicsemi.android.ble;
 
-import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
-import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
-import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.exception.BluetoothDisabledException;
 import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
@@ -39,124 +36,67 @@ import no.nordicsemi.android.ble.exception.InvalidRequestException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 /**
- * A type or Request that holds a value. A value can be received or sent.
- * This is a base class for other types of requests.
- *
- * @param <T> The sent/received value callback type.
+ * A value request that requires a {@link android.bluetooth.BluetoothGattCallback callback} or
+ * can't have timeout for any other reason. This class defines the {@link #await()} methods.
  */
-@SuppressWarnings("WeakerAccess")
-public abstract class ValueRequest<T> extends Request {
+@SuppressWarnings({"WeakerAccess", "unused"})
+public abstract class TimeoutableValueRequest<T> extends TimeoutableRequest {
 	T valueCallback;
 
-	ValueRequest(@NonNull final Type type) {
+	TimeoutableValueRequest(@NonNull final Type type) {
 		super(type);
 	}
 
-	ValueRequest(@NonNull final Type type,
-                 @Nullable final BluetoothGattCharacteristic characteristic) {
+	TimeoutableValueRequest(@NonNull final Type type,
+							@Nullable final BluetoothGattCharacteristic characteristic) {
 		super(type, characteristic);
 	}
 
-	ValueRequest(@NonNull final Type type,
-                 @Nullable final BluetoothGattDescriptor descriptor) {
+	TimeoutableValueRequest(@NonNull final Type type,
+							@Nullable final BluetoothGattDescriptor descriptor) {
 		super(type, descriptor);
 	}
 
 	@NonNull
 	@Override
-	ValueRequest<T> setManager(@NonNull final BleManager manager) {
-		super.setManager(manager);
-		return this;
-	}
-
-	@NonNull
-	@Override
-	public ValueRequest<T> done(@NonNull final SuccessCallback callback) {
-		super.done(callback);
-		return this;
-	}
-
-	@NonNull
-	@Override
-	public ValueRequest<T> fail(@NonNull final FailCallback callback) {
-		super.fail(callback);
-		return this;
-	}
-
-	@NonNull
-	@Override
-	public ValueRequest<T> invalid(@NonNull final InvalidRequestCallback callback) {
-		super.invalid(callback);
-		return this;
-	}
-
-	@Override
-	@NonNull
-	public ValueRequest<T> before(@NonNull final BeforeCallback callback) {
-		super.before(callback);
+	public TimeoutableValueRequest<T> timeout(final long timeout) {
+		super.timeout(timeout);
 		return this;
 	}
 
 	/**
 	 * Sets the value callback. When the request is invoked synchronously, this callback will
-	 * be ignored and the received value will be returned by {@link #await(Class, int)}
-	 * (or any of its variants).
+	 * be ignored and the received value will be returned by the <code>await(...)</code> method;
 	 *
 	 * @param callback the callback.
 	 * @return The request.
 	 */
 	@NonNull
-	public ValueRequest<T> with(@NonNull final T callback) {
+	public TimeoutableValueRequest<T> with(@NonNull final T callback) {
 		this.valueCallback = callback;
 		return this;
 	}
 
 	/**
 	 * Synchronously waits until the request is done.
-	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)} and
-	 * {@link #with(T)} will be ignored.
 	 * <p>
-	 * This method may not be called from the main (UI) thread.
-	 *
-	 * @param responseClass the response class. This class will be instantiate, therefore it has
-     *                      to have a default constructor.
-	 * @return The response with a response.
-	 * @throws RequestFailedException      thrown when the BLE request finished with status other
-	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main
-	 *                                     (UI) thread.
-	 * @throws IllegalArgumentException    thrown when the response class could not be instantiated.
-	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
-	 *                                     was completed.
-	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
-	 * @throws InvalidRequestException     thrown when the request was called before the device was
-	 *                                     connected at least once (unknown device).
-	 */
-	@NonNull
-	public <E extends T> E await(@NonNull final Class<E> responseClass)
-			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
-			InvalidRequestException {
-		try {
-			return await(responseClass, 0);
-		} catch (final InterruptedException e) {
-			// never happen
-			throw new IllegalStateException("This should never happen");
-		}
-	}
-
-	/**
-	 * Synchronously waits until the request is done.
+	 * When the timeout, set with {@link #timeout(long)} occurs, the {@link InterruptedException}
+	 * will be thrown.
+	 * <p>
 	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)} and
-	 * {@link #with(T)} will be ignored.
+	 * {@link #with(E)} will be ignored.
 	 * <p>
 	 * This method may not be called from the main (UI) thread.
 	 *
 	 * @param response the response object.
+	 * @param <E>      a response class.
 	 * @return The response with a response.
 	 * @throws RequestFailedException      thrown when the BLE request finished with status other
-	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
+	 *                                     than {@link android.bluetooth.BluetoothGatt#GATT_SUCCESS}.
+	 * @throws InterruptedException        thrown if the timeout occurred before the request has
+	 *                                     finished.
 	 * @throws IllegalStateException       thrown when you try to call this method from the main
-	 *                                     (UI) thread.
+	 *                                     (UI) thread, or when the trigger was already enqueued.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
@@ -166,28 +106,31 @@ public abstract class ValueRequest<T> extends Request {
 	@NonNull
 	public <E extends T> E await(@NonNull final E response)
 			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
-			InvalidRequestException {
+			InvalidRequestException, InterruptedException {
+		assertNotMainThread();
+
+		final T vc = valueCallback;
 		try {
-			return await(response, 0);
-		} catch (final InterruptedException e) {
-			// never happen
-			throw new IllegalStateException("This should never happen");
+			with(response).await();
+			return response;
+		} finally {
+			valueCallback = vc;
 		}
 	}
 
 	/**
-	 * Synchronously waits until the request is done, for at most given number of milliseconds.
-	 * Callbacks set using {@link #done(SuccessCallback)}, {@link #fail(FailCallback)} and
+	 * Synchronously waits until the request is done.
+	 * <p>
+	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)} and
 	 * {@link #with(T)} will be ignored.
 	 * <p>
 	 * This method may not be called from the main (UI) thread.
 	 *
 	 * @param responseClass the response class. This class will be instantiate, therefore it has
 	 *                      to have a default constructor.
-	 * @param timeout       optional timeout in milliseconds.
-	 * @return The object with a response.
+	 * @return The response with a response.
 	 * @throws RequestFailedException      thrown when the BLE request finished with status other
-	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
+	 *                                     than {@link android.bluetooth.BluetoothGatt#GATT_SUCCESS}.
 	 * @throws InterruptedException        thrown if the timeout occurred before the request has
 	 *                                     finished.
 	 * @throws IllegalStateException       thrown when you try to call this method from the main
@@ -198,90 +141,98 @@ public abstract class ValueRequest<T> extends Request {
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
 	 * @throws InvalidRequestException     thrown when the request was called before the device was
 	 *                                     connected at least once (unknown device).
+	 * @see #await(Object)
 	 */
-	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
-	public <E extends T> E await(@NonNull final Class<E> responseClass,
-								 @IntRange(from = 0) final int timeout)
-			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
-			BluetoothDisabledException, InvalidRequestException {
+	public <E extends T> E await(@NonNull final Class<E> responseClass)
+			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
+			InvalidRequestException, InterruptedException {
 		assertNotMainThread();
 
 		try {
-			Request.assertNotMainThread();
-
-			E response = null;
-			if (responseClass != null)
-				response = responseClass.newInstance();
-			return await(response, timeout);
+			final E response = responseClass.newInstance();
+			return await(response);
 		} catch (IllegalAccessException e) {
 			throw new IllegalArgumentException("Couldn't instantiate "
-                    + responseClass.getCanonicalName()
+					+ responseClass.getCanonicalName()
 					+ " class. Is the default constructor accessible?");
 		} catch (InstantiationException e) {
 			throw new IllegalArgumentException("Couldn't instantiate "
-                    + responseClass.getCanonicalName()
+					+ responseClass.getCanonicalName()
 					+ " class. Does it have a default constructor with no arguments?");
 		}
 	}
 
 	/**
-	 * Synchronously waits until the request is done, for at most given number of milliseconds.
+	 * Synchronously waits until the request is done, for at most given number of milliseconds
+	 * after which the {@link InterruptedException} will be thrown.
+	 * <p>
 	 * Callbacks set using {@link #done(SuccessCallback)}, {@link #fail(FailCallback)} and
-	 * {@link #with(T)} will be ignored.
+	 * {@link #with(E)} will be ignored.
 	 * <p>
 	 * This method may not be called from the main (UI) thread.
 	 *
-	 * @param response the response object.
-	 * @param timeout  optional timeout in milliseconds.
+	 * @param responseClass the response class. This class will be instantiate, therefore it has
+	 *                      to have a default constructor.
+	 * @param timeout       optional timeout in milliseconds. This value will override one set
+	 *                      in {@link #timeout(long)}.
+	 * @param <E>           a response class that extends {@link T}.
 	 * @return The object with a response.
 	 * @throws RequestFailedException      thrown when the BLE request finished with status other
-	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
+	 *                                     than {@link android.bluetooth.BluetoothGatt#GATT_SUCCESS}.
 	 * @throws InterruptedException        thrown if the timeout occurred before the request has
 	 *                                     finished.
 	 * @throws IllegalStateException       thrown when you try to call this method from the main
-     *                                     (UI) thread.
+	 *                                     (UI) thread.
+	 * @throws IllegalArgumentException    thrown when the response class could not be instantiated.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
 	 * @throws InvalidRequestException     thrown when the request was called before the device was
 	 *                                     connected at least once (unknown device).
+	 * @deprecated Use {@link #timeout(long)} and {@link #await(Class)} instead.
 	 */
-	@SuppressWarnings({"NullableProblems", "ConstantConditions"})
 	@NonNull
-	public <E extends T> E await(@NonNull final E response, @IntRange(from = 0) final int timeout)
+	@Deprecated
+	public <E extends T> E await(@NonNull final Class<E> responseClass,
+								 @IntRange(from = 0) final long timeout)
 			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
 			BluetoothDisabledException, InvalidRequestException {
-		assertNotMainThread();
+		return timeout(timeout).await(responseClass);
+	}
 
-		final SuccessCallback sc = successCallback;
-		final FailCallback fc = failCallback;
-		final T vc = valueCallback;
-		try {
-			syncLock.close();
-			final RequestCallback callback = new RequestCallback();
-			with(response).done(callback).fail(callback).enqueue();
-
-			if (!syncLock.block(timeout)) {
-				throw new InterruptedException();
-			}
-			if (!callback.isSuccess()) {
-				if (callback.status == FailCallback.REASON_DEVICE_DISCONNECTED) {
-					throw new DeviceDisconnectedException();
-				}
-				if (callback.status == FailCallback.REASON_BLUETOOTH_DISABLED) {
-					throw new BluetoothDisabledException();
-				}
-				if (callback.status == RequestCallback.REASON_REQUEST_INVALID) {
-					throw new InvalidRequestException(this);
-				}
-				throw new RequestFailedException(this, callback.status);
-			}
-			return response;
-		} finally {
-			successCallback = sc;
-			failCallback = fc;
-			valueCallback = vc;
-		}
+	/**
+	 * Synchronously waits until the request is done, for at most given number of milliseconds
+	 * after which the {@link InterruptedException} will be thrown.
+	 * <p>
+	 * Callbacks set using {@link #done(SuccessCallback)}, {@link #fail(FailCallback)} and
+	 * {@link #with(E)} will be ignored.
+	 * <p>
+	 * This method may not be called from the main (UI) thread.
+	 *
+	 * @param response the response object.
+	 * @param timeout  optional timeout in milliseconds.
+	 * @param <E>      a response class that extends {@link T}.
+	 * @return The object with a response.
+	 * @throws RequestFailedException      thrown when the BLE request finished with status other
+	 *                                     than {@link android.bluetooth.BluetoothGatt#GATT_SUCCESS}.
+	 * @throws InterruptedException        thrown if the timeout occurred before the request has
+	 *                                     finished.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main
+	 *                                     (UI) thread.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
+	 *                                     was completed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
+	 * @throws InvalidRequestException     thrown when the request was called before the device was
+	 *                                     connected at least once (unknown device).
+	 * @deprecated Use {@link #timeout(long)} and {@link #await(E)} instead.
+	 */
+	@NonNull
+	@Deprecated
+	public <E extends T> E await(@NonNull final E response,
+								 @IntRange(from = 0) final long timeout)
+			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
+			BluetoothDisabledException, InvalidRequestException {
+		return timeout(timeout).await(response);
 	}
 }

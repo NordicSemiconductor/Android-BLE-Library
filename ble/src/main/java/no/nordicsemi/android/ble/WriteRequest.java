@@ -23,11 +23,14 @@
 package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
+
+import java.util.Arrays;
 
 import no.nordicsemi.android.ble.annotation.WriteType;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
@@ -41,13 +44,14 @@ import no.nordicsemi.android.ble.data.DataSplitter;
 import no.nordicsemi.android.ble.data.DefaultMtuSplitter;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
-public final class WriteRequest extends ValueRequest<DataSentCallback> {
+public final class WriteRequest extends SimpleValueRequest<DataSentCallback> implements Operation {
 	private final static DataSplitter MTU_SPLITTER = new DefaultMtuSplitter();
 
 	private WriteProgressCallback progressCallback;
 	private DataSplitter dataSplitter;
 	private final byte[] data;
 	private final int writeType;
+	private byte[] currentChunk;
 	private byte[] nextChunk;
 	private int count = 0;
 	private boolean complete = false;
@@ -87,17 +91,6 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 	WriteRequest setManager(@NonNull final BleManager manager) {
 		super.setManager(manager);
 		return this;
-	}
-
-	private static byte[] copy(@Nullable final byte[] value,
-							   @IntRange(from = 0) final int offset,
-							   @IntRange(from = 0) final int length) {
-		if (value == null || offset > value.length)
-			return null;
-		final int maxLength = Math.min(value.length - offset, length);
-		final byte[] copy = new byte[maxLength];
-		System.arraycopy(value, offset, copy, 0, maxLength);
-		return copy;
 	}
 
 	@Override
@@ -196,42 +189,94 @@ public final class WriteRequest extends ValueRequest<DataSentCallback> {
 		return this;
 	}
 
+	/**
+	 * This method makes sure the data sent will be split to at-most MTU-3 bytes long packets.
+	 * This is because Long Write does not work with Reliable Write.
+	 */
+	void forceSplit() {
+		if (dataSplitter == null)
+			split();
+	}
+
+	/**
+	 * Returns the next chunk to be sent. If data splitter was not set the date returned may
+	 * be longer than MTU. Android will try to send them using Long Write sub-procedure if
+	 * write type is {@link BluetoothGattCharacteristic#WRITE_TYPE_DEFAULT}. Other write types
+	 * will cause the data to be truncated.
+	 *
+	 * @param mtu the current MTU.
+	 * @return The next bytes to be sent.
+	 */
 	byte[] getData(@IntRange(from = 23, to = 517) final int mtu) {
 		if (dataSplitter == null || data == null) {
 			complete = true;
-			return data;
+			return currentChunk = data;
 		}
+
+		// Write Request and Write Command require 3 bytes for handler and op code.
+		// Write Signed requires 12 bytes, as the signature is sent.
+		final int maxLength = writeType != BluetoothGattCharacteristic.WRITE_TYPE_SIGNED ?
+				mtu - 3 : mtu - 12;
 
 		byte[] chunk = nextChunk;
 		// Get the first chunk.
 		if (chunk == null) {
-			chunk = dataSplitter.chunk(data, count, mtu - 3);
+			chunk = dataSplitter.chunk(data, count, maxLength);
 		}
 		// If there's something to send, check if there are any more packets to be sent later.
 		if (chunk != null) {
-			nextChunk = dataSplitter.chunk(data, count + 1, mtu - 3);
+			nextChunk = dataSplitter.chunk(data, count + 1, maxLength);
 		}
 		// If there's no next packet left, we are done.
 		if (nextChunk == null) {
 			complete = true;
 		}
-		return chunk;
+		return currentChunk = chunk;
 	}
 
-	void notifyPacketSent(@NonNull final BluetoothDevice device, @Nullable final byte[] data) {
+	/**
+	 * Method called when packet has been sent and confirmed (when Write With Response was used),
+	 * or added to local outgoing buffer (when Write Without Response was used).
+	 *
+	 * @param device the target device.
+	 * @param data   the data received in the
+	 *               {@link android.bluetooth.BluetoothGattCallback#onCharacteristicWrite(BluetoothGatt, BluetoothGattCharacteristic, int)}.
+	 * @return True, if the data received are equal to data sent.
+	 */
+	boolean notifyPacketSent(@NonNull final BluetoothDevice device, @Nullable final byte[] data) {
 		if (progressCallback != null)
 			progressCallback.onPacketSent(device, data, count);
 		count++;
 		if (complete && valueCallback != null)
 			valueCallback.onDataSent(device, new Data(WriteRequest.this.data));
+		return Arrays.equals(data, currentChunk);
 	}
 
+	/**
+	 * Returns whether there are more bytes to be sent from this Write Request.
+	 * @return True if not all data were sent, false if the request is complete.
+	 */
 	boolean hasMore() {
 		return !complete;
 	}
 
+	/**
+	 * Returns the write type that should be used to send the data.
+	 * @return The write type.
+	 */
 	@WriteType
 	int getWriteType() {
 		return writeType;
+	}
+
+	private static byte[] copy(@Nullable final byte[] value,
+							   @IntRange(from = 0) final int offset,
+							   @IntRange(from = 0) final int length) {
+		if (value == null || offset > value.length)
+			return null;
+		final int maxLength = Math.min(value.length - offset, length);
+		final byte[] copy = new byte[maxLength];
+		System.arraycopy(value, offset, copy, 0, maxLength);
+		return copy;
 	}
 }

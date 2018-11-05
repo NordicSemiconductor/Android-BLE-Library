@@ -26,7 +26,6 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
-import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -47,7 +46,7 @@ import no.nordicsemi.android.ble.exception.InvalidRequestException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
-public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
+public final class ReadRequest extends SimpleValueRequest<DataReceivedCallback> implements Operation  {
 	private ReadProgressCallback progressCallback;
 	private DataMerger dataMerger;
 	private DataStream buffer;
@@ -162,7 +161,7 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass)
 			throws RequestFailedException, InvalidDataException, DeviceDisconnectedException,
 			BluetoothDisabledException, InvalidRequestException {
-		E response = await(responseClass);
+		final E response = await(responseClass);
 		if (!response.isValid()) {
 			throw new InvalidDataException(response);
 		}
@@ -196,82 +195,6 @@ public final class ReadRequest extends ValueRequest<DataReceivedCallback> {
 			throws RequestFailedException, InvalidDataException, DeviceDisconnectedException,
 			BluetoothDisabledException, InvalidRequestException {
 		await(response);
-		if (!response.isValid()) {
-			throw new InvalidDataException(response);
-		}
-		return response;
-	}
-
-	/**
-	 * Same as {@link #await(Class, int)}, but if the response class extends
-	 * {@link ProfileReadResponse} and the received response is not valid
-	 * ({@link ProfileReadResponse#isValid()} returns false), this method will
-	 * throw an exception.
-	 *
-	 * @param responseClass the response class. This class will be instantiate, therefore it
-	 *                      has to have a default constructor.
-	 * @param timeout       optional timeout in milliseconds.
-	 * @return The object with the response.
-	 * @throws RequestFailedException      thrown when the BLE request finished with status other
-	 *                                     then {@link BluetoothGatt#GATT_SUCCESS}.
-	 * @throws InterruptedException        thrown if the timeout occurred before the request has
-     *                                     finished.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main
-	 *                                     (UI) thread.
-     * @throws IllegalArgumentException    thrown when the response class could not be instantiated.
-	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
-	 *                                     was completed.
-	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
-     * @throws InvalidDataException        thrown when the received data were not valid (that is when
-     *                                     {@link ProfileReadResponse#onDataReceived(BluetoothDevice, Data)}
-     *                                     failed to parse the data correctly and called
-     *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}).
-	 * @throws InvalidRequestException     thrown when the request was called before the device was
-	 *                                     connected at least once (unknown device).
-	 */
-	@NonNull
-	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass,
-														@IntRange(from = 0) final int timeout)
-			throws RequestFailedException, InterruptedException, InvalidDataException,
-			DeviceDisconnectedException, BluetoothDisabledException, InvalidRequestException {
-		E response = await(responseClass, timeout);
-		if (!response.isValid()) {
-			throw new InvalidDataException(response);
-		}
-		return response;
-	}
-
-	/**
-	 * Same as {@link #await(Object, int)}, but if the response class extends
-	 * {@link ProfileReadResponse} and the received response is not valid
-	 * ({@link ProfileReadResponse#isValid()} returns false), this method will
-	 * throw an exception.
-	 *
-	 * @param response the response object.
-	 * @param timeout  optional timeout in milliseconds.
-	 * @return The object with the response.
-     * @throws RequestFailedException      thrown when the BLE request finished with status other
-     *                                     then {@link BluetoothGatt#GATT_SUCCESS}.
-     * @throws InterruptedException        thrown if the timeout occurred before the request has
-     *                                     finished.
-     * @throws IllegalStateException       thrown when you try to call this method from the main
-     *                                     (UI) thread.
-	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
-	 *                                     was completed.
-	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
-     * @throws InvalidDataException        thrown when the received data were not valid (that is when
-     *                                     {@link ProfileReadResponse#onDataReceived(BluetoothDevice, Data)}
-     *                                     failed to parse the data correctly and called
-     *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}).
-	 * @throws InvalidRequestException     thrown when the request was called before the device was
-	 *                                     connected at least once (unknown device).
-	 */
-	@NonNull
-	public <E extends ProfileReadResponse> E awaitValid(@NonNull final E response,
-														@IntRange(from = 0) final int timeout)
-			throws RequestFailedException, InterruptedException, InvalidDataException,
-			DeviceDisconnectedException, BluetoothDisabledException, InvalidRequestException {
-		await(response, timeout);
 		if (!response.isValid()) {
 			throw new InvalidDataException(response);
 		}

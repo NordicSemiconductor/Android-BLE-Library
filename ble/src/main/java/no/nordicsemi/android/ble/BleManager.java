@@ -100,14 +100,7 @@ import no.nordicsemi.android.ble.utils.ParserUtils;
  * <strike>The manager also is responsible for parsing the Battery Level values and calling
  * {@link BleManagerCallbacks#onBatteryValueReceived(BluetoothDevice, int)} method.</strike>
  * <p>
- * If {@link #setLogger(ILogSession)} was called, the events are logged into the nRF Logger
- * application, which may be downloaded from Google Play:
- * <a href="https://play.google.com/store/apps/details?id=no.nordicsemi.android.log">
- * https://play.google.com/store/apps/details?id=no.nordicsemi.android.log</a>
- * The nRF Logger application allows you to see application logs without need to connect it to
- * the computer.
- * <p>
- * If you want to log on LogCat, override the {@link #log(int, String)} method.
+ * To get logs, override the {@link #log(int, String)} method.
  * <p>
  * The BleManager should be overridden in your app and all the 'high level' callbacks should
  * be called from there. Keeping this file as is (and {@link BleManagerCallbacks} as well)
@@ -115,8 +108,8 @@ import no.nordicsemi.android.ble.utils.ParserUtils;
  *
  * @param <E> The profile callbacks type.
  */
-@SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue", "DeprecatedIsStillUsed", "deprecation"})
-public abstract class BleManager<E extends BleManagerCallbacks> implements ILogger {
+@SuppressWarnings({"WeakerAccess", "unused", "DeprecatedIsStillUsed", "deprecation"})
+public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutHandler implements ILogger {
 	private final static String TAG = "BleManager";
 
 	private final static UUID CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
@@ -136,13 +129,14 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	private BleManagerGattCallback mGattCallback;
 	protected E mCallbacks;
 	/**
-	 * This flag is set to false only when the {@link #shouldAutoConnect()} method returns true and
-	 * the device got disconnected without calling {@link #disconnect()} method.
-	 * If {@link #shouldAutoConnect()} returns false (default) this is always set to true.
+	 * This flag is set to false only when the {@link ConnectRequest#shouldAutoConnect()} method
+	 * returns true and the device got disconnected without calling {@link #disconnect()} method.
+	 * If {@link ConnectRequest#shouldAutoConnect()} returns false (default) this is always
+	 * set to true.
 	 */
 	private boolean mUserDisconnected;
 	/**
-	 * Flag set to true when {@link #shouldAutoConnect()} method returned <code>true</code>.
+	 * Flag set to true when {@link ConnectRequest#shouldAutoConnect()} method returned true.
 	 * The first connection attempt is done with <code>autoConnect</code> flag set to false
 	 * (to make the first connection quick) but on connection lost the manager will call
 	 * {@link #connect(BluetoothDevice)} again. This time this method will call
@@ -197,6 +191,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * a single packet is MTU-3.
 	 */
 	private int mMtu = 23;
+	/** A flag indicating that Reliable Write is in progress. */
+	private boolean mReliableWriteInProgress;
 	/**
 	 * The connect request. This is instantiated in {@link #connect(BluetoothDevice, int)}
 	 * and nullified after the device is ready.
@@ -209,6 +205,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * Currently performed request or null in idle state.
 	 */
 	private Request mRequest;
+	/**
+	 * Currently performer request set, or null if none.
+	 */
+	private RequestQueue mRequestQueue;
 	/**
 	 * A map of {@link ValueChangedCallback}s for handling notifications and indications.
 	 */
@@ -539,7 +539,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * is complete, after {@link BleManagerCallbacks#onDeviceReady(BluetoothDevice)} has been
 	 * called.
 	 * <p>
-	 * Calling {@link ConnectRequest#await(int)} will make this request
+	 * Calling {@link ConnectRequest#await()} will make this request
 	 * synchronous (the callbacks set will be ignored, instead the synchronous method will
 	 * return or throw an exception).
 	 * <p>
@@ -552,6 +552,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @param device a device to connect to.
 	 * @return The connect request.
 	 */
+	@SuppressWarnings("ConstantConditions")
 	@NonNull
 	public final ConnectRequest connect(@NonNull final BluetoothDevice device) {
 		if (mCallbacks == null) {
@@ -575,7 +576,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * is complete, after {@link BleManagerCallbacks#onDeviceReady(BluetoothDevice)} has been
 	 * called.
 	 * <p>
-	 * Calling {@link ConnectRequest#await(int)} will make this request
+	 * Calling {@link ConnectRequest#await()} will make this request
 	 * synchronous (the callbacks set will be ignored, instead the synchronous method will
 	 * return or throw an exception).
 	 * <p>
@@ -851,6 +852,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			}
 			mConnected = false;
 			mInitialConnection = false;
+			mReliableWriteInProgress = false;
 			mNotificationCallbacks.clear();
 			mConnectionState = BluetoothGatt.STATE_DISCONNECTED;
 			if (mGattCallback != null) {
@@ -956,7 +958,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * when the {@link BluetoothDevice#getBondState()} changes to {@link BluetoothDevice#BOND_NONE}.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @return The request.
 	 */
@@ -1080,7 +1082,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * completed before the callback is notified.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic that value is expect to change.
 	 * @return The callback.
@@ -1099,7 +1101,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * completed before the callback is notified.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic that value is expect to change.
 	 * @return The callback.
@@ -1115,7 +1117,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to be enabled.
 	 * @return The request.
@@ -1151,7 +1153,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to be disabled.
 	 * @return The request.
@@ -1186,7 +1188,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to be enabled.
 	 * @return The request.
@@ -1221,7 +1223,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to be disabled.
 	 * @return The request.
@@ -1261,12 +1263,24 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	/**
+	 * Creates an atomic request queue. The requests from the queue will be executed in order.
+	 * This is useful when more then one thread may add requests and you want some of them to
+	 * be executed together.
+	 *
+	 * @return The request.
+	 */
+	@NonNull
+	protected final RequestQueue beginAtomicRequestQueue() {
+		return new RequestQueue().setManager(this);
+	}
+
+	/**
 	 * Sends the read request to the given characteristic.
 	 * If the characteristic is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to read.
 	 * @return The request.
@@ -1302,7 +1316,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to write to.
 	 * @param data           data to be written to the characteristic.
@@ -1325,7 +1339,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to write to.
 	 * @param data           data to be written to the characteristic.
@@ -1348,7 +1362,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to write to.
 	 * @param data           data to be written to the characteristic.
@@ -1386,7 +1400,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param descriptor the descriptor to read.
 	 * @return The request.
@@ -1417,7 +1431,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param descriptor the descriptor to write to.
 	 * @param data       data to be written to the descriptor.
@@ -1440,7 +1454,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param descriptor the descriptor to write to.
 	 * @param data       data to be written to the descriptor.
@@ -1462,7 +1476,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param descriptor the descriptor to write to.
 	 * @param data       data to be written to the descriptor.
@@ -1486,6 +1500,100 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		log(Log.VERBOSE, "Writing descriptor " + descriptor.getUuid());
 		log(Log.DEBUG, "gatt.writeDescriptor(" + descriptor.getUuid() + ")");
 		return internalWriteDescriptorWorkaround(descriptor);
+	}
+
+	/**
+	 * Begins the Reliable Write sub-procedure. Requests that need to be performed reliably
+	 * should be enqueued with {@link ReliableWriteRequest#add(Operation)} instead of using
+	 * {@link Request#enqueue()}. The library will verify all Write operations and will
+	 * automatically abort the Reliable Write procedure when the returned data mismatch with the
+	 * data sent. When all requests enqueued in the {@link ReliableWriteRequest} were completed,
+	 * the Reliable Write will be automatically executed.
+	 * <p>
+	 * Long Write will not work when Reliable Write is in progress. The library will make sure
+	 * that {@link WriteRequest#split()} was called for all {@link WriteRequest} packets, had
+	 * they not been assigned other splitter.
+	 * <p>
+	 * At least one Write operation must be executed before executing or aborting, otherwise the
+	 * {@link GattError#GATT_INVALID_OFFSET} error will be reported. Because of that, enqueueing
+	 * a {@link ReliableWriteRequest} without any operations does nothing.
+	 * <p>
+	 * Example of usage:
+	 * <pre>
+	 *     beginReliableWrite()
+	 *           .add(writeCharacteristic(someCharacteristic, someData)
+	 *                   .fail(...)
+	 *                   .done(...))
+	 *           // Non-write requests are also possible
+	 *           .add(requestMtu(200))
+	 *           // Data will be written in the same order
+	 *           .add(writeCharacteristic(someCharacteristic, differentData))
+	 *           // This will return the OLD data, not 'differentData', as the RW wasn't executed!
+	 *           .add(readCharacteristic(someCharacteristic).with(callback))
+	 *           // Multiple characteristics may be written during a single RW
+	 *           .add(writeCharacteristic(someOtherCharacteristic, importantData))
+	 *        // Finally, enqueue the Reliable Write request in BleManager
+	 *     	  .enqueue();
+	 * </pre>
+	 *
+	 * @return The request.
+	 */
+	@NonNull
+	protected final ReliableWriteRequest beginReliableWrite() {
+		return Request.newReliableWriteRequest().setManager(this);
+	}
+
+	@MainThread
+	private boolean internalBeginReliableWrite() {
+		final BluetoothGatt gatt = mBluetoothGatt;
+		if (gatt == null || !mConnected)
+			return false;
+
+		// Reliable Write can't be before the old one isn't executed or aborted.
+		if (mReliableWriteInProgress)
+			return true;
+
+		log(Log.VERBOSE, "Beginning reliable write...");
+		log(Log.DEBUG, "gatt.beginReliableWrite()");
+		return mReliableWriteInProgress = gatt.beginReliableWrite();
+	}
+
+	@MainThread
+	private boolean internalExecuteReliableWrite() {
+		final BluetoothGatt gatt = mBluetoothGatt;
+		if (gatt == null || !mConnected)
+			return false;
+
+		if (!mReliableWriteInProgress)
+			return false;
+
+		log(Log.VERBOSE, "Executing reliable write...");
+		log(Log.DEBUG, "gatt.executeReliableWrite()");
+		return gatt.executeReliableWrite();
+	}
+
+	@MainThread
+	private boolean internalAbortReliableWrite() {
+		final BluetoothGatt gatt = mBluetoothGatt;
+		if (gatt == null || !mConnected)
+			return false;
+
+		if (!mReliableWriteInProgress)
+			return false;
+
+		log(Log.VERBOSE, "Aborting reliable write...");
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+			log(Log.DEBUG, "gatt.abortReliableWrite()");
+			gatt.abortReliableWrite();
+		} else {
+			log(Log.DEBUG, "gatt.abortReliableWrite(device)");
+			gatt.abortReliableWrite(mBluetoothDevice);
+		}
+		return true;
+	}
+
+	protected final boolean isReliableWriteInProgress() {
+		return mReliableWriteInProgress;
 	}
 
 	/**
@@ -1617,7 +1725,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * {@link MtuRequest#with(MtuCallback)} will be called with current MTU value.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @return The request.
 	 */
@@ -1686,7 +1794,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * using {@link ConnectionPriorityRequest#with(ConnectionPriorityCallback)}.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param priority one of: {@link BluetoothGatt#CONNECTION_PRIORITY_HIGH},
 	 *                 {@link BluetoothGatt#CONNECTION_PRIORITY_BALANCED},
@@ -1708,17 +1816,17 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 		String text, priorityText;
 		switch (priority) {
-			case BluetoothGatt.CONNECTION_PRIORITY_HIGH:
+			case ConnectionPriorityRequest.CONNECTION_PRIORITY_HIGH:
 				text = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ?
 						"HIGH (11.25–15ms, 0, 20s)" : "HIGH (7.5–10ms, 0, 20s)";
 				priorityText = "HIGH";
 				break;
-			case BluetoothGatt.CONNECTION_PRIORITY_LOW_POWER:
+			case ConnectionPriorityRequest.CONNECTION_PRIORITY_LOW_POWER:
 				text = "BALANCED (30–50ms, 0, 20s)";
 				priorityText = "LOW POWER";
 				break;
 			default:
-			case BluetoothGatt.CONNECTION_PRIORITY_BALANCED:
+			case ConnectionPriorityRequest.CONNECTION_PRIORITY_BALANCED:
 				text = "LOW POWER (100–125ms, 2, 20s)";
 				priorityText = "BALANCED";
 				break;
@@ -1736,7 +1844,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * as TX and RX PHY in the callback.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param txPhy      preferred transmitter PHY. Bitwise OR of any of
 	 *                   {@link PhyRequest#PHY_LE_1M_MASK}, {@link PhyRequest#PHY_LE_2M_MASK},
@@ -1778,7 +1886,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * in the callback.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @return The request.
 	 */
@@ -1803,7 +1911,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * Reads the current RSSI (Received Signal Strength Indication).
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @return The request.
 	 */
@@ -1835,7 +1943,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * be called and the initialization will be performed as if the device has just connected.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @return The request.
 	 */
@@ -1875,7 +1983,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * at least given number of milliseconds.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param delay the delay in milliseconds.
 	 * @return The request.
@@ -1921,13 +2029,18 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	@MainThread
-	void onRequestTimeout(final Request request) {
+	@Override
+	void onRequestTimeout(@NonNull final TimeoutableRequest request) {
 		mRequest = null;
 		mValueChangedRequest = null;
 		if (request.type == Request.Type.CONNECT) {
 			mConnectRequest = null;
 			internalDisconnect();
 			// The method above will call mGattCallback.nextRequest(true) so we have to return here.
+			return;
+		}
+		if (request.type == Request.Type.DISCONNECT) {
+			close();
 			return;
 		}
 		final BleManagerGattCallback callback = mGattCallback;
@@ -1950,6 +2063,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		private final static String ERROR_READ_RSSI = "Error on RSSI read";
 		private final static String ERROR_READ_PHY = "Error on PHY read";
 		private final static String ERROR_PHY_UPDATE = "Error on PHY update";
+		private final static String ERROR_RELIABLE_WRITE = "Error on Execute Reliable Write";
 
 		private final Deque<Request> mTaskQueue = new LinkedList<>();
 		private Deque<Request> mInitQueue;
@@ -2296,9 +2410,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 						final int delay = mConnectRequest.getRetryDelay();
 						if (delay > 0)
 							log(Log.DEBUG, "wait(" + delay + ")");
-						mHandler.postDelayed(() -> {
-							internalConnect(gatt.getDevice(), mConnectRequest);
-						}, delay);
+						mHandler.postDelayed(() -> internalConnect(gatt.getDevice(), mConnectRequest), delay);
 						return;
 					}
 
@@ -2501,8 +2613,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				onCharacteristicWrite(gatt, characteristic);
 				if (mRequest instanceof WriteRequest) {
 					final WriteRequest request = (WriteRequest) mRequest;
-					request.notifyPacketSent(gatt.getDevice(), data);
-					if (request.hasMore()) {
+					final boolean valid = request.notifyPacketSent(gatt.getDevice(), data);
+					if (!valid && mRequestQueue instanceof ReliableWriteRequest) {
+						request.notifyFail(gatt.getDevice(), FailCallback.REASON_VALIDATION);
+						mRequestQueue.cancelQueue();
+					} else if (request.hasMore()) {
 						enqueueFirst(request);
 					} else {
 						request.notifySuccess(gatt.getDevice());
@@ -2523,6 +2638,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				Log.e(TAG, "onCharacteristicWrite error " + status);
 				if (mRequest instanceof WriteRequest) {
 					mRequest.notifyFail(gatt.getDevice(), status);
+					// Automatically abort Reliable Write when write error happen
+					if (mRequestQueue instanceof ReliableWriteRequest)
+						mRequestQueue.cancelQueue();
 				}
 				mValueChangedRequest = null;
 				onError(gatt.getDevice(), ERROR_WRITE_CHARACTERISTIC, status);
@@ -2533,7 +2651,23 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		@Override
 		final void onReliableWriteCompletedSafe(@NonNull final BluetoothGatt gatt,
 												final int status) {
-			// TODO implement request
+			final boolean execute = mRequest.type == Request.Type.EXECUTE_RELIABLE_WRITE;
+			mReliableWriteInProgress = false;
+			if (status == BluetoothGatt.GATT_SUCCESS) {
+				if (execute) {
+					log(Log.INFO, "Reliable Write executed");
+					mRequest.notifySuccess(gatt.getDevice());
+				} else {
+					log(Log.WARN, "Reliable Write aborted");
+					mRequest.notifySuccess(gatt.getDevice());
+					mRequestQueue.notifyFail(gatt.getDevice(), FailCallback.REASON_REQUEST_FAILED);
+				}
+			} else {
+				Log.e(TAG, "onReliableWriteCompleted execute " + execute + ", error " + status);
+				mRequest.notifyFail(gatt.getDevice(), status);
+				onError(gatt.getDevice(), ERROR_RELIABLE_WRITE, status);
+			}
+			nextRequest(true);
 		}
 
 		@Override
@@ -2607,8 +2741,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				}
 				if (mRequest instanceof WriteRequest) {
 					final WriteRequest request = (WriteRequest) mRequest;
-					request.notifyPacketSent(gatt.getDevice(), data);
-					if (request.hasMore()) {
+					final boolean valid = request.notifyPacketSent(gatt.getDevice(), data);
+					if (!valid && mRequestQueue instanceof ReliableWriteRequest) {
+						request.notifyFail(gatt.getDevice(), FailCallback.REASON_VALIDATION);
+						mRequestQueue.cancelQueue();
+					} else if (request.hasMore()) {
 						enqueueFirst(request);
 					} else {
 						request.notifySuccess(gatt.getDevice());
@@ -2629,6 +2766,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				Log.e(TAG, "onDescriptorWrite error " + status);
 				if (mRequest instanceof WriteRequest) {
 					mRequest.notifyFail(gatt.getDevice(), status);
+					// Automatically abort Reliable Write when write error happen
+					if (mRequestQueue instanceof ReliableWriteRequest)
+						mRequestQueue.cancelQueue();
 				}
 				mValueChangedRequest = null;
 				onError(gatt.getDevice(), ERROR_WRITE_DESCRIPTOR, status);
@@ -2899,10 +3039,23 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			// Get the first request from the init queue
 			Request request = null;
 			try {
-				request = mInitQueue != null ? mInitQueue.poll() : null;
+				// If Request set is present, try taking next request from it
+				if (mRequestQueue != null) {
+					if (mRequestQueue.hasMore()) {
+						request = mRequestQueue.getNext().setManager(BleManager.this);
+					} else {
+						// Set is completed
+						mRequestQueue.notifySuccess(mBluetoothDevice);
+						mRequestQueue = null;
+					}
+				}
+				// Request wasn't obtained from the request set? Take next one from the queue.
+				if (request == null) {
+					request = mInitQueue != null ? mInitQueue.poll() : null;
+				}
 			} catch (final Exception e) {
 				// On older Android versions poll() may in some cases throw NoSuchElementException,
-				// as it's using removeFirst() intermally.
+				// as it's using removeFirst() internally.
 				// See: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/37
 				request = null;
 			}
@@ -2924,14 +3077,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 				}
 				// If so, we can continue with the task queue
 				try {
-					request = mTaskQueue.poll();
+					request = mTaskQueue.remove();
 				} catch (final Exception e) {
-					// On older Android versions poll() may in some cases throw NoSuchElementException,
-					// as it's using removeFirst() intermally.
-					// See: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/37
-					request = null;
-				}
-				if (request == null) {
+					// No more tasks to perform
 					mOperationInProgress = false;
 					mRequest = null;
 					onManagerReady();
@@ -3012,6 +3160,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 					result = internalRemoveBond();
 					break;
 				}
+				case SET: {
+					mRequestQueue = (RequestQueue) request;
+					nextRequest(true);
+					return;
+				}
 				case READ: {
 					result = internalReadCharacteristic(request.characteristic);
 					break;
@@ -3037,6 +3190,25 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 						descriptor.setValue(wr.getData(mMtu));
 					}
 					result = internalWriteDescriptor(descriptor);
+					break;
+				}
+				case BEGIN_RELIABLE_WRITE: {
+					result = internalBeginReliableWrite();
+					// There is no callback for begin reliable write request.
+					// Notify success and start next request immediately.
+					if (result) {
+						mRequest.notifySuccess(mBluetoothDevice);
+						nextRequest(true);
+						return;
+					}
+					break;
+				}
+				case EXECUTE_RELIABLE_WRITE: {
+					result = internalExecuteReliableWrite();
+					break;
+				}
+				case ABORT_RELIABLE_WRITE: {
+					result = internalAbortReliableWrite();
 					break;
 				}
 				case ENABLE_NOTIFICATIONS: {

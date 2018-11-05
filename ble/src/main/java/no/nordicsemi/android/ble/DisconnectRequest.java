@@ -22,6 +22,7 @@
 
 package no.nordicsemi.android.ble;
 
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 
 import no.nordicsemi.android.ble.callback.BeforeCallback;
@@ -29,8 +30,8 @@ import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
-@SuppressWarnings("WeakerAccess")
-public class DisconnectRequest extends Request {
+@SuppressWarnings({"WeakerAccess", "unused", "deprecation"})
+public class DisconnectRequest extends TimeoutableRequest {
 
 	DisconnectRequest(@NonNull final Type type) {
 		super(type);
@@ -40,6 +41,13 @@ public class DisconnectRequest extends Request {
 	@Override
 	DisconnectRequest setManager(@NonNull final BleManager manager) {
 		super.setManager(manager);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public DisconnectRequest timeout(@IntRange(from = 0) final long timeout) {
+		super.timeout(timeout);
 		return this;
 	}
 

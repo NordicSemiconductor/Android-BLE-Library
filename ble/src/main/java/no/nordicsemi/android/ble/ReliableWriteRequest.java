@@ -22,67 +22,114 @@
 
 package no.nordicsemi.android.ble;
 
-import android.bluetooth.BluetoothDevice;
-import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
-import no.nordicsemi.android.ble.callback.RssiCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
-public final class ReadRssiRequest extends SimpleValueRequest<RssiCallback> implements Operation {
-
-	ReadRssiRequest(@NonNull final Type type) {
-		super(type);
-	}
+@SuppressWarnings("unused")
+public final class ReliableWriteRequest extends RequestQueue {
+	private boolean initialized;
+	private boolean closed;
+	private boolean cancelled;
 
 	@NonNull
 	@Override
-	ReadRssiRequest setManager(@NonNull final BleManager manager) {
+	ReliableWriteRequest setManager(@NonNull final BleManager manager) {
 		super.setManager(manager);
 		return this;
 	}
 
 	@Override
 	@NonNull
-	public ReadRssiRequest done(@NonNull final SuccessCallback callback) {
+	public ReliableWriteRequest done(@NonNull final SuccessCallback callback) {
 		super.done(callback);
 		return this;
 	}
 
 	@Override
 	@NonNull
-	public ReadRssiRequest fail(@NonNull final FailCallback callback) {
+	public ReliableWriteRequest fail(@NonNull final FailCallback callback) {
 		super.fail(callback);
 		return this;
 	}
 
 	@NonNull
 	@Override
-	public ReadRssiRequest invalid(@NonNull final InvalidRequestCallback callback) {
+	public ReliableWriteRequest invalid(@NonNull final InvalidRequestCallback callback) {
 		super.invalid(callback);
 		return this;
 	}
 
 	@Override
 	@NonNull
-	public ReadRssiRequest before(@NonNull final BeforeCallback callback) {
+	public ReliableWriteRequest before(@NonNull final BeforeCallback callback) {
 		super.before(callback);
 		return this;
 	}
 
-	@Override
 	@NonNull
-	public ReadRssiRequest with(@NonNull final RssiCallback callback) {
-		super.with(callback);
+	@Override
+	public ReliableWriteRequest add(@NonNull final Operation operation) {
+		super.add(operation);
+		// Make sure the write request uses splitting, as Long Write is not supported
+		// in Reliable Write sub-procedure.
+		if (operation instanceof WriteRequest) {
+			((WriteRequest) operation).forceSplit();
+		}
 		return this;
 	}
 
-	void notifyRssiRead(@NonNull final BluetoothDevice device,
-						@IntRange(from = -128, to = 20) final int rssi) {
-		if (valueCallback != null)
-			valueCallback.onRssiRead(device, rssi);
+	@Override
+	public void cancelQueue() {
+		cancelled = true;
+		super.cancelQueue();
+	}
+
+	/**
+	 * Alias for {@link #cancelQueue()}.
+	 */
+	public void abort() {
+		cancelQueue();
+	}
+
+	@Override
+	public int size() {
+		int size = super.size();
+
+		// Add Begin Reliable Write
+		if (!initialized)
+			size += 1;
+
+		// Add Execute or Abort Reliable Write
+		if (!closed)
+			size += 1;
+		return size;
+	}
+
+	@Override
+	Request getNext() {
+		if (!initialized) {
+			initialized = true;
+			return newBeginReliableWriteRequest();
+		}
+		if (super.isEmpty()) {
+			closed = true;
+
+			if (cancelled)
+				return newAbortReliableWriteRequest();
+			return newExecuteReliableWriteRequest();
+		}
+		return super.getNext();
+	}
+
+	@Override
+	boolean hasMore() {
+		// If no operations were added, consider the RW request empty, no requests will be executed.
+		if (!initialized)
+			return super.hasMore();
+		return !closed;
 	}
 }

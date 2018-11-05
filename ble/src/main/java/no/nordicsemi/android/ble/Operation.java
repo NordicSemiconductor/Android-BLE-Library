@@ -20,19 +20,13 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package no.nordicsemi.android.ble.annotation;
+package no.nordicsemi.android.ble;
 
-import android.support.annotation.IntDef;
-
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
-
-import no.nordicsemi.android.ble.PhyRequest;
-
-@Retention(RetentionPolicy.SOURCE)
-@IntDef(flag = true, value = {
-		PhyRequest.PHY_LE_1M_MASK,
-		PhyRequest.PHY_LE_2M_MASK,
-		PhyRequest.PHY_LE_CODED_MASK
-})
-public @interface PhyMask {}
+/**
+ * An operation is a request that can be executed during a pending connection without
+ * changing connection state. Such requests may be added to {@link RequestQueue}.
+ */
+@SuppressWarnings("WeakerAccess")
+public interface Operation {
+	// empty
+}

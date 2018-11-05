@@ -36,13 +36,24 @@ import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
-@SuppressWarnings({"WeakerAccess", "unused"})
-public class ConnectRequest extends Request {
-
+/**
+ * The connect request is used to connect to a Bluetooth LE device. The request will end when
+ * the device gets connected, the connection timeouts, or an error occurs.
+ * <p>
+ * The {@link #done(SuccessCallback)} callback will be called after the device is ready, that is
+ * when it is connected, the services were discovered, the required services were found and the
+ * initialization queue set in {@link BleManager.BleManagerGattCallback#initialize()} is complete
+ * (without or with errors).
+ */
+@SuppressWarnings({"WeakerAccess", "unused", "deprecation"})
+public class ConnectRequest extends TimeoutableRequest {
+	@NonNull
 	private BluetoothDevice device;
 	@PhyMask
 	private int preferredPhy;
+	@IntRange(from = 0)
 	private int attempt = 0, retries = 0;
+	@IntRange(from = 0)
 	private int delay = 0;
 	private boolean autoConnect = false;
 
@@ -59,9 +70,16 @@ public class ConnectRequest extends Request {
 		return this;
 	}
 
+	@NonNull
+	@Override
+	public ConnectRequest timeout(final long timeout) {
+		super.timeout(timeout);
+		return this;
+	}
+
 	/**
 	 * Use to set a completion callback. The callback will be invoked when the operation has
-	 * finished successfully unless {@link #await(int)} or its variant was used, in which case this
+	 * finished successfully unless {@link #await()} or its variant was used, in which case this
 	 * callback will be ignored.
 	 * <p>
 	 * The done callback will also be called when one or more of initialization requests has
@@ -150,7 +168,7 @@ public class ConnectRequest extends Request {
 	 * lost, the {@link BleManagerCallbacks#onLinkLossOccurred(BluetoothDevice)} callback is
 	 * called instead of {@link BleManagerCallbacks#onDeviceDisconnected(BluetoothDevice)}.
 	 * <p>
-	 * This feature works much better on newer Android phone models and have issues on older
+	 * This feature works much better on newer Android phone models and may have issues on older
 	 * phones.
 	 * <p>
 	 * This method should only be used with bonded devices, as otherwise the device may change
@@ -166,6 +184,7 @@ public class ConnectRequest extends Request {
 	 * @param autoConnect true to use autoConnect feature on the second and following connections.
 	 *                    The first connection is always done with autoConnect parameter equal to
 	 *                    false, to make it faster and allow to timeout it the device is unreachable.
+	 *                    Default value is false.
 	 * @return The request.
 	 */
 	public ConnectRequest useAutoConnect(final boolean autoConnect) {

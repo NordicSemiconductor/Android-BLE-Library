@@ -32,7 +32,7 @@ import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.MtuCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
-public final class MtuRequest extends ValueRequest<MtuCallback> {
+public final class MtuRequest extends SimpleValueRequest<MtuCallback>implements Operation {
 	private final int value;
 
 	MtuRequest(@NonNull final Type type, @IntRange(from = 23, to = 517) int mtu) {

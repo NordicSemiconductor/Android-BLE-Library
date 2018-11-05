@@ -40,7 +40,8 @@ import no.nordicsemi.android.ble.exception.InvalidRequestException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
-public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPriorityCallback> {
+public final class ConnectionPriorityRequest extends SimpleValueRequest<ConnectionPriorityCallback>
+		implements Operation {
 
 	/**
 	 * Connection parameter update - Use the connection parameters recommended by the
@@ -136,12 +137,11 @@ public final class ConnectionPriorityRequest extends ValueRequest<ConnectionPrio
 	@RequiresApi(value = Build.VERSION_CODES.O)
 	@NonNull
 	@Override
-	public <E extends ConnectionPriorityCallback> E await(@NonNull final Class<E> responseClass,
-														  final int timeout)
-			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
-			BluetoothDisabledException, InvalidRequestException {
+	public <E extends ConnectionPriorityCallback> E await(@NonNull final E response)
+			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
+			InvalidRequestException {
 		// The BluetoothGattCallback#onConnectionUpdated callback was introduced in Android Oreo.
-		return super.await(responseClass, timeout);
+		return super.await(response);
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.O)
