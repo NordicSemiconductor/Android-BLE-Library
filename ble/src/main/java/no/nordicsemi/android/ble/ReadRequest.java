@@ -46,7 +46,7 @@ import no.nordicsemi.android.ble.exception.InvalidRequestException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
-public final class ReadRequest extends SimpleValueRequest<DataReceivedCallback> {
+public final class ReadRequest extends SimpleValueRequest<DataReceivedCallback> implements Operation  {
 	private ReadProgressCallback progressCallback;
 	private DataMerger dataMerger;
 	private DataStream buffer;

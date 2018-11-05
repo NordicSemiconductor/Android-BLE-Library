@@ -24,6 +24,7 @@ package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -39,21 +40,28 @@ import no.nordicsemi.android.ble.exception.RequestFailedException;
  * can't have timeout for any other reason. This class defines the {@link #await()} methods.
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
-public abstract class SimpleValueRequest<T> extends SimpleRequest {
+public abstract class TimeoutableValueRequest<T> extends TimeoutableRequest {
 	T valueCallback;
 
-	SimpleValueRequest(@NonNull final Type type) {
+	TimeoutableValueRequest(@NonNull final Type type) {
 		super(type);
 	}
 
-	SimpleValueRequest(@NonNull final Type type,
-					   @Nullable final BluetoothGattCharacteristic characteristic) {
+	TimeoutableValueRequest(@NonNull final Type type,
+							@Nullable final BluetoothGattCharacteristic characteristic) {
 		super(type, characteristic);
 	}
 
-	SimpleValueRequest(@NonNull final Type type,
-					   @Nullable final BluetoothGattDescriptor descriptor) {
+	TimeoutableValueRequest(@NonNull final Type type,
+							@Nullable final BluetoothGattDescriptor descriptor) {
 		super(type, descriptor);
+	}
+
+	@NonNull
+	@Override
+	public TimeoutableValueRequest<T> timeout(final long timeout) {
+		super.timeout(timeout);
+		return this;
 	}
 
 	/**
@@ -64,17 +72,19 @@ public abstract class SimpleValueRequest<T> extends SimpleRequest {
 	 * @return The request.
 	 */
 	@NonNull
-	public SimpleValueRequest<T> with(@NonNull final T callback) {
+	public TimeoutableValueRequest<T> with(@NonNull final T callback) {
 		this.valueCallback = callback;
 		return this;
 	}
 
 	/**
-	 * Synchronously waits until the request is done. The given response object will be filled
-	 * with the request response.
+	 * Synchronously waits until the request is done.
+	 * <p>
+	 * When the timeout, set with {@link #timeout(long)} occurs, the {@link InterruptedException}
+	 * will be thrown.
 	 * <p>
 	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)} and
-	 * {@link #with(T)} will be ignored.
+	 * {@link #with(E)} will be ignored.
 	 * <p>
 	 * This method may not be called from the main (UI) thread.
 	 *
@@ -83,25 +93,25 @@ public abstract class SimpleValueRequest<T> extends SimpleRequest {
 	 * @return The response with a response.
 	 * @throws RequestFailedException      thrown when the BLE request finished with status other
 	 *                                     than {@link android.bluetooth.BluetoothGatt#GATT_SUCCESS}.
+	 * @throws InterruptedException        thrown if the timeout occurred before the request has
+	 *                                     finished.
 	 * @throws IllegalStateException       thrown when you try to call this method from the main
-	 *                                     (UI) thread.
+	 *                                     (UI) thread, or when the trigger was already enqueued.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
 	 *                                     was completed.
 	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
 	 * @throws InvalidRequestException     thrown when the request was called before the device was
 	 *                                     connected at least once (unknown device).
-	 * @see #await(Class)
 	 */
 	@NonNull
 	public <E extends T> E await(@NonNull final E response)
 			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
-			InvalidRequestException {
+			InvalidRequestException, InterruptedException {
 		assertNotMainThread();
 
 		final T vc = valueCallback;
-		with(response);
 		try {
-			await();
+			with(response).await();
 			return response;
 		} finally {
 			valueCallback = vc;
@@ -121,6 +131,8 @@ public abstract class SimpleValueRequest<T> extends SimpleRequest {
 	 * @return The response with a response.
 	 * @throws RequestFailedException      thrown when the BLE request finished with status other
 	 *                                     than {@link android.bluetooth.BluetoothGatt#GATT_SUCCESS}.
+	 * @throws InterruptedException        thrown if the timeout occurred before the request has
+	 *                                     finished.
 	 * @throws IllegalStateException       thrown when you try to call this method from the main
 	 *                                     (UI) thread.
 	 * @throws IllegalArgumentException    thrown when the response class could not be instantiated.
@@ -134,7 +146,7 @@ public abstract class SimpleValueRequest<T> extends SimpleRequest {
 	@NonNull
 	public <E extends T> E await(@NonNull final Class<E> responseClass)
 			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
-			InvalidRequestException {
+			InvalidRequestException, InterruptedException {
 		assertNotMainThread();
 
 		try {
@@ -149,5 +161,78 @@ public abstract class SimpleValueRequest<T> extends SimpleRequest {
 					+ responseClass.getCanonicalName()
 					+ " class. Does it have a default constructor with no arguments?");
 		}
+	}
+
+	/**
+	 * Synchronously waits until the request is done, for at most given number of milliseconds
+	 * after which the {@link InterruptedException} will be thrown.
+	 * <p>
+	 * Callbacks set using {@link #done(SuccessCallback)}, {@link #fail(FailCallback)} and
+	 * {@link #with(E)} will be ignored.
+	 * <p>
+	 * This method may not be called from the main (UI) thread.
+	 *
+	 * @param responseClass the response class. This class will be instantiate, therefore it has
+	 *                      to have a default constructor.
+	 * @param timeout       optional timeout in milliseconds. This value will override one set
+	 *                      in {@link #timeout(long)}.
+	 * @param <E>           a response class that extends {@link T}.
+	 * @return The object with a response.
+	 * @throws RequestFailedException      thrown when the BLE request finished with status other
+	 *                                     than {@link android.bluetooth.BluetoothGatt#GATT_SUCCESS}.
+	 * @throws InterruptedException        thrown if the timeout occurred before the request has
+	 *                                     finished.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main
+	 *                                     (UI) thread.
+	 * @throws IllegalArgumentException    thrown when the response class could not be instantiated.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
+	 *                                     was completed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
+	 * @throws InvalidRequestException     thrown when the request was called before the device was
+	 *                                     connected at least once (unknown device).
+	 * @deprecated Use {@link #timeout(long)} and {@link #await(Class)} instead.
+	 */
+	@NonNull
+	@Deprecated
+	public <E extends T> E await(@NonNull final Class<E> responseClass,
+								 @IntRange(from = 0) final long timeout)
+			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
+			BluetoothDisabledException, InvalidRequestException {
+		return timeout(timeout).await(responseClass);
+	}
+
+	/**
+	 * Synchronously waits until the request is done, for at most given number of milliseconds
+	 * after which the {@link InterruptedException} will be thrown.
+	 * <p>
+	 * Callbacks set using {@link #done(SuccessCallback)}, {@link #fail(FailCallback)} and
+	 * {@link #with(E)} will be ignored.
+	 * <p>
+	 * This method may not be called from the main (UI) thread.
+	 *
+	 * @param response the response object.
+	 * @param timeout  optional timeout in milliseconds.
+	 * @param <E>      a response class that extends {@link T}.
+	 * @return The object with a response.
+	 * @throws RequestFailedException      thrown when the BLE request finished with status other
+	 *                                     than {@link android.bluetooth.BluetoothGatt#GATT_SUCCESS}.
+	 * @throws InterruptedException        thrown if the timeout occurred before the request has
+	 *                                     finished.
+	 * @throws IllegalStateException       thrown when you try to call this method from the main
+	 *                                     (UI) thread.
+	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
+	 *                                     was completed.
+	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter is disabled.
+	 * @throws InvalidRequestException     thrown when the request was called before the device was
+	 *                                     connected at least once (unknown device).
+	 * @deprecated Use {@link #timeout(long)} and {@link #await(E)} instead.
+	 */
+	@NonNull
+	@Deprecated
+	public <E extends T> E await(@NonNull final E response,
+								 @IntRange(from = 0) final long timeout)
+			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
+			BluetoothDisabledException, InvalidRequestException {
+		return timeout(timeout).await(response);
 	}
 }

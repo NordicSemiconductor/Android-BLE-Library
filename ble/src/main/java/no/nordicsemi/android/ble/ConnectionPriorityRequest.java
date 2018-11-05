@@ -40,7 +40,8 @@ import no.nordicsemi.android.ble.exception.InvalidRequestException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
-public final class ConnectionPriorityRequest extends SimpleValueRequest<ConnectionPriorityCallback> {
+public final class ConnectionPriorityRequest extends SimpleValueRequest<ConnectionPriorityCallback>
+		implements Operation {
 
 	/**
 	 * Connection parameter update - Use the connection parameters recommended by the

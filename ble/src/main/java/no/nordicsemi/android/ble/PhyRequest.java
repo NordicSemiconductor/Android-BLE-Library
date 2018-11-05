@@ -35,7 +35,7 @@ import no.nordicsemi.android.ble.callback.PhyCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
 @SuppressWarnings({"WeakerAccess", "unused"})
-public final class PhyRequest extends SimpleValueRequest<PhyCallback> {
+public final class PhyRequest extends SimpleValueRequest<PhyCallback> implements Operation  {
 
 	/**
 	 * Bluetooth LE 1M PHY mask. Used to specify LE 1M Physical Channel as one of many available

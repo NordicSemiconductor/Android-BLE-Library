@@ -23,8 +23,10 @@
 package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothGatt;
-import android.support.annotation.IntRange;
+import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
@@ -44,22 +46,19 @@ public class SimpleRequest extends Request {
 		super(type);
 	}
 
-	/**
-	 * This method throws an {@link UnsupportedOperationException} exception, as this request does
-	 * not support timeout.
-	 *
-	 * @param timeout the request timeout in milliseconds, 0 to disable timeout. Ignored.
-	 * @return This method always throws an exception.
-	 * @throws UnsupportedOperationException always.
-	 */
-	@NonNull
-	@Override
-	final ReadRequest timeout(@IntRange(from = 0) final long timeout) {
-		throw new UnsupportedOperationException("This request may not have timeout");
+	SimpleRequest(@NonNull final Type type,
+				  @Nullable final BluetoothGattCharacteristic characteristic) {
+		super(type, characteristic);
+	}
+
+	SimpleRequest(@NonNull final Type type,
+				  @Nullable final BluetoothGattDescriptor descriptor) {
+		super(type, descriptor);
 	}
 
 	/**
 	 * Synchronously waits until the request is done.
+	 * <p>
 	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)}
 	 * will be ignored.
 	 * <p>
@@ -77,6 +76,31 @@ public class SimpleRequest extends Request {
 	 */
 	public final void await() throws RequestFailedException, DeviceDisconnectedException,
 			BluetoothDisabledException, InvalidRequestException {
-		awaitWithoutTimeout();
+		assertNotMainThread();
+
+		final SuccessCallback sc = successCallback;
+		final FailCallback fc = failCallback;
+		try {
+			syncLock.close();
+			final RequestCallback callback = new RequestCallback();
+			done(callback).fail(callback).invalid(callback).enqueue();
+
+			syncLock.block();
+			if (!callback.isSuccess()) {
+				if (callback.status == FailCallback.REASON_DEVICE_DISCONNECTED) {
+					throw new DeviceDisconnectedException();
+				}
+				if (callback.status == FailCallback.REASON_BLUETOOTH_DISABLED) {
+					throw new BluetoothDisabledException();
+				}
+				if (callback.status == RequestCallback.REASON_REQUEST_INVALID) {
+					throw new InvalidRequestException(this);
+				}
+				throw new RequestFailedException(this, callback.status);
+			}
+		} finally {
+			successCallback = sc;
+			failCallback = fc;
+		}
 	}
 }

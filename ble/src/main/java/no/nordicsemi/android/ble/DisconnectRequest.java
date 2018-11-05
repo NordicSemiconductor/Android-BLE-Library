@@ -22,7 +22,6 @@
 
 package no.nordicsemi.android.ble;
 
-import android.bluetooth.BluetoothGatt;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 
@@ -30,13 +29,9 @@ import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
-import no.nordicsemi.android.ble.exception.BluetoothDisabledException;
-import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
-import no.nordicsemi.android.ble.exception.InvalidRequestException;
-import no.nordicsemi.android.ble.exception.RequestFailedException;
 
-@SuppressWarnings({"WeakerAccess", "unused"})
-public class DisconnectRequest extends Request {
+@SuppressWarnings({"WeakerAccess", "unused", "deprecation"})
+public class DisconnectRequest extends TimeoutableRequest {
 
 	DisconnectRequest(@NonNull final Type type) {
 		super(type);
@@ -46,6 +41,13 @@ public class DisconnectRequest extends Request {
 	@Override
 	DisconnectRequest setManager(@NonNull final BleManager manager) {
 		super.setManager(manager);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public DisconnectRequest timeout(@IntRange(from = 0) final long timeout) {
+		super.timeout(timeout);
 		return this;
 	}
 
@@ -75,100 +77,5 @@ public class DisconnectRequest extends Request {
 	public DisconnectRequest before(@NonNull final BeforeCallback callback) {
 		super.before(callback);
 		return this;
-	}
-
-	@NonNull
-	@Override
-	public DisconnectRequest timeout(@IntRange(from = 0) final long timeout) {
-		super.timeout(timeout);
-		return this;
-	}
-
-	/**
-	 * Enqueues the disconnect request for asynchronous execution.
-	 * <p>
-	 * Use {@link #timeout(long)} to set the maximum time the manager will wait.
-	 * When the timeout occurs, the request will fail with {@link FailCallback#REASON_TIMEOUT}
-	 * and the connection will be force-closed using {@link BleManager#clone()}.
-	 */
-	@Override
-	public void enqueue() {
-		super.enqueue();
-	}
-
-	/**
-	 * Enqueues the disconnect request for asynchronous execution.
-	 * <p>
-	 * Use {@link #timeout(long)} to set the maximum time the manager will wait.
-	 * When the timeout occurs, the request will fail with {@link FailCallback#REASON_TIMEOUT}
-	 * and the connection will be force-closed using {@link BleManager#clone()}.
-	 *
-	 * @param timeout the request timeout in milliseconds, 0 to disable timeout. This value
-	 *                will override one set using {@link #timeout(long)}.
-	 * @deprecated Use {@link #timeout(long)} and {@link #enqueue()} instead.
-	 */
-	@Deprecated
-	public void enqueue(@IntRange(from = 0) final long timeout) {
-		timeout(timeout).enqueue();
-	}
-
-	/**
-	 * Synchronously waits until the device disconnects.
-	 * <p>
-	 * Use {@link #timeout(long)} to set the maximum time the manager will wait.
-	 * When the timeout occurs, the request will throw {@link InterruptedException}
-	 * and the connection will be force-closed using {@link BleManager#clone()}.
-	 * <p>
-	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)}
-	 * will be ignored.
-	 * <p>
-	 * This method may not be called from the main (UI) thread.
-	 *
-	 * @throws RequestFailedException      thrown when the BLE request finished with status other
-	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
-	 * @throws InterruptedException        thrown if the timeout occurred before the request has
-	 *                                     finished.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main
-	 *                                     (UI) thread.
-	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
-	 *                                     was completed.
-	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
-	 * @throws InvalidRequestException     thrown when the request was called before the device was
-	 *                                     connected at least once (unknown device).
-	 */
-	public void await() throws RequestFailedException, DeviceDisconnectedException,
-			BluetoothDisabledException, InvalidRequestException, InterruptedException {
-		awaitWithTimeout();
-	}
-
-	/**
-	 * Synchronously waits until the device disconnects for at most the given number of
-	 * milliseconds. When the timeout occurs, the request will throw {@link InterruptedException}
-	 * and the connection will be force-closed using {@link BleManager#clone()}.
-	 * <p>
-	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)}
-	 * will be ignored.
-	 * <p>
-	 * This method may not be called from the main (UI) thread.
-	 *
-	 * @param timeout optional timeout in milliseconds, 0 to disable timeout.
-	 * @throws RequestFailedException      thrown when the BLE request finished with status other
-	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
-	 * @throws InterruptedException        thrown if the timeout occurred before the request has
-	 *                                     finished.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main
-	 *                                     (UI) thread.
-	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
-	 *                                     was completed.
-	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
-	 * @throws InvalidRequestException     thrown when the request was called before the device was
-	 *                                     connected at least once (unknown device).
-	 * @deprecated Use {@link #timeout(long)} and {@link #await()} instead.
-	 */
-	@Deprecated
-	public void await(@IntRange(from = 0) final long timeout) throws RequestFailedException,
-			InterruptedException, DeviceDisconnectedException, BluetoothDisabledException,
-			InvalidRequestException {
-		timeout(timeout).awaitWithTimeout();
 	}
 }

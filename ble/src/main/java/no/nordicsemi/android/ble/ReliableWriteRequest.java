@@ -29,6 +29,7 @@ import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
+@SuppressWarnings("unused")
 public final class ReliableWriteRequest extends RequestQueue {
 	private boolean initialized;
 	private boolean closed;
@@ -71,14 +72,41 @@ public final class ReliableWriteRequest extends RequestQueue {
 
 	@NonNull
 	@Override
-	public ReliableWriteRequest add(@NonNull final ConnectionRequest request) {
-		super.add(request);
+	public ReliableWriteRequest add(@NonNull final Operation operation) {
+		super.add(operation);
 		// Make sure the write request uses splitting, as Long Write is not supported
 		// in Reliable Write sub-procedure.
-		if (request instanceof WriteRequest) {
-			((WriteRequest) request).forceSplit();
+		if (operation instanceof WriteRequest) {
+			((WriteRequest) operation).forceSplit();
 		}
 		return this;
+	}
+
+	@Override
+	public void cancelQueue() {
+		cancelled = true;
+		super.cancelQueue();
+	}
+
+	/**
+	 * Alias for {@link #cancelQueue()}.
+	 */
+	public void abort() {
+		cancelQueue();
+	}
+
+	@Override
+	public int size() {
+		int size = super.size();
+
+		// Add Begin Reliable Write
+		if (!initialized)
+			size += 1;
+
+		// Add Execute or Abort Reliable Write
+		if (!closed)
+			size += 1;
+		return size;
 	}
 
 	@Override
@@ -98,37 +126,10 @@ public final class ReliableWriteRequest extends RequestQueue {
 	}
 
 	@Override
-	public int size() {
-		int size = super.size();
-
-		// Add Begin Reliable Write
-		if (!initialized)
-			size += 1;
-
-		// Add Execute or Abort Reliable Write
-		if (!closed)
-			size += 1;
-		return size;
-	}
-
-	@Override
 	boolean hasMore() {
 		// If no operations were added, consider the RW request empty, no requests will be executed.
 		if (!initialized)
 			return super.hasMore();
 		return !closed;
-	}
-
-	@Override
-	public void cancelQueue() {
-		cancelled = true;
-		super.cancelQueue();
-	}
-
-	/**
-	 * Alias for {@link #cancelQueue()}.
-	 */
-	public void abort() {
-		cancelQueue();
 	}
 }

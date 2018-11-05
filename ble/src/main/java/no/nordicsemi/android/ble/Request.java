@@ -92,8 +92,6 @@ public abstract class Request {
 		SLEEP,
 	}
 
-	private Runnable timeoutHandler;
-	protected long timeout;
 	private BleManager manager;
 
 	final ConditionVariable syncLock;
@@ -492,7 +490,7 @@ public abstract class Request {
 	 * After the operation is complete a proper callback will be invoked.
 	 * <p>
 	 * If the notification should be triggered by another operation (for example writing an
-	 * op code), set it with {@link WaitForValueChangedRequest#trigger(ConnectionRequest)}.
+	 * op code), set it with {@link WaitForValueChangedRequest#trigger(Operation)}.
 	 *
 	 * @param characteristic characteristic from which a notification should be received.
 	 * @return The new request.
@@ -512,7 +510,7 @@ public abstract class Request {
 	 * After the operation is complete a proper callback will be invoked.
 	 * <p>
 	 * If the indication should be triggered by another operation (for example writing an
-	 * op code), set it with {@link WaitForValueChangedRequest#trigger(ConnectionRequest)}.
+	 * op code), set it with {@link WaitForValueChangedRequest#trigger(Operation)}.
 	 *
 	 * @param characteristic characteristic from which a notification should be received.
 	 * @return The new request.
@@ -796,85 +794,13 @@ public abstract class Request {
 	}
 
 	/**
-	 * Sets the operation timeout.
-	 * When the timeout occurs, the request will fail with {@link FailCallback#REASON_TIMEOUT}.
-	 *
-	 * @param timeout the request timeout in milliseconds, 0 to disable timeout.
-	 * @return the callback.
-	 * @throws IllegalStateException         thrown when the request has already been started.
-	 * @throws UnsupportedOperationException thrown when the timeout is not allowed for this request,
-	 *                                       as the callback from the system is required.
-	 */
-	@NonNull
-	Request timeout(@IntRange(from = 0) final long timeout) {
-		// This method is package-private, as not all requests support timeout. The access
-		// modifier may be widened to public where timeout is supported.
-		if (timeoutHandler != null)
-			throw new IllegalStateException("Request already started");
-		this.timeout = timeout;
-		return this;
-	}
-
-	/**
 	 * Enqueues the request for asynchronous execution.
 	 */
 	public void enqueue() {
 		manager.enqueue(this);
 	}
 
-	void awaitWithoutTimeout() throws RequestFailedException, DeviceDisconnectedException,
-			BluetoothDisabledException, InvalidRequestException {
-		try {
-			awaitWithTimeout();
-		} catch (final InterruptedException e) {
-			// never happen
-		}
-	}
-
-	void awaitWithTimeout() throws RequestFailedException, DeviceDisconnectedException,
-			BluetoothDisabledException, InvalidRequestException, InterruptedException {
-		assertNotMainThread();
-
-		final SuccessCallback sc = successCallback;
-		final FailCallback fc = failCallback;
-		try {
-			syncLock.close();
-			final RequestCallback callback = new RequestCallback();
-			done(callback).fail(callback).invalid(callback).enqueue();
-
-			if (!syncLock.block(timeout)) {
-				throw new InterruptedException();
-			}
-			if (!callback.isSuccess()) {
-				if (callback.status == FailCallback.REASON_DEVICE_DISCONNECTED) {
-					throw new DeviceDisconnectedException();
-				}
-				if (callback.status == FailCallback.REASON_BLUETOOTH_DISABLED) {
-					throw new BluetoothDisabledException();
-				}
-				if (callback.status == RequestCallback.REASON_REQUEST_INVALID) {
-					throw new InvalidRequestException(this);
-				}
-				throw new RequestFailedException(this, callback.status);
-			}
-		} finally {
-			successCallback = sc;
-			failCallback = fc;
-		}
-	}
-
 	void notifyStarted(@NonNull final BluetoothDevice device) {
-		if (timeout > 0L) {
-			timeoutHandler = () -> {
-				timeoutHandler = null;
-				if (!finished) {
-					notifyFail(device, FailCallback.REASON_TIMEOUT);
-					manager.onRequestTimeout(this);
-				}
-			};
-			manager.mHandler.postDelayed(timeoutHandler, timeout);
-		}
-
 		if (beforeCallback != null)
 			beforeCallback.onRequestStarted(device);
 	}
@@ -882,8 +808,6 @@ public abstract class Request {
 	void notifySuccess(@NonNull final BluetoothDevice device) {
 		if (!finished) {
 			finished = true;
-			manager.mHandler.removeCallbacks(timeoutHandler);
-			timeoutHandler = null;
 
 			if (successCallback != null)
 				successCallback.onRequestCompleted(device);
@@ -893,8 +817,6 @@ public abstract class Request {
 	void notifyFail(@NonNull final BluetoothDevice device, final int status) {
 		if (!finished) {
 			finished = true;
-			manager.mHandler.removeCallbacks(timeoutHandler);
-			timeoutHandler = null;
 
 			if (failCallback != null)
 				failCallback.onRequestFailed(device, status);
@@ -906,8 +828,6 @@ public abstract class Request {
 	void notifyInvalidRequest() {
 		if (!finished) {
 			finished = true;
-			manager.mHandler.removeCallbacks(timeoutHandler);
-			timeoutHandler = null;
 
 			if (invalidRequestCallback != null)
 				invalidRequestCallback.onInvalidRequest();

@@ -38,7 +38,7 @@ import no.nordicsemi.android.ble.callback.SuccessCallback;
 public class RequestQueue extends SimpleRequest {
 	/** A list of operations that will be executed together. */
 	@NonNull
-	private final Queue<ConnectionRequest> requests;
+	private final Queue<Request> requests;
 
 	RequestQueue() {
 		super(Type.SET);
@@ -84,19 +84,24 @@ public class RequestQueue extends SimpleRequest {
 	 * Enqueues a new operation. All operations will be executed sequentially in order they were
 	 * added.
 	 *
-	 * @param request the new operation to be enqueued.
+	 * @param operation the new operation to be enqueued.
 	 * @throws IllegalStateException if the operation was enqueued before.
 	 */
 	@NonNull
-	public RequestQueue add(@NonNull final ConnectionRequest request) {
-		// Validate
-		if (request.enqueued)
-			throw new IllegalStateException("Request already enqueued");
-		// Add
-		requests.add(request);
-		// Mark
-		request.enqueued = true;
-		return this;
+	public RequestQueue add(@NonNull final Operation operation) {
+		if (operation instanceof Request) {
+			final Request request = (Request) operation;
+			// Validate
+			if (request.enqueued)
+				throw new IllegalStateException("Request already enqueued");
+			// Add
+			requests.add(request);
+			// Mark
+			request.enqueued = true;
+			return this;
+		} else {
+			throw new IllegalArgumentException("Operation does not extend Request");
+		}
 	}
 
 	/**

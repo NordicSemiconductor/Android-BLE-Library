@@ -109,7 +109,7 @@ import no.nordicsemi.android.ble.utils.ParserUtils;
  * @param <E> The profile callbacks type.
  */
 @SuppressWarnings({"WeakerAccess", "unused", "DeprecatedIsStillUsed", "deprecation"})
-public abstract class BleManager<E extends BleManagerCallbacks> implements ILogger {
+public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutHandler implements ILogger {
 	private final static String TAG = "BleManager";
 
 	private final static UUID CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
@@ -958,7 +958,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * when the {@link BluetoothDevice#getBondState()} changes to {@link BluetoothDevice#BOND_NONE}.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @return The request.
 	 */
@@ -1082,7 +1082,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * completed before the callback is notified.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic that value is expect to change.
 	 * @return The callback.
@@ -1101,7 +1101,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * completed before the callback is notified.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic that value is expect to change.
 	 * @return The callback.
@@ -1117,7 +1117,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to be enabled.
 	 * @return The request.
@@ -1153,7 +1153,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to be disabled.
 	 * @return The request.
@@ -1188,7 +1188,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to be enabled.
 	 * @return The request.
@@ -1223,7 +1223,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to be disabled.
 	 * @return The request.
@@ -1280,7 +1280,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to read.
 	 * @return The request.
@@ -1316,7 +1316,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to write to.
 	 * @param data           data to be written to the characteristic.
@@ -1339,7 +1339,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to write to.
 	 * @param data           data to be written to the characteristic.
@@ -1362,7 +1362,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic to write to.
 	 * @param data           data to be written to the characteristic.
@@ -1400,7 +1400,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param descriptor the descriptor to read.
 	 * @return The request.
@@ -1431,7 +1431,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param descriptor the descriptor to write to.
 	 * @param data       data to be written to the descriptor.
@@ -1454,7 +1454,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param descriptor the descriptor to write to.
 	 * @param data       data to be written to the descriptor.
@@ -1476,7 +1476,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * callback will be called.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param descriptor the descriptor to write to.
 	 * @param data       data to be written to the descriptor.
@@ -1504,7 +1504,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 	/**
 	 * Begins the Reliable Write sub-procedure. Requests that need to be performed reliably
-	 * should be enqueued with {@link ReliableWriteRequest#add(ConnectionRequest)} instead of using
+	 * should be enqueued with {@link ReliableWriteRequest#add(Operation)} instead of using
 	 * {@link Request#enqueue()}. The library will verify all Write operations and will
 	 * automatically abort the Reliable Write procedure when the returned data mismatch with the
 	 * data sent. When all requests enqueued in the {@link ReliableWriteRequest} were completed,
@@ -1725,7 +1725,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * {@link MtuRequest#with(MtuCallback)} will be called with current MTU value.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @return The request.
 	 */
@@ -1794,7 +1794,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * using {@link ConnectionPriorityRequest#with(ConnectionPriorityCallback)}.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param priority one of: {@link BluetoothGatt#CONNECTION_PRIORITY_HIGH},
 	 *                 {@link BluetoothGatt#CONNECTION_PRIORITY_BALANCED},
@@ -1844,7 +1844,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * as TX and RX PHY in the callback.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param txPhy      preferred transmitter PHY. Bitwise OR of any of
 	 *                   {@link PhyRequest#PHY_LE_1M_MASK}, {@link PhyRequest#PHY_LE_2M_MASK},
@@ -1886,7 +1886,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * in the callback.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @return The request.
 	 */
@@ -1911,7 +1911,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * Reads the current RSSI (Received Signal Strength Indication).
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @return The request.
 	 */
@@ -1943,7 +1943,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * be called and the initialization will be performed as if the device has just connected.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @return The request.
 	 */
@@ -1983,7 +1983,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * at least given number of milliseconds.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param delay the delay in milliseconds.
 	 * @return The request.
@@ -2029,13 +2029,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	@MainThread
-	void onRequestTimeout(final Request request) {
+	@Override
+	void onRequestTimeout(@NonNull final TimeoutableRequest request) {
 		mRequest = null;
 		mValueChangedRequest = null;
-		if (request.type == Request.Type.SET) {
-			// This will never happen, as RequestQueue does not support timeout.
-			mRequestQueue = null;
-		}
 		if (request.type == Request.Type.CONNECT) {
 			mConnectRequest = null;
 			internalDisconnect();
