@@ -26,7 +26,6 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
-import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -70,12 +69,6 @@ public final class ReadRequest extends SimpleValueRequest<DataReceivedCallback> 
 	ReadRequest setManager(@NonNull final BleManager manager) {
 		super.setManager(manager);
 		return this;
-	}
-
-	@NonNull
-	@Override
-	ReadRequest timeout(@IntRange(from = 0) final long timeout) {
-		throw new UnsupportedOperationException("Read request may not have timeout");
 	}
 
 	@Override

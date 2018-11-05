@@ -1,6 +1,5 @@
 package no.nordicsemi.android.ble;
 
-import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 
 import no.nordicsemi.android.ble.callback.BeforeCallback;
@@ -18,12 +17,6 @@ public final class ReliableWriteRequest extends RequestQueue {
 	ReliableWriteRequest setManager(@NonNull final BleManager manager) {
 		super.setManager(manager);
 		return this;
-	}
-
-	@NonNull
-	@Override
-	ReliableWriteRequest timeout(@IntRange(from = 0) final long timeout) {
-		throw new UnsupportedOperationException("MTU request may not have timeout");
 	}
 
 	@Override

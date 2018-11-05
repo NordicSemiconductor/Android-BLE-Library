@@ -1,6 +1,7 @@
 package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothGatt;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 
 import no.nordicsemi.android.ble.callback.FailCallback;
@@ -19,6 +20,20 @@ public class SimpleRequest extends Request {
 
 	SimpleRequest(@NonNull final Type type) {
 		super(type);
+	}
+
+	/**
+	 * This method throws an {@link UnsupportedOperationException} exception, as this request does
+	 * not support timeout.
+	 *
+	 * @param timeout the request timeout in milliseconds, 0 to disable timeout. Ignored.
+	 * @return This method always throws an exception.
+	 * @throws UnsupportedOperationException always.
+	 */
+	@NonNull
+	@Override
+	final ReadRequest timeout(@IntRange(from = 0) final long timeout) {
+		throw new UnsupportedOperationException("This request may not have timeout");
 	}
 
 	/**

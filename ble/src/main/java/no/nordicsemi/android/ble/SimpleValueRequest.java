@@ -3,6 +3,7 @@ package no.nordicsemi.android.ble;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
 import android.support.annotation.Nullable;
 
@@ -32,6 +33,20 @@ public abstract class SimpleValueRequest<T> extends ValueRequest<T> {
 	SimpleValueRequest(@NonNull final Type type,
 					   @Nullable final BluetoothGattDescriptor descriptor) {
 		super(type, descriptor);
+	}
+
+	/**
+	 * This method throws an {@link UnsupportedOperationException} exception, as this request does
+	 * not support timeout.
+	 *
+	 * @param timeout the request timeout in milliseconds, 0 to disable timeout. Ignored.
+	 * @return This method always throws an exception.
+	 * @throws UnsupportedOperationException always.
+	 */
+	@NonNull
+	@Override
+	final ConnectionPriorityRequest timeout(@IntRange(from = 0) final long timeout) {
+		throw new UnsupportedOperationException("This request may not have timeout");
 	}
 
 	/**

@@ -93,12 +93,6 @@ public final class WriteRequest extends SimpleValueRequest<DataSentCallback> {
 		return this;
 	}
 
-	@NonNull
-	@Override
-	WriteRequest timeout(@IntRange(from = 0) final long timeout) {
-		throw new UnsupportedOperationException("Write request may not have timeout");
-	}
-
 	@Override
 	@NonNull
 	public WriteRequest done(@NonNull final SuccessCallback callback) {

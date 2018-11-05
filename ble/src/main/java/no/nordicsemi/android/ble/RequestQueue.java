@@ -30,12 +30,6 @@ public class RequestQueue extends SimpleRequest {
 		return this;
 	}
 
-	@NonNull
-	@Override
-	RequestQueue timeout(@IntRange(from = 0) final long timeout) {
-		throw new UnsupportedOperationException("Request queue may not have timeout");
-	}
-
 	@Override
 	@NonNull
 	public RequestQueue done(@NonNull final SuccessCallback callback) {

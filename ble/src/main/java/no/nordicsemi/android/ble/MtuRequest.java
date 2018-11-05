@@ -51,12 +51,6 @@ public final class MtuRequest extends SimpleValueRequest<MtuCallback> {
 		return this;
 	}
 
-	@NonNull
-	@Override
-	MtuRequest timeout(@IntRange(from = 0) final long timeout) {
-		throw new UnsupportedOperationException("MTU request may not have timeout");
-	}
-
 	@Override
 	@NonNull
 	public MtuRequest done(@NonNull final SuccessCallback callback) {

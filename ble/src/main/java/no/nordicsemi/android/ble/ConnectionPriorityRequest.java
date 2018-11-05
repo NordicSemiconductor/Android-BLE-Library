@@ -86,12 +86,6 @@ public final class ConnectionPriorityRequest extends SimpleValueRequest<Connecti
 		return this;
 	}
 
-	@NonNull
-	@Override
-	ConnectionPriorityRequest timeout(@IntRange(from = 0) final long timeout) {
-		throw new UnsupportedOperationException("Connection priority request may not have timeout");
-	}
-
 	@Override
 	@NonNull
 	public ConnectionPriorityRequest done(@NonNull final SuccessCallback callback) {
