@@ -424,7 +424,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The context.
 	 */
 	@NonNull
-	protected Context getContext() {
+	protected final Context getContext() {
 		return mContext;
 	}
 
@@ -763,7 +763,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The Bluetooth device or null, if {@link #connect(BluetoothDevice)} wasn't called.
 	 */
 	@Nullable
-	public final BluetoothDevice getBluetoothDevice() {
+	// This method is not final, as some Managers may be created with BluetoothDevice in a
+	// constructor. Those can return the device object even without calling connect(device).
+	public BluetoothDevice getBluetoothDevice() {
 		return mBluetoothDevice;
 	}
 
@@ -906,7 +908,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * the use of BleManager object and connect after bond is established.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
-	 * asynchronous use, or awaited using {@link Request#await()} in synchronous execution.
+	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @return The request.
 	 */
