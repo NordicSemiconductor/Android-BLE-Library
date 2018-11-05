@@ -858,7 +858,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 			mNotificationCallbacks.clear();
 			mConnectionState = BluetoothGatt.STATE_DISCONNECTED;
 			if (mGattCallback != null) {
-				mGattCallback.mOperationInProgress = false;
+				// close() is called in notifyDeviceDisconnected, which may enqueue new requests.
+				// Setting this flag to false would allow to enqueue a new request before the
+				// current one ends processing. The following line should not be uncommented.
+				// mGattCallback.mOperationInProgress = false;
 				mGattCallback.cancelQueue();
 				mGattCallback.mInitQueue = null;
 			}
