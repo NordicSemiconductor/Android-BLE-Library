@@ -30,7 +30,7 @@ import java.io.ByteArrayOutputStream;
 
 @SuppressWarnings("WeakerAccess")
 public class DataStream {
-	private ByteArrayOutputStream buffer;
+	private final ByteArrayOutputStream buffer;
 
 	public DataStream() {
 		buffer = new ByteArrayOutputStream();
