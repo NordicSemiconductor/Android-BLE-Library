@@ -257,11 +257,17 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 
 						// The connection is killed by the system, no need to disconnect gently.
 						mUserDisconnected = true;
+						// Allow new requests when Bluetooth is enabled again. close() doesn't do it.
+						// See: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/25
+						// and: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/41
+						mGattCallback.mOperationInProgress = false;
+						// This will call close()
 						mGattCallback.notifyDeviceDisconnected(mBluetoothDevice);
+					} else {
+						// Calling close() will prevent the STATE_OFF event from being logged
+						// (this receiver will be unregistered). But it doesn't matter.
+						close();
 					}
-					// Calling close() will prevent the STATE_OFF event from being logged
-					// (this receiver will be unregistered). But it doesn't matter.
-					close();
 					break;
 			}
 		}
