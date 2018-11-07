@@ -56,6 +56,7 @@ import java.util.LinkedList;
 import java.util.UUID;
 
 import no.nordicsemi.android.ble.annotation.ConnectionPriority;
+import no.nordicsemi.android.ble.annotation.ConnectionState;
 import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.annotation.PhyOption;
 import no.nordicsemi.android.ble.annotation.PhyValue;
@@ -805,13 +806,14 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 
 	/**
 	 * Method returns the connection state:
-	 * {@link BluetoothGatt#STATE_CONNECTING STATE_CONNECTING},
-	 * {@link BluetoothGatt#STATE_CONNECTED STATE_CONNECTED},
-	 * {@link BluetoothGatt#STATE_DISCONNECTING STATE_DISCONNECTING},
-	 * {@link BluetoothGatt#STATE_DISCONNECTED STATE_DISCONNECTED}
+	 * {@link BluetoothProfile#STATE_CONNECTING STATE_CONNECTING},
+	 * {@link BluetoothProfile#STATE_CONNECTED STATE_CONNECTED},
+	 * {@link BluetoothProfile#STATE_DISCONNECTING STATE_DISCONNECTING},
+	 * {@link BluetoothProfile#STATE_DISCONNECTED STATE_DISCONNECTED}
 	 *
 	 * @return The connection state.
 	 */
+	@ConnectionState
 	public final int getConnectionState() {
 		return mConnectionState;
 	}
