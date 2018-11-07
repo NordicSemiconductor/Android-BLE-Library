@@ -2375,6 +2375,17 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 					status + " and new state: " + newState + " (" + stateToString(newState) + ")");
 
 			if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothProfile.STATE_CONNECTED) {
+				// Sometimes, when a notification/indication is received after the device got
+				// disconnected, the Android calls onConnectionStateChanged again, with state
+				// STATE_CONNECTED.
+				// See: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/43
+				if (mBluetoothDevice == null) {
+					Log.e(TAG, "Device received notification after disconnection.");
+					log(Log.DEBUG, "gatt.close()");
+					gatt.close();
+					return;
+				}
+
 				// Notify the parent activity/service.
 				log(Log.INFO, "Connected to " + gatt.getDevice().getAddress());
 				mConnected = true;
