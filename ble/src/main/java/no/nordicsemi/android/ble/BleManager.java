@@ -426,13 +426,12 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	}
 
 	/**
-	 * Returns the context that the manager was created with.
+	 * Sets the manager callback listener.
 	 *
-	 * @return The context.
+	 * @param callbacks the callback listener.
 	 */
-	@NonNull
-	protected final Context getContext() {
-		return mContext;
+	public void setGattCallbacks(@NonNull final E callbacks) {
+		mCallbacks = callbacks;
 	}
 
 	/**
@@ -444,6 +443,111 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 */
 	@NonNull
 	protected abstract BleManagerGattCallback getGattCallback();
+
+	/**
+	 * Returns the context that the manager was created with.
+	 *
+	 * @return The context.
+	 */
+	@NonNull
+	protected final Context getContext() {
+		return mContext;
+	}
+
+	/**
+	 * Returns the Bluetooth device object used in {@link #connect(BluetoothDevice)}.
+	 *
+	 * @return The Bluetooth device or null, if {@link #connect(BluetoothDevice)} wasn't called.
+	 */
+	@Nullable
+	// This method is not final, as some Managers may be created with BluetoothDevice in a
+	// constructor. Those can return the device object even without calling connect(device).
+	public BluetoothDevice getBluetoothDevice() {
+		return mBluetoothDevice;
+	}
+
+	/**
+	 * This method returns true if the device is connected. Services could have not been
+	 * discovered yet.
+	 */
+	public final boolean isConnected() {
+		return mConnected;
+	}
+
+	/**
+	 * Returns whether the target device is bonded. The device does not have to be connected,
+	 * but must have been set prior to call this method.
+	 *
+	 * @return True, if the Android has bonds information of the device. This does not mean that
+	 * the target device also has such information, or that the link is in fact encrypted.
+	 */
+	protected final boolean isBonded() {
+		return mBluetoothDevice != null
+				&& mBluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED;
+	}
+
+	/**
+	 * Returns true if the device is connected and the initialization has finished,
+	 * that is when {@link BleManagerGattCallback#onDeviceReady()} was called.
+	 */
+	public final boolean isReady() {
+		return mReady;
+	}
+
+	/**
+	 * Method returns the connection state:
+	 * {@link BluetoothProfile#STATE_CONNECTING STATE_CONNECTING},
+	 * {@link BluetoothProfile#STATE_CONNECTED STATE_CONNECTED},
+	 * {@link BluetoothProfile#STATE_DISCONNECTING STATE_DISCONNECTING},
+	 * {@link BluetoothProfile#STATE_DISCONNECTED STATE_DISCONNECTED}
+	 *
+	 * @return The connection state.
+	 */
+	@ConnectionState
+	public final int getConnectionState() {
+		return mConnectionState;
+	}
+
+	/**
+	 * Returns the last received value of Battery Level characteristic, or -1 if such
+	 * does not exist, hasn't been read or notification wasn't received yet.
+	 * <p>
+	 * The value returned will be invalid if overridden {@link #readBatteryLevel()} and
+	 * {@link #enableBatteryLevelNotifications()} were used.
+	 *
+	 * @return The last battery level value in percent.
+	 * @deprecated Keep the battery level in your manager instead.
+	 */
+	@IntRange(from = -1, to = 100)
+	@Deprecated
+	public final int getBatteryValue() {
+		return mBatteryValue;
+	}
+
+	@Override
+	public void log(final int priority, @NonNull final String message) {
+		// Override to log events. Simple log can use Logcat:
+		//
+		// Log.println(priority, TAG, message);
+		//
+		// You may also use Timber:
+		//
+		// Timber.log(priority, message);
+		//
+		// or nRF Logger:
+		//
+		// Logger.log(logSession, LogContract.Log.Level.fromPriority(priority), message);
+		//
+		// Starting from nRF Logger 2.1.3, you may use log-timber and plant nRFLoggerTree.
+		// https://github.com/NordicSemiconductor/nRF-Logger-API
+	}
+
+	@Override
+	public void log(final int priority, @StringRes final int messageRes,
+					@Nullable final Object... params) {
+		final String message = mContext.getString(messageRes, params);
+		log(priority, message);
+	}
 
 	/**
 	 * Returns whether to connect to the remote device just once (false) or to add the address to
@@ -765,76 +869,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	}
 
 	/**
-	 * Returns the Bluetooth device object used in {@link #connect(BluetoothDevice)}.
-	 *
-	 * @return The Bluetooth device or null, if {@link #connect(BluetoothDevice)} wasn't called.
-	 */
-	@Nullable
-	// This method is not final, as some Managers may be created with BluetoothDevice in a
-	// constructor. Those can return the device object even without calling connect(device).
-	public BluetoothDevice getBluetoothDevice() {
-		return mBluetoothDevice;
-	}
-
-	/**
-	 * This method returns true if the device is connected. Services could have not been
-	 * discovered yet.
-	 */
-	public final boolean isConnected() {
-		return mConnected;
-	}
-
-	/**
-	 * Returns whether the target device is bonded. The device does not have to be connected,
-	 * but must have been set prior to call this method.
-	 *
-	 * @return True, if the Android has bonds information of the device. This does not mean that
-	 * the target device also has such information, or that the link is in fact encrypted.
-	 */
-	protected final boolean isBonded() {
-		return mBluetoothDevice != null
-				&& mBluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED;
-	}
-
-	/**
-	 * Returns true if the device is connected and the initialization has finished,
-	 * that is when {@link BleManagerGattCallback#onDeviceReady()} was called.
-	 */
-	public final boolean isReady() {
-		return mReady;
-	}
-
-	/**
-	 * Method returns the connection state:
-	 * {@link BluetoothProfile#STATE_CONNECTING STATE_CONNECTING},
-	 * {@link BluetoothProfile#STATE_CONNECTED STATE_CONNECTED},
-	 * {@link BluetoothProfile#STATE_DISCONNECTING STATE_DISCONNECTING},
-	 * {@link BluetoothProfile#STATE_DISCONNECTED STATE_DISCONNECTED}
-	 *
-	 * @return The connection state.
-	 */
-	@ConnectionState
-	public final int getConnectionState() {
-		return mConnectionState;
-	}
-
-	/**
-	 * Returns the last received value of Battery Level characteristic, or -1 if such
-	 * does not exist, hasn't been read or notification wasn't received yet.
-	 * <p>
-	 * The value returned will be invalid if overridden {@link #readBatteryLevel()} and
-	 * {@link #enableBatteryLevelNotifications()} were used.
-	 *
-	 * @return The last battery level value in percent.
-	 * @deprecated Keep the battery level in your manager instead.
-	 */
-	@IntRange(from = -1, to = 100)
-	@Deprecated
-	public final int getBatteryValue() {
-		return mBatteryValue;
-	}
-
-	/**
 	 * Closes and releases resources. This method will be called automatically after
 	 * calling {@link #disconnect()}. When the device disconnected with link loss and
 	 * {@link #shouldAutoConnect()} returned true you have call this method to close the connection.
@@ -876,40 +910,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 			mGattCallback = null;
 			mBluetoothDevice = null;
 		}
-	}
-
-	@Override
-	public void log(final int priority, @NonNull final String message) {
-		// Override to log events. Simple log can use Logcat:
-		//
-		// Log.println(priority, TAG, message);
-		//
-		// You may also use Timber:
-		//
-		// Timber.log(priority, message);
-		//
-		// or nRF Logger:
-		//
-		// Logger.log(logSession, priority, message);
-		//
-		// Starting from nRF Logger 2.1.3, you may use log-timber and plane nRFLoggerTree.
-		// https://github.com/NordicSemiconductor/nRF-Logger-API
-	}
-
-	@Override
-	public void log(final int priority, @StringRes final int messageRes,
-					@Nullable final Object... params) {
-		final String message = mContext.getString(messageRes, params);
-		log(priority, message);
-	}
-
-	/**
-	 * Sets the manager callback listener.
-	 *
-	 * @param callbacks the callback listener.
-	 */
-	public void setGattCallbacks(@NonNull E callbacks) {
-		mCallbacks = callbacks;
 	}
 
 	/**
@@ -980,7 +980,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		return Request.removeBond().setManager(this);
 	}
 
-	@SuppressWarnings("JavaReflectionMemberAccess")
 	@MainThread
 	private boolean internalRemoveBond() {
 		final BluetoothDevice device = mBluetoothDevice;
@@ -1276,18 +1275,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	}
 
 	/**
-	 * Creates an atomic request queue. The requests from the queue will be executed in order.
-	 * This is useful when more then one thread may add requests and you want some of them to
-	 * be executed together.
-	 *
-	 * @return The request.
-	 */
-	@NonNull
-	protected final RequestQueue beginAtomicRequestQueue() {
-		return new RequestQueue().setManager(this);
-	}
-
-	/**
 	 * Sends the read request to the given characteristic.
 	 * If the characteristic is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
 	 * callback will be called.
@@ -1516,6 +1503,18 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	}
 
 	/**
+	 * Creates an atomic request queue. The requests from the queue will be executed in order.
+	 * This is useful when more then one thread may add requests and you want some of them to
+	 * be executed together.
+	 *
+	 * @return The request.
+	 */
+	@NonNull
+	protected final RequestQueue beginAtomicRequestQueue() {
+		return new RequestQueue().setManager(this);
+	}
+
+	/**
 	 * Begins the Reliable Write sub-procedure. Requests that need to be performed reliably
 	 * should be enqueued with {@link ReliableWriteRequest#add(Operation)} instead of using
 	 * {@link Request#enqueue()}. The library will verify all Write operations and will
@@ -1605,6 +1604,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		return true;
 	}
 
+	/**
+	 * Returns true if {@link BluetoothGatt#beginReliableWrite()} has been called and
+	 * the Reliable Write hasn't been executed nor aborted yet.
+	 */
 	protected final boolean isReliableWriteInProgress() {
 		return mReliableWriteInProgress;
 	}
