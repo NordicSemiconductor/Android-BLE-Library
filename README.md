@@ -143,7 +143,7 @@ The latter one is a set of useful parsers and callbacks for common Bluetooth SIG
 The libraries are available on jcenter, but if you need to make some changes, clone all 3 projects, 
 ensure the path to *:ble* and *:ble-common* modules are correct in *settings.gradle* file, and sync the project.
 
-### How to use it
+## How to use it
 
 Find the simple example here [Android nRF Blinky](https://github.com/NordicSemiconductor/Android-nRF-Blinky).
 
@@ -155,6 +155,7 @@ classes in [nRF Toolbox](https://github.com/NordicSemiconductor/Android-nRF-Tool
 2. Extend `BleManager` class and implement required methods:
 [example](https://github.com/NordicSemiconductor/Android-nRF-Blinky/blob/master/app/src/main/java/no/nordicsemi/android/blinky/profile/BlinkyManager.java)
 
-### Version 1.x
+## Version 1.x
 
 The BLE library v 1.x is no longer supported. Please migrate to 2.0 for bug fixing releases.
+Find it on [version/1x branch](https://github.com/NordicSemiconductor/Android-BLE-Library/tree/version/1x).
