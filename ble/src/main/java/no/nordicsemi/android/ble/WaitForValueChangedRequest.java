@@ -48,13 +48,14 @@ import no.nordicsemi.android.ble.exception.RequestFailedException;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class WaitForValueChangedRequest extends TimeoutableValueRequest<DataReceivedCallback>
 		implements Operation {
+	static final int NOT_COMPLETED = -123456;
 	private ReadProgressCallback progressCallback;
 	private DataMerger dataMerger;
 	private DataStream buffer;
 	private Request trigger;
 	private boolean deviceDisconnected;
 	private boolean bluetoothDisabled;
-	private int triggerStatus;
+	private int triggerStatus = BluetoothGatt.GATT_SUCCESS;
 	private int count = 0;
 
 	WaitForValueChangedRequest(@NonNull final Type type,
@@ -150,11 +151,13 @@ public class WaitForValueChangedRequest extends TimeoutableValueRequest<DataRece
 	public WaitForValueChangedRequest trigger(@NonNull final Operation trigger) {
 		if (trigger instanceof Request) {
 			this.trigger = (Request) trigger;
+			this.triggerStatus = NOT_COMPLETED;
 			// The trigger will never receive invalid request event.
 			// If the BluetoothDevice wasn't set, the whole WaitForValueChangedRequest would be invalid.
 			/*this.trigger.invalid(() -> {
 				// never called
 			});*/
+			this.trigger.internalSuccess(device -> triggerStatus = BluetoothGatt.GATT_SUCCESS);
 			this.trigger.internalFail((device, status) -> {
 				triggerStatus = status;
 				syncLock.open();
@@ -173,19 +176,17 @@ public class WaitForValueChangedRequest extends TimeoutableValueRequest<DataRece
 
 		try {
 			// Ensure the trigger request it enqueued after the callback has been set.
-			triggerStatus = BluetoothGatt.GATT_SUCCESS;
 			if (trigger != null && trigger.enqueued) {
 				throw new IllegalStateException("Trigger request already enqueued");
 			}
-
 			super.await(response);
 			return response;
 		} catch (final RequestFailedException e) {
 			if (triggerStatus != BluetoothGatt.GATT_SUCCESS) {
 				// Trigger will never have invalid request status. The outer request will.
-					/*if (triggerStatus == RequestCallback.REASON_REQUEST_INVALID) {
-						throw new InvalidRequestException(trigger);
-					}*/
+				/*if (triggerStatus == RequestCallback.REASON_REQUEST_INVALID) {
+					throw new InvalidRequestException(trigger);
+				}*/
 				throw new RequestFailedException(trigger, triggerStatus);
 			}
 			throw e;
@@ -366,5 +367,9 @@ public class WaitForValueChangedRequest extends TimeoutableValueRequest<DataRece
 	@Nullable
 	Request getTrigger() {
 		return trigger;
+	}
+
+	int getTriggerStatus() {
+		return triggerStatus;
 	}
 }

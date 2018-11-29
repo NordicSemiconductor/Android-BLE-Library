@@ -98,6 +98,7 @@ public abstract class Request {
 	FailCallback failCallback;
 	InvalidRequestCallback invalidRequestCallback;
 	BeforeCallback beforeCallback;
+	SuccessCallback internalSuccessCallback;
 	FailCallback internalFailCallback;
 	boolean enqueued;
 	boolean finished;
@@ -753,6 +754,17 @@ public abstract class Request {
 	}
 
 	/**
+	 * Used to set internal success callback. The callback will be notified in case the request
+	 * has completed.
+	 *
+	 * @param callback the callback.
+	 */
+	void internalSuccess(@NonNull final SuccessCallback callback) {
+		this.internalSuccessCallback = callback;
+	}
+
+
+	/**
 	 * Used to set internal fail callback. The callback will be notified in case the request
 	 * has failed.
 	 *
@@ -807,6 +819,8 @@ public abstract class Request {
 
 			if (successCallback != null)
 				successCallback.onRequestCompleted(device);
+			if (internalSuccessCallback != null)
+				internalSuccessCallback.onRequestCompleted(device);
 		}
 	}
 

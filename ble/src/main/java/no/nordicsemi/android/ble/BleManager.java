@@ -2842,7 +2842,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 					request.notifyValueChanged(gatt.getDevice(), data);
 				}
 				final WaitForValueChangedRequest valueChangedRequest = mValueChangedRequest;
-				if (valueChangedRequest != null && valueChangedRequest.characteristic == characteristic) {
+				if (valueChangedRequest != null && valueChangedRequest.characteristic == characteristic
+						&& valueChangedRequest.getTriggerStatus() != WaitForValueChangedRequest.NOT_COMPLETED) {
 					valueChangedRequest.notifyValueChanged(gatt.getDevice(), data);
 					if (!valueChangedRequest.hasMore()) {
 						valueChangedRequest.notifySuccess(gatt.getDevice());
