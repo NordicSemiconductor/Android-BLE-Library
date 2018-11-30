@@ -2837,18 +2837,33 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 				if (mBatteryLevelNotificationCallback != null && isBatteryLevelCharacteristic(characteristic)) {
 					mBatteryLevelNotificationCallback.notifyValueChanged(gatt.getDevice(), data);
 				}
+				// Notify the notification registered listener, if set
 				final ValueChangedCallback request = mNotificationCallbacks.get(characteristic);
 				if (request != null) {
 					request.notifyValueChanged(gatt.getDevice(), data);
 				}
+				// If there is a value change request,
 				final WaitForValueChangedRequest valueChangedRequest = mValueChangedRequest;
-				if (valueChangedRequest != null && valueChangedRequest.characteristic == characteristic
-						&& valueChangedRequest.getTriggerStatus() != WaitForValueChangedRequest.NOT_COMPLETED) {
+				if (valueChangedRequest != null
+						// registered for this characteristic
+						&& valueChangedRequest.characteristic == characteristic
+						// and didn't have a trigger, or the trigger was started
+						// (not necessarily completed)
+						&& !valueChangedRequest.isTriggerPending()) {
+					// notify that new data was received.
 					valueChangedRequest.notifyValueChanged(gatt.getDevice(), data);
+
+					// If no more data are expected
 					if (!valueChangedRequest.hasMore()) {
+						// notify success,
 						valueChangedRequest.notifySuccess(gatt.getDevice());
+						// and proceed to the next request only if the trigger has completed.
+						// Otherwise, the next request will be started when the request's callback
+						// will be received.
 						mValueChangedRequest = null;
-						nextRequest(true);
+						if (valueChangedRequest.isTriggerCompleteOrNull()) {
+							nextRequest(true);
+						}
 					}
 				}
 			}

@@ -48,7 +48,9 @@ import no.nordicsemi.android.ble.exception.RequestFailedException;
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class WaitForValueChangedRequest extends TimeoutableValueRequest<DataReceivedCallback>
 		implements Operation {
-	static final int NOT_COMPLETED = -123456;
+	static final int NOT_STARTED = -123456;
+	static final int STARTED = NOT_STARTED + 1;
+
 	private ReadProgressCallback progressCallback;
 	private DataMerger dataMerger;
 	private DataStream buffer;
@@ -151,12 +153,13 @@ public class WaitForValueChangedRequest extends TimeoutableValueRequest<DataRece
 	public WaitForValueChangedRequest trigger(@NonNull final Operation trigger) {
 		if (trigger instanceof Request) {
 			this.trigger = (Request) trigger;
-			this.triggerStatus = NOT_COMPLETED;
+			this.triggerStatus = NOT_STARTED;
 			// The trigger will never receive invalid request event.
 			// If the BluetoothDevice wasn't set, the whole WaitForValueChangedRequest would be invalid.
 			/*this.trigger.invalid(() -> {
 				// never called
 			});*/
+			this.trigger.internalBefore(device -> triggerStatus = STARTED);
 			this.trigger.internalSuccess(device -> triggerStatus = BluetoothGatt.GATT_SUCCESS);
 			this.trigger.internalFail((device, status) -> {
 				triggerStatus = status;
@@ -369,7 +372,11 @@ public class WaitForValueChangedRequest extends TimeoutableValueRequest<DataRece
 		return trigger;
 	}
 
-	int getTriggerStatus() {
-		return triggerStatus;
+	boolean isTriggerPending() {
+		return triggerStatus == NOT_STARTED;
+	}
+
+	boolean isTriggerCompleteOrNull() {
+		return triggerStatus != STARTED;
 	}
 }
