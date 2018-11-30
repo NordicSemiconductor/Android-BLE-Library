@@ -2,9 +2,9 @@
 
 [ ![Download](https://api.bintray.com/packages/nordic/android/ble-library/images/download.svg) ](https://bintray.com/nordic/android/ble-library/_latestVersion)
 
-An Android library that solves a lot of Android's Bluetooth LE problems. 
+An Android library that solves a lot of Android's Bluetooth Low Energy problems. 
 The [BleManager](https://github.com/NordicSemiconductor/Android-BLE-Library/blob/master/ble/src/main/java/no/nordicsemi/android/ble/BleManager.java)
-class exposes high level API for connecting and communicating with BLE peripherals.
+class exposes high level API for connecting and communicating with Bluetooth LE peripherals.
 The API is clean and easy to read.
 
 ## Features
