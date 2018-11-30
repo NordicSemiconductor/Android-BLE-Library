@@ -94,10 +94,12 @@ public abstract class Request {
 	final Type type;
 	final BluetoothGattCharacteristic characteristic;
 	final BluetoothGattDescriptor descriptor;
+	BeforeCallback beforeCallback;
 	SuccessCallback successCallback;
 	FailCallback failCallback;
 	InvalidRequestCallback invalidRequestCallback;
-	BeforeCallback beforeCallback;
+	BeforeCallback internalBeforeCallback;
+	SuccessCallback internalSuccessCallback;
 	FailCallback internalFailCallback;
 	boolean enqueued;
 	boolean finished;
@@ -753,6 +755,26 @@ public abstract class Request {
 	}
 
 	/**
+	 * Used to set internal callback what will be executed before the request is executed.
+	 *
+	 * @param callback the callback.
+	 */
+	void internalBefore(@NonNull final BeforeCallback callback) {
+		this.internalBeforeCallback = callback;
+	}
+
+	/**
+	 * Used to set internal success callback. The callback will be notified in case the request
+	 * has completed.
+	 *
+	 * @param callback the callback.
+	 */
+	void internalSuccess(@NonNull final SuccessCallback callback) {
+		this.internalSuccessCallback = callback;
+	}
+
+
+	/**
 	 * Used to set internal fail callback. The callback will be notified in case the request
 	 * has failed.
 	 *
@@ -799,6 +821,8 @@ public abstract class Request {
 	void notifyStarted(@NonNull final BluetoothDevice device) {
 		if (beforeCallback != null)
 			beforeCallback.onRequestStarted(device);
+		if (internalBeforeCallback != null)
+			internalBeforeCallback.onRequestStarted(device);
 	}
 
 	void notifySuccess(@NonNull final BluetoothDevice device) {
@@ -807,6 +831,8 @@ public abstract class Request {
 
 			if (successCallback != null)
 				successCallback.onRequestCompleted(device);
+			if (internalSuccessCallback != null)
+				internalSuccessCallback.onRequestCompleted(device);
 		}
 	}
 
