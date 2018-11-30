@@ -26,13 +26,13 @@ import android.bluetooth.BluetoothDevice;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import no.nordicsemi.android.ble.annotation.PhyValue;
 import no.nordicsemi.android.ble.callback.PhyCallback;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class PhyResult implements PhyCallback, Parcelable {
-	@NonNull
 	private BluetoothDevice device;
 
 	@PhyValue
@@ -49,7 +49,7 @@ public class PhyResult implements PhyCallback, Parcelable {
 		this.rxPhy = rxPhy;
 	}
 
-	@NonNull
+	@Nullable
 	public BluetoothDevice getBluetoothDevice() {
 		return device;
 	}
