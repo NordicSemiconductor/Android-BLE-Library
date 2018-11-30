@@ -26,6 +26,7 @@ import android.bluetooth.BluetoothDevice;
 import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import no.nordicsemi.android.ble.callback.DataReceivedCallback;
 import no.nordicsemi.android.ble.data.Data;
@@ -51,12 +52,12 @@ public class ReadResponse implements DataReceivedCallback, Parcelable {
 		this.data = data;
 	}
 
-	@NonNull
+	@Nullable
 	public BluetoothDevice getBluetoothDevice() {
 		return device;
 	}
 
-	@NonNull
+	@Nullable
 	public Data getRawData() {
 		return data;
 	}
