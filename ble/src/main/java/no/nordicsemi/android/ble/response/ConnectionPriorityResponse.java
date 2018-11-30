@@ -27,6 +27,7 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
 
@@ -37,7 +38,6 @@ import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class ConnectionPriorityResponse implements ConnectionPriorityCallback, Parcelable {
-	@NonNull
 	private BluetoothDevice device;
 
 	@IntRange(from = 6, to = 3200)
@@ -60,7 +60,7 @@ public class ConnectionPriorityResponse implements ConnectionPriorityCallback, P
 		this.supervisionTimeout = timeout;
 	}
 
-	@NonNull
+	@Nullable
 	public BluetoothDevice getBluetoothDevice() {
 		return device;
 	}

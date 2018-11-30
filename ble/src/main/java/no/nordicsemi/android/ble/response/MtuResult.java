@@ -27,12 +27,12 @@ import android.os.Parcel;
 import android.os.Parcelable;
 import android.support.annotation.IntRange;
 import android.support.annotation.NonNull;
+import android.support.annotation.Nullable;
 
 import no.nordicsemi.android.ble.callback.MtuCallback;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
 public class MtuResult implements MtuCallback, Parcelable {
-	@NonNull
 	private BluetoothDevice device;
 
 	@IntRange(from = 23, to = 517)
@@ -45,7 +45,7 @@ public class MtuResult implements MtuCallback, Parcelable {
 		this.mtu = mtu;
 	}
 
-	@NonNull
+	@Nullable
 	public BluetoothDevice getBluetoothDevice() {
 		return device;
 	}
