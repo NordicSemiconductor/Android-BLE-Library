@@ -807,8 +807,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 			final int preferredPhy = connectRequest.getPreferredPhy();
 			log(Log.DEBUG, "gatt = device.connectGatt(autoConnect = false, TRANSPORT_LE, "
 					+ phyMaskToString(preferredPhy) + ")");
+			// A variant of connectGatt with Handled can't be used here.
+			// Check https://github.com/NordicSemiconductor/Android-BLE-Library/issues/54
 			mBluetoothGatt = device.connectGatt(mContext, false, mGattCallback,
-					BluetoothDevice.TRANSPORT_LE, preferredPhy, mHandler);
+					BluetoothDevice.TRANSPORT_LE, preferredPhy/*, mHandler*/);
 		} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
 			log(Log.DEBUG, "gatt = device.connectGatt(autoConnect = false, TRANSPORT_LE)");
 			mBluetoothGatt = device.connectGatt(mContext, false, mGattCallback,
