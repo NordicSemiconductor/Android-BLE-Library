@@ -40,7 +40,7 @@ The library may be found on jcenter and Maven Central repository.
 Add it to your project by adding the following dependency:
 
 ```grovy
-implementation 'no.nordicsemi.android:ble:2.0.0'
+implementation 'no.nordicsemi.android:ble:2.0.3'
 ```
 
 #### Manual
