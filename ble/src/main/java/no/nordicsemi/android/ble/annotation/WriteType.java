@@ -23,10 +23,11 @@
 package no.nordicsemi.android.ble.annotation;
 
 import android.bluetooth.BluetoothGattCharacteristic;
-import android.support.annotation.IntDef;
 
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
+
+import androidx.annotation.IntDef;
 
 @Retention(RetentionPolicy.SOURCE)
 @IntDef(value = {
