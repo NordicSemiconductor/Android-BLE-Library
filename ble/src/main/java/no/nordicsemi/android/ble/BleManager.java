@@ -866,7 +866,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 			else
 				mRequest.notifyInvalidRequest();
 		}
-		mGattCallback.nextRequest(true);
+		if (mGattCallback != null) {
+			mGattCallback.nextRequest(true);
+		}
 		return true;
 	}
 
