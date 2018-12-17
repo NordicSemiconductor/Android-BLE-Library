@@ -729,16 +729,22 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		final boolean bluetoothEnabled = BluetoothAdapter.getDefaultAdapter().isEnabled();
 		if (mConnected || !bluetoothEnabled) {
 			final BluetoothDevice currentDevice = mBluetoothDevice;
-			if (currentDevice != null && currentDevice.equals(device)) {
+			if (bluetoothEnabled && currentDevice != null && currentDevice.equals(device)) {
 				mConnectRequest.notifySuccess(device);
 			} else {
 				// We can't return false here, as the request would be notified with
 				// mBluetoothDevice instance instead, and that may be null or a wrong device.
-				mConnectRequest.notifyFail(device, bluetoothEnabled ?
-						FailCallback.REASON_REQUEST_FAILED : FailCallback.REASON_BLUETOOTH_DISABLED);
+				if (mConnectRequest != null) {
+					mConnectRequest.notifyFail(device,
+							bluetoothEnabled ?
+									FailCallback.REASON_REQUEST_FAILED :
+									FailCallback.REASON_BLUETOOTH_DISABLED);
+				} // else, the request was already failed by the Bluetooth state receiver
 			}
 			mConnectRequest = null;
-			mGattCallback.nextRequest(true);
+			if (mGattCallback != null) {
+				mGattCallback.nextRequest(true);
+			}
 			return true;
 		}
 
