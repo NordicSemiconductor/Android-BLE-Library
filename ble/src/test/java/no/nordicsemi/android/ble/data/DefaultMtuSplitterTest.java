@@ -24,7 +24,8 @@ package no.nordicsemi.android.ble.data;
 
 import org.junit.Test;
 
-import static org.junit.Assert.*;
+import static org.junit.Assert.assertArrayEquals;
+import static org.junit.Assert.assertNull;
 
 public class DefaultMtuSplitterTest {
 	private final String text = "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod " +

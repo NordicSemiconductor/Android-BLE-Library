@@ -23,10 +23,10 @@
 package no.nordicsemi.android.ble.callback;
 
 import android.bluetooth.BluetoothDevice;
-import android.support.annotation.IntRange;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
+import androidx.annotation.IntRange;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import no.nordicsemi.android.ble.data.DataMerger;
 
 public interface ReadProgressCallback {

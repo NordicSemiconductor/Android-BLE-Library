@@ -22,11 +22,11 @@
 
 package no.nordicsemi.android.ble.data;
 
-import android.support.annotation.IntRange;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-
 import java.io.ByteArrayOutputStream;
+
+import androidx.annotation.IntRange;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 @SuppressWarnings("WeakerAccess")
 public class DataStream {

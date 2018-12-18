@@ -29,12 +29,12 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.os.Build;
 import android.os.Handler;
 import android.os.Looper;
-import android.support.annotation.IntRange;
-import android.support.annotation.Keep;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.RequiresApi;
 
+import androidx.annotation.IntRange;
+import androidx.annotation.Keep;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import no.nordicsemi.android.ble.annotation.ConnectionState;
 import no.nordicsemi.android.ble.annotation.PhyValue;
 

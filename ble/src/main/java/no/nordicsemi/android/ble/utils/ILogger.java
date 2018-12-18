@@ -21,9 +21,9 @@
  */
 package no.nordicsemi.android.ble.utils;
 
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
-import android.support.annotation.StringRes;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.StringRes;
 
 @SuppressWarnings("unused")
 public interface ILogger {

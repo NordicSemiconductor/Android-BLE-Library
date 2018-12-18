@@ -1,6 +1,6 @@
 package no.nordicsemi.android.ble;
 
-import android.support.annotation.NonNull;
+import androidx.annotation.NonNull;
 
 abstract class TimeoutHandler {
 
