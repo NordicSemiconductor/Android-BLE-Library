@@ -2612,8 +2612,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 				onCharacteristicRead(gatt, characteristic);
 				if (mRequest instanceof ReadRequest) {
 					final ReadRequest request = (ReadRequest) mRequest;
-					request.notifyValueChanged(gatt.getDevice(), data);
-					if (request.hasMore()) {
+					final boolean matches = request.matches(data);
+					if (matches) {
+						request.notifyValueChanged(gatt.getDevice(), data);
+					}
+					if (!matches || request.hasMore()) {
 						enqueueFirst(request);
 					} else {
 						request.notifySuccess(gatt.getDevice());
