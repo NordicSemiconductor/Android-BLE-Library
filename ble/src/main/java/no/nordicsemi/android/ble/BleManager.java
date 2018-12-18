@@ -1336,7 +1336,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 */
 	@NonNull
 	protected WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic,
-													 @Nullable final Data data) {
+											   @Nullable final Data data) {
 		return Request.newWriteRequest(characteristic, data != null ? data.getValue() : null)
 				.setManager(this);
 	}
@@ -1359,7 +1359,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 */
 	@NonNull
 	protected WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic,
-													 @Nullable final byte[] data) {
+											   @Nullable final byte[] data) {
 		return Request.newWriteRequest(characteristic, data).setManager(this);
 	}
 
@@ -1384,7 +1384,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 */
 	@NonNull
 	protected WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic,
-													 @Nullable final byte[] data, final int offset, final int length) {
+											   @Nullable final byte[] data, final int offset, final int length) {
 		return Request.newWriteRequest(characteristic, data, offset, length).setManager(this);
 	}
 
@@ -1451,7 +1451,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 */
 	@NonNull
 	protected WriteRequest writeDescriptor(@Nullable final BluetoothGattDescriptor descriptor,
-												 @Nullable final Data data) {
+										   @Nullable final Data data) {
 		return Request.newWriteRequest(descriptor, data != null ? data.getValue() : null)
 				.setManager(this);
 	}
@@ -1474,7 +1474,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 */
 	@NonNull
 	protected WriteRequest writeDescriptor(@Nullable final BluetoothGattDescriptor descriptor,
-												 @Nullable final byte[] data) {
+										   @Nullable final byte[] data) {
 		return Request.newWriteRequest(descriptor, data).setManager(this);
 	}
 
@@ -1498,8 +1498,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 */
 	@NonNull
 	protected WriteRequest writeDescriptor(@Nullable final BluetoothGattDescriptor descriptor,
-												 @Nullable final byte[] data, final int offset,
-												 final int length) {
+										   @Nullable final byte[] data, final int offset,
+										   final int length) {
 		return Request.newWriteRequest(descriptor, data, offset, length).setManager(this);
 	}
 
@@ -1886,7 +1886,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The request.
 	 */
 	protected PhyRequest setPreferredPhy(@PhyMask final int txPhy, @PhyMask final int rxPhy,
-											   @PhyOption final int phyOptions) {
+										 @PhyOption final int phyOptions) {
 		return Request.newSetPreferredPhyRequest(txPhy, rxPhy, phyOptions).setManager(this);
 	}
 
