@@ -2851,7 +2851,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 				}
 				// Notify the notification registered listener, if set
 				final ValueChangedCallback request = mNotificationCallbacks.get(characteristic);
-				if (request != null) {
+				if (request != null && request.matches(data)) {
 					request.notifyValueChanged(gatt.getDevice(), data);
 				}
 				// If there is a value change request,
@@ -2861,7 +2861,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 						&& valueChangedRequest.characteristic == characteristic
 						// and didn't have a trigger, or the trigger was started
 						// (not necessarily completed)
-						&& !valueChangedRequest.isTriggerPending()) {
+						&& !valueChangedRequest.isTriggerPending()
+						// and the data matches the filter (if set)
+						&& valueChangedRequest.matches(data)) {
 					// notify that new data was received.
 					valueChangedRequest.notifyValueChanged(gatt.getDevice(), data);
 
