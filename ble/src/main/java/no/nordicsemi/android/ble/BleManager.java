@@ -934,7 +934,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The request.
 	 */
 	@NonNull
-	protected final Request createBond() {
+	protected Request createBond() {
 		return Request.createBond().setManager(this);
 	}
 
@@ -986,7 +986,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The request.
 	 */
 	@NonNull
-	protected final Request removeBond() {
+	protected Request removeBond() {
 		return Request.removeBond().setManager(this);
 	}
 
@@ -1066,7 +1066,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 */
 	@MainThread
 	@NonNull
-	protected final ValueChangedCallback setNotificationCallback(@Nullable final BluetoothGattCharacteristic characteristic) {
+	protected ValueChangedCallback setNotificationCallback(@Nullable final BluetoothGattCharacteristic characteristic) {
 		ValueChangedCallback callback = mNotificationCallbacks.get(characteristic);
 		if (callback == null) {
 			callback = new ValueChangedCallback();
@@ -1091,7 +1091,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The callback.
 	 */
 	@NonNull
-	protected final ValueChangedCallback setIndicationCallback(@Nullable final BluetoothGattCharacteristic characteristic) {
+	protected ValueChangedCallback setIndicationCallback(@Nullable final BluetoothGattCharacteristic characteristic) {
 		return setNotificationCallback(characteristic);
 	}
 
@@ -1110,7 +1110,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The callback.
 	 */
 	@NonNull
-	protected final WaitForValueChangedRequest waitForNotification(@NonNull final BluetoothGattCharacteristic characteristic) {
+	protected WaitForValueChangedRequest waitForNotification(@NonNull final BluetoothGattCharacteristic characteristic) {
 		return Request.newWaitForNotificationRequest(characteristic).setManager(this);
 	}
 
@@ -1129,7 +1129,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The callback.
 	 */
 	@NonNull
-	protected final WaitForValueChangedRequest waitForIndication(@NonNull final BluetoothGattCharacteristic characteristic) {
+	protected WaitForValueChangedRequest waitForIndication(@NonNull final BluetoothGattCharacteristic characteristic) {
 		return Request.newWaitForIndicationRequest(characteristic).setManager(this);
 	}
 
@@ -1145,7 +1145,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest enableNotifications(
+	protected WriteRequest enableNotifications(
 			@Nullable final BluetoothGattCharacteristic characteristic) {
 		return Request.newEnableNotificationsRequest(characteristic).setManager(this);
 	}
@@ -1181,7 +1181,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest disableNotifications(@Nullable final BluetoothGattCharacteristic characteristic) {
+	protected WriteRequest disableNotifications(@Nullable final BluetoothGattCharacteristic characteristic) {
 		return Request.newDisableNotificationsRequest(characteristic).setManager(this);
 	}
 
@@ -1216,7 +1216,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest enableIndications(@Nullable final BluetoothGattCharacteristic characteristic) {
+	protected WriteRequest enableIndications(@Nullable final BluetoothGattCharacteristic characteristic) {
 		return Request.newEnableIndicationsRequest(characteristic).setManager(this);
 	}
 
@@ -1251,7 +1251,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest disableIndications(@Nullable final BluetoothGattCharacteristic characteristic) {
+	protected WriteRequest disableIndications(@Nullable final BluetoothGattCharacteristic characteristic) {
 		return Request.newDisableIndicationsRequest(characteristic).setManager(this);
 	}
 
@@ -1296,7 +1296,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The request.
 	 */
 	@NonNull
-	protected final ReadRequest readCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic) {
+	protected ReadRequest readCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic) {
 		return Request.newReadRequest(characteristic).setManager(this);
 	}
 
@@ -1333,7 +1333,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic,
+	protected WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic,
 													 @Nullable final Data data) {
 		return Request.newWriteRequest(characteristic, data != null ? data.getValue() : null)
 				.setManager(this);
@@ -1356,7 +1356,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic,
+	protected WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic,
 													 @Nullable final byte[] data) {
 		return Request.newWriteRequest(characteristic, data).setManager(this);
 	}
@@ -1381,7 +1381,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic,
+	protected WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic,
 													 @Nullable final byte[] data, final int offset, final int length) {
 		return Request.newWriteRequest(characteristic, data, offset, length).setManager(this);
 	}
@@ -1416,7 +1416,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The request.
 	 */
 	@NonNull
-	protected final ReadRequest readDescriptor(@Nullable final BluetoothGattDescriptor descriptor) {
+	protected ReadRequest readDescriptor(@Nullable final BluetoothGattDescriptor descriptor) {
 		return Request.newReadRequest(descriptor).setManager(this);
 	}
 
@@ -1448,7 +1448,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest writeDescriptor(@Nullable final BluetoothGattDescriptor descriptor,
+	protected WriteRequest writeDescriptor(@Nullable final BluetoothGattDescriptor descriptor,
 												 @Nullable final Data data) {
 		return Request.newWriteRequest(descriptor, data != null ? data.getValue() : null)
 				.setManager(this);
@@ -1471,7 +1471,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest writeDescriptor(@Nullable final BluetoothGattDescriptor descriptor,
+	protected WriteRequest writeDescriptor(@Nullable final BluetoothGattDescriptor descriptor,
 												 @Nullable final byte[] data) {
 		return Request.newWriteRequest(descriptor, data).setManager(this);
 	}
@@ -1495,7 +1495,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The request.
 	 */
 	@NonNull
-	protected final WriteRequest writeDescriptor(@Nullable final BluetoothGattDescriptor descriptor,
+	protected WriteRequest writeDescriptor(@Nullable final BluetoothGattDescriptor descriptor,
 												 @Nullable final byte[] data, final int offset,
 												 final int length) {
 		return Request.newWriteRequest(descriptor, data, offset, length).setManager(this);
@@ -1520,7 +1520,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The request.
 	 */
 	@NonNull
-	protected final RequestQueue beginAtomicRequestQueue() {
+	protected RequestQueue beginAtomicRequestQueue() {
 		return new RequestQueue().setManager(this);
 	}
 
@@ -1561,7 +1561,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The request.
 	 */
 	@NonNull
-	protected final ReliableWriteRequest beginReliableWrite() {
+	protected ReliableWriteRequest beginReliableWrite() {
 		return Request.newReliableWriteRequest().setManager(this);
 	}
 
@@ -1755,7 +1755,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 *
 	 * @return The request.
 	 */
-	protected final MtuRequest requestMtu(@IntRange(from = 23, to = 517) final int mtu) {
+	protected MtuRequest requestMtu(@IntRange(from = 23, to = 517) final int mtu) {
 		return Request.newMtuRequest(mtu).setManager(this);
 	}
 
@@ -1772,7 +1772,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return the current MTU value. Default to 23.
 	 */
 	@IntRange(from = 23, to = 517)
-	protected final int getMtu() {
+	protected int getMtu() {
 		return mMtu;
 	}
 
@@ -1784,7 +1784,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 *
 	 * @param mtu the MTU value set by the peripheral.
 	 */
-	protected final void overrideMtu(@IntRange(from = 23, to = 517) final int mtu) {
+	protected void overrideMtu(@IntRange(from = 23, to = 517) final int mtu) {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 			mMtu = mtu;
 		}
@@ -1828,7 +1828,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The request.
 	 */
 	@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-	protected final ConnectionPriorityRequest requestConnectionPriority(
+	protected ConnectionPriorityRequest requestConnectionPriority(
 			@ConnectionPriority final int priority) {
 		return Request.newConnectionPriorityRequest(priority).setManager(this);
 	}
@@ -1883,7 +1883,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 *                   {@link PhyRequest#PHY_OPTION_S2} or {@link PhyRequest#PHY_OPTION_S8}.
 	 * @return The request.
 	 */
-	protected final PhyRequest setPreferredPhy(@PhyMask final int txPhy, @PhyMask final int rxPhy,
+	protected PhyRequest setPreferredPhy(@PhyMask final int txPhy, @PhyMask final int rxPhy,
 											   @PhyOption final int phyOptions) {
 		return Request.newSetPreferredPhyRequest(txPhy, rxPhy, phyOptions).setManager(this);
 	}
@@ -1916,7 +1916,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 *
 	 * @return The request.
 	 */
-	protected final PhyRequest readPhy() {
+	protected PhyRequest readPhy() {
 		return Request.newReadPhyRequest().setManager(this);
 	}
 
@@ -1941,7 +1941,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 *
 	 * @return The request.
 	 */
-	protected final ReadRssiRequest readRssi() {
+	protected ReadRssiRequest readRssi() {
 		return Request.newReadRssiRequest().setManager(this);
 	}
 
@@ -1974,7 +1974,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The request.
 	 */
 	@SuppressWarnings("JavadocReference")
-	protected final Request refreshDeviceCache() {
+	protected Request refreshDeviceCache() {
 		return Request.newRefreshCacheRequest().setManager(this);
 	}
 
@@ -2014,7 +2014,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @param delay the delay in milliseconds.
 	 * @return The request.
 	 */
-	protected final SleepRequest sleep(@IntRange(from = 0) final long delay) {
+	protected SleepRequest sleep(@IntRange(from = 0) final long delay) {
 		return Request.newSleepRequest(delay).setManager(this);
 	}
 
@@ -2039,7 +2039,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	/**
 	 * Cancels all the enqueued operations. The one currently executed will be finished.
 	 */
-	protected final void clearQueue() {
+	protected void clearQueue() {
 		final BleManagerGattCallback callback = mGattCallback;
 		if (callback != null) {
 			callback.cancelQueue();
