@@ -1025,6 +1025,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		 * We will call it using reflections.
 		 */
 		try {
+			//noinspection JavaReflectionMemberAccess
 			final Method removeBond = device.getClass().getMethod("removeBond");
 			log(Log.DEBUG, "device.removeBond() (hidden)");
 			return (Boolean) removeBond.invoke(device);
