@@ -25,8 +25,8 @@ package no.nordicsemi.android.ble.callback.profile;
 import android.bluetooth.BluetoothDevice;
 import android.os.Parcel;
 import android.os.Parcelable;
-import android.support.annotation.NonNull;
 
+import androidx.annotation.NonNull;
 import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.response.ReadResponse;
 

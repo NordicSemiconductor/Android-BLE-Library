@@ -24,9 +24,9 @@ package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.exception.BluetoothDisabledException;
