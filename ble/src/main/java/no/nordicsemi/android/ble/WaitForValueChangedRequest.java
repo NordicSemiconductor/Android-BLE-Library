@@ -37,6 +37,7 @@ import no.nordicsemi.android.ble.callback.ReadProgressCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.callback.profile.ProfileReadResponse;
 import no.nordicsemi.android.ble.data.Data;
+import no.nordicsemi.android.ble.data.DataFilter;
 import no.nordicsemi.android.ble.data.DataMerger;
 import no.nordicsemi.android.ble.data.DataStream;
 import no.nordicsemi.android.ble.exception.BluetoothDisabledException;
@@ -46,7 +47,7 @@ import no.nordicsemi.android.ble.exception.InvalidRequestException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
-public class WaitForValueChangedRequest extends TimeoutableValueRequest<DataReceivedCallback>
+public final class WaitForValueChangedRequest extends TimeoutableValueRequest<DataReceivedCallback>
 		implements Operation {
 	static final int NOT_STARTED = -123456;
 	static final int STARTED = NOT_STARTED + 1;
@@ -54,6 +55,7 @@ public class WaitForValueChangedRequest extends TimeoutableValueRequest<DataRece
 	private ReadProgressCallback progressCallback;
 	private DataMerger dataMerger;
 	private DataStream buffer;
+	private DataFilter filter;
 	private Request trigger;
 	private boolean deviceDisconnected;
 	private boolean bluetoothDisabled;
@@ -111,6 +113,18 @@ public class WaitForValueChangedRequest extends TimeoutableValueRequest<DataRece
 	@Override
 	public WaitForValueChangedRequest with(@NonNull final DataReceivedCallback callback) {
 		super.with(callback);
+		return this;
+	}
+
+	/**
+	 * Sets a filter which allows to skip some incoming data.
+	 *
+	 * @param filter the data filter.
+	 * @return The request.
+	 */
+	@NonNull
+	public WaitForValueChangedRequest filter(@NonNull final DataFilter filter) {
+		this.filter = filter;
 		return this;
 	}
 
@@ -336,6 +350,10 @@ public class WaitForValueChangedRequest extends TimeoutableValueRequest<DataRece
 			throws InterruptedException, InvalidDataException, DeviceDisconnectedException,
 			RequestFailedException, BluetoothDisabledException, InvalidRequestException {
 		return timeout(timeout).awaitValid(response);
+	}
+
+	boolean matches(final byte[] packet) {
+		return filter == null || filter.filter(packet);
 	}
 
 	void notifyValueChanged(final BluetoothDevice device, final byte[] value) {
