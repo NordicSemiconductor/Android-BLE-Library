@@ -748,7 +748,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 			return true;
 		}
 
-		mConnectionState = BluetoothGatt.STATE_CONNECTING;
 		synchronized (mLock) {
 			if (mBluetoothGatt != null) {
 				// There are 2 ways of reconnecting to the same device:
@@ -776,6 +775,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 					// flag set to false.
 					mInitialConnection = false;
 					mConnectionTime = 0L; // no timeout possible when autoConnect used
+					mConnectionState = BluetoothGatt.STATE_CONNECTING;
 					log(Log.VERBOSE, "Connecting...");
 					mCallbacks.onDeviceConnecting(device);
 					log(Log.DEBUG, "gatt.connect()");
@@ -794,7 +794,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 			}
 		}
 
-		//noinspection ConstantConditions
+		// This should not happen in normal circumstances, but may, when Bluetooth was turned off
+		// when retrying to create a connection.
+		if (connectRequest == null)
+			return false;
 		final boolean shouldAutoConnect = connectRequest.shouldAutoConnect();
 		// We will receive Link Loss events only when the device is connected with autoConnect=true.
 		mUserDisconnected = !shouldAutoConnect;
@@ -807,6 +810,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		mBluetoothDevice = device;
 		mGattCallback.setHandler(mHandler);
 		log(Log.VERBOSE, connectRequest.isFirstAttempt() ? "Connecting..." : "Retrying...");
+		mConnectionState = BluetoothGatt.STATE_CONNECTING;
 		mCallbacks.onDeviceConnecting(device);
 		mConnectionTime = SystemClock.elapsedRealtime();
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
@@ -2443,7 +2447,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 						log(Log.WARN, "Error: (0x" + Integer.toHexString(status) + "): " +
 								GattError.parseConnectionError(status));
 
-					// In case of a connection error, retry if requred.
+					// In case of a connection error, retry if required.
 					if (status != BluetoothGatt.GATT_SUCCESS && canTimeout && !timeout
 							&& mConnectRequest != null && mConnectRequest.canRetry()) {
 						final int delay = mConnectRequest.getRetryDelay();
