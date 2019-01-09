@@ -1350,7 +1350,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 */
 	@NonNull
 	protected WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic,
-													 @Nullable final Data data) {
+											   @Nullable final Data data) {
 		return Request.newWriteRequest(characteristic, data != null ? data.getValue() : null)
 				.setManager(this);
 	}
@@ -1373,7 +1373,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 */
 	@NonNull
 	protected WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic,
-													 @Nullable final byte[] data) {
+											   @Nullable final byte[] data) {
 		return Request.newWriteRequest(characteristic, data).setManager(this);
 	}
 
@@ -1398,7 +1398,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 */
 	@NonNull
 	protected WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic,
-													 @Nullable final byte[] data, final int offset, final int length) {
+											   @Nullable final byte[] data, final int offset, final int length) {
 		return Request.newWriteRequest(characteristic, data, offset, length).setManager(this);
 	}
 
@@ -1465,7 +1465,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 */
 	@NonNull
 	protected WriteRequest writeDescriptor(@Nullable final BluetoothGattDescriptor descriptor,
-												 @Nullable final Data data) {
+										   @Nullable final Data data) {
 		return Request.newWriteRequest(descriptor, data != null ? data.getValue() : null)
 				.setManager(this);
 	}
@@ -1488,7 +1488,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 */
 	@NonNull
 	protected WriteRequest writeDescriptor(@Nullable final BluetoothGattDescriptor descriptor,
-												 @Nullable final byte[] data) {
+										   @Nullable final byte[] data) {
 		return Request.newWriteRequest(descriptor, data).setManager(this);
 	}
 
@@ -1512,8 +1512,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 */
 	@NonNull
 	protected WriteRequest writeDescriptor(@Nullable final BluetoothGattDescriptor descriptor,
-												 @Nullable final byte[] data, final int offset,
-												 final int length) {
+										   @Nullable final byte[] data, final int offset,
+										   final int length) {
 		return Request.newWriteRequest(descriptor, data, offset, length).setManager(this);
 	}
 
@@ -1900,7 +1900,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @return The request.
 	 */
 	protected PhyRequest setPreferredPhy(@PhyMask final int txPhy, @PhyMask final int rxPhy,
-											   @PhyOption final int phyOptions) {
+										 @PhyOption final int phyOptions) {
 		return Request.newSetPreferredPhyRequest(txPhy, rxPhy, phyOptions).setManager(this);
 	}
 
@@ -2626,8 +2626,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 				onCharacteristicRead(gatt, characteristic);
 				if (mRequest instanceof ReadRequest) {
 					final ReadRequest request = (ReadRequest) mRequest;
-					request.notifyValueChanged(gatt.getDevice(), data);
-					if (request.hasMore()) {
+					final boolean matches = request.matches(data);
+					if (matches) {
+						request.notifyValueChanged(gatt.getDevice(), data);
+					}
+					if (!matches || request.hasMore()) {
 						enqueueFirst(request);
 					} else {
 						request.notifySuccess(gatt.getDevice());
@@ -2865,7 +2868,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 				}
 				// Notify the notification registered listener, if set
 				final ValueChangedCallback request = mNotificationCallbacks.get(characteristic);
-				if (request != null) {
+				if (request != null && request.matches(data)) {
 					request.notifyValueChanged(gatt.getDevice(), data);
 				}
 				// If there is a value change request,
@@ -2875,7 +2878,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 						&& valueChangedRequest.characteristic == characteristic
 						// and didn't have a trigger, or the trigger was started
 						// (not necessarily completed)
-						&& !valueChangedRequest.isTriggerPending()) {
+						&& !valueChangedRequest.isTriggerPending()
+						// and the data matches the filter (if set)
+						&& valueChangedRequest.matches(data)) {
 					// notify that new data was received.
 					valueChangedRequest.notifyValueChanged(gatt.getDevice(), data);
 
