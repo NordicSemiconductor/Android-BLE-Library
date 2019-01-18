@@ -1864,12 +1864,12 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 				priorityText = "HIGH";
 				break;
 			case ConnectionPriorityRequest.CONNECTION_PRIORITY_LOW_POWER:
-				text = "BALANCED (30–50ms, 0, 20s)";
+				text = "LOW POWER (100–125ms, 2, 20s)";
 				priorityText = "LOW POWER";
 				break;
 			default:
 			case ConnectionPriorityRequest.CONNECTION_PRIORITY_BALANCED:
-				text = "LOW POWER (100–125ms, 2, 20s)";
+				text = "BALANCED (30–50ms, 0, 20s)";
 				priorityText = "BALANCED";
 				break;
 		}
