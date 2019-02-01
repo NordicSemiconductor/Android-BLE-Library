@@ -235,35 +235,45 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 			switch (state) {
 				case BluetoothAdapter.STATE_TURNING_OFF:
 				case BluetoothAdapter.STATE_OFF:
-					if (mConnected && previousState != BluetoothAdapter.STATE_TURNING_OFF
+					if (previousState != BluetoothAdapter.STATE_TURNING_OFF
 							&& previousState != BluetoothAdapter.STATE_OFF) {
-						// No more calls are possible
-						mGattCallback.mOperationInProgress = true;
-						mGattCallback.cancelQueue();
-						mGattCallback.mInitQueue = null;
+						final BleManagerGattCallback callback = mGattCallback;
+						if (callback != null) {
+							// No more calls are possible
+							callback.mOperationInProgress = true;
+							callback.cancelQueue();
+							callback.mInitQueue = null;
+						}
 
-						// Signal the current request, if any
-						if (mRequest != null && mRequest.type != Request.Type.DISCONNECT) {
-							mRequest.notifyFail(mBluetoothDevice, FailCallback.REASON_BLUETOOTH_DISABLED);
-							mRequest = null;
-						}
-						if (mValueChangedRequest != null) {
-							mValueChangedRequest.notifyFail(mBluetoothDevice, FailCallback.REASON_BLUETOOTH_DISABLED);
-							mValueChangedRequest = null;
-						}
-						if (mConnectRequest != null) {
-							mConnectRequest.notifyFail(mBluetoothDevice, FailCallback.REASON_BLUETOOTH_DISABLED);
-							mConnectRequest = null;
+						final BluetoothDevice device = mBluetoothDevice;
+						if (device != null) {
+							// Signal the current request, if any
+							if (mRequest != null && mRequest.type != Request.Type.DISCONNECT) {
+								mRequest.notifyFail(device, FailCallback.REASON_BLUETOOTH_DISABLED);
+								mRequest = null;
+							}
+							if (mValueChangedRequest != null) {
+								mValueChangedRequest.notifyFail(device, FailCallback.REASON_BLUETOOTH_DISABLED);
+								mValueChangedRequest = null;
+							}
+							if (mConnectRequest != null) {
+								mConnectRequest.notifyFail(device, FailCallback.REASON_BLUETOOTH_DISABLED);
+								mConnectRequest = null;
+							}
 						}
 
 						// The connection is killed by the system, no need to disconnect gently.
 						mUserDisconnected = true;
-						// Allow new requests when Bluetooth is enabled again. close() doesn't do it.
-						// See: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/25
-						// and: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/41
-						mGattCallback.mOperationInProgress = false;
-						// This will call close()
-						mGattCallback.notifyDeviceDisconnected(mBluetoothDevice);
+						if (callback != null) {
+							// Allow new requests when Bluetooth is enabled again. close() doesn't do it.
+							// See: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/25
+							// and: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/41
+							callback.mOperationInProgress = false;
+							// This will call close()
+							if (device != null) {
+								callback.notifyDeviceDisconnected(device);
+							}
+						}
 					} else {
 						// Calling close() will prevent the STATE_OFF event from being logged
 						// (this receiver will be unregistered). But it doesn't matter.
