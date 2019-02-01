@@ -20,19 +20,18 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package no.nordicsemi.android.ble.annotation;
+package no.nordicsemi.android.ble.data;
 
-import android.bluetooth.BluetoothGattCharacteristic;
+import androidx.annotation.Nullable;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+public interface DataFilter {
 
-import androidx.annotation.IntDef;
-
-@Retention(RetentionPolicy.SOURCE)
-@IntDef(value = {
-		BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT,
-		BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE,
-		BluetoothGattCharacteristic.WRITE_TYPE_SIGNED,
-})
-public @interface WriteType {}
+	/**
+	 * This method should return true if the packet matches the filter and should be processed
+	 * by the request.
+	 *
+	 * @param lastPacket the packet received.
+	 * @return True, if packet should be processed, false if it should be ignored.
+	 */
+	boolean filter(@Nullable final byte[] lastPacket);
+}

@@ -22,8 +22,7 @@
 
 package no.nordicsemi.android.ble.exception;
 
-import android.support.annotation.NonNull;
-
+import androidx.annotation.NonNull;
 import no.nordicsemi.android.ble.callback.profile.ProfileReadResponse;
 
 @SuppressWarnings("unused")

@@ -23,12 +23,13 @@
 package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
-import android.support.annotation.NonNull;
-import android.support.annotation.Nullable;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import no.nordicsemi.android.ble.callback.DataReceivedCallback;
 import no.nordicsemi.android.ble.callback.ReadProgressCallback;
 import no.nordicsemi.android.ble.data.Data;
+import no.nordicsemi.android.ble.data.DataFilter;
 import no.nordicsemi.android.ble.data.DataMerger;
 import no.nordicsemi.android.ble.data.DataStream;
 
@@ -38,6 +39,7 @@ public class ValueChangedCallback {
 	private DataReceivedCallback valueCallback;
 	private DataMerger dataMerger;
 	private DataStream buffer;
+	private DataFilter filter;
 	private int count = 0;
 
 	ValueChangedCallback() {
@@ -54,6 +56,18 @@ public class ValueChangedCallback {
 	@NonNull
 	public ValueChangedCallback with(@NonNull final DataReceivedCallback callback) {
 		this.valueCallback = callback;
+		return this;
+	}
+
+	/**
+	 * Sets a filter which allows to skip some incoming data.
+	 *
+	 * @param filter the data filter.
+	 * @return The request.
+	 */
+	@NonNull
+	public ValueChangedCallback filter(@NonNull final DataFilter filter) {
+		this.filter = filter;
 		return this;
 	}
 
@@ -90,6 +104,10 @@ public class ValueChangedCallback {
 		progressCallback = null;
 		buffer = null;
 		return this;
+	}
+
+	boolean matches(final byte[] packet) {
+		return filter == null || filter.filter(packet);
 	}
 
 	void notifyValueChanged(@NonNull final BluetoothDevice device, @Nullable final byte[] value) {

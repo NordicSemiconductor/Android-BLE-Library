@@ -34,16 +34,18 @@ which brings almost all recent features, introduced in Lollipop and later, to th
 
 ## Importing
 
-#### Maven or jcenter
+#### Maven Central or jcenter
 
 The library may be found on jcenter and Maven Central repository. 
 Add it to your project by adding the following dependency:
 
 ```grovy
-implementation 'no.nordicsemi.android:ble:2.0.5'
+implementation 'no.nordicsemi.android:ble:2.1.0'
 ```
 
-#### Manual
+The last version not migrated to AndroidX is 2.0.5.
+
+#### As a library module
 
 Clone this project and add *ble* module as a dependency to your project:
 
@@ -54,8 +56,6 @@ project(':ble').projectDir = file('../Android-BLE-Library/ble')
 ```
 2. In *app/build.gradle* file add `implementation project(':ble')` inside dependencies.
 3. Sync project and build it.
-
-See example projects listed below.
 
 ## Usage
 
