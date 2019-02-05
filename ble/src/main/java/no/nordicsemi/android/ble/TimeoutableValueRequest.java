@@ -59,7 +59,7 @@ public abstract class TimeoutableValueRequest<T> extends TimeoutableRequest {
 
 	@NonNull
 	@Override
-	public TimeoutableValueRequest<T> timeout(final long timeout) {
+	public TimeoutableValueRequest<T> timeout(@IntRange(from = 0) final long timeout) {
 		super.timeout(timeout);
 		return this;
 	}
