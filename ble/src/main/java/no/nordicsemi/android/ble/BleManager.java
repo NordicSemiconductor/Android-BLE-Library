@@ -771,7 +771,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 				// have to close gatt and open it again.
 				if (!mInitialConnection) {
 					log(Log.DEBUG, "gatt.close()");
-					mBluetoothGatt.close();
+					try {
+						mBluetoothGatt.close();
+					} catch (final Throwable t) {
+						// ignore
+					}
 					mBluetoothGatt = null;
 					try {
 						log(Log.DEBUG, "wait(200)");
@@ -916,7 +920,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 					}
 				}
 				log(Log.DEBUG, "gatt.close()");
-				mBluetoothGatt.close();
+				try {
+					mBluetoothGatt.close();
+				} catch (final Throwable t) {
+					// ignore
+				}
 				mBluetoothGatt = null;
 			}
 			mConnected = false;
@@ -2411,7 +2419,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 				if (mBluetoothDevice == null) {
 					Log.e(TAG, "Device received notification after disconnection.");
 					log(Log.DEBUG, "gatt.close()");
-					gatt.close();
+					try {
+						gatt.close();
+					} catch (final Throwable t) {
+						// ignore
+					}
 					return;
 				}
 
