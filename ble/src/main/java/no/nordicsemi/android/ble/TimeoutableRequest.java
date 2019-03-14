@@ -17,7 +17,7 @@ import no.nordicsemi.android.ble.exception.InvalidRequestException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 @SuppressWarnings("WeakerAccess")
-abstract class TimeoutableRequest extends Request {
+public abstract class TimeoutableRequest extends Request {
 	private TimeoutHandler timeoutHandler;
 	private Runnable timeoutCallback;
 	private Handler handler;
