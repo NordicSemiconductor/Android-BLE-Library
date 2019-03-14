@@ -72,7 +72,7 @@ public class ConnectRequest extends TimeoutableRequest {
 
 	@NonNull
 	@Override
-	public ConnectRequest timeout(final long timeout) {
+	public ConnectRequest timeout(@IntRange(from = 0) final long timeout) {
 		super.timeout(timeout);
 		return this;
 	}
