@@ -40,7 +40,7 @@ The library may be found on jcenter and Maven Central repository.
 Add it to your project by adding the following dependency:
 
 ```grovy
-implementation 'no.nordicsemi.android:ble:2.1.0'
+implementation 'no.nordicsemi.android:ble:2.1.1'
 ```
 
 The last version not migrated to AndroidX is 2.0.5.
@@ -157,5 +157,5 @@ classes in [nRF Toolbox](https://github.com/NordicSemiconductor/Android-nRF-Tool
 
 ## Version 1.x
 
-The BLE library v 1.x is no longer supported. Please migrate to 2.0 for bug fixing releases.
+The BLE library v 1.x is no longer supported. Please migrate to 2.x for bug fixing releases.
 Find it on [version/1x branch](https://github.com/NordicSemiconductor/Android-BLE-Library/tree/version/1x).
