@@ -11,7 +11,7 @@ The API is clean and easy to read.
 
 **BleManager** class provides the following features:
 
-1. Connection, with automatic retires
+1. Connection, with automatic retries
 2. Service discovery
 3. Bonding (optional) and removing bond information (using reflections)
 4. Automatic handling of Service Changed indications
