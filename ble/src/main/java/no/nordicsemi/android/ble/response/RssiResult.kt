@@ -20,53 +20,57 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package no.nordicsemi.android.ble.data;
+package no.nordicsemi.android.ble.response
 
-import org.junit.Test;
+import android.bluetooth.BluetoothDevice
+import android.os.Parcel
+import android.os.Parcelable
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import androidx.annotation.IntRange
 
-public class DataStreamTest {
+import no.nordicsemi.android.ble.callback.RssiCallback
 
-    @Test
-    public void write() {
-        final DataStream stream = new DataStream();
-        stream.write(new byte[]{0, 1, 2, 3});
-        stream.write(new byte[]{4, 5, 6});
-        assertArrayEquals(new byte[]{0, 1, 2, 3, 4, 5, 6}, stream.toByteArray());
+class RssiResult// Parcelable
+protected constructor(`in`: Parcel) : RssiCallback, Parcelable {
+    var bluetoothDevice: BluetoothDevice? = null
+        private set
+    @IntRange(from = -128, to = 20)
+    @get:IntRange(from = -128, to = 20)
+    var rssi: Int = 0
+        private set
+
+    init {
+        bluetoothDevice = `in`.readParcelable(BluetoothDevice::class.java.classLoader)
+        rssi = `in`.readInt()
     }
 
-    @Test
-    public void write_part() {
-        final DataStream stream = new DataStream();
-        stream.write(new byte[]{0, 1, 2, 3, 4, 5, 6}, 1, 2);
-        assertArrayEquals(new byte[]{1, 2}, stream.toByteArray());
+    override fun onRssiRead(
+        device: BluetoothDevice,
+        @IntRange(from = -128, to = 20) rssi: Int
+    ) {
+        this.bluetoothDevice = device
+        this.rssi = rssi
     }
 
-    @Test
-    public void write_data() {
-        final DataStream stream = new DataStream();
-        final Data data1 = new Data(new byte[]{0, 2, 4, 6, 8});
-        final Data data2 = new Data(new byte[]{1, 3, 5, 7, 9});
-        stream.write(data1);
-        stream.write(data2);
-        assertArrayEquals(new byte[]{0, 2, 4, 6, 8, 1, 3, 5, 7, 9}, stream.toByteArray());
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+        dest.writeParcelable(bluetoothDevice, flags)
+        dest.writeInt(rssi)
     }
 
-    @Test
-    public void size() {
-        final DataStream stream = new DataStream();
-        stream.write(new byte[]{0, 1, 2, 3, 4, 5, 6});
-        assertEquals(7, stream.size());
+    override fun describeContents(): Int {
+        return 0
     }
 
-    @SuppressWarnings("ConstantConditions")
-    @Test
-    public void toData() {
-        final DataStream stream = new DataStream();
-        stream.write(new byte[]{0, 1, 2, 3, 4, 5, 6});
-        final Data data = stream.toData();
-        assertEquals(0x100, data.getIntValue(Data.FORMAT_UINT16, 0).intValue());
+    companion object {
+        @JvmField
+        val CREATOR: Parcelable.Creator<RssiResult> = object : Parcelable.Creator<RssiResult> {
+            override fun createFromParcel(`in`: Parcel): RssiResult {
+                return RssiResult(`in`)
+            }
+
+            override fun newArray(size: Int): Array<RssiResult?> {
+                return arrayOfNulls(size)
+            }
+        }
     }
 }

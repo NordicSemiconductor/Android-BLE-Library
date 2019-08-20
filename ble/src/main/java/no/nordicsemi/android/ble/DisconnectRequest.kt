@@ -20,53 +20,44 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package no.nordicsemi.android.ble.data;
+package no.nordicsemi.android.ble
 
-import org.junit.Test;
+import androidx.annotation.IntRange
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import no.nordicsemi.android.ble.callback.BeforeCallback
+import no.nordicsemi.android.ble.callback.FailCallback
+import no.nordicsemi.android.ble.callback.InvalidRequestCallback
+import no.nordicsemi.android.ble.callback.SuccessCallback
 
-public class DataStreamTest {
+class DisconnectRequest internal constructor(type: Request.Type) : TimeoutableRequest(type) {
 
-    @Test
-    public void write() {
-        final DataStream stream = new DataStream();
-        stream.write(new byte[]{0, 1, 2, 3});
-        stream.write(new byte[]{4, 5, 6});
-        assertArrayEquals(new byte[]{0, 1, 2, 3, 4, 5, 6}, stream.toByteArray());
+    override fun setManager(manager: BleManager<*>): DisconnectRequest {
+        super.setManager(manager)
+        return this
     }
 
-    @Test
-    public void write_part() {
-        final DataStream stream = new DataStream();
-        stream.write(new byte[]{0, 1, 2, 3, 4, 5, 6}, 1, 2);
-        assertArrayEquals(new byte[]{1, 2}, stream.toByteArray());
+    override fun timeout(@IntRange(from = 0) timeout: Long): DisconnectRequest {
+        super.timeout(timeout)
+        return this
     }
 
-    @Test
-    public void write_data() {
-        final DataStream stream = new DataStream();
-        final Data data1 = new Data(new byte[]{0, 2, 4, 6, 8});
-        final Data data2 = new Data(new byte[]{1, 3, 5, 7, 9});
-        stream.write(data1);
-        stream.write(data2);
-        assertArrayEquals(new byte[]{0, 2, 4, 6, 8, 1, 3, 5, 7, 9}, stream.toByteArray());
+    override fun done(callback: SuccessCallback): DisconnectRequest {
+        super.done(callback)
+        return this
     }
 
-    @Test
-    public void size() {
-        final DataStream stream = new DataStream();
-        stream.write(new byte[]{0, 1, 2, 3, 4, 5, 6});
-        assertEquals(7, stream.size());
+    override fun fail(callback: FailCallback): DisconnectRequest {
+        super.fail(callback)
+        return this
     }
 
-    @SuppressWarnings("ConstantConditions")
-    @Test
-    public void toData() {
-        final DataStream stream = new DataStream();
-        stream.write(new byte[]{0, 1, 2, 3, 4, 5, 6});
-        final Data data = stream.toData();
-        assertEquals(0x100, data.getIntValue(Data.FORMAT_UINT16, 0).intValue());
+    override fun invalid(callback: InvalidRequestCallback): DisconnectRequest {
+        super.invalid(callback)
+        return this
+    }
+
+    override fun before(callback: BeforeCallback): DisconnectRequest {
+        super.before(callback)
+        return this
     }
 }

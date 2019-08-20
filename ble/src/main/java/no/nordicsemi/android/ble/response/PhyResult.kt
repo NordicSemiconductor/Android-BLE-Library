@@ -20,53 +20,63 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package no.nordicsemi.android.ble.data;
+package no.nordicsemi.android.ble.response
 
-import org.junit.Test;
+import android.bluetooth.BluetoothDevice
+import android.os.Parcel
+import android.os.Parcelable
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import no.nordicsemi.android.ble.annotation.PhyValue
+import no.nordicsemi.android.ble.callback.PhyCallback
 
-public class DataStreamTest {
+class PhyResult// Parcelable
+protected constructor(`in`: Parcel) : PhyCallback, Parcelable {
+    var bluetoothDevice: BluetoothDevice? = null
+        private set
+    @PhyValue
+    @get:PhyValue
+    var txPhy: Int = 0
+        private set
+    @PhyValue
+    @get:PhyValue
+    var rxPhy: Int = 0
+        private set
 
-    @Test
-    public void write() {
-        final DataStream stream = new DataStream();
-        stream.write(new byte[]{0, 1, 2, 3});
-        stream.write(new byte[]{4, 5, 6});
-        assertArrayEquals(new byte[]{0, 1, 2, 3, 4, 5, 6}, stream.toByteArray());
+    init {
+        bluetoothDevice = `in`.readParcelable(BluetoothDevice::class.java.classLoader)
+        txPhy = `in`.readInt()
+        rxPhy = `in`.readInt()
     }
 
-    @Test
-    public void write_part() {
-        final DataStream stream = new DataStream();
-        stream.write(new byte[]{0, 1, 2, 3, 4, 5, 6}, 1, 2);
-        assertArrayEquals(new byte[]{1, 2}, stream.toByteArray());
+    override fun onPhyChanged(
+        device: BluetoothDevice,
+        @PhyValue txPhy: Int, @PhyValue rxPhy: Int
+    ) {
+        this.bluetoothDevice = device
+        this.txPhy = txPhy
+        this.rxPhy = rxPhy
     }
 
-    @Test
-    public void write_data() {
-        final DataStream stream = new DataStream();
-        final Data data1 = new Data(new byte[]{0, 2, 4, 6, 8});
-        final Data data2 = new Data(new byte[]{1, 3, 5, 7, 9});
-        stream.write(data1);
-        stream.write(data2);
-        assertArrayEquals(new byte[]{0, 2, 4, 6, 8, 1, 3, 5, 7, 9}, stream.toByteArray());
+    override fun writeToParcel(dest: Parcel, flags: Int) {
+        dest.writeParcelable(bluetoothDevice, flags)
+        dest.writeInt(txPhy)
+        dest.writeInt(rxPhy)
     }
 
-    @Test
-    public void size() {
-        final DataStream stream = new DataStream();
-        stream.write(new byte[]{0, 1, 2, 3, 4, 5, 6});
-        assertEquals(7, stream.size());
+    override fun describeContents(): Int {
+        return 0
     }
 
-    @SuppressWarnings("ConstantConditions")
-    @Test
-    public void toData() {
-        final DataStream stream = new DataStream();
-        stream.write(new byte[]{0, 1, 2, 3, 4, 5, 6});
-        final Data data = stream.toData();
-        assertEquals(0x100, data.getIntValue(Data.FORMAT_UINT16, 0).intValue());
+    companion object {
+        @JvmField
+        val CREATOR: Parcelable.Creator<PhyResult> = object : Parcelable.Creator<PhyResult> {
+            override fun createFromParcel(`in`: Parcel): PhyResult {
+                return PhyResult(`in`)
+            }
+
+            override fun newArray(size: Int): Array<PhyResult?> {
+                return arrayOfNulls(size)
+            }
+        }
     }
 }

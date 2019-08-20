@@ -1,0 +1,126 @@
+/*
+ * Copyright (c) 2018, Nordic Semiconductor
+ * All rights reserved.
+ *
+ * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
+ *
+ * 1. Redistributions of source code must retain the above copyright notice, this list of conditions and the following disclaimer.
+ *
+ * 2. Redistributions in binary form must reproduce the above copyright notice, this list of conditions and the following disclaimer in the
+ * documentation and/or other materials provided with the distribution.
+ *
+ * 3. Neither the name of the copyright holder nor the names of its contributors may be used to endorse or promote products derived from this
+ * software without specific prior written permission.
+ *
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT
+ * LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT
+ * HOLDER OR CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT
+ * LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
+ * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
+ * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ */
+
+package no.nordicsemi.android.ble
+
+import android.bluetooth.BluetoothDevice
+
+import no.nordicsemi.android.ble.callback.DataReceivedCallback
+import no.nordicsemi.android.ble.callback.ReadProgressCallback
+import no.nordicsemi.android.ble.data.Data
+import no.nordicsemi.android.ble.data.DataFilter
+import no.nordicsemi.android.ble.data.DataMerger
+import no.nordicsemi.android.ble.data.DataStream
+
+class ValueChangedCallback internal constructor()// empty
+{
+    private var progressCallback: ReadProgressCallback? = null
+    private var valueCallback: DataReceivedCallback? = null
+    private var dataMerger: DataMerger? = null
+    private var buffer: DataStream? = null
+    private var filter: DataFilter? = null
+    private var count = 0
+
+    /**
+     * Sets the asynchronous data callback that will be called whenever a notification or
+     * an indication is received on given characteristic.
+     *
+     * @param callback the data callback.
+     * @return The request.
+     */
+    fun with(callback: DataReceivedCallback): ValueChangedCallback {
+        this.valueCallback = callback
+        return this
+    }
+
+    /**
+     * Sets a filter which allows to skip some incoming data.
+     *
+     * @param filter the data filter.
+     * @return The request.
+     */
+    fun filter(filter: DataFilter): ValueChangedCallback {
+        this.filter = filter
+        return this
+    }
+
+    /**
+     * Adds a merger that will be used to merge multiple packets into a single Data.
+     * The merger may modify each packet if necessary.
+     *
+     * @return The request.
+     */
+    fun merge(merger: DataMerger): ValueChangedCallback {
+        this.dataMerger = merger
+        this.progressCallback = null
+        return this
+    }
+
+    /**
+     * Adds a merger that will be used to merge multiple packets into a single Data.
+     * The merger may modify each packet if necessary.
+     *
+     * @return The request.
+     */
+    fun merge(
+        merger: DataMerger,
+        callback: ReadProgressCallback
+    ): ValueChangedCallback {
+        this.dataMerger = merger
+        this.progressCallback = callback
+        return this
+    }
+
+    internal fun free(): ValueChangedCallback {
+        valueCallback = null
+        dataMerger = null
+        progressCallback = null
+        buffer = null
+        return this
+    }
+
+    internal fun matches(packet: ByteArray): Boolean {
+        return filter == null || filter!!.filter(packet)
+    }
+
+    internal fun notifyValueChanged(device: BluetoothDevice, value: ByteArray?) {
+        // Keep a reference to the value callback, as it may change during execution
+        val valueCallback = this.valueCallback ?: return
+
+        // With no value callback there is no need for any merging
+
+        if (dataMerger == null) {
+            valueCallback.onDataReceived(device, Data(value))
+        } else {
+            if (progressCallback != null)
+                progressCallback!!.onPacketReceived(device, value, count)
+            if (buffer == null)
+                buffer = DataStream()
+            if (dataMerger!!.merge(buffer!!, value, count++)) {
+                valueCallback.onDataReceived(device, buffer!!.toData())
+                buffer = null
+                count = 0
+            } // else
+            // wait for more packets to be merged
+        }
+    }
+}

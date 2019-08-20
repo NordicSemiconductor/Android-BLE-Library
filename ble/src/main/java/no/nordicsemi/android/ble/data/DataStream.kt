@@ -20,53 +20,50 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package no.nordicsemi.android.ble.data;
+package no.nordicsemi.android.ble.data
 
-import org.junit.Test;
+import androidx.annotation.IntRange
 
-import static org.junit.Assert.assertArrayEquals;
-import static org.junit.Assert.assertEquals;
+import java.io.ByteArrayOutputStream
 
-public class DataStreamTest {
+class DataStream {
+    private val buffer: ByteArrayOutputStream
 
-    @Test
-    public void write() {
-        final DataStream stream = new DataStream();
-        stream.write(new byte[]{0, 1, 2, 3});
-        stream.write(new byte[]{4, 5, 6});
-        assertArrayEquals(new byte[]{0, 1, 2, 3, 4, 5, 6}, stream.toByteArray());
+    init {
+        buffer = ByteArrayOutputStream()
     }
 
-    @Test
-    public void write_part() {
-        final DataStream stream = new DataStream();
-        stream.write(new byte[]{0, 1, 2, 3, 4, 5, 6}, 1, 2);
-        assertArrayEquals(new byte[]{1, 2}, stream.toByteArray());
+    fun write(data: ByteArray?): Boolean {
+        return if (data == null) false else write(data, 0, data.size)
+
     }
 
-    @Test
-    public void write_data() {
-        final DataStream stream = new DataStream();
-        final Data data1 = new Data(new byte[]{0, 2, 4, 6, 8});
-        final Data data2 = new Data(new byte[]{1, 3, 5, 7, 9});
-        stream.write(data1);
-        stream.write(data2);
-        assertArrayEquals(new byte[]{0, 2, 4, 6, 8, 1, 3, 5, 7, 9}, stream.toByteArray());
+    fun write(
+        data: ByteArray?,
+        @IntRange(from = 0) offset: Int, @IntRange(from = 0) length: Int
+    ): Boolean {
+        if (data == null || data.size < offset)
+            return false
+
+        val len = Math.min(data.size - offset, length)
+        buffer.write(data, offset, len)
+        return true
     }
 
-    @Test
-    public void size() {
-        final DataStream stream = new DataStream();
-        stream.write(new byte[]{0, 1, 2, 3, 4, 5, 6});
-        assertEquals(7, stream.size());
+    fun write(data: Data?): Boolean {
+        return data != null && write(data.value)
     }
 
-    @SuppressWarnings("ConstantConditions")
-    @Test
-    public void toData() {
-        final DataStream stream = new DataStream();
-        stream.write(new byte[]{0, 1, 2, 3, 4, 5, 6});
-        final Data data = stream.toData();
-        assertEquals(0x100, data.getIntValue(Data.FORMAT_UINT16, 0).intValue());
+    @IntRange(from = 0)
+    fun size(): Int {
+        return buffer.size()
+    }
+
+    fun toByteArray(): ByteArray {
+        return buffer.toByteArray()
+    }
+
+    fun toData(): Data {
+        return Data(buffer.toByteArray())
     }
 }
