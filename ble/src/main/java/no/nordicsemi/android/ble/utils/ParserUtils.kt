@@ -43,8 +43,10 @@ open class ParserUtils {
 
             val out = CharArray(data.size * 3 - 1)
             for (j in data.indices) {
-                val v = data[j] and 0xFF.toByte()
-                out[j * 3] = HEX_ARRAY[v.toInt().ushr(4)]
+                var v = (data[j] and 0xFF.toByte()).toInt()
+                if (v < 0)
+                    v += 256
+                out[j * 3] = HEX_ARRAY[v.ushr(4)]
                 out[j * 3 + 1] = HEX_ARRAY[(v and 0x0F).toInt()]
                 if (j != data.size - 1)
                     out[j * 3 + 2] = '-'
