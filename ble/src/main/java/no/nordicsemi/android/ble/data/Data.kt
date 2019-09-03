@@ -373,14 +373,20 @@ open class Data : Parcelable {
          * Convert a signed byte to an unsigned int.
          */
         private fun unsignedByteToInt(b: Byte): Int {
-            return (b and 0xFF.toByte()).toInt()
+            var value = (b and 0xFF.toByte()).toInt()
+            if(value < 0)
+                value += 256
+            return value
         }
 
         /**
          * Convert a signed byte to an unsigned int.
          */
         private fun unsignedByteToLong(b: Byte): Long {
-            return (b and 0xFFL.toByte()).toLong()
+            var value = (b and 0xFFL.toByte()).toLong()
+            if(value < 0)
+                value += 256
+            return value
         }
 
         /**
