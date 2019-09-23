@@ -40,6 +40,14 @@ import android.os.Looper;
 import android.os.SystemClock;
 import android.util.Log;
 
+import androidx.annotation.IntDef;
+import androidx.annotation.IntRange;
+import androidx.annotation.MainThread;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.StringRes;
+
 import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
@@ -48,13 +56,6 @@ import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.UUID;
 
-import androidx.annotation.IntDef;
-import androidx.annotation.IntRange;
-import androidx.annotation.MainThread;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.annotation.StringRes;
 import no.nordicsemi.android.ble.annotation.ConnectionPriority;
 import no.nordicsemi.android.ble.annotation.ConnectionState;
 import no.nordicsemi.android.ble.annotation.PhyMask;
@@ -834,15 +835,15 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 					+ phyMaskToString(preferredPhy) + ")");
 			// A variant of connectGatt with Handled can't be used here.
 			// Check https://github.com/NordicSemiconductor/Android-BLE-Library/issues/54
-			mBluetoothGatt = device.connectGatt(mContext, false, mGattCallback,
+            mBluetoothGatt = device.connectGatt(mContext, shouldAutoConnect, mGattCallback,
 					BluetoothDevice.TRANSPORT_LE, preferredPhy/*, mHandler*/);
 		} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-			log(Log.DEBUG, "gatt = device.connectGatt(autoConnect = false, TRANSPORT_LE)");
-			mBluetoothGatt = device.connectGatt(mContext, false, mGattCallback,
+            log(Log.DEBUG, "gatt = device.connectGatt(autoConnect = shouldAutoConnect, TRANSPORT_LE)");
+            mBluetoothGatt = device.connectGatt(mContext, shouldAutoConnect, mGattCallback,
 					BluetoothDevice.TRANSPORT_LE);
 		} else {
-			log(Log.DEBUG, "gatt = device.connectGatt(autoConnect = false)");
-			mBluetoothGatt = device.connectGatt(mContext, false, mGattCallback);
+            log(Log.DEBUG, "gatt = device.connectGatt(autoConnect = shouldAutoConnect)");
+            mBluetoothGatt = device.connectGatt(mContext, shouldAutoConnect, mGattCallback);
 		}
 		return true;
 	}
