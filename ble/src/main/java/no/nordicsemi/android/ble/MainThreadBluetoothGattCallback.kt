@@ -42,7 +42,7 @@ import no.nordicsemi.android.ble.annotation.PhyValue
  * in Android Oreo, before that the behavior was undefined.
  */
 abstract class MainThreadBluetoothGattCallback : BluetoothGattCallback() {
-    private var mHandler: Handler? = Handler()
+    private var mHandler: Handler? = Handler(Looper.getMainLooper())
 
     fun setHandler(handler: Handler) {
         mHandler = handler
