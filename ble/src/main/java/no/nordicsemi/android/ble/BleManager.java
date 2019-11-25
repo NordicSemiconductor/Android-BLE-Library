@@ -45,8 +45,8 @@ import java.lang.annotation.RetentionPolicy;
 import java.lang.reflect.Method;
 import java.util.Deque;
 import java.util.HashMap;
-import java.util.LinkedList;
 import java.util.UUID;
+import java.util.concurrent.LinkedBlockingDeque;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.IntRange;
@@ -2115,7 +2115,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		private final static String ERROR_PHY_UPDATE = "Error on PHY update";
 		private final static String ERROR_RELIABLE_WRITE = "Error on Execute Reliable Write";
 
-		private final Deque<Request> mTaskQueue = new LinkedList<>();
+		private final Deque<Request> mTaskQueue = new LinkedBlockingDeque<>();
 		private Deque<Request> mInitQueue;
 		private boolean mInitInProgress;
 		private boolean mOperationInProgress;
@@ -2574,7 +2574,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 					}
 
 					if (mInitQueue == null)
-						mInitQueue = new LinkedList<>();
+						mInitQueue = new LinkedBlockingDeque<>();
 
 					// Before we start executing the initialization queue some other tasks
 					// need to be done.
