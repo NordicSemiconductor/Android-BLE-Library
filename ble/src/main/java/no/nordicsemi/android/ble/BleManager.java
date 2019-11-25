@@ -2236,6 +2236,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 			mServiceDiscoveryRequested = false;
 			mInitInProgress = false;
 			mConnectionState = BluetoothGatt.STATE_DISCONNECTED;
+			mMtu = 23;
 			if (!wasConnected) {
 				log(Log.WARN, "Connection attempt timed out");
 				close();
