@@ -3405,12 +3405,13 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 					break;
 				}
 				case REFRESH_CACHE: {
+					final Request r = request;
 					result = internalRefreshDeviceCache();
 					if (result) {
 						final BluetoothDevice device = mBluetoothDevice;
 						mHandler.postDelayed(() -> {
 							log(Log.INFO, "Cache refreshed");
-							mRequest.notifySuccess(device);
+							r.notifySuccess(device);
 							mRequest = null;
 							if (mValueChangedRequest != null) {
 								mValueChangedRequest.notifyFail(device, FailCallback.REASON_NULL_ATTRIBUTE);
