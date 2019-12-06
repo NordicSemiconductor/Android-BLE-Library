@@ -308,7 +308,6 @@ public final class WaitForValueChangedRequest extends TimeoutableValueRequest<Da
 	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}).
 	 * @deprecated Use {@link #timeout(long)} and {@link #awaitValid(Class)} instead.
 	 */
-	@SuppressWarnings("ConstantConditions")
 	@NonNull
 	@Deprecated
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass,
@@ -342,7 +341,6 @@ public final class WaitForValueChangedRequest extends TimeoutableValueRequest<Da
 	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}).
 	 * @deprecated Use {@link #timeout(long)} and {@link #awaitValid(E)} instead.
 	 */
-	@SuppressWarnings("ConstantConditions")
 	@NonNull
 	@Deprecated
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final E response,
@@ -366,14 +364,18 @@ public final class WaitForValueChangedRequest extends TimeoutableValueRequest<Da
 		}
 
 		if (dataMerger == null) {
-			valueCallback.onDataReceived(device, new Data(value));
+			final Data data = new Data(value);
+			handler.post(() -> valueCallback.onDataReceived(device, data));
 		} else {
-			if (progressCallback != null)
-				progressCallback.onPacketReceived(device, value, count);
+			handler.post(() -> {
+				if (progressCallback != null)
+					progressCallback.onPacketReceived(device, value, count);
+			});
 			if (buffer == null)
 				buffer = new DataStream();
 			if (dataMerger.merge(buffer, value, count++)) {
-				valueCallback.onDataReceived(device, buffer.toData());
+				final Data data = buffer.toData();
+				handler.post(() -> valueCallback.onDataReceived(device, data));
 				buffer = null;
 				count = 0;
 			} // else

@@ -29,7 +29,7 @@ import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
-@SuppressWarnings({"WeakerAccess", "unused", "deprecation"})
+@SuppressWarnings({"unused"})
 public class DisconnectRequest extends TimeoutableRequest {
 
 	DisconnectRequest(@NonNull final Type type) {

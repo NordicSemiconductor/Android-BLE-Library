@@ -82,7 +82,9 @@ public final class ReadRssiRequest extends SimpleValueRequest<RssiCallback> impl
 
 	void notifyRssiRead(@NonNull final BluetoothDevice device,
 						@IntRange(from = -128, to = 20) final int rssi) {
-		if (valueCallback != null)
-			valueCallback.onRssiRead(device, rssi);
+		handler.post(() -> {
+			if (valueCallback != null)
+				valueCallback.onRssiRead(device, rssi);
+		});
 	}
 }

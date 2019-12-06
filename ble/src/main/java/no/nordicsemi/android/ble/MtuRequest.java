@@ -88,8 +88,10 @@ public final class MtuRequest extends SimpleValueRequest<MtuCallback>implements 
 
 	void notifyMtuChanged(@NonNull final BluetoothDevice device,
 						  @IntRange(from = 23, to = 517) final int mtu) {
-		if (valueCallback != null)
-			valueCallback.onMtuChanged(device, mtu);
+		handler.post(() -> {
+			if (valueCallback != null)
+				valueCallback.onMtuChanged(device, mtu);
+		});
 	}
 
 	int getRequiredMtu() {
