@@ -1081,8 +1081,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * enabled using {@link #enableNotifications(BluetoothGattCharacteristic)}.
 	 * This applies also when they were already enabled on the remote side.
 	 * <p>
-	 * To remove the callback, disable notifications using
-	 * {@link #disableNotifications(BluetoothGattCharacteristic)}.
+	 * To remove the callback, call
+	 * {@link #removeNotificationCallback(BluetoothGattCharacteristic)}.
 	 *
 	 * @param characteristic characteristic to bind the callback with. If null, the returned
 	 *                       callback will not be null, but will not be used.
@@ -1107,8 +1107,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * enabled using {@link #enableIndications(BluetoothGattCharacteristic)}.
 	 * This applies also when they were already enabled on the remote side.
 	 * <p>
-	 * To remove the callback, disable indications using
-	 * {@link #disableIndications(BluetoothGattCharacteristic)}.
+	 * To remove the callback, call
+	 * {@link #removeIndicationCallback(BluetoothGattCharacteristic)}.
 	 *
 	 * @param characteristic characteristic to bind the callback with. If null, the returned
 	 *                       callback will not be null, but will not be used.
@@ -1117,6 +1117,26 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	@NonNull
 	protected ValueChangedCallback setIndicationCallback(@Nullable final BluetoothGattCharacteristic characteristic) {
 		return setNotificationCallback(characteristic);
+	}
+
+	/**
+	 * Removes the notifications callback set using
+	 * {@link #setNotificationCallback(BluetoothGattCharacteristic)}.
+	 *
+	 * @param characteristic characteristic to unbind the callback from.
+	 */
+	protected void removeNotificationCallback(@Nullable final BluetoothGattCharacteristic characteristic) {
+		mNotificationCallbacks.remove(characteristic);
+	}
+
+	/**
+	 * Removes the indications callback set using
+	 * {@link #setNotificationCallback(BluetoothGattCharacteristic)}.
+	 *
+	 * @param characteristic characteristic to unbind the callback from.
+	 */
+	protected void removeIndicationCallback(@Nullable final BluetoothGattCharacteristic characteristic) {
+		removeNotificationCallback(characteristic);
 	}
 
 	/**
@@ -2793,7 +2813,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 					if (data != null && data.length == 2 && data[1] == 0x00) {
 						switch (data[0]) {
 							case 0x00:
-								mNotificationCallbacks.remove(descriptor.getCharacteristic());
 								log(Log.INFO, "Notifications and indications disabled");
 								break;
 							case 0x01:
