@@ -115,7 +115,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	private final Context context;
 	private final Handler handler;
 	private BleManager.BleManagerGattCallback requestHandler;
-	private BluetoothDevice bluetoothDevice;
 	E userCallbacks;
 
 	private final BroadcastReceiver mPairingRequestBroadcastReceiver = new BroadcastReceiver() {
@@ -124,6 +123,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
 			// Skip other devices.
+			if (requestHandler == null)
+				return;
+			final BluetoothDevice bluetoothDevice = requestHandler.getBluetoothDevice();
 			if (bluetoothDevice == null || device == null
 					|| !device.getAddress().equals(bluetoothDevice.getAddress()))
 				return;
@@ -185,7 +187,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			// the receiver must have been not registered or unregistered before.
 		}
 		requestHandler.close();
-		bluetoothDevice = null;
 	}
 
 	/**
@@ -245,7 +246,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	// This method is not final, as some Managers may be created with BluetoothDevice in a
 	// constructor. Those can return the device object even without calling connect(device).
 	public BluetoothDevice getBluetoothDevice() {
-		return bluetoothDevice;
+		return requestHandler.getBluetoothDevice();
 	}
 
 	/**
@@ -272,6 +273,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * the target device also has such information, or that the link is in fact encrypted.
 	 */
 	protected final boolean isBonded() {
+		final BluetoothDevice bluetoothDevice = requestHandler.getBluetoothDevice();
 		return bluetoothDevice != null
 				&& bluetoothDevice.getBondState() == BluetoothDevice.BOND_BONDED;
 	}
