@@ -24,6 +24,7 @@ package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
 import android.os.Build;
+import android.os.Handler;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
@@ -39,7 +40,6 @@ import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
 import no.nordicsemi.android.ble.exception.InvalidRequestException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
-@SuppressWarnings({"unused"})
 public final class ConnectionPriorityRequest extends SimpleValueRequest<ConnectionPriorityCallback>
 		implements Operation {
 
@@ -82,8 +82,15 @@ public final class ConnectionPriorityRequest extends SimpleValueRequest<Connecti
 
 	@NonNull
 	@Override
-	ConnectionPriorityRequest setManager(@NonNull final BleManager manager) {
-		super.setManager(manager);
+	ConnectionPriorityRequest setRequestHandler(@NonNull final RequestHandler requestHandler) {
+		super.setRequestHandler(requestHandler);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public ConnectionPriorityRequest setHandler(@NonNull final Handler handler) {
+		super.setHandler(handler);
 		return this;
 	}
 

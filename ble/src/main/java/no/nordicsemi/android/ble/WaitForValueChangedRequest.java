@@ -25,6 +25,7 @@ package no.nordicsemi.android.ble;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.os.Handler;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
@@ -69,8 +70,15 @@ public final class WaitForValueChangedRequest extends TimeoutableValueRequest<Da
 
 	@NonNull
 	@Override
-	WaitForValueChangedRequest setManager(@NonNull final BleManager manager) {
-		super.setManager(manager);
+	WaitForValueChangedRequest setRequestHandler(@NonNull final RequestHandler requestHandler) {
+		super.setRequestHandler(requestHandler);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public WaitForValueChangedRequest setHandler(@NonNull final Handler handler) {
+		super.setHandler(handler);
 		return this;
 	}
 

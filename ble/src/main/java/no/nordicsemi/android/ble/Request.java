@@ -89,7 +89,7 @@ public abstract class Request {
 		SLEEP,
 	}
 
-	private BleManager manager;
+	protected RequestHandler requestHandler;
 	protected Handler handler;
 
 	final ConditionVariable syncLock;
@@ -129,13 +129,28 @@ public abstract class Request {
 
 	/**
 	 * Sets the {@link BleManager} instance.
+	 *  @param requestHandler the requestHandler in which the request will be executed.
 	 *
-	 * @param manager the manager in which the request will be executed.
 	 */
 	@NonNull
-	Request setManager(@NonNull final BleManager manager) {
-		this.manager = manager;
-		this.handler = manager.mHandler;
+	Request setRequestHandler(@NonNull final RequestHandler requestHandler) {
+		this.requestHandler = requestHandler;
+		if (this.handler == null) {
+			this.handler = requestHandler.getHandler();
+		}
+		return this;
+	}
+
+	/**
+	 * Sets the handler that will be used to invoke callbacks. By default, the handler set in
+	 * {@link BleManager} will be used.
+	 *
+	 * @param handler The handler to invoke callbacks for this request.
+	 * @return The request.
+	 */
+	@NonNull
+	public Request setHandler(@NonNull final Handler handler) {
+		this.handler = handler;
 		return this;
 	}
 
@@ -818,7 +833,7 @@ public abstract class Request {
 	 * Enqueues the request for asynchronous execution.
 	 */
 	public void enqueue() {
-		manager.enqueue(this);
+		requestHandler.enqueue(this);
 	}
 
 	void notifyStarted(@NonNull final BluetoothDevice device) {

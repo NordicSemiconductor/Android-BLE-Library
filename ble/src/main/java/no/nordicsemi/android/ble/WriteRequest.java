@@ -26,6 +26,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.os.Handler;
 
 import java.util.Arrays;
 
@@ -88,8 +89,15 @@ public final class WriteRequest extends SimpleValueRequest<DataSentCallback> imp
 
 	@NonNull
 	@Override
-	WriteRequest setManager(@NonNull final BleManager manager) {
-		super.setManager(manager);
+	WriteRequest setRequestHandler(@NonNull final RequestHandler requestHandler) {
+		super.setRequestHandler(requestHandler);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public WriteRequest setHandler(@NonNull final Handler handler) {
+		super.setHandler(handler);
 		return this;
 	}
 

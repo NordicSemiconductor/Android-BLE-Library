@@ -23,6 +23,7 @@
 package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
+import android.os.Handler;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
@@ -46,8 +47,15 @@ public final class MtuRequest extends SimpleValueRequest<MtuCallback>implements 
 
 	@NonNull
 	@Override
-	MtuRequest setManager(@NonNull final BleManager manager) {
-		super.setManager(manager);
+	MtuRequest setRequestHandler(@NonNull final RequestHandler requestHandler) {
+		super.setRequestHandler(requestHandler);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public MtuRequest setHandler(@NonNull final Handler handler) {
+		super.setHandler(handler);
 		return this;
 	}
 
