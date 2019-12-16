@@ -45,7 +45,7 @@ import no.nordicsemi.android.ble.callback.SuccessCallback;
  * initialization queue set in {@link BleManager.BleManagerGattCallback#initialize()} is complete
  * (without or with errors).
  */
-@SuppressWarnings({"WeakerAccess", "unused", "deprecation"})
+@SuppressWarnings({"WeakerAccess", "unused"})
 public class ConnectRequest extends TimeoutableRequest {
 	@NonNull
 	private BluetoothDevice device;

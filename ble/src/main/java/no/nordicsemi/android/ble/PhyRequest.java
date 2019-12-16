@@ -34,7 +34,7 @@ import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.PhyCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
-@SuppressWarnings({"WeakerAccess", "unused"})
+@SuppressWarnings({"unused"})
 public final class PhyRequest extends SimpleValueRequest<PhyCallback> implements Operation  {
 
 	/**
@@ -139,13 +139,17 @@ public final class PhyRequest extends SimpleValueRequest<PhyCallback> implements
 
 	void notifyPhyChanged(@NonNull final BluetoothDevice device,
 						  @PhyValue final int txPhy, @PhyValue final int rxPhy) {
-		if (valueCallback != null)
-			valueCallback.onPhyChanged(device, txPhy, rxPhy);
+		handler.post(() -> {
+			if (valueCallback != null)
+				valueCallback.onPhyChanged(device, txPhy, rxPhy);
+		});
 	}
 
 	void notifyLegacyPhy(@NonNull final BluetoothDevice device) {
-		if (valueCallback != null)
-			valueCallback.onPhyChanged(device, PhyCallback.PHY_LE_1M, PhyCallback.PHY_LE_1M);
+		handler.post(() -> {
+			if (valueCallback != null)
+				valueCallback.onPhyChanged(device, PhyCallback.PHY_LE_1M, PhyCallback.PHY_LE_1M);
+		});
 	}
 
 	@PhyMask

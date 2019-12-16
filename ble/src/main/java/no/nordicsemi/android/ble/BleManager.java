@@ -50,7 +50,6 @@ import java.util.concurrent.LinkedBlockingDeque;
 
 import androidx.annotation.IntDef;
 import androidx.annotation.IntRange;
-import androidx.annotation.MainThread;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -369,7 +368,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 					// - Samsung S8 with Android 8.0.0
 					//
 					if (Build.VERSION.SDK_INT < Build.VERSION_CODES.O) {
-						if (mRequest != null && mRequest.type != Request.Type.CREATE_BOND) {
+						if (mRequest != null) {
 							// Repeat the last command in that case.
 							mGattCallback.enqueueFirst(mRequest);
 							break;
@@ -431,8 +430,24 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @param context the context.
 	 */
 	public BleManager(@NonNull final Context context) {
+		this(context, new Handler(Looper.getMainLooper()));
+	}
+
+	/**
+	 * The manager constructor.
+	 * <p>
+	 * After constructing the manager, the callbacks object must be set with
+	 * {@link #setGattCallbacks(BleManagerCallbacks)}.
+	 * <p>
+	 * To connect a device, call {@link #connect(BluetoothDevice)}.
+	 *
+	 * @param context the context.
+	 * @param handler the handler used for delaying operations, timeouts and, most of all, the
+	 *                request callbacks (done/fail/with, etc).
+	 */
+	public BleManager(@NonNull final Context context, @NonNull final Handler handler) {
 		mContext = context.getApplicationContext();
-		mHandler = new Handler(Looper.getMainLooper());
+		mHandler = handler;
 	}
 
 	/**
@@ -733,7 +748,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 				.setManager(this);
 	}
 
-	@MainThread
 	private boolean internalConnect(@NonNull final BluetoothDevice device,
 									@Nullable final ConnectRequest connectRequest) {
 		final boolean bluetoothEnabled = BluetoothAdapter.getDefaultAdapter().isEnabled();
@@ -822,7 +836,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 			mInitialConnection = true;
 		}
 		mBluetoothDevice = device;
-		mGattCallback.setHandler(mHandler);
 		log(Log.VERBOSE, connectRequest.isFirstAttempt() ? "Connecting..." : "Retrying...");
 		mConnectionState = BluetoothGatt.STATE_CONNECTING;
 		mCallbacks.onDeviceConnecting(device);
@@ -860,7 +873,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		return Request.disconnect().setManager(this);
 	}
 
-	@MainThread
 	private boolean internalDisconnect() {
 		mUserDisconnected = true;
 		mInitialConnection = false;
@@ -961,7 +973,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		return Request.createBond().setManager(this);
 	}
 
-	@MainThread
 	private boolean internalCreateBond() {
 		final BluetoothDevice device = mBluetoothDevice;
 		if (device == null)
@@ -1013,7 +1024,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		return Request.removeBond().setManager(this);
 	}
 
-	@MainThread
 	private boolean internalRemoveBond() {
 		final BluetoothDevice device = mBluetoothDevice;
 		if (device == null)
@@ -1088,12 +1098,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 *                       callback will not be null, but will not be used.
 	 * @return The callback.
 	 */
-	@MainThread
 	@NonNull
 	protected ValueChangedCallback setNotificationCallback(@Nullable final BluetoothGattCharacteristic characteristic) {
 		ValueChangedCallback callback = mNotificationCallbacks.get(characteristic);
 		if (callback == null) {
-			callback = new ValueChangedCallback();
+			callback = new ValueChangedCallback(mHandler);
 			if (characteristic != null) {
 				mNotificationCallbacks.put(characteristic, callback);
 			}
@@ -1131,7 +1140,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 
 	/**
 	 * Removes the indications callback set using
-	 * {@link #setNotificationCallback(BluetoothGattCharacteristic)}.
+	 * {@link #setIndicationCallback(BluetoothGattCharacteristic)}.
 	 *
 	 * @param characteristic characteristic to unbind the callback from.
 	 */
@@ -1194,7 +1203,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		return Request.newEnableNotificationsRequest(characteristic).setManager(this);
 	}
 
-	@MainThread
 	private boolean internalEnableNotifications(final BluetoothGattCharacteristic characteristic) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || characteristic == null || !mConnected)
@@ -1229,7 +1237,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		return Request.newDisableNotificationsRequest(characteristic).setManager(this);
 	}
 
-	@MainThread
 	private boolean internalDisableNotifications(final BluetoothGattCharacteristic characteristic) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || characteristic == null || !mConnected)
@@ -1264,7 +1271,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		return Request.newEnableIndicationsRequest(characteristic).setManager(this);
 	}
 
-	@MainThread
 	private boolean internalEnableIndications(final BluetoothGattCharacteristic characteristic) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || characteristic == null || !mConnected)
@@ -1299,7 +1305,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		return Request.newDisableIndicationsRequest(characteristic).setManager(this);
 	}
 
-	@MainThread
 	private boolean internalDisableIndications(final BluetoothGattCharacteristic characteristic) {
 		// This writes exactly the same settings so do not duplicate code.
 		return internalDisableNotifications(characteristic);
@@ -1344,7 +1349,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		return Request.newReadRequest(characteristic).setManager(this);
 	}
 
-	@MainThread
 	private boolean internalReadCharacteristic(final BluetoothGattCharacteristic characteristic) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || characteristic == null || !mConnected)
@@ -1430,7 +1434,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		return Request.newWriteRequest(characteristic, data, offset, length).setManager(this);
 	}
 
-	@MainThread
 	private boolean internalWriteCharacteristic(final BluetoothGattCharacteristic characteristic) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || characteristic == null || !mConnected)
@@ -1464,7 +1467,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		return Request.newReadRequest(descriptor).setManager(this);
 	}
 
-	@MainThread
 	private boolean internalReadDescriptor(final BluetoothGattDescriptor descriptor) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || descriptor == null || !mConnected)
@@ -1545,7 +1547,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		return Request.newWriteRequest(descriptor, data, offset, length).setManager(this);
 	}
 
-	@MainThread
 	private boolean internalWriteDescriptor(final BluetoothGattDescriptor descriptor) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || descriptor == null || !mConnected)
@@ -1609,7 +1610,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		return Request.newReliableWriteRequest().setManager(this);
 	}
 
-	@MainThread
 	private boolean internalBeginReliableWrite() {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || !mConnected)
@@ -1624,7 +1624,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		return mReliableWriteInProgress = gatt.beginReliableWrite();
 	}
 
-	@MainThread
 	private boolean internalExecuteReliableWrite() {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || !mConnected)
@@ -1638,7 +1637,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		return gatt.executeReliableWrite();
 	}
 
-	@MainThread
 	private boolean internalAbortReliableWrite() {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || !mConnected)
@@ -1690,7 +1688,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 				.enqueue();
 	}
 
-	@MainThread
 	@Deprecated
 	private boolean internalReadBatteryLevel() {
 		final BluetoothGatt gatt = mBluetoothGatt;
@@ -1716,7 +1713,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	@Deprecated
 	protected void enableBatteryLevelNotifications() {
 		if (mBatteryLevelNotificationCallback == null) {
-			mBatteryLevelNotificationCallback = new ValueChangedCallback()
+			mBatteryLevelNotificationCallback = new ValueChangedCallback(mHandler)
 					.with((device, data) -> {
 						if (data.size() == 1) {
 							final int batteryLevel = data.getIntValue(Data.FORMAT_UINT8, 0);
@@ -1746,7 +1743,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 				.enqueue();
 	}
 
-	@MainThread
 	@Deprecated
 	private boolean internalSetBatteryNotifications(final boolean enable) {
 		final BluetoothGatt gatt = mBluetoothGatt;
@@ -1774,7 +1770,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * @param descriptor the descriptor to be written
 	 * @return the result of {@link BluetoothGatt#writeDescriptor(BluetoothGattDescriptor)}
 	 */
-	@MainThread
 	private boolean internalWriteDescriptorWorkaround(final BluetoothGattDescriptor descriptor) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || descriptor == null || !mConnected)
@@ -1835,7 +1830,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-	@MainThread
 	private boolean internalRequestMtu(@IntRange(from = 23, to = 517) final int mtu) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || !mConnected)
@@ -1878,7 +1872,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
-	@MainThread
 	private boolean internalRequestConnectionPriority(@ConnectionPriority final int priority) {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || !mConnected)
@@ -1910,7 +1903,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * Enqueues a request to set the preferred PHY.
 	 * <p>
 	 * PHY LE 2M and PHY LE Coded are supported only on Android Oreo or newer.
-	 * You may safely request other PHYs on older platforms, but  you will get PHY LE 1M
+	 * You may ly request other PHYs on older platforms, but  you will get PHY LE 1M
 	 * as TX and RX PHY in the callback.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
@@ -1933,7 +1926,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.O)
-	@MainThread
 	private boolean internalSetPreferredPhy(@PhyMask final int txPhy, @PhyMask final int rxPhy,
 											@PhyOption final int phyOptions) {
 		final BluetoothGatt gatt = mBluetoothGatt;
@@ -1952,7 +1944,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * Reads the current PHY for this connections.
 	 * <p>
 	 * PHY LE 2M and PHY LE Coded are supported only on Android Oreo or newer.
-	 * You may safely read PHY on older platforms, but you will get PHY LE 1M as TX and RX PHY
+	 * You may ly read PHY on older platforms, but you will get PHY LE 1M as TX and RX PHY
 	 * in the callback.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
@@ -1965,7 +1957,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	}
 
 	@RequiresApi(api = Build.VERSION_CODES.O)
-	@MainThread
 	private boolean internalReadPhy() {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || !mConnected)
@@ -1989,7 +1980,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		return Request.newReadRssiRequest().setManager(this);
 	}
 
-	@MainThread
 	private boolean internalReadRssi() {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null || !mConnected)
@@ -2026,7 +2016,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	 * Clears the device cache.
 	 */
 	@SuppressWarnings("JavaReflectionMemberAccess")
-	@MainThread
 	private boolean internalRefreshDeviceCache() {
 		final BluetoothGatt gatt = mBluetoothGatt;
 		if (gatt == null) // no need to be connected
@@ -2075,9 +2064,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 			callback = mGattCallback = getGattCallback();
 		}
 		// Add the new task to the end of the queue.
-		final BleManagerGattCallback finalCallback = callback;
-		finalCallback.enqueue(request);
-		runOnUiThread(() -> finalCallback.nextRequest(false));
+		callback.enqueue(request);
+		callback.nextRequest(false);
 	}
 
 	/**
@@ -2090,15 +2078,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		}
 	}
 
-	private void runOnUiThread(final Runnable runnable) {
-		if (Looper.myLooper() != Looper.getMainLooper()) {
-			mHandler.post(runnable);
-		} else {
-			runnable.run();
-		}
-	}
-
-	@MainThread
 	@Override
 	void onRequestTimeout(@NonNull final TimeoutableRequest request) {
 		mRequest = null;
@@ -2120,7 +2099,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 	}
 
 	@SuppressWarnings({"WeakerAccess", "DeprecatedIsStillUsed"})
-	protected abstract class BleManagerGattCallback extends MainThreadBluetoothGattCallback {
+	protected abstract class BleManagerGattCallback extends BluetoothGattCallback {
 		private final static String ERROR_CONNECTION_STATE_CHANGE = "Error on connection state change";
 		private final static String ERROR_DISCOVERY_SERVICE = "Error on discovering services";
 		private final static String ERROR_AUTH_ERROR_WHILE_BONDED = "Phone has lost bonding information";
@@ -2428,7 +2407,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		}
 
 		@Override
-		final void onConnectionStateChangeSafe(@NonNull final BluetoothGatt gatt, final int status, final int newState) {
+		public final void onConnectionStateChange(@NonNull final BluetoothGatt gatt, final int status, final int newState) {
 			log(Log.DEBUG, "[Callback] Connection state changed with status: " +
 					status + " and new state: " + newState + " (" + stateToString(newState) + ")");
 
@@ -2567,7 +2546,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		}
 
 		@Override
-		final void onServicesDiscoveredSafe(@NonNull final BluetoothGatt gatt, final int status) {
+		public final void onServicesDiscovered(@NonNull final BluetoothGatt gatt, final int status) {
 			mServiceDiscoveryRequested = false;
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, "Services discovered");
@@ -2649,9 +2628,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		}
 
 		@Override
-		final void onCharacteristicReadSafe(@NonNull final BluetoothGatt gatt,
-											@NonNull final BluetoothGattCharacteristic characteristic,
-											@Nullable final byte[] data, final int status) {
+		public void onCharacteristicRead(final BluetoothGatt gatt,
+										 final BluetoothGattCharacteristic characteristic,
+										 final int status) {
+			final byte[] data = characteristic.getValue();
+
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, "Read Response received from " + characteristic.getUuid() +
 						", value: " + ParserUtils.parse(data));
@@ -2692,9 +2673,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		}
 
 		@Override
-		final void onCharacteristicWriteSafe(@NonNull final BluetoothGatt gatt,
-											 @NonNull final BluetoothGattCharacteristic characteristic,
-											 @Nullable final byte[] data, final int status) {
+		public void onCharacteristicWrite(final BluetoothGatt gatt,
+										  final BluetoothGattCharacteristic characteristic,
+										  final int status) {
+			final byte[] data = characteristic.getValue();
+
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, "Data written to " + characteristic.getUuid() +
 						", value: " + ParserUtils.parse(data));
@@ -2738,8 +2721,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		}
 
 		@Override
-		final void onReliableWriteCompletedSafe(@NonNull final BluetoothGatt gatt,
-												final int status) {
+		public final void onReliableWriteCompleted(@NonNull final BluetoothGatt gatt,
+												   final int status) {
 			final boolean execute = mRequest.type == Request.Type.EXECUTE_RELIABLE_WRITE;
 			mReliableWriteInProgress = false;
 			if (status == BluetoothGatt.GATT_SUCCESS) {
@@ -2760,9 +2743,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		}
 
 		@Override
-		void onDescriptorReadSafe(@NonNull final BluetoothGatt gatt,
-								  @NonNull final BluetoothGattDescriptor descriptor,
-								  @Nullable final byte[] data, final int status) {
+		public void onDescriptorRead(final BluetoothGatt gatt, final BluetoothGattDescriptor descriptor, final int status) {
+			final byte[] data = descriptor.getValue();
+
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, "Read Response received from descr. " + descriptor.getUuid() +
 						", value: " + ParserUtils.parse(data));
@@ -2800,9 +2783,11 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		}
 
 		@Override
-		final void onDescriptorWriteSafe(@NonNull final BluetoothGatt gatt,
-										 @NonNull final BluetoothGattDescriptor descriptor,
-										 @Nullable final byte[] data, final int status) {
+		public void onDescriptorWrite(final BluetoothGatt gatt,
+									  final BluetoothGattDescriptor descriptor,
+									  final int status) {
+			final byte[] data = descriptor.getValue();
+
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, "Data written to descr. " + descriptor.getUuid() +
 						", value: " + ParserUtils.parse(data));
@@ -2865,9 +2850,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		}
 
 		@Override
-		final void onCharacteristicChangedSafe(@NonNull final BluetoothGatt gatt,
-											   @NonNull final BluetoothGattCharacteristic characteristic,
-											   @Nullable final byte[] data) {
+		public void onCharacteristicChanged(final BluetoothGatt gatt,
+											final BluetoothGattCharacteristic characteristic) {
+			final byte[] data = characteristic.getValue();
+
 			if (isServiceChangedCharacteristic(characteristic)) {
 				// TODO this should be tested. Should services be invalidated?
 				// Forbid enqueuing more operations.
@@ -2934,9 +2920,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 
 		@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 		@Override
-		final void onMtuChangedSafe(@NonNull final BluetoothGatt gatt,
-									@IntRange(from = 23, to = 517) final int mtu,
-									final int status) {
+		public final void onMtuChanged(@NonNull final BluetoothGatt gatt,
+									   @IntRange(from = 23, to = 517) final int mtu,
+									   final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, "MTU changed to: " + mtu);
 				mMtu = mtu;
@@ -2970,12 +2956,12 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		 *                 successfully.
 		 */
 		@RequiresApi(api = Build.VERSION_CODES.O)
-		@Override
-		final void onConnectionUpdatedSafe(@NonNull final BluetoothGatt gatt,
-										   @IntRange(from = 6, to = 3200) final int interval,
-										   @IntRange(from = 0, to = 499) final int latency,
-										   @IntRange(from = 10, to = 3200) final int timeout,
-										   final int status) {
+		// @Override
+		public final void onConnectionUpdated(@NonNull final BluetoothGatt gatt,
+										      @IntRange(from = 6, to = 3200) final int interval,
+											  @IntRange(from = 0, to = 499) final int latency,
+											  @IntRange(from = 10, to = 3200) final int timeout,
+											  final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, "Connection parameters updated " +
 						"(interval: " + (interval * 1.25) + "ms," +
@@ -3022,9 +3008,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 
 		@RequiresApi(api = Build.VERSION_CODES.O)
 		@Override
-		final void onPhyUpdateSafe(@NonNull final BluetoothGatt gatt,
-								   @PhyValue final int txPhy, @PhyValue final int rxPhy,
-								   final int status) {
+		public final void onPhyUpdate(@NonNull final BluetoothGatt gatt,
+								      @PhyValue final int txPhy, @PhyValue final int rxPhy,
+								      final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, "PHY updated (TX: " + phyToString(txPhy) +
 						", RX: " + phyToString(rxPhy) + ")");
@@ -3049,9 +3035,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 
 		@RequiresApi(api = Build.VERSION_CODES.O)
 		@Override
-		final void onPhyReadSafe(@NonNull final BluetoothGatt gatt,
-								 @PhyValue final int txPhy, @PhyValue final int rxPhy,
-								 final int status) {
+		public final void onPhyRead(@NonNull final BluetoothGatt gatt,
+								    @PhyValue final int txPhy, @PhyValue final int rxPhy,
+								    final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, "PHY read (TX: " + phyToString(txPhy) +
 						", RX: " + phyToString(rxPhy) + ")");
@@ -3071,9 +3057,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		}
 
 		@Override
-		final void onReadRemoteRssiSafe(@NonNull final BluetoothGatt gatt,
-										@IntRange(from = -128, to = 20) final int rssi,
-										final int status) {
+		public final void onReadRemoteRssi(@NonNull final BluetoothGatt gatt,
+										   @IntRange(from = -128, to = 20) final int rssi,
+										   final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, "Remote RSSI received: " + rssi + " dBm");
 				if (mRequest instanceof ReadRssiRequest) {
@@ -3127,7 +3113,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> extends TimeoutH
 		 * been executed the {@link #onDeviceReady()} callback is called.
 		 */
 		@SuppressWarnings("ConstantConditions")
-		@MainThread
 		private synchronized void nextRequest(final boolean force) {
 			// Is the manager closed()?
 			if (mGattCallback == null) {
