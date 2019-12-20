@@ -23,7 +23,6 @@
 package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.os.Handler;
 
@@ -48,19 +47,14 @@ import no.nordicsemi.android.ble.exception.InvalidRequestException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
-public final class WaitForValueChangedRequest extends TimeoutableValueRequest<DataReceivedCallback>
+public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceivedCallback>
 		implements Operation {
-	static final int NOT_STARTED = -123456;
-	static final int STARTED = NOT_STARTED + 1;
-
 	private ReadProgressCallback progressCallback;
 	private DataMerger dataMerger;
 	private DataStream buffer;
 	private DataFilter filter;
-	private Request trigger;
 	private boolean deviceDisconnected;
 	private boolean bluetoothDisabled;
-	private int triggerStatus = BluetoothGatt.GATT_SUCCESS;
 	private int count = 0;
 
 	WaitForValueChangedRequest(@NonNull final Type type,
@@ -124,6 +118,12 @@ public final class WaitForValueChangedRequest extends TimeoutableValueRequest<Da
 		return this;
 	}
 
+	@NonNull
+	public WaitForValueChangedRequest trigger(@NonNull final Operation trigger) {
+		super.trigger(trigger);
+		return this;
+	}
+
 	/**
 	 * Sets a filter which allows to skip some incoming data.
 	 *
@@ -161,61 +161,6 @@ public final class WaitForValueChangedRequest extends TimeoutableValueRequest<Da
 		this.dataMerger = merger;
 		this.progressCallback = callback;
 		return this;
-	}
-
-	/**
-	 * Sets an optional request that is suppose to trigger the notification or indication.
-	 * This is to ensure that the characteristic value won't change before the callback was set.
-	 *
-	 * @param trigger the operation that triggers the notification, usually a write characteristic
-	 *                request that write some OP CODE.
-	 * @return The request.
-	 */
-	@NonNull
-	public WaitForValueChangedRequest trigger(@NonNull final Operation trigger) {
-		if (trigger instanceof Request) {
-			this.trigger = (Request) trigger;
-			this.triggerStatus = NOT_STARTED;
-			// The trigger will never receive invalid request event.
-			// If the BluetoothDevice wasn't set, the whole WaitForValueChangedRequest would be invalid.
-			/*this.trigger.invalid(() -> {
-				// never called
-			});*/
-			this.trigger.internalBefore(device -> triggerStatus = STARTED);
-			this.trigger.internalSuccess(device -> triggerStatus = BluetoothGatt.GATT_SUCCESS);
-			this.trigger.internalFail((device, status) -> {
-				triggerStatus = status;
-				syncLock.open();
-				notifyFail(device, status);
-			});
-		}
-		return this;
-	}
-
-	@NonNull
-	@Override
-	public <E extends DataReceivedCallback> E await(@NonNull final E response)
-			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
-			InvalidRequestException, InterruptedException {
-		assertNotMainThread();
-
-		try {
-			// Ensure the trigger request it enqueued after the callback has been set.
-			if (trigger != null && trigger.enqueued) {
-				throw new IllegalStateException("Trigger request already enqueued");
-			}
-			super.await(response);
-			return response;
-		} catch (final RequestFailedException e) {
-			if (triggerStatus != BluetoothGatt.GATT_SUCCESS) {
-				// Trigger will never have invalid request status. The outer request will.
-				/*if (triggerStatus == RequestCallback.REASON_REQUEST_INVALID) {
-					throw new InvalidRequestException(trigger);
-				}*/
-				throw new RequestFailedException(trigger, triggerStatus);
-			}
-			throw e;
-		}
 	}
 
 	/**
@@ -393,18 +338,5 @@ public final class WaitForValueChangedRequest extends TimeoutableValueRequest<Da
 
 	boolean hasMore() {
 		return count > 0;
-	}
-
-	@Nullable
-	Request getTrigger() {
-		return trigger;
-	}
-
-	boolean isTriggerPending() {
-		return triggerStatus == NOT_STARTED;
-	}
-
-	boolean isTriggerCompleteOrNull() {
-		return triggerStatus != STARTED;
 	}
 }

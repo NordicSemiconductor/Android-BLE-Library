@@ -69,8 +69,8 @@ public interface BleManagerCallbacks {
 	/**
 	 * Called when the device has disconnected (when the callback returned
 	 * {@link BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)} with state
-	 * DISCONNECTED), but ONLY if the {@link BleManager#shouldAutoConnect()} method returned false
-	 * for this device when it was connecting.
+	 * DISCONNECTED), but ONLY if the {@link ConnectRequest#shouldAutoConnect()} method returned
+	 * false for this device when it was connecting.
 	 * Otherwise the {@link #onLinkLossOccurred(BluetoothDevice)} method will be called instead.
 	 *
 	 * @param device the device that got disconnected.
@@ -79,7 +79,7 @@ public interface BleManagerCallbacks {
 
 	/**
 	 * This callback is invoked when the Ble Manager lost connection to a device that has been
-	 * connected with autoConnect option (see {@link BleManager#shouldAutoConnect()}.
+	 * connected with autoConnect option (see {@link ConnectRequest#shouldAutoConnect()}.
 	 * Otherwise a {@link #onDeviceDisconnected(BluetoothDevice)} method will be called on such
 	 * event.
 	 *

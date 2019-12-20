@@ -114,7 +114,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 	private final Context context;
 	private final Handler handler;
-	private BleManager.BleManagerGattCallback requestHandler;
+	private BleServerManager serverManager;
+	BleManager.BleManagerGattCallback requestHandler;
 	E userCallbacks;
 
 	private final BroadcastReceiver mPairingRequestBroadcastReceiver = new BroadcastReceiver() {
@@ -157,7 +158,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * The manager constructor.
 	 * <p>
 	 * After constructing the manager, the callbacks object must be set with
-	 * {@link #setGattCallbacks(BleManagerCallbacks)}.
+	 * {@link #setManagerCallbacks(BleManagerCallbacks)}.
 	 * <p>
 	 * To connect a device, call {@link #connect(BluetoothDevice)}.
 	 *
@@ -184,9 +185,25 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		try {
 			context.unregisterReceiver(mPairingRequestBroadcastReceiver);
 		} catch (final Exception e) {
-			// the receiver must have been not registered or unregistered before.
+			// The receiver must have been already unregistered before.
 		}
-		requestHandler.close();
+		if (serverManager != null) {
+			serverManager.removeManager(this);
+		}
+		if (requestHandler != null) {
+			requestHandler.close();
+		}
+	}
+
+	/**
+	 * Sets the manager callback listener.
+	 *
+	 * @param callbacks the callback listener.
+	 * @deprecated Use {@link #setManagerCallbacks(BleManagerCallbacks)} instead.
+	 */
+	@Deprecated
+	public void setGattCallbacks(@NonNull final E callbacks) {
+		setManagerCallbacks(callbacks);
 	}
 
 	/**
@@ -194,8 +211,33 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 *
 	 * @param callbacks the callback listener.
 	 */
-	public void setGattCallbacks(@NonNull final E callbacks) {
+	public final void setManagerCallbacks(@NonNull final E callbacks) {
 		userCallbacks = callbacks;
+	}
+
+	/**
+	 * This method binds the manager with the give server instance. Apps that allow multiple
+	 * simultaneous connections and GATT server should use a single server instance, shared
+	 * between all clients.
+	 *
+	 * @param server the server instance.
+	 */
+	public final void useServer(@NonNull final BleServerManager server) {
+		if (serverManager != null) {
+			serverManager.removeManager(this);
+		}
+		serverManager = server;
+		server.addManager(this);
+		if (requestHandler != null) {
+			requestHandler.useServer(server);
+		}
+	}
+
+	final void closeServer() {
+		serverManager = null;
+		if (requestHandler != null) {
+			requestHandler.useServer(null);
+		}
 	}
 
 	/**
@@ -411,12 +453,12 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * <p>
 	 * Please calculate the proper delay that will work in your solution.
 	 * <p>
-	 * For devices that are not bonded, but support paiing, a small delay is required on some
+	 * For devices that are not bonded, but support pairing, a small delay is required on some
 	 * older Android versions (Nexus 4 with Android 5.1.1) when the device will send pairing
 	 * request just after connection. If so, we want to wait with the service discovery until
 	 * bonding is complete.
 	 * <p>
-	 * The default thisementation returns 1600 ms for bonded and 300 ms when the device is not
+	 * The default this implementation returns 1600 ms for bonded and 300 ms when the device is not
 	 * bonded to be compatible with older versions of the library.
 	 */
 	@IntRange(from = 0)
@@ -441,7 +483,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * For asynchronous call usage, {@link ConnectRequest#enqueue()} must be called on the returned
 	 * request.
 	 * <p>
-	 * The callbacks observer must be set with {@link #setGattCallbacks(BleManagerCallbacks)}
+	 * The callbacks observer must be set with {@link #setManagerCallbacks(BleManagerCallbacks)}
 	 * before calling this method.
 	 *
 	 * @param device a device to connect to.
@@ -451,7 +493,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	@NonNull
 	public final ConnectRequest connect(@NonNull final BluetoothDevice device) {
 		if (userCallbacks == null) {
-			throw new NullPointerException("Set callbacks using setGattCallbacks(E callbacks) before connecting");
+			throw new NullPointerException("Set callbacks using setManagerCallbacks(E callbacks) before connecting");
 		}
 		if (device == null) {
 			throw new NullPointerException("Bluetooth device not specified");
@@ -459,6 +501,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		if (requestHandler == null) {
 			requestHandler = getGattCallback();
 			requestHandler.init(this, handler);
+			requestHandler.useServer(serverManager);
 		}
 		return Request.connect(device)
 				.useAutoConnect(shouldAutoConnect())
@@ -482,7 +525,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * For asynchronous call usage, {@link ConnectRequest#enqueue()} must be called on the returned
 	 * request.
 	 * <p>
-	 * The callbacks observer must be set with {@link #setGattCallbacks(BleManagerCallbacks)}
+	 * The callbacks observer must be set with {@link #setManagerCallbacks(BleManagerCallbacks)}
 	 * before calling this method.
 	 *
 	 * @param device a device to connect to.
@@ -500,7 +543,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	@Deprecated
 	public final ConnectRequest connect(@NonNull final BluetoothDevice device, @PhyMask final int phy) {
 		if (userCallbacks == null) {
-			throw new NullPointerException("Set callbacks using setGattCallbacks(E callbacks) before connecting");
+			throw new NullPointerException("Set callbacks using setManagerCallbacks(E callbacks) before connecting");
 		}
 		if (device == null) {
 			throw new NullPointerException("Bluetooth device not specified");
@@ -578,7 +621,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 
 	/**
 	 * Returns the callback that is registered for value changes (indications) of given
-	 * characteristic. After assigning the notifications callback, indications must be
+	 * characteristic. After assigning the indication callback, indications must be
 	 * enabled using {@link #enableIndications(BluetoothGattCharacteristic)}.
 	 * This applies also when they were already enabled on the remote side.
 	 * <p>
@@ -592,6 +635,22 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	@NonNull
 	protected ValueChangedCallback setIndicationCallback(@Nullable final BluetoothGattCharacteristic characteristic) {
 		return setNotificationCallback(characteristic);
+	}
+
+	/**
+	 * Returns the callback that is registered for value changes (write command or write request
+	 * initiated by the remote device) of given characteristic.
+	 * <p>
+	 * To remove the callback, call
+	 * {@link #removeIndicationCallback(BluetoothGattCharacteristic)}.
+	 *
+	 * @param serverCharacteristic characteristic to bind the callback with. If null, the returned
+	 *                       	   callback will not be null, but will not be used.
+	 * @return The callback.
+	 */
+	@NonNull
+	protected ValueChangedCallback setWriteCallback(@Nullable final BluetoothGattCharacteristic serverCharacteristic) {
+		return setNotificationCallback(serverCharacteristic);
 	}
 
 	/**
@@ -612,6 +671,16 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	protected void removeIndicationCallback(@Nullable final BluetoothGattCharacteristic characteristic) {
 		removeNotificationCallback(characteristic);
+	}
+
+	/**
+	 * Removes the write callback set using
+	 * {@link #setWriteCallback(BluetoothGattCharacteristic)}.
+	 *
+	 * @param serverCharacteristic characteristic to unbind the callback from.
+	 */
+	protected void removeWriteCallback(@Nullable final BluetoothGattCharacteristic serverCharacteristic) {
+		removeNotificationCallback(serverCharacteristic);
 	}
 
 	/**
@@ -651,6 +720,251 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	@NonNull
 	protected WaitForValueChangedRequest waitForIndication(@NonNull final BluetoothGattCharacteristic characteristic) {
 		return Request.newWaitForIndicationRequest(characteristic)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Sets a one-time callback that will be notified when the value of the given characteristic
+	 * changes. This is a blocking request, so the next request will be executed after the
+	 * write command or write request was received.
+	 * <p>
+	 * If {@link WaitForValueChangedRequest#merge(DataMerger)} was used, the whole message will be
+	 * completed before the callback is notified.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param serverCharacteristic the characteristic that is expected to be written.
+	 * @return The callback.
+	 */
+	@NonNull
+	protected WaitForValueChangedRequest waitForWrite(@NonNull final BluetoothGattCharacteristic serverCharacteristic) {
+		return Request.newWaitForIndicationRequest(serverCharacteristic)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Waits until the given characteristic is read by the remote device. The data must have been set
+	 * to the characteristic before the request is executed.
+	 * Use {@link #setCharacteristicValue(BluetoothGattCharacteristic, Data)} to set data, or
+	 * {@link #waitForRead(BluetoothGattCharacteristic, byte[], int, int)} to set the data immediately.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param serverCharacteristic the target characteristic to be read.
+	 * @return The request.
+	 */
+	@NonNull
+	protected WaitForReadRequest waitForRead(@Nullable final BluetoothGattCharacteristic serverCharacteristic) {
+		return Request.newWaitForReadRequest(serverCharacteristic)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Sets the given data to the readable server characteristic and waits until they are read by the
+	 * remote device.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param serverCharacteristic the target characteristic to be read.
+	 * @param data                 the data to be sent as read response.
+	 * @return The request.
+	 */
+	@NonNull
+	protected WaitForReadRequest waitForRead(@Nullable final BluetoothGattCharacteristic serverCharacteristic,
+											 @Nullable final byte[] data) {
+		return Request.newWaitForReadRequest(serverCharacteristic, data)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Sets the given data to the readable server characteristic and waits until they are read by the
+	 * remote device.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param serverCharacteristic the target characteristic to be read.
+	 * @param data                 the data buffer.
+	 * @param offset               index of the first byte to be returned.
+	 * @param length               number of bytes to be returned.
+	 * @return The request.
+	 */
+	@NonNull
+	protected WaitForReadRequest waitForRead(@Nullable final BluetoothGattCharacteristic serverCharacteristic,
+											 @Nullable final byte[] data, final int offset, final int length) {
+		return Request.newWaitForReadRequest(serverCharacteristic, data, offset, length)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Waits until the given descriptor is read by the remote device. The data must have been set
+	 * to the descriptor before the request is executed.
+	 * Use {@link #setDescriptorValue(BluetoothGattDescriptor, byte[])} to set data, or
+	 * {@link #waitForRead(BluetoothGattDescriptor, byte[], int, int)} to set the data immediately.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param serverDescriptor the target descriptor to be read.
+	 * @return The request.
+	 */
+	@NonNull
+	protected WaitForReadRequest waitForRead(@Nullable final BluetoothGattDescriptor serverDescriptor) {
+		return Request.newWaitForReadRequest(serverDescriptor)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Sets the given data to the readable server descriptor and waits until they are read by the
+	 * remote device.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param serverDescriptor the target descriptor to be read.
+	 * @param data             the data to be sent as read response.
+	 * @return The request.
+	 */
+	@NonNull
+	protected WaitForReadRequest waitForRead(@Nullable final BluetoothGattDescriptor serverDescriptor,
+											 @Nullable final byte[] data) {
+		return Request.newWaitForReadRequest(serverDescriptor, data)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Sets the given data to the readable server descriptor and waits until they are read by the
+	 * remote device.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param serverDescriptor the target descriptor to be read.
+	 * @param data             the data buffer.
+	 * @param offset           index of the first byte to be returned.
+	 * @param length           number of bytes to be returned.
+	 * @return The request.
+	 */
+	@NonNull
+	protected WaitForReadRequest waitForRead(@Nullable final BluetoothGattDescriptor serverDescriptor,
+											 @Nullable final byte[] data, final int offset, final int length) {
+		return Request.newWaitForReadRequest(serverDescriptor, data, offset, length)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Sets the given data to the readable server characteristic.The data will be available to be
+	 * read by the remote device.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param serverCharacteristic the target characteristic to set value.
+	 * @param data                 data to be set.
+	 * @return The request.
+	 */
+	@NonNull
+	protected SetValueRequest setCharacteristicValue(@Nullable final BluetoothGattCharacteristic serverCharacteristic,
+													 @Nullable final Data data) {
+		return Request.newSetValueRequest(serverCharacteristic, data != null ? data.getValue() : null)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Sets the given data to the readable server characteristic. The data will be available to be
+	 * read by the remote device.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param serverCharacteristic the target characteristic to set value.
+	 * @param data                 data to be set.
+	 * @return The request.
+	 */
+	@NonNull
+	protected SetValueRequest setCharacteristicValue(@Nullable final BluetoothGattCharacteristic serverCharacteristic,
+													 @Nullable final byte[] data) {
+		return Request.newSetValueRequest(serverCharacteristic, data)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Sets the given data to the readable server characteristic. The data will be available to be
+	 * read by the remote device until the device writes a new value, or
+	 * {@link #sendNotification(BluetoothGattCharacteristic, byte[])} or #sendIn
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param serverCharacteristic the target characteristic to set value.
+	 * @param data                 data to be set.
+	 * @param offset               index of the first byte to be set.
+	 * @param length               number of bytes to be set.
+	 * @return The request.
+	 */
+	@NonNull
+	protected SetValueRequest setCharacteristicValue(@Nullable final BluetoothGattCharacteristic serverCharacteristic,
+													 @Nullable final byte[] data, final int offset, final int length) {
+		return Request.newSetValueRequest(serverCharacteristic, data, offset, length)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Sets the given data to the readable server descriptor. The data will be available to be
+	 * read by the remote device.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param serverDescriptor the target descriptor to set value.
+	 * @param data             data to be set.
+	 * @return The request.
+	 */
+	@NonNull
+	protected SetValueRequest setDescriptorValue(@Nullable final BluetoothGattDescriptor serverDescriptor,
+												 @Nullable final Data data) {
+		return Request.newSetValueRequest(serverDescriptor, data != null ? data.getValue() : null)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Sets the given data to the readable server descriptor. The data will be available to be
+	 * read by the remote device.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param serverDescriptor the target descriptor to set value.
+	 * @param data             data to be set.
+	 * @return The request.
+	 */
+	@NonNull
+	protected SetValueRequest setDescriptorValue(@Nullable final BluetoothGattDescriptor serverDescriptor,
+												 @Nullable final byte[] data) {
+		return Request.newSetValueRequest(serverDescriptor, data)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Sets the given data to the readable server descriptor. The data will be available to be
+	 * read by the remote device.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param serverDescriptor the target descriptor to set value.
+	 * @param data             data to be set.
+	 * @param offset           index of the first byte to be set.
+	 * @param length           number of bytes to be set.
+	 * @return The request.
+	 */
+	@NonNull
+	protected SetValueRequest setDescriptorValue(@Nullable final BluetoothGattDescriptor serverDescriptor,
+												 @Nullable final byte[] data, final int offset, final int length) {
+		return Request.newSetValueRequest(serverDescriptor, data, offset, length)
 				.setRequestHandler(requestHandler);
 	}
 
@@ -898,6 +1212,157 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 										   @Nullable final byte[] data, final int offset,
 										   final int length) {
 		return Request.newWriteRequest(descriptor, data, offset, length)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Sends the notification from the server characteristic. The notifications on this
+	 * characteristic must be enabled before the request is executed.
+	 *
+	 * <p>
+	 * Use {@link WriteRequest#split() split()} or
+	 * {@link WriteRequest#split(DataSplitter) split(ValueSplitter)} on the returned
+	 * {@link WriteRequest} if data should be automatically split into multiple packets.
+	 * If the characteristic is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
+	 * callback will be called.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param serverCharacteristic the characteristic to notify.
+	 * @param data           	   data to be sent to the characteristic.
+	 * @return The request.
+	 */
+	@NonNull
+	protected WriteRequest sendNotification(@Nullable final BluetoothGattCharacteristic serverCharacteristic,
+											@Nullable final Data data) {
+		return Request.newWriteRequest(serverCharacteristic, data != null ? data.getValue() : null)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Sends the notification from the server characteristic. The notifications on this
+	 * characteristic must be enabled before the request is executed.
+	 * <p>
+	 * Use {@link WriteRequest#split() split()} or
+	 * {@link WriteRequest#split(DataSplitter) split(ValueSplitter)} on the returned
+	 * {@link WriteRequest} if data should be automatically split into multiple packets.
+	 * If the characteristic is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
+	 * callback will be called.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param serverCharacteristic the characteristic to notify.
+	 * @param data           	   data to be sent to the characteristic.
+	 * @return The request.
+	 */
+	@NonNull
+	protected WriteRequest sendNotification(@Nullable final BluetoothGattCharacteristic serverCharacteristic,
+											@Nullable final byte[] data) {
+		return Request.newWriteRequest(serverCharacteristic, data)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Sends the notification with at most length bytes from offset at given data from the server
+	 * characteristic. The notifications on this characteristic must be enabled before the request
+	 * is executed.
+	 * <p>
+	 * Use {@link WriteRequest#split() split()} or
+	 * {@link WriteRequest#split(DataSplitter) split(ValueSplitter)} on the returned
+	 * {@link WriteRequest} if data should be automatically split into multiple packets.
+	 * If the characteristic is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
+	 * callback will be called.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param serverCharacteristic the characteristic to notify.
+	 * @param data           	   the data buffer.
+	 * @param offset         	   index of the first byte to be sent.
+	 * @param length               number of bytes to be sent.
+	 * @return The request.
+	 */
+	@NonNull
+	protected WriteRequest sendNotification(@Nullable final BluetoothGattCharacteristic serverCharacteristic,
+											@Nullable final byte[] data, final int offset, final int length) {
+		return Request.newNotificationRequest(serverCharacteristic, data, offset, length)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Sends the indication from the server characteristic. The indications on this characteristic
+	 * must be enabled before the request is executed.
+	 * <p>
+	 * Use {@link WriteRequest#split() split()} or
+	 * {@link WriteRequest#split(DataSplitter) split(ValueSplitter)} on the returned
+	 * {@link WriteRequest} if data should be automatically split into multiple packets.
+	 * If the characteristic is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
+	 * callback will be called.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param serverCharacteristic the characteristic to indicate.
+	 * @param data           	   data to be sent.
+	 * @return The request.
+	 */
+	@NonNull
+	protected WriteRequest sendIndication(@Nullable final BluetoothGattCharacteristic serverCharacteristic,
+										  @Nullable final Data data) {
+		return Request.newIndicationRequest(serverCharacteristic, data != null ? data.getValue() : null)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Sends the indication from the server characteristic. The indications on this characteristic
+	 * must be enabled before the request is executed.
+	 * <p>
+	 * Use {@link WriteRequest#split() split()} or
+	 * {@link WriteRequest#split(DataSplitter) split(ValueSplitter)} on the returned
+	 * {@link WriteRequest} if data should be automatically split into multiple packets.
+	 * If the characteristic is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
+	 * callback will be called.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param serverCharacteristic the characteristic to indicate.
+	 * @param data           	   data to be sent.
+	 * @return The request.
+	 */
+	@NonNull
+	protected WriteRequest sendIndication(@Nullable final BluetoothGattCharacteristic serverCharacteristic,
+										  @Nullable final byte[] data) {
+		return Request.newIndicationRequest(serverCharacteristic, data)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Sends the indication with at most length bytes from offset at given data from the server
+	 * characteristic. The indications on this characteristic must be enabled before the request
+	 * is executed.
+	 * <p>
+	 * Use {@link WriteRequest#split() split()} or
+	 * {@link WriteRequest#split(DataSplitter) split(ValueSplitter)} on the returned
+	 * {@link WriteRequest} if data should be automatically split into multiple packets.
+	 * If the characteristic is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
+	 * callback will be called.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param serverCharacteristic the characteristic to indicate.
+	 * @param data           	   the data buffer.
+	 * @param offset         	   index of the first byte to be sent.
+	 * @param length               number of bytes to be sent.
+	 * @return The request.
+	 */
+	@NonNull
+	protected WriteRequest sendIndication(@Nullable final BluetoothGattCharacteristic serverCharacteristic,
+										  @Nullable final byte[] data, final int offset, final int length) {
+		return Request.newIndicationRequest(serverCharacteristic, data, offset, length)
 				.setRequestHandler(requestHandler);
 	}
 

@@ -72,6 +72,19 @@ public class ParserUtils {
 		return "(0x) " + new String(out);
 	}
 
+	public static String parseDebug(final byte[] data) {
+		if (data == null || data.length == 0)
+			return "null";
+
+		final char[] out = new char[data.length * 2];
+		for (int j = 0; j < data.length; j++) {
+			int v = data[j] & 0xFF;
+			out[j * 2] = HEX_ARRAY[v >>> 4];
+			out[j * 2 + 1] = HEX_ARRAY[v & 0x0F];
+		}
+		return "0x" + new String(out);
+	}
+
 	@NonNull
 	public static String pairingVariantToString(@PairingVariant final int variant) {
 		switch (variant) {
