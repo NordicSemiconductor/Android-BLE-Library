@@ -26,7 +26,7 @@ public final class WaitForReadRequest extends AwaitingRequest<DataSentCallback> 
 
 	private WriteProgressCallback progressCallback;
 	private DataSplitter dataSplitter;
-	private final byte[] data;
+	private byte[] data;
 	private byte[] currentChunk;
 	private byte[] nextChunk;
 	private int count = 0;
@@ -60,6 +60,11 @@ public final class WaitForReadRequest extends AwaitingRequest<DataSentCallback> 
 					   @IntRange(from = 0) final int offset, @IntRange(from = 0) final int length) {
 		super(type, descriptor);
 		this.data = Bytes.copy(data, offset, length);
+	}
+
+	void setDataIfNull(@Nullable final byte[] data) {
+		if (this.data == null)
+			this.data = data;
 	}
 
 	@NonNull

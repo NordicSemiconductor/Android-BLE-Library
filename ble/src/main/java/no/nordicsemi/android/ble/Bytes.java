@@ -23,4 +23,20 @@ final class Bytes {
 		return copy;
 	}
 
+
+	static byte[] concat(@Nullable final byte[] left, @Nullable final byte[] right) {
+		final int offset = left != null ? left.length : 0;
+		return concat(left, right, offset);
+	}
+
+	static byte[] concat(@Nullable final byte[] left, @Nullable final byte[] right, @IntRange(from = 0) final int offset) {
+		final int length = offset + (right != null ? right.length : 0);
+		final byte[] result = new byte[length];
+		if (left != null)
+			System.arraycopy(left, 0, result, 0, left.length);
+		if (right != null)
+			System.arraycopy(right, 0, result, offset, right.length);
+		return result;
+	}
+
 }

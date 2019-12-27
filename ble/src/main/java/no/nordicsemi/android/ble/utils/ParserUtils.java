@@ -27,6 +27,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothProfile;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import no.nordicsemi.android.ble.PhyRequest;
 import no.nordicsemi.android.ble.annotation.BondState;
 import no.nordicsemi.android.ble.annotation.ConnectionState;
@@ -49,15 +50,15 @@ import static no.nordicsemi.android.ble.BleManager.PAIRING_VARIANT_PIN;
 public class ParserUtils {
 	protected final static char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 
-	public static String parse(final BluetoothGattCharacteristic characteristic) {
+	public static String parse(@NonNull final BluetoothGattCharacteristic characteristic) {
 		return parse(characteristic.getValue());
 	}
 
-	public static String parse(final BluetoothGattDescriptor descriptor) {
+	public static String parse(@NonNull final BluetoothGattDescriptor descriptor) {
 		return parse(descriptor.getValue());
 	}
 
-	public static String parse(final byte[] data) {
+	public static String parse(@Nullable final byte[] data) {
 		if (data == null || data.length == 0)
 			return "";
 
@@ -72,7 +73,7 @@ public class ParserUtils {
 		return "(0x) " + new String(out);
 	}
 
-	public static String parseDebug(final byte[] data) {
+	public static String parseDebug(@Nullable final byte[] data) {
 		if (data == null || data.length == 0)
 			return "null";
 

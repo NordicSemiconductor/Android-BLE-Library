@@ -222,7 +222,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 *
 	 * @param server the server instance.
 	 */
-	public final void useServer(@NonNull final BleServerManager server) {
+	public final <S extends BleServerManagerCallbacks> void useServer(@NonNull final BleServerManager<S> server) {
 		if (serverManager != null) {
 			serverManager.removeManager(this);
 		}
@@ -642,7 +642,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * initiated by the remote device) of given characteristic.
 	 * <p>
 	 * To remove the callback, call
-	 * {@link #removeIndicationCallback(BluetoothGattCharacteristic)}.
+	 * {@link #removeWriteCallback(BluetoothGattCharacteristic)}.
 	 *
 	 * @param serverCharacteristic characteristic to bind the callback with. If null, the returned
 	 *                       	   callback will not be null, but will not be used.
@@ -650,7 +650,23 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	@NonNull
 	protected ValueChangedCallback setWriteCallback(@Nullable final BluetoothGattCharacteristic serverCharacteristic) {
-		return setNotificationCallback(serverCharacteristic);
+		return requestHandler.setNotificationCallback(serverCharacteristic);
+	}
+
+	/**
+	 * Returns the callback that is registered for value changes (write command or write request
+	 * initiated by the remote device) of given descriptor.
+	 * <p>
+	 * To remove the callback, call
+	 * {@link #removeWriteCallback(BluetoothGattCharacteristic)}.
+	 *
+	 * @param serverDescriptor descriptor to bind the callback with. If null, the returned
+	 *                         callback will not be null, but will not be used.
+	 * @return The callback.
+	 */
+	@NonNull
+	protected ValueChangedCallback setWriteCallback(@Nullable final BluetoothGattDescriptor serverDescriptor) {
+		return requestHandler.setNotificationCallback(serverDescriptor);
 	}
 
 	/**
@@ -680,7 +696,17 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @param serverCharacteristic characteristic to unbind the callback from.
 	 */
 	protected void removeWriteCallback(@Nullable final BluetoothGattCharacteristic serverCharacteristic) {
-		removeNotificationCallback(serverCharacteristic);
+		requestHandler.removeNotificationCallback(serverCharacteristic);
+	}
+
+	/**
+	 * Removes the write callback set using
+	 * {@link #setWriteCallback(BluetoothGattCharacteristic)}.
+	 *
+	 * @param serverDescriptor descriptor to unbind the callback from.
+	 */
+	protected void removeWriteCallback(@Nullable final BluetoothGattDescriptor serverDescriptor) {
+		requestHandler.removeNotificationCallback(serverDescriptor);
 	}
 
 	/**
@@ -695,10 +721,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic that value is expect to change.
-	 * @return The callback.
+	 * @return The request.
 	 */
 	@NonNull
-	protected WaitForValueChangedRequest waitForNotification(@NonNull final BluetoothGattCharacteristic characteristic) {
+	protected WaitForValueChangedRequest waitForNotification(@Nullable final BluetoothGattCharacteristic characteristic) {
 		return Request.newWaitForNotificationRequest(characteristic)
 				.setRequestHandler(requestHandler);
 	}
@@ -715,10 +741,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param characteristic the characteristic that value is expect to change.
-	 * @return The callback.
+	 * @return The request.
 	 */
 	@NonNull
-	protected WaitForValueChangedRequest waitForIndication(@NonNull final BluetoothGattCharacteristic characteristic) {
+	protected WaitForValueChangedRequest waitForIndication(@Nullable final BluetoothGattCharacteristic characteristic) {
 		return Request.newWaitForIndicationRequest(characteristic)
 				.setRequestHandler(requestHandler);
 	}
@@ -735,12 +761,62 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @param serverCharacteristic the characteristic that is expected to be written.
-	 * @return The callback.
+	 * @return The request.
 	 */
 	@NonNull
-	protected WaitForValueChangedRequest waitForWrite(@NonNull final BluetoothGattCharacteristic serverCharacteristic) {
-		return Request.newWaitForIndicationRequest(serverCharacteristic)
+	protected WaitForValueChangedRequest waitForWrite(@Nullable final BluetoothGattCharacteristic serverCharacteristic) {
+		return Request.newWaitForWriteRequest(serverCharacteristic)
 				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Sets a one-time callback that will be notified when the value of the given descriptor
+	 * changes. This is a blocking request, so the next request will be executed after the
+	 * write command or write request was received.
+	 * <p>
+	 * If {@link WaitForValueChangedRequest#merge(DataMerger)} was used, the whole message will be
+	 * completed before the callback is notified.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param serverDescriptor the descriptor that is expected to be written.
+	 * @return The request.
+	 */
+	@NonNull
+	protected WaitForValueChangedRequest waitForWrite(@Nullable final BluetoothGattDescriptor serverDescriptor) {
+		return Request.newWaitForWriteRequest(serverDescriptor)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Creates a request that will wait for enabling notifications.
+	 *
+	 * @param serverCharacteristic the server characteristic with notify property.
+	 * @return The request.
+	 */
+	@NonNull
+	protected WaitForValueChangedRequest waitForEnablingNotifications(
+			@Nullable final BluetoothGattCharacteristic serverCharacteristic) {
+		final BluetoothGattDescriptor cccd = serverCharacteristic != null ?
+				serverCharacteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID) : null;
+		return waitForWrite(cccd)
+				.filter(lastPacket -> lastPacket != null && lastPacket.length == 2 && (lastPacket[0] & 0x01) != 0);
+	}
+
+	/**
+	 * Creates a request that will wait for enabling indications.
+	 *
+	 * @param serverCharacteristic the server characteristic with indicate property.
+	 * @return The request.
+	 */
+	@NonNull
+	protected WaitForValueChangedRequest waitForEnablingIndications(
+			@Nullable final BluetoothGattCharacteristic serverCharacteristic) {
+		final BluetoothGattDescriptor cccd = serverCharacteristic != null ?
+				serverCharacteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID) : null;
+		return waitForWrite(cccd)
+				.filter(lastPacket -> lastPacket != null && lastPacket.length == 2 && (lastPacket[0] & 0x02) != 0);
 	}
 
 	/**
@@ -1260,7 +1336,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	@NonNull
 	protected WriteRequest sendNotification(@Nullable final BluetoothGattCharacteristic serverCharacteristic,
 											@Nullable final byte[] data) {
-		return Request.newWriteRequest(serverCharacteristic, data)
+		return Request.newNotificationRequest(serverCharacteristic, data)
 				.setRequestHandler(requestHandler);
 	}
 

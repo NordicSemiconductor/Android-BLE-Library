@@ -110,7 +110,7 @@ public abstract class Request {
 	SuccessCallback internalSuccessCallback;
 	FailCallback internalFailCallback;
 	boolean enqueued;
-	boolean finished;
+	boolean started, finished;
 
 	Request(@NonNull final Type type) {
 		this.type = type;
@@ -640,6 +640,22 @@ public abstract class Request {
 	}
 
 	/**
+	 * Creates new Wait For Write request. The request will not be executed if given
+	 * descriptor is null After the operation is complete a proper callback will be invoked.
+	 * <p>
+	 * If the write should be triggered by another operation (for example writing an
+	 * op code), set it with {@link WaitForValueChangedRequest#trigger(Operation)}.
+	 *
+	 * @param descriptor descriptor that should be written by the remote device.
+	 * @return The new request.
+	 */
+	@NonNull
+	static WaitForValueChangedRequest newWaitForWriteRequest(
+			@Nullable final BluetoothGattDescriptor descriptor) {
+		return new WaitForValueChangedRequest(Type.WAIT_FOR_WRITE, descriptor);
+	}
+
+	/**
 	 * Creates new Wait For Read request. The request will not be executed if given server
 	 * characteristic is null, or does not have READ property.
 	 * After the operation is complete a proper callback will be invoked.
@@ -822,7 +838,7 @@ public abstract class Request {
 			@Nullable final BluetoothGattDescriptor descriptor,
 			@Nullable final byte[] value,
 			@IntRange(from = 0) final int offset, @IntRange(from = 0) final int length) {
-		return new SetValueRequest(Type.SET_VALUE, descriptor, value, offset, length);
+		return new SetValueRequest(Type.SET_DESCRIPTOR_VALUE, descriptor, value, offset, length);
 	}
 
 	/**
@@ -1122,12 +1138,16 @@ public abstract class Request {
 	}
 
 	void notifyStarted(@NonNull final BluetoothDevice device) {
-		handler.post(() -> {
-			if (beforeCallback != null)
-				beforeCallback.onRequestStarted(device);
-			if (internalBeforeCallback != null)
-				internalBeforeCallback.onRequestStarted(device);
-		});
+		if (!started) {
+			started = true;
+
+			handler.post(() -> {
+				if (beforeCallback != null)
+					beforeCallback.onRequestStarted(device);
+				if (internalBeforeCallback != null)
+					internalBeforeCallback.onRequestStarted(device);
+			});
+		}
 	}
 
 	void notifySuccess(@NonNull final BluetoothDevice device) {

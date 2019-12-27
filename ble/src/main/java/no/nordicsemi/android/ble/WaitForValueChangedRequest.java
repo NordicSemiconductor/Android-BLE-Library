@@ -24,6 +24,7 @@ package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
 import android.os.Handler;
 
 import androidx.annotation.IntRange;
@@ -60,6 +61,11 @@ public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceiv
 	WaitForValueChangedRequest(@NonNull final Type type,
 							   @Nullable final BluetoothGattCharacteristic characteristic) {
 		super(type, characteristic);
+	}
+
+	WaitForValueChangedRequest(@NonNull final Type type,
+							   @Nullable final BluetoothGattDescriptor descriptor) {
+		super(type, descriptor);
 	}
 
 	@NonNull
@@ -336,6 +342,7 @@ public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceiv
 		}
 	}
 
+	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 	boolean hasMore() {
 		return count > 0;
 	}
