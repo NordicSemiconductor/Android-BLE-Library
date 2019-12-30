@@ -60,17 +60,16 @@ project(':ble').projectDir = file('../Android-BLE-Library/ble')
 
 ## Usage
 
-`BleManager` may be used for a single connection 
-(see [nRF Toolbox](https://github.com/NordicSemiconductor/Android-nRF-Toolbox) -> RSC profile) 
-or when multiple connections are required (see nRF Toolbox -> Proximity profile), 
-from a Service (see nRF Toolbox -> RSC profile), ViewModel's repo 
-(see [Architecture Components](https://developer.android.com/topic/libraries/architecture/index.html) 
-and [nRF Blinky](https://github.com/NordicSemiconductor/Android-nRF-Blinky)),
-or as a singleton (not recommended, see nRF Toolbox -> HRM).
-
-A single `BleManager` instance is responsible for connecting and communicating with a single peripheral.
+A `BleManager` instance is responsible for connecting and communicating with a single peripheral.
 Multiple manager instances are allowed. Extend `BleManager` with you manager where you define the
 high level device's API.
+
+`BleManager` may be used in different ways:
+1. In a Service, for a single connection - see [nRF Toolbox](https://github.com/NordicSemiconductor/Android-nRF-Toolbox) -> RSC profile, 
+2. In a Service with multiple connections - see nRF Toolbox -> Proximity profile, 
+3. From ViewModel's repo - see [Architecture Components](https://developer.android.com/topic/libraries/architecture/index.html) 
+and [nRF Blinky](https://github.com/NordicSemiconductor/Android-nRF-Blinky)),
+4. As a singleton - not recommended, see nRF Toolbox -> HRM.
 
 ```java
 
@@ -182,8 +181,17 @@ class MyBleManager extends BleManager<BleManagerCallbacks> {
 					writeCharacteristic(secondCharacteristic, new byte[] { 01, 00 })
 						.done(device -> log(Log.INDO, "Power on command sent"))
 			 )
-			.with((device, data) -> log(Log.WARN, "Flux Capacitor enabled! Jumping to 1985 in 3 seconds!"))
+			.with((device, data) -> log(Log.WARN, "Flux Capacitor enabled! Going back to the future in 3 seconds!"))
 			.enqueue();
+		sleep(3000).enqueue();
+		write(secondCharacteristic, "Hold on!".getBytes())
+			.done(device -> log(Log.WARN, "It's 2140 again!"))
+			.enqueue();
+	}
+	
+	/** Aborts time travel. Call during 3 sec after enabling Flux Capacitor and only if you like 2020. */
+	public void abort() {
+		cancelQueue();
 	}
 }
 ```
