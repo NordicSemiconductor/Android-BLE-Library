@@ -226,6 +226,11 @@ public abstract class BleServerManager<E extends BleServerManagerCallbacks> impl
 	/**
 	 * A helper method that creates a characteristic with given UUID, properties and permissions.
 	 * Optionally, an initial value and a list of descriptors may be set.
+	 * <p>
+	 * The Client Characteristic Configuration Descriptor (CCCD) will be added automatically if
+	 * {@link BluetoothGattCharacteristic#PROPERTY_NOTIFY} or {@link BluetoothGattCharacteristic#PROPERTY_INDICATE}
+	 * was set, if not added explicitly in the descriptors list.
+	 * <p>
 	 * If {@link #reliableWrite()} was added as one of the descriptors or the Characteristic User
 	 * Description descriptor was created with any of write permissions
 	 * (see {@link #description(String, boolean)}) the
@@ -249,50 +254,62 @@ public abstract class BleServerManager<E extends BleServerManagerCallbacks> impl
 															   int properties, final int permissions,
 															   @Nullable final byte[] initialValue,
 															   final BluetoothGattDescriptor... descriptors) {
-		// Look Characteristic User Description descriptor and Characteristic Extended Properties descr.
+		// Look for Client Characteristic Configuration descriptor,
+		// Characteristic User Description descriptor and Characteristic Extended Properties descriptor.
 		boolean writableAuxiliaries = false;
-		boolean cepFound = false;
-		BluetoothGattDescriptor cep = null;
+		boolean cccdFound = false;
+		boolean cepdFound = false;
+		BluetoothGattDescriptor cepd = null;
 		for (final BluetoothGattDescriptor descriptor : descriptors) {
-			if (CLIENT_USER_DESCRIPTION_DESCRIPTOR_UUID.equals(descriptor.getUuid())
-					&& (descriptor.getPermissions() & 0x70) != 0) {
+			if (CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID.equals(descriptor.getUuid())) {
+				cccdFound = true;
+			} else if (CLIENT_USER_DESCRIPTION_DESCRIPTOR_UUID.equals(descriptor.getUuid())
+					&& 0 != (descriptor.getPermissions() & (
+							  BluetoothGattDescriptor.PERMISSION_WRITE
+							| BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED
+							| BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED_MITM))) {
 				writableAuxiliaries = true;
 			} else if (CHARACTERISTIC_EXTENDED_PROPERTIES_DESCRIPTOR_UUID.equals(descriptor.getUuid())) {
-				cep = descriptor;
-				cepFound = true;
+				cepd = descriptor;
+				cepdFound = true;
 			}
 		}
 
 		if (writableAuxiliaries) {
-			if (cep == null) {
-				cep = new BluetoothGattDescriptor(CHARACTERISTIC_EXTENDED_PROPERTIES_DESCRIPTOR_UUID,
+			if (cepd == null) {
+				cepd = new BluetoothGattDescriptor(CHARACTERISTIC_EXTENDED_PROPERTIES_DESCRIPTOR_UUID,
 						BluetoothGattDescriptor.PERMISSION_READ);
-				cep.setValue(new byte[]{0x02, 0x00});
+				cepd.setValue(new byte[]{0x02, 0x00});
 			} else {
-				if (cep.getValue() != null && cep.getValue().length == 2) {
-					cep.getValue()[0] |= 0x02;
+				if (cepd.getValue() != null && cepd.getValue().length == 2) {
+					cepd.getValue()[0] |= 0x02;
 				} else {
-					cep.setValue(new byte[]{0x02, 0x00});
+					cepd.setValue(new byte[]{0x02, 0x00});
 				}
 			}
 		}
 
-		final boolean reliableWrite = cep != null && cep.getValue() != null
-				&& cep.getValue().length == 2 && (cep.getValue()[0] & 0x01) != 0;
+		final boolean cccdRequired = (properties & (BluetoothGattCharacteristic.PROPERTY_NOTIFY | BluetoothGattCharacteristic.PROPERTY_INDICATE)) != 0;
+		final boolean reliableWrite = cepd != null && cepd.getValue() != null
+				&& cepd.getValue().length == 2 && (cepd.getValue()[0] & 0x01) != 0;
 		if (writableAuxiliaries || reliableWrite) {
 			properties |= BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS;
 		}
-		if ((properties & BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS) != 0 && cep == null) {
-			cep = new BluetoothGattDescriptor(CHARACTERISTIC_EXTENDED_PROPERTIES_DESCRIPTOR_UUID, BluetoothGattDescriptor.PERMISSION_READ);
-			cep.setValue(new byte[] { 0, 0 });
+		if ((properties & BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS) != 0 && cepd == null) {
+			cepd = new BluetoothGattDescriptor(CHARACTERISTIC_EXTENDED_PROPERTIES_DESCRIPTOR_UUID, BluetoothGattDescriptor.PERMISSION_READ);
+			cepd.setValue(new byte[] { 0, 0 });
 		}
 
+
 		final BluetoothGattCharacteristic characteristic = new BluetoothGattCharacteristic(uuid, properties, permissions);
+		if (cccdRequired && !cccdFound) {
+			characteristic.addDescriptor(cccd());
+		}
 		for (BluetoothGattDescriptor descriptor: descriptors) {
 			characteristic.addDescriptor(descriptor);
 		}
-		if (cep != null && !cepFound) {
-			characteristic.addDescriptor(cep);
+		if (cepd != null && !cepdFound) {
+			characteristic.addDescriptor(cepd);
 		}
 		characteristic.setValue(initialValue);
 		return characteristic;
@@ -301,6 +318,11 @@ public abstract class BleServerManager<E extends BleServerManagerCallbacks> impl
 	/**
 	 * A helper method that creates a characteristic with given UUID, properties and permissions.
 	 * Optionally, an initial value and a list of descriptors may be set.
+	 * <p>
+	 * The Client Characteristic Configuration Descriptor (CCCD) will be added automatically if
+	 * {@link BluetoothGattCharacteristic#PROPERTY_NOTIFY} or {@link BluetoothGattCharacteristic#PROPERTY_INDICATE}
+	 * was set, if not added explicitly in the descriptors list.
+	 * <p>
 	 * If {@link #reliableWrite()} was added as one of the descriptors or the Characteristic User
 	 * Description descriptor was created with any of write permissions
 	 * (see {@link #description(String, boolean)}) the
@@ -331,6 +353,20 @@ public abstract class BleServerManager<E extends BleServerManagerCallbacks> impl
 		return characteristic;
 	}
 
+	/**
+	 * A helper method that creates a descriptor with given UUID and permissions.
+	 * Optionally, an initial value may be set.
+	 * <p>
+	 * The value of the descriptor will NOT be shared between clients. Each client will write
+	 * and read its own copy. To create a shared descriptor, use
+	 * {@link #sharedDescriptor(UUID, int, byte[])} instead.
+	 *
+	 * @param uuid The characteristic UUID.
+	 * @param permissions The bit mask or characteristic permissions. See {@link BluetoothGattCharacteristic}
+	 *                    for details.
+	 * @param initialValue The optional initial value of the characteristic.
+	 * @return The characteristic.
+	 */
 	@NonNull
 	protected final BluetoothGattDescriptor descriptor(@NonNull final UUID uuid, final int permissions,
 													   @Nullable final byte[] initialValue) {
@@ -339,6 +375,20 @@ public abstract class BleServerManager<E extends BleServerManagerCallbacks> impl
 		return descriptor;
 	}
 
+	/**
+	 * A helper method that creates a descriptor with given UUID and permissions.
+	 * Optionally, an initial value may be set.
+	 * <p>
+	 * The value of the characteristic is shared between clients. A value written by one of the
+	 * connected clients will be available for all other clients. To create a sandboxed characteristic,
+	 * use {@link #characteristic(UUID, int, int, byte[], BluetoothGattDescriptor...)} instead.
+	 *
+	 * @param uuid The characteristic UUID.
+	 * @param permissions The bit mask or characteristic permissions. See {@link BluetoothGattCharacteristic}
+	 *                    for details.
+	 * @param initialValue The optional initial value of the characteristic.
+	 * @return The characteristic.
+	 */
 	@NonNull
 	protected final BluetoothGattDescriptor sharedDescriptor(@NonNull final UUID uuid,
 															 final int permissions,
