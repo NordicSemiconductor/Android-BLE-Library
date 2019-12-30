@@ -68,9 +68,11 @@ high level device's API.
 1. In a Service, for a single connection - see [nRF Toolbox](https://github.com/NordicSemiconductor/Android-nRF-Toolbox) -> RSC profile, 
 2. In a Service with multiple connections - see nRF Toolbox -> Proximity profile, 
 3. From ViewModel's repo - see [Architecture Components](https://developer.android.com/topic/libraries/architecture/index.html) 
-and [nRF Blinky](https://github.com/NordicSemiconductor/Android-nRF-Blinky)),
+and [nRF Blinky](https://github.com/NordicSemiconductor/Android-nRF-Blinky),
 4. As a singleton - not recommended, see nRF Toolbox -> HRM.
 
+The first step is to create your BLE Manager implementation, like below. The manager should
+act as API of your remote device, to separate lower BLE layer from the application layer.
 ```java
 
 class MyBleManager extends BleManager<BleManagerCallbacks> {
@@ -93,7 +95,9 @@ class MyBleManager extends BleManager<BleManagerCallbacks> {
 
 	@Override
 	public void log(final int priority, @NonNull final String message) {
-		Log.println(priority, "MyBleManager", message);
+		// Please, don't log in production.
+		if (Build.DEBUG || priority == Log.ERROR)
+			Log.println(priority, "MyBleManager", message);
 	}
 
 	/**
@@ -174,26 +178,64 @@ class MyBleManager extends BleManager<BleManagerCallbacks> {
 	
 	// Define your API.
 	
+	private abstract class FluxHandler implements DataReceivedCallback {		
+		@Override
+		public void onDataReceived(@NonNull final BluetoothDevice device, @NonNull final Data data) {
+			if (data.getByte(0) == 0x01)
+				onFluxCapacitorEngaged();
+		}
+		
+		abstract void onFluxCapacitorEngaged();
+	}
+	
 	/** Initialize time machine. */
-	public void enableFluxCapacitor() {
+	public void enableFluxCapacitor(final int year) {
 		waitForNotification(firstCharacteristic)
 			.trigger(
-					writeCharacteristic(secondCharacteristic, new byte[] { 01, 00 })
+					writeCharacteristic(secondCharacteristic, new FluxJumpRequest(year))
 						.done(device -> log(Log.INDO, "Power on command sent"))
 			 )
-			.with((device, data) -> log(Log.WARN, "Flux Capacitor enabled! Going back to the future in 3 seconds!"))
-			.enqueue();
-		sleep(3000).enqueue();
-		write(secondCharacteristic, "Hold on!".getBytes())
-			.done(device -> log(Log.WARN, "It's 2140 again!"))
+			.with(new FluxHandler() {
+				public void onFluxCapacitorEngaged() {
+					log(Log.WARN, "Flux Capacitor enabled! Going back to the future in 3 seconds!");
+					callbacks.onFluxCapacitorEngaged();
+					
+					sleep(3000).enqueue();
+					write(secondCharacteristic, "Hold on!".getBytes())
+						.done(device -> log(Log.WARN, "It's " + year + "!"))
+						.fail((device, status) -> "Not enough flux? (status: " + status + ")")
+						.enqueue();
+				}
+			})
 			.enqueue();
 	}
 	
-	/** Aborts time travel. Call during 3 sec after enabling Flux Capacitor and only if you like 2020. */
+	/** 
+	* Aborts time travel. Call during 3 sec after enabling Flux Capacitor and only if you don't 
+	* like 2020. 
+	*/
 	public void abort() {
 		cancelQueue();
 	}
 }
+```
+Create the callbacks for your device:
+```java
+interface FluxCallbacks extends BleManagerCallbacks {
+	void onFluxCapacitorEngaged();
+}
+```
+
+To connect to a Bluetooth LE device using GATT, create a manager instance:
+
+```java
+final MyBleManager manager = new MyBleManager(context);
+manager.setManagerCallbacks(fluxCallbacks);
+manager.connect(device)
+	.timeout(100000)
+	.retry(3, 100)
+	.done(device -> Log.i(TAG, "Device initiated"))
+	.enqueue();
 ```
 
 #### Adding GATT Server support
@@ -239,6 +281,7 @@ final MyBleManager manager = new MyBleManager(context);
 manager.setManagerCallbacks(this);
 // Use the manager with the server
 manager.useServer(serverManager);
+// [...]
 ```
 The `BleServermanagerCallbacks.onServerReady()` will be invoked when all service were added.
 You may initiate your connection there.
