@@ -19,7 +19,7 @@ import no.nordicsemi.android.ble.data.DataSplitter;
 import no.nordicsemi.android.ble.data.DefaultMtuSplitter;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
-public final class WaitForReadRequest extends AwaitingRequest<DataSentCallback> implements Operation {
+public final class WaitForReadRequest extends AwaitingRequest<DataSentCallback> {
 	private static final DataSplitter MTU_SPLITTER = new DefaultMtuSplitter();
 
 	private WriteProgressCallback progressCallback;

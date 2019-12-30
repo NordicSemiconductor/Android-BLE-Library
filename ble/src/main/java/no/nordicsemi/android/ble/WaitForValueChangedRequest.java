@@ -48,8 +48,7 @@ import no.nordicsemi.android.ble.exception.InvalidRequestException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
-public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceivedCallback>
-		implements Operation {
+public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceivedCallback> {
 	private ReadProgressCallback progressCallback;
 	private DataMerger dataMerger;
 	private DataStream buffer;
