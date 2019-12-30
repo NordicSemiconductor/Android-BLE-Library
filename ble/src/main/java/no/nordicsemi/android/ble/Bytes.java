@@ -23,6 +23,13 @@ final class Bytes {
 		return copy;
 	}
 
+	/**
+	 * Concatenates two byte arrays. The right one will be places at the given offset.
+	 * @param left the first part
+	 * @param right the second part
+	 * @param offset the offset
+	 * @return the concatenated byte array. Result will be at least offset-bytes long.
+	 */
 	static byte[] concat(@Nullable final byte[] left, @Nullable final byte[] right, @IntRange(from = 0) final int offset) {
 		final int length = offset + (right != null ? right.length : 0);
 		final byte[] result = new byte[length];
