@@ -62,7 +62,7 @@ import no.nordicsemi.android.ble.utils.ParserUtils;
 /**
  * <p>
  * The BleManager is responsible for managing the low level communication with a Bluetooth LE device.
- * Please see profiles thisementation in Android nRF Blinky or Android nRF Toolbox app for an
+ * Please see profiles implementation in Android nRF Blinky or Android nRF Toolbox app for an
  * example of use.
  * <p>
  * This base manager has been tested against number of devices and samples from Nordic SDK.

@@ -31,9 +31,8 @@ import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
-@SuppressWarnings({"unused"})
 public final class SleepRequest extends SimpleRequest implements Operation {
-	private long delay;
+	private final long delay;
 
 	SleepRequest(@NonNull final Type type, @IntRange(from = 0) final long delay) {
 		super(type);

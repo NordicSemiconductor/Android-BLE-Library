@@ -5,8 +5,6 @@ import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.os.Handler;
 
-import java.util.Arrays;
-
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -27,7 +25,6 @@ public final class WaitForReadRequest extends AwaitingRequest<DataSentCallback> 
 	private WriteProgressCallback progressCallback;
 	private DataSplitter dataSplitter;
 	private byte[] data;
-	private byte[] currentChunk;
 	private byte[] nextChunk;
 	private int count = 0;
 	private boolean complete = false;
@@ -195,7 +192,7 @@ public final class WaitForReadRequest extends AwaitingRequest<DataSentCallback> 
 	byte[] getData(@IntRange(from = 23, to = 517) final int mtu) {
 		if (dataSplitter == null || data == null) {
 			complete = true;
-			return currentChunk = data;
+			return data;
 		}
 
 		// Read [procedure requires 3 bytes for handler and op code.
@@ -214,7 +211,7 @@ public final class WaitForReadRequest extends AwaitingRequest<DataSentCallback> 
 		if (nextChunk == null) {
 			complete = true;
 		}
-		return currentChunk = chunk;
+		return chunk;
 	}
 
 	/**
@@ -249,6 +246,7 @@ public final class WaitForReadRequest extends AwaitingRequest<DataSentCallback> 
 	 *
 	 * @return True if not all data were sent, false if the request is complete.
 	 */
+	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 	boolean hasMore() {
 		return !complete;
 	}

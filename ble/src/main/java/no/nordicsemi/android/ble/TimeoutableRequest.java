@@ -16,7 +16,6 @@ import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
 import no.nordicsemi.android.ble.exception.InvalidRequestException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
-@SuppressWarnings("WeakerAccess")
 public abstract class TimeoutableRequest extends Request {
 	private Runnable timeoutCallback;
 	protected long timeout;

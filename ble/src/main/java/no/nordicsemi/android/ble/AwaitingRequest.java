@@ -86,6 +86,7 @@ public class AwaitingRequest<T> extends TimeoutableValueRequest<T> {
 		return trigger;
 	}
 
+	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 	boolean isTriggerPending() {
 		return triggerStatus == NOT_STARTED;
 	}

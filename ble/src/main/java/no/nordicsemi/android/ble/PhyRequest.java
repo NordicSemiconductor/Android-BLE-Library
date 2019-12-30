@@ -48,13 +48,13 @@ public final class PhyRequest extends SimpleValueRequest<PhyCallback> implements
 	 * Bluetooth LE 2M PHY mask. Used to specify LE 2M Physical Channel as one of many available
 	 * options in a bitmask.
 	 */
-	public static final int PHY_LE_2M_MASK = 2;
+	public static final int PHY_LE_2M_MASK = 1 << 1;
 
 	/**
 	 * Bluetooth LE Coded PHY mask. Used to specify LE Coded Physical Channel as one of many
 	 * available options in a bitmask.
 	 */
-	public static final int PHY_LE_CODED_MASK = 4;
+	public static final int PHY_LE_CODED_MASK = 1 << 2;
 
 	/**
 	 * No preferred coding when transmitting on the LE Coded PHY.

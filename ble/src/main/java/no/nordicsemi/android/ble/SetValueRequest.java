@@ -12,7 +12,7 @@ import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
-@SuppressWarnings({"WeakerAccess", "unused"})
+@SuppressWarnings({"unused", "WeakerAccess"})
 public final class SetValueRequest extends SimpleRequest {
 	private final byte[] data;
 	private boolean longReadSupported = true;
