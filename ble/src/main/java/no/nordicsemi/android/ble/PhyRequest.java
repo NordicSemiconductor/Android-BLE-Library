@@ -23,6 +23,7 @@
 package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
+import android.os.Handler;
 
 import androidx.annotation.NonNull;
 import no.nordicsemi.android.ble.annotation.PhyMask;
@@ -97,8 +98,15 @@ public final class PhyRequest extends SimpleValueRequest<PhyCallback> implements
 
 	@NonNull
 	@Override
-	PhyRequest setManager(@NonNull final BleManager manager) {
-		super.setManager(manager);
+	PhyRequest setRequestHandler(@NonNull final RequestHandler requestHandler) {
+		super.setRequestHandler(requestHandler);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public PhyRequest setHandler(@NonNull final Handler handler) {
+		super.setHandler(handler);
 		return this;
 	}
 

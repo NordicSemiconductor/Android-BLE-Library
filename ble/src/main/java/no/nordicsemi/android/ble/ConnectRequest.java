@@ -27,6 +27,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.content.Context;
+import android.os.Handler;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
@@ -65,8 +66,15 @@ public class ConnectRequest extends TimeoutableRequest {
 
 	@NonNull
 	@Override
-	ConnectRequest setManager(@NonNull final BleManager manager) {
-		super.setManager(manager);
+	ConnectRequest setRequestHandler(@NonNull final RequestHandler requestHandler) {
+		super.setRequestHandler(requestHandler);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public ConnectRequest setHandler(@NonNull final Handler handler) {
+		super.setHandler(handler);
 		return this;
 	}
 
@@ -145,7 +153,7 @@ public class ConnectRequest extends TimeoutableRequest {
 	 * @param delay the delay between each connection attempt, in milliseconds.
 	 *              The real delay will be 200 ms longer than specified, as
 	 *              {@link BluetoothGatt#clone()} is estimated to last
-	 *              {@link BleManager#internalConnect(BluetoothDevice, ConnectRequest) 200 ms}.
+	 *              {@link BleManagerHandler#internalConnect(BluetoothDevice, ConnectRequest) 200 ms}.
 	 * @return The request.
 	 * @see #retry(int)
 	 */

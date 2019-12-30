@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.os.Handler;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
@@ -17,7 +18,6 @@ import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 @SuppressWarnings("WeakerAccess")
 public abstract class TimeoutableRequest extends Request {
-	private TimeoutHandler timeoutHandler;
 	private Runnable timeoutCallback;
 	protected long timeout;
 
@@ -35,9 +35,15 @@ public abstract class TimeoutableRequest extends Request {
 
 	@NonNull
 	@Override
-	TimeoutableRequest setManager(@NonNull final BleManager manager) {
-		super.setManager(manager);
-		this.timeoutHandler = manager;
+	TimeoutableRequest setRequestHandler(@NonNull final RequestHandler requestHandler) {
+		super.setRequestHandler(requestHandler);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public TimeoutableRequest setHandler(@NonNull final Handler handler) {
+		super.setHandler(handler);
 		return this;
 	}
 
@@ -182,7 +188,7 @@ public abstract class TimeoutableRequest extends Request {
 				timeoutCallback = null;
 				if (!finished) {
 					notifyFail(device, FailCallback.REASON_TIMEOUT);
-					timeoutHandler.onRequestTimeout(this);
+					requestHandler.onRequestTimeout(this);
 				}
 			};
 			handler.postDelayed(timeoutCallback, timeout);

@@ -23,6 +23,7 @@
 package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
+import android.os.Handler;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
@@ -40,8 +41,15 @@ public final class ReadRssiRequest extends SimpleValueRequest<RssiCallback> impl
 
 	@NonNull
 	@Override
-	ReadRssiRequest setManager(@NonNull final BleManager manager) {
-		super.setManager(manager);
+	ReadRssiRequest setRequestHandler(@NonNull final RequestHandler requestHandler) {
+		super.setRequestHandler(requestHandler);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public ReadRssiRequest setHandler(@NonNull final Handler handler) {
+		super.setHandler(handler);
 		return this;
 	}
 

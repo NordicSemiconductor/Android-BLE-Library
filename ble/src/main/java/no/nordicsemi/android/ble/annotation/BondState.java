@@ -20,69 +20,19 @@
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package no.nordicsemi.android.ble;
+package no.nordicsemi.android.ble.annotation;
 
-import android.os.Handler;
+import android.bluetooth.BluetoothDevice;
 
-import androidx.annotation.IntRange;
-import androidx.annotation.NonNull;
-import no.nordicsemi.android.ble.callback.BeforeCallback;
-import no.nordicsemi.android.ble.callback.FailCallback;
-import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
-import no.nordicsemi.android.ble.callback.SuccessCallback;
+import java.lang.annotation.Retention;
+import java.lang.annotation.RetentionPolicy;
 
-@SuppressWarnings({"unused"})
-public final class SleepRequest extends SimpleRequest implements Operation {
-	private long delay;
+import androidx.annotation.IntDef;
 
-	SleepRequest(@NonNull final Type type, @IntRange(from = 0) final long delay) {
-		super(type);
-		this.delay = delay;
-	}
-
-    @NonNull
-    @Override
-    SleepRequest setRequestHandler(@NonNull final RequestHandler requestHandler) {
-        super.setRequestHandler(requestHandler);
-        return this;
-    }
-
-	@NonNull
-	@Override
-	public SleepRequest setHandler(@NonNull final Handler handler) {
-		super.setHandler(handler);
-		return this;
-	}
-
-	@NonNull
-	@Override
-	public SleepRequest done(@NonNull final SuccessCallback callback) {
-		super.done(callback);
-		return this;
-	}
-
-	@NonNull
-	@Override
-	public SleepRequest fail(@NonNull final FailCallback callback) {
-		super.fail(callback);
-		return this;
-	}
-
-	@NonNull
-	@Override
-	public SleepRequest invalid(@NonNull final InvalidRequestCallback callback) {
-		super.invalid(callback);
-		return this;
-	}
-
-	@NonNull
-	@Override
-	public SleepRequest before(@NonNull final BeforeCallback callback) {
-		super.before(callback);
-		return this;
-	}
-
-	long getDelay() {
-		return delay;
-	}
-}
+@Retention(RetentionPolicy.SOURCE)
+@IntDef(value = {
+		BluetoothDevice.BOND_NONE,
+		BluetoothDevice.BOND_BONDING,
+		BluetoothDevice.BOND_BONDED,
+})
+public @interface BondState {}

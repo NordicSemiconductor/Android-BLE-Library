@@ -22,6 +22,8 @@
 
 package no.nordicsemi.android.ble;
 
+import android.os.Handler;
+
 import java.util.LinkedList;
 import java.util.Queue;
 
@@ -48,8 +50,15 @@ public class RequestQueue extends SimpleRequest {
 
 	@NonNull
 	@Override
-	RequestQueue setManager(@NonNull final BleManager manager) {
-		super.setManager(manager);
+	RequestQueue setRequestHandler(@NonNull final RequestHandler requestHandler) {
+		super.setRequestHandler(requestHandler);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public RequestQueue setHandler(@NonNull final Handler handler) {
+		super.setHandler(handler);
 		return this;
 	}
 
