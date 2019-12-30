@@ -29,17 +29,17 @@ import no.nordicsemi.android.ble.utils.ILogger;
  * @since 2.2
  */
 @SuppressWarnings({"WeakerAccess", "unused"})
-public abstract class BleServerManager<E extends BleServerManagerCallbacks> implements ILogger {
-	public final static UUID CHARACTERISTIC_EXTENDED_PROPERTIES_DESCRIPTOR_UUID = UUID.fromString("00002900-0000-1000-8000-00805f9b34fb");
-	public final static UUID CLIENT_USER_DESCRIPTION_DESCRIPTOR_UUID            = UUID.fromString("00002901-0000-1000-8000-00805f9b34fb");
-	public final static UUID CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID       = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
+public abstract class BleServerManager implements ILogger {
+	private final static UUID CHARACTERISTIC_EXTENDED_PROPERTIES_DESCRIPTOR_UUID = UUID.fromString("00002900-0000-1000-8000-00805f9b34fb");
+	private final static UUID CLIENT_USER_DESCRIPTION_DESCRIPTOR_UUID            = UUID.fromString("00002901-0000-1000-8000-00805f9b34fb");
+	private final static UUID CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID       = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
 
 	/** Bluetooth GATT server instance, or null if not opened. */
 	private BluetoothGattServer server;
 
 	private final List<BleManager> managers = new ArrayList<>();
 	private final Context context;
-	private E userCallbacks;
+	private BleServerManagerCallbacks callbacks;
 
 	/**
 	 * List of server services returned by {@link #initializeServer()}.
@@ -79,8 +79,8 @@ public abstract class BleServerManager<E extends BleServerManagerCallbacks> impl
 				final BluetoothGattService service = serverServices.remove();
 				server.addService(service);
 			} catch (final NoSuchElementException e) {
-				if (userCallbacks != null)
-					userCallbacks.onServerReady();
+				if (callbacks != null)
+					callbacks.onServerReady();
 			} catch (final Exception e) {
 				close();
 				return false;
@@ -112,8 +112,8 @@ public abstract class BleServerManager<E extends BleServerManagerCallbacks> impl
 	 *
 	 * @param callbacks the callback listener.
 	 */
-	public final void setManagerCallbacks(@NonNull final E callbacks) {
-		userCallbacks = callbacks;
+	public final void setManagerCallbacks(@NonNull final BleServerManagerCallbacks callbacks) {
+		this.callbacks = callbacks;
 	}
 
 	/**
@@ -457,8 +457,8 @@ public abstract class BleServerManager<E extends BleServerManagerCallbacks> impl
 					server.addService(nextService);
 				} catch (final Exception e) {
 					log(Log.INFO, "[Server] All services added successfully");
-					if (userCallbacks != null)
-						userCallbacks.onServerReady();
+					if (callbacks != null)
+						callbacks.onServerReady();
 					serverServices = null;
 				}
 			} else {
@@ -469,11 +469,11 @@ public abstract class BleServerManager<E extends BleServerManagerCallbacks> impl
 		@Override
 		public void onConnectionStateChange(@NonNull final BluetoothDevice device, final int status, final int newState) {
 			if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothGatt.STATE_CONNECTED) {
-				if (userCallbacks != null)
-					userCallbacks.onDeviceConnectedToServer(device);
+				if (callbacks != null)
+					callbacks.onDeviceConnectedToServer(device);
 			} else {
-				if (userCallbacks != null)
-					userCallbacks.onDeviceDisconnectedFromServer(device);
+				if (callbacks != null)
+					callbacks.onDeviceDisconnectedFromServer(device);
 			}
 		}
 

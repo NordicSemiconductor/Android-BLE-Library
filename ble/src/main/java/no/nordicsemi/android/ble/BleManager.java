@@ -116,7 +116,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	private final Handler handler;
 	private BleServerManager serverManager;
 	BleManager.BleManagerGattCallback requestHandler;
-	E userCallbacks;
+	/** Manager callbacks, set using {@link #setManagerCallbacks(BleManagerCallbacks)}. */
+	protected E callbacks;
 
 	private final BroadcastReceiver mPairingRequestBroadcastReceiver = new BroadcastReceiver() {
 		@Override
@@ -212,7 +213,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @param callbacks the callback listener.
 	 */
 	public final void setManagerCallbacks(@NonNull final E callbacks) {
-		userCallbacks = callbacks;
+		this.callbacks = callbacks;
 	}
 
 	/**
@@ -222,7 +223,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 *
 	 * @param server the server instance.
 	 */
-	public final <S extends BleServerManagerCallbacks> void useServer(@NonNull final BleServerManager<S> server) {
+	public final void useServer(@NonNull final BleServerManager server) {
 		if (serverManager != null) {
 			serverManager.removeManager(this);
 		}
@@ -492,7 +493,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	@SuppressWarnings("ConstantConditions")
 	@NonNull
 	public final ConnectRequest connect(@NonNull final BluetoothDevice device) {
-		if (userCallbacks == null) {
+		if (callbacks == null) {
 			throw new NullPointerException("Set callbacks using setManagerCallbacks(E callbacks) before connecting");
 		}
 		if (device == null) {
@@ -542,7 +543,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	@NonNull
 	@Deprecated
 	public final ConnectRequest connect(@NonNull final BluetoothDevice device, @PhyMask final int phy) {
-		if (userCallbacks == null) {
+		if (callbacks == null) {
 			throw new NullPointerException("Set callbacks using setManagerCallbacks(E callbacks) before connecting");
 		}
 		if (device == null) {
@@ -1743,7 +1744,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * The GATT Callback handler. An object of this class must be returned by
 	 * {@link #getGattCallback()}. It is responsible for all GATT operations.
 	 */
-	@SuppressWarnings({"WeakerAccess"})
 	protected abstract class BleManagerGattCallback extends BleManagerHandler {
 		// All methods defined in the super class.
 	}
