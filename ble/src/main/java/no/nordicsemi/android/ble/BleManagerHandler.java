@@ -226,7 +226,7 @@ abstract class BleManagerHandler extends RequestHandler {
 							&& previousState != BluetoothAdapter.STATE_OFF) {
 						// No more calls are possible
 						operationInProgress = true;
-						cancelQueue();
+						taskQueue.clear();
 						initQueue = null;
 
 						final BluetoothDevice device = bluetoothDevice;
@@ -1105,6 +1105,17 @@ abstract class BleManagerHandler extends RequestHandler {
 	@Override
 	final void cancelQueue() {
 		taskQueue.clear();
+		initQueue = null;
+		if (awaitingRequest != null)
+			awaitingRequest.notifyFail(bluetoothDevice, FailCallback.REASON_CANCELLED);
+		if (request != null && awaitingRequest != request)
+			request.notifyFail(bluetoothDevice, FailCallback.REASON_CANCELLED);
+		if (requestQueue != null)
+			requestQueue.notifyFail(bluetoothDevice, FailCallback.REASON_CANCELLED);
+		awaitingRequest = null;
+		request = null;
+		requestQueue = null;
+		nextRequest(true);
 	}
 
 	@Override
@@ -1560,7 +1571,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					}
 
 					operationInProgress = true; // no more calls are possible
-					cancelQueue();
+					taskQueue.clear();
 					initQueue = null;
 					ready = false;
 
@@ -1963,7 +1974,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				// Forbid enqueuing more operations.
 				operationInProgress = true;
 				// Clear queues, services are no longer valid.
-				cancelQueue();
+				taskQueue.clear();
 				initQueue = null;
 				log(Log.INFO, "Service Changed indication received");
 				log(Log.VERBOSE, "Discovering Services...");
@@ -2887,7 +2898,7 @@ abstract class BleManagerHandler extends RequestHandler {
 							awaitingRequest.notifyFail(device, FailCallback.REASON_NULL_ATTRIBUTE);
 							awaitingRequest = null;
 						}
-						cancelQueue();
+						taskQueue.clear();
 						initQueue = null;
 						if (connected) {
 							// Invalidate all services and characteristics

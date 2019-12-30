@@ -1726,7 +1726,14 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	/**
-	 * Removes all enqueued requests from the queue. Initialization queue will not be impacted.
+	 * Removes all enqueued requests from the queue.
+	 * The currently executed request will be cancelled and will fail with status
+	 * {@link FailCallback#REASON_CANCELLED}.
+	 * <p>
+	 * If a BLE operation was in progress when the queue was cancelled, enqueueing a next BLE
+	 * operation immediately may cause the Bluetooth to behave improperly, as the manager will
+	 * try to execute it without waiting for the {@link BluetoothGattCallback callback}. A delay
+	 * in such case is recommended.
 	 */
 	protected final void cancelQueue() {
 		requestHandler.cancelQueue();
