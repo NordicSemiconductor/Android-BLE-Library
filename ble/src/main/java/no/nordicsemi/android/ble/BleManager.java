@@ -1718,11 +1718,18 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * Enqueues a new request.
 	 *
 	 * @param request the new request to be added to the end of the queue.
-	 * @deprecated The access modifier of this method will be changed to package only.
+	 * @deprecated This way of enqueueing requests is deprecated, use above methods instead.
 	 */
 	@Deprecated
 	protected final void enqueue(@NonNull final Request request) {
 		requestHandler.enqueue(request);
+	}
+
+	/**
+	 * Removes all enqueued requests from the queue. Initialization queue will not be impacted.
+	 */
+	protected final void cancelQueue() {
+		requestHandler.cancelQueue();
 	}
 
 	/**
