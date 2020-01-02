@@ -23,8 +23,9 @@
 package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
-import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
+import android.bluetooth.BluetoothGattDescriptor;
+import android.os.Handler;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
@@ -47,19 +48,13 @@ import no.nordicsemi.android.ble.exception.InvalidRequestException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
-public final class WaitForValueChangedRequest extends TimeoutableValueRequest<DataReceivedCallback>
-		implements Operation {
-	static final int NOT_STARTED = -123456;
-	static final int STARTED = NOT_STARTED + 1;
-
+public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceivedCallback> {
 	private ReadProgressCallback progressCallback;
 	private DataMerger dataMerger;
 	private DataStream buffer;
 	private DataFilter filter;
-	private Request trigger;
 	private boolean deviceDisconnected;
 	private boolean bluetoothDisabled;
-	private int triggerStatus = BluetoothGatt.GATT_SUCCESS;
 	private int count = 0;
 
 	WaitForValueChangedRequest(@NonNull final Type type,
@@ -67,10 +62,22 @@ public final class WaitForValueChangedRequest extends TimeoutableValueRequest<Da
 		super(type, characteristic);
 	}
 
+	WaitForValueChangedRequest(@NonNull final Type type,
+							   @Nullable final BluetoothGattDescriptor descriptor) {
+		super(type, descriptor);
+	}
+
 	@NonNull
 	@Override
-	WaitForValueChangedRequest setManager(@NonNull final BleManager manager) {
-		super.setManager(manager);
+	WaitForValueChangedRequest setRequestHandler(@NonNull final RequestHandler requestHandler) {
+		super.setRequestHandler(requestHandler);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public WaitForValueChangedRequest setHandler(@NonNull final Handler handler) {
+		super.setHandler(handler);
 		return this;
 	}
 
@@ -116,6 +123,12 @@ public final class WaitForValueChangedRequest extends TimeoutableValueRequest<Da
 		return this;
 	}
 
+	@NonNull
+	public WaitForValueChangedRequest trigger(@NonNull final Operation trigger) {
+		super.trigger(trigger);
+		return this;
+	}
+
 	/**
 	 * Sets a filter which allows to skip some incoming data.
 	 *
@@ -153,61 +166,6 @@ public final class WaitForValueChangedRequest extends TimeoutableValueRequest<Da
 		this.dataMerger = merger;
 		this.progressCallback = callback;
 		return this;
-	}
-
-	/**
-	 * Sets an optional request that is suppose to trigger the notification or indication.
-	 * This is to ensure that the characteristic value won't change before the callback was set.
-	 *
-	 * @param trigger the operation that triggers the notification, usually a write characteristic
-	 *                request that write some OP CODE.
-	 * @return The request.
-	 */
-	@NonNull
-	public WaitForValueChangedRequest trigger(@NonNull final Operation trigger) {
-		if (trigger instanceof Request) {
-			this.trigger = (Request) trigger;
-			this.triggerStatus = NOT_STARTED;
-			// The trigger will never receive invalid request event.
-			// If the BluetoothDevice wasn't set, the whole WaitForValueChangedRequest would be invalid.
-			/*this.trigger.invalid(() -> {
-				// never called
-			});*/
-			this.trigger.internalBefore(device -> triggerStatus = STARTED);
-			this.trigger.internalSuccess(device -> triggerStatus = BluetoothGatt.GATT_SUCCESS);
-			this.trigger.internalFail((device, status) -> {
-				triggerStatus = status;
-				syncLock.open();
-				notifyFail(device, status);
-			});
-		}
-		return this;
-	}
-
-	@NonNull
-	@Override
-	public <E extends DataReceivedCallback> E await(@NonNull final E response)
-			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
-			InvalidRequestException, InterruptedException {
-		assertNotMainThread();
-
-		try {
-			// Ensure the trigger request it enqueued after the callback has been set.
-			if (trigger != null && trigger.enqueued) {
-				throw new IllegalStateException("Trigger request already enqueued");
-			}
-			super.await(response);
-			return response;
-		} catch (final RequestFailedException e) {
-			if (triggerStatus != BluetoothGatt.GATT_SUCCESS) {
-				// Trigger will never have invalid request status. The outer request will.
-				/*if (triggerStatus == RequestCallback.REASON_REQUEST_INVALID) {
-					throw new InvalidRequestException(trigger);
-				}*/
-				throw new RequestFailedException(trigger, triggerStatus);
-			}
-			throw e;
-		}
 	}
 
 	/**
@@ -308,7 +266,6 @@ public final class WaitForValueChangedRequest extends TimeoutableValueRequest<Da
 	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}).
 	 * @deprecated Use {@link #timeout(long)} and {@link #awaitValid(Class)} instead.
 	 */
-	@SuppressWarnings("ConstantConditions")
 	@NonNull
 	@Deprecated
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass,
@@ -342,7 +299,6 @@ public final class WaitForValueChangedRequest extends TimeoutableValueRequest<Da
 	 *                                     {@link ProfileReadResponse#onInvalidDataReceived(BluetoothDevice, Data)}).
 	 * @deprecated Use {@link #timeout(long)} and {@link #awaitValid(E)} instead.
 	 */
-	@SuppressWarnings("ConstantConditions")
 	@NonNull
 	@Deprecated
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final E response,
@@ -366,14 +322,18 @@ public final class WaitForValueChangedRequest extends TimeoutableValueRequest<Da
 		}
 
 		if (dataMerger == null) {
-			valueCallback.onDataReceived(device, new Data(value));
+			final Data data = new Data(value);
+			handler.post(() -> valueCallback.onDataReceived(device, data));
 		} else {
-			if (progressCallback != null)
-				progressCallback.onPacketReceived(device, value, count);
+			handler.post(() -> {
+				if (progressCallback != null)
+					progressCallback.onPacketReceived(device, value, count);
+			});
 			if (buffer == null)
 				buffer = new DataStream();
 			if (dataMerger.merge(buffer, value, count++)) {
-				valueCallback.onDataReceived(device, buffer.toData());
+				final Data data = buffer.toData();
+				handler.post(() -> valueCallback.onDataReceived(device, data));
 				buffer = null;
 				count = 0;
 			} // else
@@ -381,20 +341,8 @@ public final class WaitForValueChangedRequest extends TimeoutableValueRequest<Da
 		}
 	}
 
+	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
 	boolean hasMore() {
 		return count > 0;
-	}
-
-	@Nullable
-	Request getTrigger() {
-		return trigger;
-	}
-
-	boolean isTriggerPending() {
-		return triggerStatus == NOT_STARTED;
-	}
-
-	boolean isTriggerCompleteOrNull() {
-		return triggerStatus != STARTED;
 	}
 }

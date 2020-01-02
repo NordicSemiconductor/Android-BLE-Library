@@ -1,6 +1,6 @@
 # Android BLE Library
 
-[ ![Download](https://api.bintray.com/packages/nordic/android/ble-library/images/download.svg) ](https://bintray.com/nordic/android/ble-library/_latestVersion)
+[ ![Download](https://api.bintray.com/packages/nordic/android/no.nordicsemi.android%3Able/images/download.svg) ](https://bintray.com/nordic/android/no.nordicsemi.android%3Able/_latestVersion)
 
 An Android library that solves a lot of Android's Bluetooth Low Energy problems. 
 The [BleManager](https://github.com/NordicSemiconductor/Android-BLE-Library/blob/master/ble/src/main/java/no/nordicsemi/android/ble/BleManager.java)
@@ -26,6 +26,7 @@ The API is clean and easy to read.
 13. Operation timeouts (for *connect*, *disconnect* and *wait for notification* requests)
 14. Error handling
 15. Logging
+16. GATT server
 
 The library **does not provide support for scanning** for Bluetooth LE devices.
 For scanning, we recommend using 
@@ -42,8 +43,22 @@ Add it to your project by adding the following dependency:
 ```grovy
 implementation 'no.nordicsemi.android:ble:2.1.1'
 ```
-
 The last version not migrated to AndroidX is 2.0.5.
+
+To test the latest features, use the **alpha version**:
+```grovy
+implementation 'no.nordicsemi.android:ble:2.2.0-alpha01'
+```
+Features available in version 2.2.0:
+1. GATT Server support. This includes setting up the local GATT server on the Android device, new 
+   requests for server operations (*wait for read*, *wait for write*, *send notification*, *send indication*,
+   *set characteristic value*, *set descriptor value*).
+2. New conditional requests: *waif if* and *wait until*.
+3. BLE operations are no longer called from the main thread.
+4. There's a new option to set a handler for invoking callbacks. A handler can also be set per-callback.
+5. Breaking change: some fields in the *BleManager* got rid of the Hungarian Notation. In particular,
+   *mCallbacks* was renamed to *callbacks*.
+The API of version 2.2.0 is not finished and may slightly change in the near future.
 
 #### As a library module
 
@@ -59,80 +74,268 @@ project(':ble').projectDir = file('../Android-BLE-Library/ble')
 
 ## Usage
 
-`BleManager` may be used for a single connection 
-(see [nRF Toolbox](https://github.com/NordicSemiconductor/Android-nRF-Toolbox) -> RSC profile) 
-or when multiple connections are required (see nRF Toolbox -> Proximity profile), 
-from a Service (see nRF Toolbox -> RSC profile), ViewModel's repo 
-(see [Architecture Components](https://developer.android.com/topic/libraries/architecture/index.html) 
-and [nRF Blinky](https://github.com/NordicSemiconductor/Android-nRF-Blinky)),
-or as a singleton (not recommended, see nRF Toolbox -> HRM).
-
-A single `BleManager` instance is responsible for connecting and communicating with a single peripheral.
+A `BleManager` instance is responsible for connecting and communicating with a single peripheral.
 Multiple manager instances are allowed. Extend `BleManager` with you manager where you define the
 high level device's API.
 
-### Changes in version 2.0:
+`BleManager` may be used in different ways:
+1. In a Service, for a single connection - see [nRF Toolbox](https://github.com/NordicSemiconductor/Android-nRF-Toolbox) -> RSC profile, 
+2. In a Service with multiple connections - see nRF Toolbox -> Proximity profile, 
+3. From ViewModel's repo - see [Architecture Components](https://developer.android.com/topic/libraries/architecture/index.html) 
+and [nRF Blinky](https://github.com/NordicSemiconductor/Android-nRF-Blinky),
+4. As a singleton - not recommended, see nRF Toolbox -> HRM.
 
-1. BLE operation methods (i.e. `writeCharacteristic(...)`, etc.) return the `Request` class now, 
-instead of boolean.
-2. `onLinklossOccur` callback has been renamed to `onLinkLossOccurred`.
-3. GATT callbacks (for example: `onCharacteristicRead`, `onCharacteristicNotified`, etc.) inside 
-`BleManagerGattCallback` has been deprecated. Use `Request` callbacks instead.
-4. Build-in Battery Level support has been deprecated. Request Battery Level as any other value.
-5. A new callbacks method: `onBondingFailed` has been added to `BleManagerCallbacks`.
-6. `shouldAutoConnect()` has ben deprecated, use `useAutoConnect(boolean)` in `ConnectRequest` instead.
-7. Timeout is supported for *connect*, *disconnect* and *wait for notification/indication*.
-Most BLE operations do not support setting timeout, as receiving the `BluetoothGattCallback` is required
-in order to perform the next operation.
-8. Atomic `RequestQueue` and `ReliableWriteRequest` are supported.  
-9. BLE Library 2.0 uses Java 8. There's no good reason for this except to push the ecosystem to 
-having this be a default. As of AGP 3.2 there is no reason not to do this
-(via [butterknife](https://github.com/JakeWharton/butterknife)).
-
-#### Migration guide:
-
-1. Replace `initGatt(BluetoothGatt)` with `initialize()`:
-
-Old code:
+The first step is to create your BLE Manager implementation, like below. The manager should
+act as API of your remote device, to separate lower BLE layer from the application layer.
 ```java
-@Override
-protected Deque<Request> initGatt(final BluetoothGatt gatt) {
-  final LinkedList<Request> requests = new LinkedList<>();
-  requests.add(Request.newEnableNotificationsRequest(characteristic));
-  return requests;
+
+class MyBleManager extends BleManager<BleManagerCallbacks> {
+	final static UUID SERVICE_UUID = UUID.fromString("XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX");
+	final static UUID FIRST_CHAR   = UUID.fromString("XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX");
+	final static UUID SECOND_CHAR  = UUID.fromString("XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX");
+
+	// Client characteristics
+	private BluetoothGattCharacteristic firstCharacteristic, secondCharacteristic;
+
+	MyBleManager(@NonNull final Context context) {
+		super(context);
+	}
+
+	@NonNull
+	@Override
+	protected BleManagerGattCallback getGattCallback() {
+		return gattCallback;
+	}
+
+	@Override
+	public void log(final int priority, @NonNull final String message) {
+		// Please, don't log in production.
+		if (Build.DEBUG || priority == Log.ERROR)
+			Log.println(priority, "MyBleManager", message);
+	}
+
+	/**
+	 * BluetoothGatt callbacks object.
+	 */
+	private final BleManagerGattCallback gattCallback = new BleManagerGattCallback() {
+
+		// This method will be called when the device is connected and services are discovered.
+		// You need to obtain references to the characteristics and descriptors that you will use.
+		// Return true if all required services are found, false otherwise.
+		@Override
+		public boolean isRequiredServiceSupported(@NonNull final BluetoothGatt gatt) {
+			final BluetoothGattService service = gatt.getService(SERVICE_UUID);
+			if (service != null) {
+				firstCharacteristic = service.getCharacteristic(FIRST_CHAR);
+				secondCharacteristic = service.getCharacteristic(SECOND_CHAR);
+			}
+			// Validate properties
+			boolean notify = false;
+			if (firstCharacteristic != null) {
+				final int properties = dataCharacteristic.getProperties();
+				notify = (properties & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0;
+			}
+			boolean writeRequest = false;
+			if (secondCharacteristic != null) {
+				final int properties = controlPointCharacteristic.getProperties();
+				writeRequest = (properties & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0;
+				secondCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
+			}
+			// Return true if all required services have been found
+			return firstCharacteristic != null && secondCharacteristic != null
+					&& notify && writeRequest;
+		}
+
+		// If you have any optional services, allocate them here. Return true only if
+		// they are found. 
+		@Override
+		protected boolean isOptionalServiceSupported(@NonNull final BluetoothGatt gatt) {
+			return super.isOptionalServiceSupported(gatt);
+		}
+
+		// Initialize your device here. Often you need to enable notifications and set required
+		// MTU or write some initial data. Do it here.
+		@Override
+		protected void initialize() {
+			// You may enqueue multiple operations. A queue ensures that all operations are 
+			// performed one after another, but it is not required.
+			beginAtomicRequestQueue()
+					.add(requestMtu(247) // Remember, GATT needs 3 bytes extra. This will allow packet size of 244 bytes.
+						.with((device, mtu) -> log(Log.INFO, "MTU set to " + mtu))
+						.fail((device, status) -> log(Log.WARN, "Requested MTU not supported: " + status)))
+					.add(setPreferredPhy(PhyRequest.PHY_LE_2M_MASK, PhyRequest.PHY_LE_2M_MASK, PhyRequest.PHY_OPTION_NO_PREFERRED)
+						.fail((device, status) -> log(Log.WARN, "Requested PHY not supported: " + status)))
+					.add(enableNotifications(firstCharacteristic))
+					.done(device -> log(Log.INFO, "Target initialized"))
+					.enqueue();			
+			// You may easily enqueue more operations here like such:
+			writeCharacteristic(secondCharacteristic, "Hello World!".getBytes())
+					.done(device -> log(Log.INFO, "Greetings sent"))
+					.enqueue();
+			// Set a callback for your notifications. You may also use waitForNotification(...).
+			// Both callbacks will be called when notification is received.
+			setNotificationCallback(firstCharacteristic, callback);
+			// If you need to send very long data using Write Without Response, use split()
+			// or define your own splitter in split(DataSplitter splitter, WriteProgressCallback cb). 
+			writeCharacteristic(secondCharacteristic, "Very, very long data that will no fit into MTU")
+					.split()
+					.enqueue();
+		}
+
+		@Override
+		protected void onDeviceDisconnected() {
+			// Device disconnected. Release your references here.
+			firstCharacteristic = null;
+			secondCharacteristic = null;
+		}
+	};
+	
+	// Define your API.
+	
+	private abstract class FluxHandler implements DataReceivedCallback {		
+		@Override
+		public void onDataReceived(@NonNull final BluetoothDevice device, @NonNull final Data data) {
+			if (data.getByte(0) == 0x01)
+				onFluxCapacitorEngaged();
+		}
+		
+		abstract void onFluxCapacitorEngaged();
+	}
+	
+	/** Initialize time machine. */
+	public void enableFluxCapacitor(final int year) {
+		waitForNotification(firstCharacteristic)
+			.trigger(
+					writeCharacteristic(secondCharacteristic, new FluxJumpRequest(year))
+						.done(device -> log(Log.INDO, "Power on command sent"))
+			 )
+			.with(new FluxHandler() {
+				public void onFluxCapacitorEngaged() {
+					log(Log.WARN, "Flux Capacitor enabled! Going back to the future in 3 seconds!");
+					callbacks.onFluxCapacitorEngaged();
+					
+					sleep(3000).enqueue();
+					write(secondCharacteristic, "Hold on!".getBytes())
+						.done(device -> log(Log.WARN, "It's " + year + "!"))
+						.fail((device, status) -> "Not enough flux? (status: " + status + ")")
+						.enqueue();
+				}
+			})
+			.enqueue();
+	}
+	
+	/** 
+	* Aborts time travel. Call during 3 sec after enabling Flux Capacitor and only if you don't 
+	* like 2020. 
+	*/
+	public void abort() {
+		cancelQueue();
+	}
 }
 ```
-New code:
+Create the callbacks for your device:
 ```java
-@Override
-protected void initialize() {
-  setNotificationCallback(characteristic)
-    .with(new DataReceivedCallback() {
-      @Override
-      public void onDataReceived(@NonNull final BluetoothDevice device, @NonNull final Data data) {
-        ...
-      }
-    });
-  enableNotifications(characteristic)
-    .enqueue();
+interface FluxCallbacks extends BleManagerCallbacks {
+	void onFluxCapacitorEngaged();
 }
 ```
-See changes in [Android nRF Toolbox](https://github.com/NordicSemiconductor/Android-nRF-Toolbox/) 
-and [Android nRF Blinky](https://github.com/NordicSemiconductor/Android-nRF-Blinky/) for more examples.
 
-Remember to call `.enqueue()` method for initialization requests!
+To connect to a Bluetooth LE device using GATT, create a manager instance:
 
-Connect's completion callback is called after the initialization is done (without or with errors).
+```java
+final MyBleManager manager = new MyBleManager(context);
+manager.setManagerCallbacks(fluxCallbacks);
+manager.connect(device)
+	.timeout(100000)
+	.retry(3, 100)
+	.done(device -> Log.i(TAG, "Device initiated"))
+	.enqueue();
+```
 
-2. Move your callback implementation from `BleManagerGattCallback` to request callbacks.
-3. To split logic from parsing, we recommend to extend `DataReceivedCallback` interface in a class 
-where your parse your data, and return higher-level values. For a sample, check out nRF Toolbox 
-and [Android BLE Common Library](https://github.com/NordicSemiconductor/Android-BLE-Common-Library/). 
-If you are depending on a SIG adopted profile, like Heart Rate Monitor, Proximity, etc., 
-feel free to include the **BLE Common Library** in your project. 
-It has all the parsers implemented. If your profile isn't there, we are happy to accept PRs.
-4. `connect()` and `disconnect()` methods also require calling `.enqueue()` in asynchronous use.
-5. Replace the `shouldAutoConnect()` method in the manager with `connect(device).useAutConnect(true).enqueue()/await()`.
+#### Adding GATT Server support
+
+Starting from version 2.2 you may now define and use the GATT server in the BLE Library.
+
+First, override a `BleServerManager` class and override `initializeServer()` method. Some helper
+methods, like `characteristic(...)`, `descriptor(...)` and their shared counterparts were created 
+for making the initialization more readable.
+
+```java
+public class ServerManager extends BleServerManager<BleServerManagerCallbacks> {
+
+	ServerManager(@NonNull final Context context) {
+		super(context);
+	}
+
+	@NonNull
+	@Override
+	protected List<BluetoothGattService> initializeServer() {
+		return Collections.singletonList(
+				service(SERVICE_UUID,
+				characteristic(CHAR_UUID,
+						BluetoothGattCharacteristic.PROPERTY_WRITE // properties
+								| BluetoothGattCharacteristic.PROPERTY_NOTIFY
+								| BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS,
+						BluetoothGattCharacteristic.PERMISSION_WRITE, // permissions
+						null, // initial data
+						cccd(), reliableWrite(), description("Some description", false) // descriptors
+				))
+		);
+	}
+}
+```
+Instantiate the server and set the callback listener:
+```java
+final ServerManager serverManager = new ServerManager(context);
+serverManager.setManagerCallbacks(this);
+```
+Set the server manager for each client connection:
+```java
+final MyBleManager manager = new MyBleManager(context);
+manager.setManagerCallbacks(this);
+// Use the manager with the server
+manager.useServer(serverManager);
+// [...]
+```
+The `BleServermanagerCallbacks.onServerReady()` will be invoked when all service were added.
+You may initiate your connection there.
+
+In your client manager class, override the following method:
+```java
+class MyBleManager extends BleManager<BleManagerCallbacks> {
+	// [...]	
+
+	// Server characteristics
+	private BluetoothGattCharacteristic serverCharacteristic;
+
+	// [...]
+
+	/**
+	 * BluetoothGatt callbacks object.
+	 */
+	private final BleManagerGattCallback gattCallback = new BleManagerGattCallback() {
+		// [...]	
+	
+		@Override
+		protected void onServerReady(@NonNull final BluetoothGattServer server) {
+			// Obtain your server attributes.
+			serverCharacteristic = server
+					.getService(SERVICE_UUID)
+					.getCharacteristic(CHAR_UUID);
+		}
+		
+		// [...]
+
+		@Override
+		protected void onDeviceDisconnected() {
+			// [...]
+			serverCharacteristic = null;
+		}
+	};
+	
+	// [...]
+}
+``` 
 
 #### How to test it:
 
@@ -143,7 +346,7 @@ The latter one is a set of useful parsers and callbacks for common Bluetooth SIG
 The libraries are available on jcenter, but if you need to make some changes, clone all 3 projects, 
 ensure the path to *:ble* and *:ble-common* modules are correct in *settings.gradle* file, and sync the project.
 
-## How to use it
+## Examples
 
 Find the simple example here [Android nRF Blinky](https://github.com/NordicSemiconductor/Android-nRF-Blinky).
 
@@ -159,3 +362,5 @@ classes in [nRF Toolbox](https://github.com/NordicSemiconductor/Android-nRF-Tool
 
 The BLE library v 1.x is no longer supported. Please migrate to 2.x for bug fixing releases.
 Find it on [version/1x branch](https://github.com/NordicSemiconductor/Android-BLE-Library/tree/version/1x).
+
+Migration guide is available [here](MIGRATION.md).

@@ -23,6 +23,7 @@
 package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
+import android.os.Handler;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -33,17 +34,18 @@ import no.nordicsemi.android.ble.data.DataFilter;
 import no.nordicsemi.android.ble.data.DataMerger;
 import no.nordicsemi.android.ble.data.DataStream;
 
-@SuppressWarnings({"unused", "WeakerAccess", "UnusedReturnValue"})
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ValueChangedCallback {
 	private ReadProgressCallback progressCallback;
 	private DataReceivedCallback valueCallback;
 	private DataMerger dataMerger;
 	private DataStream buffer;
 	private DataFilter filter;
+	private final Handler handler;
 	private int count = 0;
 
-	ValueChangedCallback() {
-		// empty
+	ValueChangedCallback(final Handler handler) {
+		this.handler = handler;
 	}
 
 	/**
@@ -120,14 +122,18 @@ public class ValueChangedCallback {
 		}
 
 		if (dataMerger == null) {
-			valueCallback.onDataReceived(device, new Data(value));
+			final Data data = new Data(value);
+			handler.post(() -> valueCallback.onDataReceived(device, data));
 		} else {
-			if (progressCallback != null)
-				progressCallback.onPacketReceived(device, value, count);
+			handler.post(() -> {
+				if (progressCallback != null)
+					progressCallback.onPacketReceived(device, value, count);
+			});
 			if (buffer == null)
 				buffer = new DataStream();
 			if (dataMerger.merge(buffer, value, count++)) {
-				valueCallback.onDataReceived(device, buffer.toData());
+				final Data data = buffer.toData();
+				handler.post(() -> valueCallback.onDataReceived(device, data));
 				buffer = null;
 				count = 0;
 			} // else

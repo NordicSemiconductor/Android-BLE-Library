@@ -23,6 +23,7 @@
 package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
+import android.os.Handler;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
@@ -32,7 +33,7 @@ import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.RssiCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
-public final class ReadRssiRequest extends SimpleValueRequest<RssiCallback> implements Operation {
+public final class ReadRssiRequest extends SimpleValueRequest<RssiCallback> {
 
 	ReadRssiRequest(@NonNull final Type type) {
 		super(type);
@@ -40,8 +41,15 @@ public final class ReadRssiRequest extends SimpleValueRequest<RssiCallback> impl
 
 	@NonNull
 	@Override
-	ReadRssiRequest setManager(@NonNull final BleManager manager) {
-		super.setManager(manager);
+	ReadRssiRequest setRequestHandler(@NonNull final RequestHandler requestHandler) {
+		super.setRequestHandler(requestHandler);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public ReadRssiRequest setHandler(@NonNull final Handler handler) {
+		super.setHandler(handler);
 		return this;
 	}
 
@@ -82,7 +90,9 @@ public final class ReadRssiRequest extends SimpleValueRequest<RssiCallback> impl
 
 	void notifyRssiRead(@NonNull final BluetoothDevice device,
 						@IntRange(from = -128, to = 20) final int rssi) {
-		if (valueCallback != null)
-			valueCallback.onRssiRead(device, rssi);
+		handler.post(() -> {
+			if (valueCallback != null)
+				valueCallback.onRssiRead(device, rssi);
+		});
 	}
 }

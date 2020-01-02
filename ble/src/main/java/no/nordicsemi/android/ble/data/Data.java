@@ -196,6 +196,7 @@ public class Data implements Parcelable {
 		return mValue != null ? mValue.length : 0;
 	}
 
+	@NonNull
 	@Override
 	public String toString() {
 		if (size() == 0)

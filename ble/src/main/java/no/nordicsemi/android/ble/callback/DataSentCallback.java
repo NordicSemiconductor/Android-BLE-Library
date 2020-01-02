@@ -31,7 +31,8 @@ import no.nordicsemi.android.ble.data.DataSplitter;
 public interface DataSentCallback {
 
 	/**
-	 * Callback received each time the value was written to a characteristic or descriptor.
+	 * Callback received each time the value was written to a characteristic or descriptor,
+	 * or was read from the server characteristic or descriptor.
 	 *
 	 * @param device the target device.
 	 * @param data the data sent. If the {@link DataSplitter} was used, this contains the full data.

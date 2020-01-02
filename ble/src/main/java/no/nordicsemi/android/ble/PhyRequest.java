@@ -23,6 +23,7 @@
 package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
+import android.os.Handler;
 
 import androidx.annotation.NonNull;
 import no.nordicsemi.android.ble.annotation.PhyMask;
@@ -34,7 +35,7 @@ import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.PhyCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
-@SuppressWarnings({"WeakerAccess", "unused"})
+@SuppressWarnings({"unused"})
 public final class PhyRequest extends SimpleValueRequest<PhyCallback> implements Operation  {
 
 	/**
@@ -47,13 +48,13 @@ public final class PhyRequest extends SimpleValueRequest<PhyCallback> implements
 	 * Bluetooth LE 2M PHY mask. Used to specify LE 2M Physical Channel as one of many available
 	 * options in a bitmask.
 	 */
-	public static final int PHY_LE_2M_MASK = 2;
+	public static final int PHY_LE_2M_MASK = 1 << 1;
 
 	/**
 	 * Bluetooth LE Coded PHY mask. Used to specify LE Coded Physical Channel as one of many
 	 * available options in a bitmask.
 	 */
-	public static final int PHY_LE_CODED_MASK = 4;
+	public static final int PHY_LE_CODED_MASK = 1 << 2;
 
 	/**
 	 * No preferred coding when transmitting on the LE Coded PHY.
@@ -97,8 +98,15 @@ public final class PhyRequest extends SimpleValueRequest<PhyCallback> implements
 
 	@NonNull
 	@Override
-	PhyRequest setManager(@NonNull final BleManager manager) {
-		super.setManager(manager);
+	PhyRequest setRequestHandler(@NonNull final RequestHandler requestHandler) {
+		super.setRequestHandler(requestHandler);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public PhyRequest setHandler(@NonNull final Handler handler) {
+		super.setHandler(handler);
 		return this;
 	}
 
@@ -139,13 +147,17 @@ public final class PhyRequest extends SimpleValueRequest<PhyCallback> implements
 
 	void notifyPhyChanged(@NonNull final BluetoothDevice device,
 						  @PhyValue final int txPhy, @PhyValue final int rxPhy) {
-		if (valueCallback != null)
-			valueCallback.onPhyChanged(device, txPhy, rxPhy);
+		handler.post(() -> {
+			if (valueCallback != null)
+				valueCallback.onPhyChanged(device, txPhy, rxPhy);
+		});
 	}
 
 	void notifyLegacyPhy(@NonNull final BluetoothDevice device) {
-		if (valueCallback != null)
-			valueCallback.onPhyChanged(device, PhyCallback.PHY_LE_1M, PhyCallback.PHY_LE_1M);
+		handler.post(() -> {
+			if (valueCallback != null)
+				valueCallback.onPhyChanged(device, PhyCallback.PHY_LE_1M, PhyCallback.PHY_LE_1M);
+		});
 	}
 
 	@PhyMask

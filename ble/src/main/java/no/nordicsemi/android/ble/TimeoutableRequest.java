@@ -16,11 +16,8 @@ import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
 import no.nordicsemi.android.ble.exception.InvalidRequestException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
-@SuppressWarnings("WeakerAccess")
 public abstract class TimeoutableRequest extends Request {
-	private TimeoutHandler timeoutHandler;
 	private Runnable timeoutCallback;
-	private Handler handler;
 	protected long timeout;
 
 	TimeoutableRequest(@NonNull final Type type) {
@@ -37,10 +34,15 @@ public abstract class TimeoutableRequest extends Request {
 
 	@NonNull
 	@Override
-	TimeoutableRequest setManager(@NonNull final BleManager manager) {
-		super.setManager(manager);
-		this.handler = manager.mHandler;
-		this.timeoutHandler = manager;
+	TimeoutableRequest setRequestHandler(@NonNull final RequestHandler requestHandler) {
+		super.setRequestHandler(requestHandler);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public TimeoutableRequest setHandler(@NonNull final Handler handler) {
+		super.setHandler(handler);
 		return this;
 	}
 
@@ -185,7 +187,7 @@ public abstract class TimeoutableRequest extends Request {
 				timeoutCallback = null;
 				if (!finished) {
 					notifyFail(device, FailCallback.REASON_TIMEOUT);
-					timeoutHandler.onRequestTimeout(this);
+					requestHandler.onRequestTimeout(this);
 				}
 			};
 			handler.postDelayed(timeoutCallback, timeout);

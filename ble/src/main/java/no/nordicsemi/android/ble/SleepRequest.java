@@ -22,6 +22,8 @@
 
 package no.nordicsemi.android.ble;
 
+import android.os.Handler;
+
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
@@ -29,9 +31,8 @@ import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
-@SuppressWarnings({"unused", "WeakerAccess"})
-public final class SleepRequest extends SimpleRequest implements Operation {
-	private long delay;
+public final class SleepRequest extends SimpleRequest {
+	private final long delay;
 
 	SleepRequest(@NonNull final Type type, @IntRange(from = 0) final long delay) {
 		super(type);
@@ -40,10 +41,17 @@ public final class SleepRequest extends SimpleRequest implements Operation {
 
     @NonNull
     @Override
-    SleepRequest setManager(@NonNull final BleManager manager) {
-        super.setManager(manager);
+    SleepRequest setRequestHandler(@NonNull final RequestHandler requestHandler) {
+        super.setRequestHandler(requestHandler);
         return this;
     }
+
+	@NonNull
+	@Override
+	public SleepRequest setHandler(@NonNull final Handler handler) {
+		super.setHandler(handler);
+		return this;
+	}
 
 	@NonNull
 	@Override

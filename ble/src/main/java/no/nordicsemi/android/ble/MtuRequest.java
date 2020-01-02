@@ -23,6 +23,7 @@
 package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
+import android.os.Handler;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
@@ -32,7 +33,7 @@ import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.MtuCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
-public final class MtuRequest extends SimpleValueRequest<MtuCallback>implements Operation {
+public final class MtuRequest extends SimpleValueRequest<MtuCallback> implements Operation {
 	private final int value;
 
 	MtuRequest(@NonNull final Type type, @IntRange(from = 23, to = 517) int mtu) {
@@ -46,8 +47,15 @@ public final class MtuRequest extends SimpleValueRequest<MtuCallback>implements 
 
 	@NonNull
 	@Override
-	MtuRequest setManager(@NonNull final BleManager manager) {
-		super.setManager(manager);
+	MtuRequest setRequestHandler(@NonNull final RequestHandler requestHandler) {
+		super.setRequestHandler(requestHandler);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public MtuRequest setHandler(@NonNull final Handler handler) {
+		super.setHandler(handler);
 		return this;
 	}
 
@@ -88,8 +96,10 @@ public final class MtuRequest extends SimpleValueRequest<MtuCallback>implements 
 
 	void notifyMtuChanged(@NonNull final BluetoothDevice device,
 						  @IntRange(from = 23, to = 517) final int mtu) {
-		if (valueCallback != null)
-			valueCallback.onMtuChanged(device, mtu);
+		handler.post(() -> {
+			if (valueCallback != null)
+				valueCallback.onMtuChanged(device, mtu);
+		});
 	}
 
 	int getRequiredMtu() {

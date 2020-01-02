@@ -28,6 +28,7 @@ import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.os.ConditionVariable;
+import android.os.Handler;
 import android.os.Looper;
 
 import androidx.annotation.IntRange;
@@ -60,6 +61,8 @@ public abstract class Request {
 		CREATE_BOND,
 		REMOVE_BOND,
 		WRITE,
+		NOTIFY,
+		INDICATE,
 		READ,
 		WRITE_DESCRIPTOR,
 		READ_DESCRIPTOR,
@@ -72,6 +75,11 @@ public abstract class Request {
 		DISABLE_INDICATIONS,
 		WAIT_FOR_NOTIFICATION,
 		WAIT_FOR_INDICATION,
+		WAIT_FOR_READ,
+		WAIT_FOR_WRITE,
+		WAIT_FOR_CONDITION,
+		SET_VALUE,
+		SET_DESCRIPTOR_VALUE,
 		@Deprecated
 		READ_BATTERY_LEVEL,
 		@Deprecated
@@ -88,7 +96,8 @@ public abstract class Request {
 		SLEEP,
 	}
 
-	private BleManager manager;
+	protected RequestHandler requestHandler;
+	protected Handler handler;
 
 	final ConditionVariable syncLock;
 	final Type type;
@@ -102,7 +111,7 @@ public abstract class Request {
 	SuccessCallback internalSuccessCallback;
 	FailCallback internalFailCallback;
 	boolean enqueued;
-	boolean finished;
+	boolean started, finished;
 
 	Request(@NonNull final Type type) {
 		this.type = type;
@@ -127,12 +136,28 @@ public abstract class Request {
 
 	/**
 	 * Sets the {@link BleManager} instance.
+	 *  @param requestHandler the requestHandler in which the request will be executed.
 	 *
-	 * @param manager the manager in which the request will be executed.
 	 */
 	@NonNull
-	Request setManager(@NonNull final BleManager manager) {
-		this.manager = manager;
+	Request setRequestHandler(@NonNull final RequestHandler requestHandler) {
+		this.requestHandler = requestHandler;
+		if (this.handler == null) {
+			this.handler = requestHandler.getHandler();
+		}
+		return this;
+	}
+
+	/**
+	 * Sets the handler that will be used to invoke callbacks. By default, the handler set in
+	 * {@link BleManager} will be used.
+	 *
+	 * @param handler The handler to invoke callbacks for this request.
+	 * @return The request.
+	 */
+	@NonNull
+	public Request setHandler(@NonNull final Handler handler) {
+		this.handler = handler;
 		return this;
 	}
 
@@ -415,6 +440,82 @@ public abstract class Request {
 	}
 
 	/**
+	 * Creates new Send Notification request. The request will not be executed if given
+	 * characteristic is null or does not have NOTIFY property.
+	 * After the operation is complete a proper callback will be invoked.
+	 *
+	 * @param characteristic characteristic to be notified.
+	 * @param value          value to be sent. The array is copied into another buffer so it's
+	 *                       safe to reuse the array again.
+	 * @return The new request.
+	 */
+	@NonNull
+	static WriteRequest newNotificationRequest(
+			@Nullable final BluetoothGattCharacteristic characteristic,
+			@Nullable final byte[] value) {
+		return new WriteRequest(Type.NOTIFY, characteristic, value, 0,
+				value != null ? value.length : 0);
+	}
+
+	/**
+	 * Creates new Send Notification request. The request will not be executed if given
+	 * characteristic is null or does not have NOTIFY property.
+	 * After the operation is complete a proper callback will be invoked.
+	 *
+	 * @param characteristic characteristic to be notified.
+	 * @param value          value to be sent. The array is copied into another buffer so it's
+	 *                       safe to reuse the array again.
+	 * @param offset         the offset from which value has to be copied.
+	 * @param length         number of bytes to be copied from the value buffer.
+	 * @return The new request.
+	 */
+	@NonNull
+	static WriteRequest newNotificationRequest(
+			@Nullable final BluetoothGattCharacteristic characteristic,
+			@Nullable final byte[] value,
+			@IntRange(from = 0) final int offset, @IntRange(from = 0) final int length) {
+		return new WriteRequest(Type.NOTIFY, characteristic, value, offset, length);
+	}
+
+	/**
+	 * Creates new Send Indication request. The request will not be executed if given
+	 * characteristic is null or does not have INDICATE property.
+	 * After the operation is complete a proper callback will be invoked.
+	 *
+	 * @param characteristic characteristic to be indicated.
+	 * @param value          value to be sent. The array is copied into another buffer so it's
+	 *                       safe to reuse the array again.
+	 * @return The new request.
+	 */
+	@NonNull
+	static WriteRequest newIndicationRequest(
+			@Nullable final BluetoothGattCharacteristic characteristic,
+			@Nullable final byte[] value) {
+		return new WriteRequest(Type.INDICATE, characteristic, value, 0,
+				value != null ? value.length : 0);
+	}
+
+	/**
+	 * Creates new Send Indication request. The request will not be executed if given
+	 * characteristic is null or does not have INDICATE property.
+	 * After the operation is complete a proper callback will be invoked.
+	 *
+	 * @param characteristic characteristic to be indicated.
+	 * @param value          value to be sent. The array is copied into another buffer so it's
+	 *                       safe to reuse the array again.
+	 * @param offset         the offset from which value has to be copied.
+	 * @param length         number of bytes to be copied from the value buffer.
+	 * @return The new request.
+	 */
+	@NonNull
+	static WriteRequest newIndicationRequest(
+			@Nullable final BluetoothGattCharacteristic characteristic,
+			@Nullable final byte[] value,
+			@IntRange(from = 0) final int offset, @IntRange(from = 0) final int length) {
+		return new WriteRequest(Type.INDICATE, characteristic, value, offset, length);
+	}
+
+	/**
 	 * Creates new Enable Notification request. The request will not be executed if given
 	 * characteristic is null, does not have NOTIFY property or the CCCD.
 	 * After the operation is complete a proper callback will be invoked.
@@ -520,6 +621,238 @@ public abstract class Request {
 	public static WaitForValueChangedRequest newWaitForIndicationRequest(
 			@Nullable final BluetoothGattCharacteristic characteristic) {
 		return new WaitForValueChangedRequest(Type.WAIT_FOR_INDICATION, characteristic);
+	}
+
+	/**
+	 * Creates new Wait For Write request. The request will not be executed if given
+	 * characteristic is null, or does not have WRITE property.
+	 * After the operation is complete a proper callback will be invoked.
+	 * <p>
+	 * If the write should be triggered by another operation (for example writing an
+	 * op code), set it with {@link WaitForValueChangedRequest#trigger(Operation)}.
+	 *
+	 * @param characteristic characteristic that should be written by the remote device.
+	 * @return The new request.
+	 */
+	@NonNull
+	static WaitForValueChangedRequest newWaitForWriteRequest(
+			@Nullable final BluetoothGattCharacteristic characteristic) {
+		return new WaitForValueChangedRequest(Type.WAIT_FOR_WRITE, characteristic);
+	}
+
+	/**
+	 * Creates new Wait For Write request. The request will not be executed if given
+	 * descriptor is null After the operation is complete a proper callback will be invoked.
+	 * <p>
+	 * If the write should be triggered by another operation (for example writing an
+	 * op code), set it with {@link WaitForValueChangedRequest#trigger(Operation)}.
+	 *
+	 * @param descriptor descriptor that should be written by the remote device.
+	 * @return The new request.
+	 */
+	@NonNull
+	static WaitForValueChangedRequest newWaitForWriteRequest(
+			@Nullable final BluetoothGattDescriptor descriptor) {
+		return new WaitForValueChangedRequest(Type.WAIT_FOR_WRITE, descriptor);
+	}
+
+	/**
+	 * Creates new Wait For Read request. The request will not be executed if given server
+	 * characteristic is null, or does not have READ property.
+	 * After the operation is complete a proper callback will be invoked.
+	 * <p>
+	 * If the read should be triggered by another operation (for example writing an
+	 * op code), set it with {@link WaitForValueChangedRequest#trigger(Operation)}.
+	 *
+	 * @param characteristic characteristic that should be read by the remote device.
+	 * @return The new request.
+	 */
+	@NonNull
+	static WaitForReadRequest newWaitForReadRequest(
+			@Nullable final BluetoothGattCharacteristic characteristic) {
+		return new WaitForReadRequest(Type.WAIT_FOR_READ, characteristic);
+	}
+
+	/**
+	 * Creates new Wait For Read request. The request will not be executed if given server
+	 * characteristic is null, or does not have READ property.
+	 * After the operation is complete a proper callback will be invoked.
+	 * <p>
+	 * If the read should be triggered by another operation (for example writing an
+	 * op code), set it with {@link WaitForValueChangedRequest#trigger(Operation)}.
+	 *
+	 * @param characteristic characteristic that should be read by the remote device.
+	 * @param value          value to be sent. The array is copied into another buffer so it's
+	 *                       safe to reuse the array again.
+	 * @return The new request.
+	 */
+	@NonNull
+	static WaitForReadRequest newWaitForReadRequest(
+			@Nullable final BluetoothGattCharacteristic characteristic,
+			@Nullable final byte[] value) {
+		return new WaitForReadRequest(Type.WAIT_FOR_READ, characteristic, value, 0,
+				value != null ? value.length : 0);
+	}
+
+	/**
+	 * Creates new Wait For Read request. The request will not be executed if given server
+	 * characteristic is null, or does not have READ property.
+	 * After the operation is complete a proper callback will be invoked.
+	 * <p>
+	 * If the read should be triggered by another operation (for example writing an
+	 * op code), set it with {@link WaitForValueChangedRequest#trigger(Operation)}.
+	 *
+	 * @param characteristic characteristic that should be read by the remote device.
+	 * @param value          value to be sent. The array is copied into another buffer so it's
+	 *                       safe to reuse the array again.
+	 * @param offset         the offset from which value has to be copied.
+	 * @param length         number of bytes to be copied from the value buffer.
+	 * @return The new request.
+	 */
+	@NonNull
+	static WaitForReadRequest newWaitForReadRequest(
+			@Nullable final BluetoothGattCharacteristic characteristic,
+			@Nullable final byte[] value,
+			@IntRange(from = 0) final int offset, @IntRange(from = 0) final int length) {
+		return new WaitForReadRequest(Type.WAIT_FOR_READ, characteristic, value, offset, length);
+	}
+
+	/**
+	 * Creates new Wait For Read request. The request will not be executed if given server
+	 * characteristic is null, or does not have READ property.
+	 * After the operation is complete a proper callback will be invoked.
+	 * <p>
+	 * If the read should be triggered by another operation (for example writing an
+	 * op code), set it with {@link WaitForValueChangedRequest#trigger(Operation)}.
+	 *
+	 * @param descriptor descriptor that should be read by the remote device.
+	 * @return The new request.
+	 */
+	@NonNull
+	static WaitForReadRequest newWaitForReadRequest(
+			@Nullable final BluetoothGattDescriptor descriptor) {
+		return new WaitForReadRequest(Type.WAIT_FOR_READ, descriptor);
+	}
+
+	/**
+	 * Creates new Wait For Read request. The request will not be executed if given server
+	 * characteristic is null, or does not have READ property.
+	 * After the operation is complete a proper callback will be invoked.
+	 * <p>
+	 * If the read should be triggered by another operation (for example writing an
+	 * op code), set it with {@link WaitForValueChangedRequest#trigger(Operation)}.
+	 *
+	 * @param descriptor descriptor that should be read by the remote device.
+	 * @param value      value to be sent. The array is copied into another buffer so it's
+	 *                   safe to reuse the array again.
+	 * @return The new request.
+	 */
+	@NonNull
+	static WaitForReadRequest newWaitForReadRequest(
+			@Nullable final BluetoothGattDescriptor descriptor,
+			@Nullable final byte[] value) {
+		return new WaitForReadRequest(Type.WAIT_FOR_READ, descriptor, value, 0,
+				value != null ? value.length : 0);
+	}
+
+	/**
+	 * Creates new Wait For Read request. The request will not be executed if given server
+	 * characteristic is null, or does not have READ property.
+	 * After the operation is complete a proper callback will be invoked.
+	 * <p>
+	 * If the read should be triggered by another operation (for example writing an
+	 * op code), set it with {@link WaitForValueChangedRequest#trigger(Operation)}.
+	 *
+	 * @param descriptor descriptor that should be read by the remote device.
+	 * @param value      value to be sent. The array is copied into another buffer so it's
+	 *                   safe to reuse the array again.
+	 * @param offset     the offset from which value has to be copied.
+	 * @param length     number of bytes to be copied from the value buffer.
+	 * @return The new request.
+	 */
+	@NonNull
+	static WaitForReadRequest newWaitForReadRequest(
+			@Nullable final BluetoothGattDescriptor descriptor,
+			@Nullable final byte[] value,
+			@IntRange(from = 0) final int offset, @IntRange(from = 0) final int length) {
+		return new WaitForReadRequest(Type.WAIT_FOR_READ, descriptor, value, offset, length);
+	}
+
+	/**
+	 * Creates new Conditional Wait Request. The request will wait until the condition is fulfilled.
+	 *
+	 * @param condition the condition to check.
+	 * @param parameter an optional parameter.
+	 * @return The new request.
+	 */
+	@NonNull
+	static <T> ConditionalWaitRequest<T> newConditionalWaitRequest(@NonNull final ConditionalWaitRequest.Condition<T> condition,
+																   @Nullable final T parameter) {
+		return new ConditionalWaitRequest<>(Type.WAIT_FOR_CONDITION, condition, parameter);
+	}
+
+	/**
+	 * Creates new Set Characteristic Value request.
+	 *
+	 * @param characteristic the target characteristic for value set.
+	 * @param value          the new data to be assigned.
+	 * @return The new request.
+	 */
+	@NonNull
+	static SetValueRequest newSetValueRequest(
+			@Nullable final BluetoothGattCharacteristic characteristic,
+			@Nullable final byte[] value) {
+		return new SetValueRequest(Type.SET_VALUE, characteristic, value, 0,
+				value != null ? value.length : 0);
+	}
+
+	/**
+	 * Creates new Set Characteristic Value request.
+	 *
+	 * @param characteristic the target characteristic for value set.
+	 * @param value          the new data to be assigned.
+	 * @param offset         the offset from which value has to be copied.
+	 * @param length         number of bytes to be copied from the value buffer.
+	 * @return The new request.
+	 */
+	@NonNull
+	static SetValueRequest newSetValueRequest(
+			@Nullable final BluetoothGattCharacteristic characteristic,
+			@Nullable final byte[] value,
+			@IntRange(from = 0) final int offset, @IntRange(from = 0) final int length) {
+		return new SetValueRequest(Type.SET_VALUE, characteristic, value, offset, length);
+	}
+
+	/**
+	 * Creates new Set Descriptor Value request.
+	 *
+	 * @param descriptor the target descriptor for value set.
+	 * @param value      the new data to be assigned.
+	 * @return The new request.
+	 */
+	@NonNull
+	static SetValueRequest newSetValueRequest(
+			@Nullable final BluetoothGattDescriptor descriptor,
+			@Nullable final byte[] value) {
+		return new SetValueRequest(Type.SET_DESCRIPTOR_VALUE, descriptor, value, 0,
+				value != null ? value.length : 0);
+	}
+
+	/**
+	 * Creates new Set Descriptor Value request.
+	 *
+	 * @param descriptor the target descriptor for value set.
+	 * @param value      the new data to be assigned.
+	 * @param offset     the offset from which value has to be copied.
+	 * @param length     number of bytes to be copied from the value buffer.
+	 * @return The new request.
+	 */
+	@NonNull
+	static SetValueRequest newSetValueRequest(
+			@Nullable final BluetoothGattDescriptor descriptor,
+			@Nullable final byte[] value,
+			@IntRange(from = 0) final int offset, @IntRange(from = 0) final int length) {
+		return new SetValueRequest(Type.SET_DESCRIPTOR_VALUE, descriptor, value, offset, length);
 	}
 
 	/**
@@ -815,24 +1148,32 @@ public abstract class Request {
 	 * Enqueues the request for asynchronous execution.
 	 */
 	public void enqueue() {
-		manager.enqueue(this);
+		requestHandler.enqueue(this);
 	}
 
 	void notifyStarted(@NonNull final BluetoothDevice device) {
-		if (beforeCallback != null)
-			beforeCallback.onRequestStarted(device);
-		if (internalBeforeCallback != null)
-			internalBeforeCallback.onRequestStarted(device);
+		if (!started) {
+			started = true;
+
+			handler.post(() -> {
+				if (beforeCallback != null)
+					beforeCallback.onRequestStarted(device);
+				if (internalBeforeCallback != null)
+					internalBeforeCallback.onRequestStarted(device);
+			});
+		}
 	}
 
 	void notifySuccess(@NonNull final BluetoothDevice device) {
 		if (!finished) {
 			finished = true;
 
-			if (successCallback != null)
-				successCallback.onRequestCompleted(device);
-			if (internalSuccessCallback != null)
-				internalSuccessCallback.onRequestCompleted(device);
+			handler.post(() -> {
+				if (successCallback != null)
+					successCallback.onRequestCompleted(device);
+				if (internalSuccessCallback != null)
+					internalSuccessCallback.onRequestCompleted(device);
+			});
 		}
 	}
 
@@ -840,10 +1181,12 @@ public abstract class Request {
 		if (!finished) {
 			finished = true;
 
-			if (failCallback != null)
-				failCallback.onRequestFailed(device, status);
-			if (internalFailCallback != null)
-				internalFailCallback.onRequestFailed(device, status);
+			handler.post(() -> {
+				if (failCallback != null)
+					failCallback.onRequestFailed(device, status);
+				if (internalFailCallback != null)
+					internalFailCallback.onRequestFailed(device, status);
+			});
 		}
 	}
 
@@ -851,8 +1194,10 @@ public abstract class Request {
 		if (!finished) {
 			finished = true;
 
-			if (invalidRequestCallback != null)
-				invalidRequestCallback.onInvalidRequest();
+			handler.post(() -> {
+				if (invalidRequestCallback != null)
+					invalidRequestCallback.onInvalidRequest();
+			});
 		}
 	}
 

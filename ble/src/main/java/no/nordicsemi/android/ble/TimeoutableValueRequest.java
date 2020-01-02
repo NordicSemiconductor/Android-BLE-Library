@@ -39,7 +39,7 @@ import no.nordicsemi.android.ble.exception.RequestFailedException;
  * A value request that requires a {@link android.bluetooth.BluetoothGattCallback callback} or
  * can't have timeout for any other reason. This class defines the {@link #await()} methods.
  */
-@SuppressWarnings({"WeakerAccess", "unused"})
+@SuppressWarnings({"unused"})
 public abstract class TimeoutableValueRequest<T> extends TimeoutableRequest {
 	T valueCallback;
 

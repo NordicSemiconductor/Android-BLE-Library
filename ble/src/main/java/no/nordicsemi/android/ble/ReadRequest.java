@@ -26,6 +26,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.os.Handler;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -68,8 +69,15 @@ public final class ReadRequest extends SimpleValueRequest<DataReceivedCallback> 
 
 	@NonNull
 	@Override
-	ReadRequest setManager(@NonNull final BleManager manager) {
-		super.setManager(manager);
+	ReadRequest setRequestHandler(@NonNull final RequestHandler requestHandler) {
+		super.setRequestHandler(requestHandler);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public ReadRequest setHandler(@NonNull final Handler handler) {
+		super.setHandler(handler);
 		return this;
 	}
 
@@ -228,14 +236,18 @@ public final class ReadRequest extends SimpleValueRequest<DataReceivedCallback> 
 			return;
 
 		if (dataMerger == null) {
-			valueCallback.onDataReceived(device, new Data(value));
+			final Data data = new Data(value);
+			handler.post(() -> valueCallback.onDataReceived(device, data));
 		} else {
-			if (progressCallback != null)
-				progressCallback.onPacketReceived(device, value, count);
+			handler.post(() -> {
+				if (progressCallback != null)
+					progressCallback.onPacketReceived(device, value, count);
+			});
 			if (buffer == null)
 				buffer = new DataStream();
 			if (dataMerger.merge(buffer, value, count++)) {
-				valueCallback.onDataReceived(device, buffer.toData());
+				final Data data = buffer.toData();
+				handler.post(() -> valueCallback.onDataReceived(device, data));
 				buffer = null;
 				count = 0;
 			} // else

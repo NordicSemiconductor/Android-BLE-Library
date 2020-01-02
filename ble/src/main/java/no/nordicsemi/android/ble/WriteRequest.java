@@ -26,6 +26,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.os.Handler;
 
 import java.util.Arrays;
 
@@ -74,22 +75,37 @@ public final class WriteRequest extends SimpleValueRequest<DataSentCallback> imp
 				 @IntRange(from = 0) final int offset, @IntRange(from = 0) final int length,
 				 @WriteType final int writeType) {
 		super(type, characteristic);
-		this.data = copy(data, offset, length);
+		this.data = Bytes.copy(data, offset, length);
 		this.writeType = writeType;
+	}
+
+	WriteRequest(@NonNull final Type type, @Nullable final BluetoothGattCharacteristic characteristic,
+				 @Nullable final byte[] data,
+				 @IntRange(from = 0) final int offset, @IntRange(from = 0) final int length) {
+		super(type, characteristic);
+		this.data = Bytes.copy(data, offset, length);
+		this.writeType = 0;
 	}
 
 	WriteRequest(@NonNull final Type type, @Nullable final BluetoothGattDescriptor descriptor,
 				 @Nullable final byte[] data,
 				 @IntRange(from = 0) final int offset, @IntRange(from = 0) final int length) {
 		super(type, descriptor);
-		this.data = copy(data, offset, length);
+		this.data = Bytes.copy(data, offset, length);
 		this.writeType = BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT;
 	}
 
 	@NonNull
 	@Override
-	WriteRequest setManager(@NonNull final BleManager manager) {
-		super.setManager(manager);
+	WriteRequest setRequestHandler(@NonNull final RequestHandler requestHandler) {
+		super.setRequestHandler(requestHandler);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public WriteRequest setHandler(@NonNull final Handler handler) {
+		super.setHandler(handler);
 		return this;
 	}
 
@@ -244,16 +260,23 @@ public final class WriteRequest extends SimpleValueRequest<DataSentCallback> imp
 	 * @return True, if the data received are equal to data sent.
 	 */
 	boolean notifyPacketSent(@NonNull final BluetoothDevice device, @Nullable final byte[] data) {
-		if (progressCallback != null)
-			progressCallback.onPacketSent(device, data, count);
+		handler.post(() -> {
+			if (progressCallback != null)
+				progressCallback.onPacketSent(device, data, count);
+		});
 		count++;
-		if (complete && valueCallback != null)
-			valueCallback.onDataSent(device, new Data(WriteRequest.this.data));
+		if (complete) {
+			handler.post(() -> {
+				if (valueCallback != null)
+					valueCallback.onDataSent(device, new Data(WriteRequest.this.data));
+			});
+		}
 		return Arrays.equals(data, currentChunk);
 	}
 
 	/**
 	 * Returns whether there are more bytes to be sent from this Write Request.
+	 *
 	 * @return True if not all data were sent, false if the request is complete.
 	 */
 	boolean hasMore() {
@@ -262,21 +285,11 @@ public final class WriteRequest extends SimpleValueRequest<DataSentCallback> imp
 
 	/**
 	 * Returns the write type that should be used to send the data.
+	 *
 	 * @return The write type.
 	 */
 	@WriteType
 	int getWriteType() {
 		return writeType;
-	}
-
-	private static byte[] copy(@Nullable final byte[] value,
-							   @IntRange(from = 0) final int offset,
-							   @IntRange(from = 0) final int length) {
-		if (value == null || offset > value.length)
-			return null;
-		final int maxLength = Math.min(value.length - offset, length);
-		final byte[] copy = new byte[maxLength];
-		System.arraycopy(value, offset, copy, 0, maxLength);
-		return copy;
 	}
 }

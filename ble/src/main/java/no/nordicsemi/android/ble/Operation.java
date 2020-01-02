@@ -26,7 +26,6 @@ package no.nordicsemi.android.ble;
  * An operation is a request that can be executed during a pending connection without
  * changing connection state. Such requests may be added to {@link RequestQueue}.
  */
-@SuppressWarnings("WeakerAccess")
 public interface Operation {
 	// empty
 }
