@@ -11,12 +11,16 @@ import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
 import no.nordicsemi.android.ble.exception.InvalidRequestException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
-public class AwaitingRequest<T> extends TimeoutableValueRequest<T> {
+public abstract class AwaitingRequest<T> extends TimeoutableValueRequest<T> {
 	private static final int NOT_STARTED = -123456;
 	private static final int STARTED = NOT_STARTED + 1;
 
 	private Request trigger;
 	private int triggerStatus = BluetoothGatt.GATT_SUCCESS;
+
+	AwaitingRequest(@NonNull final Type type) {
+		super(type);
+	}
 
 	AwaitingRequest(@NonNull final Type type, @Nullable final BluetoothGattCharacteristic characteristic) {
 		super(type, characteristic);

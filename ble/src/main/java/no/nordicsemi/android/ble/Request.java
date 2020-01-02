@@ -77,6 +77,7 @@ public abstract class Request {
 		WAIT_FOR_INDICATION,
 		WAIT_FOR_READ,
 		WAIT_FOR_WRITE,
+		WAIT_FOR_CONDITION,
 		SET_VALUE,
 		SET_DESCRIPTOR_VALUE,
 		@Deprecated
@@ -775,6 +776,19 @@ public abstract class Request {
 			@Nullable final byte[] value,
 			@IntRange(from = 0) final int offset, @IntRange(from = 0) final int length) {
 		return new WaitForReadRequest(Type.WAIT_FOR_READ, descriptor, value, offset, length);
+	}
+
+	/**
+	 * Creates new Conditional Wait Request. The request will wait until the condition is fulfilled.
+	 *
+	 * @param condition the condition to check.
+	 * @param parameter an optional parameter.
+	 * @return The new request.
+	 */
+	@NonNull
+	static <T> ConditionalWaitRequest<T> newConditionalWaitRequest(@NonNull final ConditionalWaitRequest.Condition<T> condition,
+																   @Nullable final T parameter) {
+		return new ConditionalWaitRequest<>(Type.WAIT_FOR_CONDITION, condition, parameter);
 	}
 
 	/**

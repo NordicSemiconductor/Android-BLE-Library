@@ -791,33 +791,101 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	/**
-	 * Creates a request that will wait for enabling notifications.
+	 * Creates a conditional wait request that will wait if the given condition is satisfied.
+	 * The condition is checked when the request is executed and each time a new BLE operation is
+	 * complete.
+	 *
+	 * @param condition The condition to examine. If it's satisfied, the manager will wait.
+	 * @return The request.
+	 */
+	@NonNull
+	protected ConditionalWaitRequest<Void> waitIf(@NonNull final ConditionalWaitRequest.Condition<Void> condition) {
+		return Request.newConditionalWaitRequest(condition, null)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Creates a conditional wait request that will wait if the given condition is satisfied.
+	 * The condition is checked when the request is executed and each time a new BLE operation is
+	 * complete.
+	 *
+	 * @param parameter An optional parameter that will be passed to the condition.
+	 * @param condition The condition to examine. If it's satisfied, the manager will wait.
+	 * @return The request.
+	 */
+	@NonNull
+	protected <T> ConditionalWaitRequest<T> waitIf(@Nullable final T parameter,
+												   @NonNull final ConditionalWaitRequest.Condition<T> condition) {
+		return Request.newConditionalWaitRequest(condition, parameter)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Creates a conditional wait request that will wait until the given condition is not satisfied.
+	 * The condition is checked when the request is executed and each time a new BLE operation is
+	 * complete.
+	 *
+	 * @param condition The condition to examine. If it's not satisfied, the manager will wait.
+	 * @return The request.
+	 */
+	@NonNull
+	protected ConditionalWaitRequest<Void> waitUntil(@NonNull final ConditionalWaitRequest.Condition<Void> condition) {
+		return waitIf(condition).negate();
+	}
+
+	/**
+	 * Creates a conditional wait request that will wait until the given condition is not satisfied.
+	 * The condition is checked when the request is executed and each time a new BLE operation is
+	 * complete.
+	 *
+	 * @param parameter An optional parameter that will be passed to the condition.
+	 * @param condition The condition to examine. If it's not satisfied, the manager will wait.
+	 * @return The request.
+	 */
+	@NonNull
+	protected <T> ConditionalWaitRequest<T> waitUntil(@Nullable final T parameter,
+													  @NonNull final ConditionalWaitRequest.Condition<T> condition) {
+		return waitIf(parameter, condition).negate();
+	}
+
+	/**
+	 * Creates a request that will wait for enabling notifications. If notifications were
+	 * enabled at the time of executing the request, it will complete immediately.
 	 *
 	 * @param serverCharacteristic the server characteristic with notify property.
 	 * @return The request.
 	 */
 	@NonNull
-	protected WaitForValueChangedRequest waitForEnablingNotifications(
+	protected ConditionalWaitRequest waitUntilNotificationsEnabled(
 			@Nullable final BluetoothGattCharacteristic serverCharacteristic) {
-		final BluetoothGattDescriptor cccd = serverCharacteristic != null ?
-				serverCharacteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID) : null;
-		return waitForWrite(cccd)
-				.filter(lastPacket -> lastPacket != null && lastPacket.length == 2 && (lastPacket[0] & 0x01) != 0);
+		return waitUntil(serverCharacteristic, (characteristic) -> {
+			//noinspection ConstantConditions
+			final BluetoothGattDescriptor cccd = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID);
+			if (cccd == null)
+				return false;
+			final byte[] value = requestHandler.getDescriptorValue(cccd);
+			return value != null && value.length == 2 && (value[0] & 0x01) == 0x01;
+		});
 	}
 
 	/**
-	 * Creates a request that will wait for enabling indications.
+	 * Creates a request that will wait for enabling indications. If indications were
+	 * enabled at the time of executing the request, it will complete immediately.
 	 *
 	 * @param serverCharacteristic the server characteristic with indicate property.
 	 * @return The request.
 	 */
 	@NonNull
-	protected WaitForValueChangedRequest waitForEnablingIndications(
+	protected ConditionalWaitRequest<BluetoothGattCharacteristic> waitUntilIndicationsEnabled(
 			@Nullable final BluetoothGattCharacteristic serverCharacteristic) {
-		final BluetoothGattDescriptor cccd = serverCharacteristic != null ?
-				serverCharacteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID) : null;
-		return waitForWrite(cccd)
-				.filter(lastPacket -> lastPacket != null && lastPacket.length == 2 && (lastPacket[0] & 0x02) != 0);
+		return waitUntil(serverCharacteristic, (characteristic) -> {
+			//noinspection ConstantConditions
+			final BluetoothGattDescriptor cccd = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID);
+			if (cccd == null)
+				return false;
+			final byte[] value = requestHandler.getDescriptorValue(cccd);
+			return value != null && value.length == 2 && (value[0] & 0x02) == 0x02;
+		});
 	}
 
 	/**
