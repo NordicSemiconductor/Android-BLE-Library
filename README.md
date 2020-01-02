@@ -1,6 +1,6 @@
 # Android BLE Library
 
-[ ![Download](https://api.bintray.com/packages/nordic/android/ble-library/images/download.svg) ](https://bintray.com/nordic/android/ble-library/_latestVersion)
+[ ![Download](https://api.bintray.com/packages/nordic/android/no.nordicsemi.android%3Able/images/download.svg) ](https://bintray.com/nordic/android/no.nordicsemi.android%3Able/_latestVersion)
 
 An Android library that solves a lot of Android's Bluetooth Low Energy problems. 
 The [BleManager](https://github.com/NordicSemiconductor/Android-BLE-Library/blob/master/ble/src/main/java/no/nordicsemi/android/ble/BleManager.java)
