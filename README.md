@@ -43,8 +43,22 @@ Add it to your project by adding the following dependency:
 ```grovy
 implementation 'no.nordicsemi.android:ble:2.1.1'
 ```
-
 The last version not migrated to AndroidX is 2.0.5.
+
+To test the latest features, use the **alpha version**:
+```grovy
+implementation 'no.nordicsemi.android:ble:2.2.0-alpha01'
+```
+Features available in version 2.2.0:
+1. GATT Server support. This includes setting up the local GATT server on the Android device, new 
+   requests for server operations (*wait for read*, *wait for write*, *send notification, *send indication*,
+   *set characteristic value*, *set descriptor value*).
+2. New conditional requests: *waif if* and *wait until*.
+3. BLE operations are no longer called from the main thread.
+4. There's a new option to set a handler for invoking callbacks. A handler can also be set per-callback.
+5. Breaking change: some fields in the *BleManager* got rid of the Hungarian Notation. In particular,
+   *mCallbacks* was renamed to *callbacks*.
+The API of version 2.2.0 is not finished and may slightly change in the near future.
 
 #### As a library module
 
