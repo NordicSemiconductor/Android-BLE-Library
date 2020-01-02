@@ -421,7 +421,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			// Setting this flag to false would allow to enqueue a new request before the
 			// current one ends processing. The following line should not be uncommented.
 			// mGattCallback.operationInProgress = false;
-			cancelQueue();
+			taskQueue.clear();
 			initQueue = null;
 			bluetoothDevice = null;
 			serverManager = null;
