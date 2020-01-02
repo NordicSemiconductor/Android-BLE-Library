@@ -51,7 +51,7 @@ implementation 'no.nordicsemi.android:ble:2.2.0-alpha01'
 ```
 Features available in version 2.2.0:
 1. GATT Server support. This includes setting up the local GATT server on the Android device, new 
-   requests for server operations (*wait for read*, *wait for write*, *send notification, *send indication*,
+   requests for server operations (*wait for read*, *wait for write*, *send notification*, *send indication*,
    *set characteristic value*, *set descriptor value*).
 2. New conditional requests: *waif if* and *wait until*.
 3. BLE operations are no longer called from the main thread.
