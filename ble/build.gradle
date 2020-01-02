@@ -1,43 +1,13 @@
 apply plugin: 'com.android.library'
-/*
-apply plugin: 'com.github.dcendents.android-maven'
-apply plugin: 'com.jfrog.bintray'
 
-ext {
-    PUBLISH_GROUP_ID = 'no.nordicsemi.android'
-    PUBLISH_ARTIFACT_ID = 'ble'
-    PUBLISH_VERSION = '2.1.1'
-
-    bintrayRepo = 'android'
-    bintrayName = 'ble-library'
-
-    publishedGroupId = PUBLISH_GROUP_ID
-    artifact = PUBLISH_ARTIFACT_ID
-    libraryVersion = PUBLISH_VERSION
-    libraryName = 'BLE Library'
-    libraryDescription = 'Bluetooth Low Energy library for Android'
-
-    issuesUrl = 'https://github.com/NordicSemiconductor/Android-BLE-Library/issues'
-    siteUrl = 'https://github.com/NordicSemiconductor/Android-BLE-Library'
-    gitUrl = 'https://github.com/NordicSemiconductor/Android-BLE-Library.git'
-
-    developerId = 'philips77'
-    developerName = 'Aleksander Nowakowski'
-    developerEmail = 'aleksander.nowakowski@nordicsemi.no'
-
-    licenseName = 'The BSD 3-Clause License'
-    licenseUrl = 'http://opensource.org/licenses/BSD-3-Clause'
-    allLicenses = ["BSD 3-Clause"]
-}
-*/
 android {
-    compileSdkVersion 28
+    compileSdkVersion 29
 
     defaultConfig {
         minSdkVersion 18
-        targetSdkVersion 28
+        targetSdkVersion 29
         versionCode 27
-        versionName "2.1.1"
+        versionName VERSION_NAME
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -64,55 +34,4 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.2.0'
 }
 
-/*
-// The following script creates a POM file required to publish on Maven Central
-apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/installv1.gradle'
-
-// This script creates sources and javadocs. Both are required to publish a library on jcenter and MC.
-apply from: 'https://raw.githubusercontent.com/ArthurHub/release-android-library/master/android-release-aar.gradle'
-
-// The following link publishes the library to jcenter. It does not handle the userOrg, so it has been copied and modified below.
-//apply from: 'https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle'
-
-// Copied from https://raw.githubusercontent.com/nuuneoi/JCenter/master/bintrayv1.gradle
-version = libraryVersion
-
-// Bintray
-Properties properties = new Properties()
-properties.load(project.rootProject.file('local.properties').newDataInputStream())
-
-bintray {
-    user = properties.getProperty("bintray.user")
-    key = properties.getProperty("bintray.apikey")
-
-    configurations = ['archives']
-    pkg {
-        repo = bintrayRepo
-        name = bintrayName
-        userOrg = properties.getProperty("bintray.userOrg")
-        desc = libraryDescription
-        websiteUrl = siteUrl
-        issueTrackerUrl = issuesUrl
-        vcsUrl = gitUrl
-        licenses = allLicenses
-        publish = true
-        publicDownloadNumbers = true
-        version {
-            desc = libraryDescription
-            gpg {
-                sign = true //Determines whether to GPG sign the files. The default is false
-                passphrase = properties.getProperty("bintray.gpg.password")
-                //Optional. The passphrase for GPG signing'
-            }
-        }
-    }
-}
-
-if (JavaVersion.current().isJava8Compatible()) {
-    allprojects {
-        tasks.withType(Javadoc) {
-            options.addStringOption('Xdoclint:none', '-quiet')
-        }
-    }
-}
-*/
+apply from: rootProject.file('gradle/gradle-bintray-push.gradle')

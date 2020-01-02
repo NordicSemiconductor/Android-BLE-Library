@@ -34,7 +34,7 @@ import no.nordicsemi.android.ble.data.DataFilter;
 import no.nordicsemi.android.ble.data.DataMerger;
 import no.nordicsemi.android.ble.data.DataStream;
 
-@SuppressWarnings({"unused", "WeakerAccess", "UnusedReturnValue"})
+@SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ValueChangedCallback {
 	private ReadProgressCallback progressCallback;
 	private DataReceivedCallback valueCallback;

@@ -7,6 +7,7 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
 import android.content.BroadcastReceiver;
@@ -17,10 +18,15 @@ import android.os.Build;
 import android.os.Handler;
 import android.os.SystemClock;
 import android.util.Log;
+import android.util.Pair;
 
 import java.lang.reflect.Method;
+import java.security.InvalidParameterException;
 import java.util.Deque;
 import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.Map;
+import java.util.UUID;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import androidx.annotation.IntRange;
@@ -58,11 +64,13 @@ abstract class BleManagerHandler extends RequestHandler {
 	private final static String ERROR_READ_PHY = "Error on PHY read";
 	private final static String ERROR_PHY_UPDATE = "Error on PHY update";
 	private final static String ERROR_RELIABLE_WRITE = "Error on Execute Reliable Write";
+	private final static String ERROR_NOTIFY = "Error on sending notification/indication";
 
 	private final Object LOCK = new Object();
 	private BluetoothDevice bluetoothDevice;
 	private BluetoothGatt bluetoothGatt;
 	private BleManager manager;
+	private BleServerManager serverManager;
 	private Handler handler;
 
 	private final Deque<Request> taskQueue = new LinkedBlockingDeque<>();
@@ -157,6 +165,16 @@ abstract class BleManagerHandler extends RequestHandler {
 	@IntRange(from = -1, to = 100)
 	@Deprecated
 	private int batteryValue = -1;
+	/** Values of non-shared characteristics. Each connected device has its own copy of such. */
+	private Map<BluetoothGattCharacteristic, byte[]> characteristicValues;
+	/** Values of non-shared descriptors. Each connected device has its own copy of such. */
+	private Map<BluetoothGattDescriptor, byte[]> descriptorValues;
+	/**
+	 * Temporary values of characteristic to support Reliable Write. The temp value will be
+	 * set as valid when the write request is executed, or discarded when aborted.
+	 */
+	private Deque<Pair<Object /* BluetoothGattCharacteristic of BluetoothGattDescriptor> */, byte[]>> preparedValues;
+	private int prepareError;
 	/**
 	 * The connect request. This is instantiated in {@link BleManager#connect(BluetoothDevice, int)}
 	 * and nullified after the device is ready.
@@ -177,7 +195,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	 * A map of {@link ValueChangedCallback}s for handling notifications and indications.
 	 */
 	@NonNull
-	private final HashMap<BluetoothGattCharacteristic, ValueChangedCallback> notificationCallbacks = new HashMap<>();
+	private final HashMap<Object, ValueChangedCallback> notificationCallbacks = new HashMap<>();
 	/**
 	 * A special handler for Battery Level notifications.
 	 */
@@ -189,7 +207,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	 * There may be only a single instance of such request at a time as this is a blocking request.
 	 */
 	@Nullable
-	private WaitForValueChangedRequest valueChangedRequest;
+	private AwaitingRequest awaitingRequest;
 
 	private final BroadcastReceiver bluetoothStateBroadcastReceiver = new BroadcastReceiver() {
 		@Override
@@ -208,7 +226,7 @@ abstract class BleManagerHandler extends RequestHandler {
 							&& previousState != BluetoothAdapter.STATE_OFF) {
 						// No more calls are possible
 						operationInProgress = true;
-						cancelQueue();
+						taskQueue.clear();
 						initQueue = null;
 
 						final BluetoothDevice device = bluetoothDevice;
@@ -218,9 +236,9 @@ abstract class BleManagerHandler extends RequestHandler {
 								request.notifyFail(device, FailCallback.REASON_BLUETOOTH_DISABLED);
 								request = null;
 							}
-							if (valueChangedRequest != null) {
-								valueChangedRequest.notifyFail(device, FailCallback.REASON_BLUETOOTH_DISABLED);
-								valueChangedRequest = null;
+							if (awaitingRequest != null) {
+								awaitingRequest.notifyFail(device, FailCallback.REASON_BLUETOOTH_DISABLED);
+								awaitingRequest = null;
 							}
 							if (connectRequest != null) {
 								connectRequest.notifyFail(device, FailCallback.REASON_BLUETOOTH_DISABLED);
@@ -271,7 +289,8 @@ abstract class BleManagerHandler extends RequestHandler {
 			final int previousBondState = intent.getIntExtra(BluetoothDevice.EXTRA_PREVIOUS_BOND_STATE, -1);
 
 			// Skip other devices.
-			if (bluetoothDevice == null || !device.getAddress().equals(bluetoothDevice.getAddress()))
+			if (bluetoothDevice == null || device == null
+					|| !device.getAddress().equals(bluetoothDevice.getAddress()))
 				return;
 
 			log(Log.DEBUG, "[Broadcast] Action received: " +
@@ -282,7 +301,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			switch (bondState) {
 				case BluetoothDevice.BOND_NONE:
 					if (previousBondState == BluetoothDevice.BOND_BONDING) {
-						manager.userCallbacks.onBondingFailed(device);
+						manager.callbacks.onBondingFailed(device);
 						log(Log.WARN, "Bonding failed");
 						if (request != null) { // CREATE_BOND request
 							request.notifyFail(device, FailCallback.REASON_REQUEST_FAILED);
@@ -298,11 +317,11 @@ abstract class BleManagerHandler extends RequestHandler {
 					}
 					break;
 				case BluetoothDevice.BOND_BONDING:
-					manager.userCallbacks.onBondingRequired(device);
+					manager.callbacks.onBondingRequired(device);
 					return;
 				case BluetoothDevice.BOND_BONDED:
 					log(Log.INFO, "Device bonded");
-					manager.userCallbacks.onBonded(device);
+					manager.callbacks.onBonded(device);
 					if (request != null && request.type == Request.Type.CREATE_BOND) {
 						request.notifySuccess(device);
 						request = null;
@@ -359,6 +378,15 @@ abstract class BleManagerHandler extends RequestHandler {
 	}
 
 	/**
+	 * Binds the server with the BLE manager handler. Call with null to unbind the server.
+	 *
+	 * @param server the server to bind; null to unbind the server.
+	 */
+	void useServer(@Nullable final BleServerManager server) {
+		this.serverManager = server;
+	}
+
+	/**
 	 * Closes and releases resources.
 	 */
 	void close() {
@@ -396,11 +424,40 @@ abstract class BleManagerHandler extends RequestHandler {
 			cancelQueue();
 			initQueue = null;
 			bluetoothDevice = null;
+			serverManager = null;
 		}
 	}
 
 	public BluetoothDevice getBluetoothDevice() {
 		return bluetoothDevice;
+	}
+
+	/**
+	 * Returns the value of the server characteristic. For characteristics that are not shared,
+	 * the value may be different for each connected device.
+	 *
+	 * @param serverCharacteristic The characteristic to get value of.
+	 * @return The value.
+	 */
+	@Nullable
+	public final byte[] getCharacteristicValue(@NonNull final BluetoothGattCharacteristic serverCharacteristic) {
+		if (characteristicValues != null && characteristicValues.containsKey(serverCharacteristic))
+			return characteristicValues.get(serverCharacteristic);
+		return serverCharacteristic.getValue();
+	}
+
+	/**
+	 * Returns the value of the server descriptor. For descriptor that are not shared,
+	 * the value may be different for each connected device.
+	 *
+	 * @param serverDescriptor The descriptor to get value of.
+	 * @return The value.
+	 */
+	@Nullable
+	public final byte[] getDescriptorValue(@NonNull final BluetoothGattDescriptor serverDescriptor) {
+		if (descriptorValues != null && descriptorValues.containsKey(serverDescriptor))
+			return descriptorValues.get(serverDescriptor);
+		return serverDescriptor.getValue();
 	}
 
 	// Requests implementation
@@ -461,7 +518,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					connectionTime = 0L; // no timeout possible when autoConnect used
 					connectionState = BluetoothGatt.STATE_CONNECTING;
 					log(Log.VERBOSE, "Connecting...");
-					manager.userCallbacks.onDeviceConnecting(device);
+					manager.callbacks.onDeviceConnecting(device);
 					log(Log.DEBUG, "gatt.connect()");
 					bluetoothGatt.connect();
 					return true;
@@ -491,7 +548,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		bluetoothDevice = device;
 		log(Log.VERBOSE, connectRequest.isFirstAttempt() ? "Connecting..." : "Retrying...");
 		connectionState = BluetoothGatt.STATE_CONNECTING;
-		manager.userCallbacks.onDeviceConnecting(device);
+		manager.callbacks.onDeviceConnecting(device);
 		connectionTime = SystemClock.elapsedRealtime();
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			// connectRequest will never be null here.
@@ -521,7 +578,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (bluetoothGatt != null) {
 			connectionState = BluetoothGatt.STATE_DISCONNECTING;
 			log(Log.VERBOSE, connected ? "Disconnecting..." : "Cancelling connection...");
-			manager.userCallbacks.onDeviceDisconnecting(bluetoothGatt.getDevice());
+			manager.callbacks.onDeviceDisconnecting(bluetoothGatt.getDevice());
 			final boolean wasConnected = connected;
 			log(Log.DEBUG, "gatt.disconnect()");
 			bluetoothGatt.disconnect();
@@ -533,7 +590,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			// gatt.disconnect(), the connection attempt will be stopped.
 			connectionState = BluetoothGatt.STATE_DISCONNECTED;
 			log(Log.INFO, "Disconnected");
-			manager.userCallbacks.onDeviceDisconnected(bluetoothGatt.getDevice());
+			manager.callbacks.onDeviceDisconnected(bluetoothGatt.getDevice());
 		}
 		// request may be of type DISCONNECT or CONNECT (timeout).
 		// For the latter, it has already been notified with REASON_TIMEOUT.
@@ -641,7 +698,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		return internalEnableIndications(scCharacteristic);
 	}
 
-	private boolean internalEnableNotifications(final BluetoothGattCharacteristic characteristic) {
+	private boolean internalEnableNotifications(@Nullable final BluetoothGattCharacteristic characteristic) {
 		final BluetoothGatt gatt = bluetoothGatt;
 		if (gatt == null || characteristic == null || !connected)
 			return false;
@@ -660,7 +717,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		return false;
 	}
 
-	private boolean internalDisableNotifications(final BluetoothGattCharacteristic characteristic) {
+	private boolean internalDisableNotifications(@Nullable final BluetoothGattCharacteristic characteristic) {
 		final BluetoothGatt gatt = bluetoothGatt;
 		if (gatt == null || characteristic == null || !connected)
 			return false;
@@ -679,7 +736,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		return false;
 	}
 
-	private boolean internalEnableIndications(final BluetoothGattCharacteristic characteristic) {
+	private boolean internalEnableIndications(@Nullable final BluetoothGattCharacteristic characteristic) {
 		final BluetoothGatt gatt = bluetoothGatt;
 		if (gatt == null || characteristic == null || !connected)
 			return false;
@@ -698,9 +755,31 @@ abstract class BleManagerHandler extends RequestHandler {
 		return false;
 	}
 
-	private boolean internalDisableIndications(final BluetoothGattCharacteristic characteristic) {
+	private boolean internalDisableIndications(@Nullable final BluetoothGattCharacteristic characteristic) {
 		// This writes exactly the same settings so do not duplicate code.
 		return internalDisableNotifications(characteristic);
+	}
+
+	private boolean internalSendNotification(@Nullable final BluetoothGattCharacteristic serverCharacteristic,
+											 final boolean confirm) {
+		if (serverManager == null || serverManager.getServer() == null || serverCharacteristic == null)
+			return false;
+		final int requiredProperty = confirm ? BluetoothGattCharacteristic.PROPERTY_INDICATE : BluetoothGattCharacteristic.PROPERTY_NOTIFY;
+		if ((serverCharacteristic.getProperties() & requiredProperty) == 0)
+			return false;
+		final BluetoothGattDescriptor cccd = serverCharacteristic.getDescriptor(BleManager.CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID);
+		if (cccd == null)
+			return false;
+		// If notifications/indications were enabled, send the notification/indication.
+		final byte[] value = descriptorValues.containsKey(cccd) ? descriptorValues.get(cccd) : cccd.getValue();
+		if (value != null && value.length == 2 && value[0] != 0) {
+			log(Log.VERBOSE, "[Server] Sending " + (confirm ? "indication" : "notification") + " to " + serverCharacteristic.getUuid());
+			log(Log.DEBUG, "server.notifyCharacteristicChanged(device, " + serverCharacteristic.getUuid() + ", " + confirm);
+			return serverManager.getServer().notifyCharacteristicChanged(bluetoothDevice, serverCharacteristic, confirm);
+		}
+		// Otherwise, assume the data was sent. The remote side has not registered for them.
+		nextRequest(true);
+		return true;
 	}
 
 	/**
@@ -726,7 +805,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		return characteristic.getDescriptor(BleManager.CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID);
 	}
 
-	private boolean internalReadCharacteristic(final BluetoothGattCharacteristic characteristic) {
+	private boolean internalReadCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic) {
 		final BluetoothGatt gatt = bluetoothGatt;
 		if (gatt == null || characteristic == null || !connected)
 			return false;
@@ -741,7 +820,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		return gatt.readCharacteristic(characteristic);
 	}
 
-	private boolean internalWriteCharacteristic(final BluetoothGattCharacteristic characteristic) {
+	private boolean internalWriteCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic) {
 		final BluetoothGatt gatt = bluetoothGatt;
 		if (gatt == null || characteristic == null || !connected)
 			return false;
@@ -758,7 +837,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		return gatt.writeCharacteristic(characteristic);
 	}
 
-	private boolean internalReadDescriptor(final BluetoothGattDescriptor descriptor) {
+	private boolean internalReadDescriptor(@Nullable final BluetoothGattDescriptor descriptor) {
 		final BluetoothGatt gatt = bluetoothGatt;
 		if (gatt == null || descriptor == null || !connected)
 			return false;
@@ -768,7 +847,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		return gatt.readDescriptor(descriptor);
 	}
 
-	private boolean internalWriteDescriptor(final BluetoothGattDescriptor descriptor) {
+	private boolean internalWriteDescriptor(@Nullable final BluetoothGattDescriptor descriptor) {
 		final BluetoothGatt gatt = bluetoothGatt;
 		if (gatt == null || descriptor == null || !connected)
 			return false;
@@ -788,7 +867,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	 * @param descriptor the descriptor to be written
 	 * @return the result of {@link BluetoothGatt#writeDescriptor(BluetoothGattDescriptor)}
 	 */
-	private boolean internalWriteDescriptorWorkaround(final BluetoothGattDescriptor descriptor) {
+	private boolean internalWriteDescriptorWorkaround(@Nullable final BluetoothGattDescriptor descriptor) {
 		final BluetoothGatt gatt = bluetoothGatt;
 		if (gatt == null || descriptor == null || !connected)
 			return false;
@@ -964,7 +1043,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	 * @return The callback.
 	 */
 	@NonNull
-	ValueChangedCallback setNotificationCallback(@Nullable final BluetoothGattCharacteristic characteristic) {
+	ValueChangedCallback setNotificationCallback(@Nullable final Object characteristic) {
 		ValueChangedCallback callback = notificationCallbacks.get(characteristic);
 		if (callback == null) {
 			callback = new ValueChangedCallback(handler);
@@ -984,7 +1063,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				log(Log.INFO, "Battery Level received: " + batteryLevel + "%");
 				batteryValue = batteryLevel;
 				onBatteryValueReceived(bluetoothGatt, batteryLevel);
-				manager.userCallbacks.onBatteryValueReceived(device, batteryLevel);
+				manager.callbacks.onBatteryValueReceived(device, batteryLevel);
 			}
 		};
 	}
@@ -999,7 +1078,7 @@ abstract class BleManagerHandler extends RequestHandler {
 							final int batteryLevel = data.getIntValue(Data.FORMAT_UINT8, 0);
 							batteryValue = batteryLevel;
 							onBatteryValueReceived(bluetoothGatt, batteryLevel);
-							manager.userCallbacks.onBatteryValueReceived(device, batteryLevel);
+							manager.callbacks.onBatteryValueReceived(device, batteryLevel);
 						}
 					});
 		}
@@ -1007,11 +1086,11 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	/**
 	 * Removes the notifications callback set using
-	 * {@link #setNotificationCallback(BluetoothGattCharacteristic)}.
+	 * {@link #setNotificationCallback(Object)}.
 	 *
 	 * @param characteristic characteristic to unbind the callback from.
 	 */
-	void removeNotificationCallback(@Nullable final BluetoothGattCharacteristic characteristic) {
+	void removeNotificationCallback(@Nullable final Object characteristic) {
 		notificationCallbacks.remove(characteristic);
 	}
 
@@ -1060,12 +1139,32 @@ abstract class BleManagerHandler extends RequestHandler {
 	@Override
 	final void cancelQueue() {
 		taskQueue.clear();
+		initQueue = null;
+		if (awaitingRequest != null) {
+			awaitingRequest.notifyFail(bluetoothDevice, FailCallback.REASON_CANCELLED);
+		}
+		if (request != null && awaitingRequest != request) {
+			request.notifyFail(bluetoothDevice, FailCallback.REASON_CANCELLED);
+			request = null;
+		}
+		awaitingRequest = null;
+		if (requestQueue != null) {
+			requestQueue.notifyFail(bluetoothDevice, FailCallback.REASON_CANCELLED);
+			requestQueue = null;
+		}
+		if (connectRequest != null) {
+			connectRequest.notifyFail(bluetoothDevice, FailCallback.REASON_CANCELLED);
+			connectRequest = null;
+			internalDisconnect();
+		} else {
+			nextRequest(true);
+		}
 	}
 
 	@Override
 	final void onRequestTimeout(@NonNull final TimeoutableRequest request) {
 		this.request = null;
-		valueChangedRequest = null;
+		awaitingRequest = null;
 		if (request.type == Request.Type.CONNECT) {
 			connectRequest = null;
 			internalDisconnect();
@@ -1224,6 +1323,23 @@ abstract class BleManagerHandler extends RequestHandler {
 	}
 
 	/**
+	 * In this method the manager should get references to server characteristics and descriptors
+	 * that will use. The method is called after the service discovery of a remote device has
+	 * finished and {@link #isRequiredServiceSupported(BluetoothGatt)} returned true.
+	 * <p>
+	 * The references obtained in this method should be released in {@link #onDeviceDisconnected()}.
+	 * <p>
+	 * This method is called only when the server was set by
+	 * {@link BleManager#useServer(BleServerManager)} and opened using {@link BleServerManager#open()}.
+	 *
+	 * @param server The GATT Server instance. Use {@link BluetoothGattServer#getService(UUID)} to
+	 *               obtain service instance.
+	 */
+	protected void onServerReady(@NonNull final BluetoothGattServer server) {
+		// empty initialization
+	}
+
+	/**
 	 * Called when the initialization queue is complete.
 	 */
 	protected void onDeviceReady() {
@@ -1251,22 +1367,23 @@ abstract class BleManagerHandler extends RequestHandler {
 		serviceDiscoveryRequested = false;
 		initInProgress = false;
 		connectionState = BluetoothGatt.STATE_DISCONNECTED;
+		checkCondition();
 		if (!wasConnected) {
 			log(Log.WARN, "Connection attempt timed out");
 			close();
-			manager.userCallbacks.onDeviceDisconnected(device);
+			manager.callbacks.onDeviceDisconnected(device);
 			// ConnectRequest was already notified
 		} else if (userDisconnected) {
 			log(Log.INFO, "Disconnected");
 			close();
-			manager.userCallbacks.onDeviceDisconnected(device);
+			manager.callbacks.onDeviceDisconnected(device);
 			final Request request = this.request;
 			if (request != null && request.type == Request.Type.DISCONNECT) {
 				request.notifySuccess(device);
 			}
 		} else {
 			log(Log.WARN, "Connection lost");
-			manager.userCallbacks.onLinkLossOccurred(device);
+			manager.callbacks.onLinkLossOccurred(device);
 			// We are not closing the connection here as the device should try to reconnect
 			// automatically.
 			// This may be only called when the shouldAutoConnect() method returned true.
@@ -1418,7 +1535,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	private void onError(final BluetoothDevice device, final String message, final int errorCode) {
 		log(Log.ERROR, "Error (0x" + Integer.toHexString(errorCode) + "): "
 				+ GattError.parse(errorCode));
-		manager.userCallbacks.onError(device, message, errorCode);
+		manager.callbacks.onError(device, message, errorCode);
 	}
 
 	private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
@@ -1450,7 +1567,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				connected = true;
 				connectionTime = 0L;
 				connectionState = BluetoothGatt.STATE_CONNECTED;
-				manager.userCallbacks.onDeviceConnected(gatt.getDevice());
+				manager.callbacks.onDeviceConnected(gatt.getDevice());
 
 				if (!serviceDiscoveryRequested) {
 					final boolean bonded = gatt.getDevice().getBondState() == BluetoothDevice.BOND_BONDED;
@@ -1498,7 +1615,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					}
 
 					operationInProgress = true; // no more calls are possible
-					cancelQueue();
+					taskQueue.clear();
 					initQueue = null;
 					ready = false;
 
@@ -1521,9 +1638,9 @@ abstract class BleManagerHandler extends RequestHandler {
 							request = null;
 						}
 					}
-					if (valueChangedRequest != null) {
-						valueChangedRequest.notifyFail(gatt.getDevice(), FailCallback.REASON_DEVICE_DISCONNECTED);
-						valueChangedRequest = null;
+					if (awaitingRequest != null) {
+						awaitingRequest.notifyFail(gatt.getDevice(), FailCallback.REASON_DEVICE_DISCONNECTED);
+						awaitingRequest = null;
 					}
 					if (connectRequest != null) {
 						int reason;
@@ -1559,7 +1676,7 @@ abstract class BleManagerHandler extends RequestHandler {
 						log(Log.ERROR, "Error (0x" + Integer.toHexString(status) + "): " +
 								GattError.parseConnectionError(status));
 				}
-				manager.userCallbacks.onError(gatt.getDevice(), ERROR_CONNECTION_STATE_CHANGE, status);
+				manager.callbacks.onError(gatt.getDevice(), ERROR_CONNECTION_STATE_CHANGE, status);
 			}
 		}
 
@@ -1576,7 +1693,31 @@ abstract class BleManagerHandler extends RequestHandler {
 						log(Log.VERBOSE, "Secondary service found");
 
 					// Notify the parent activity.
-					manager.userCallbacks.onServicesDiscovered(gatt.getDevice(), optionalServicesFound);
+					manager.callbacks.onServicesDiscovered(gatt.getDevice(), optionalServicesFound);
+
+					// Initialize server attributes.
+					if (serverManager != null) {
+						final BluetoothGattServer server = serverManager.getServer();
+						if (server != null) {
+							for (final BluetoothGattService service: server.getServices()) {
+								for (final BluetoothGattCharacteristic characteristic: service.getCharacteristics()) {
+									if (!serverManager.isShared(characteristic)) {
+										if (characteristicValues == null)
+											characteristicValues = new HashMap<>();
+										characteristicValues.put(characteristic, characteristic.getValue());
+									}
+									for (final BluetoothGattDescriptor descriptor: characteristic.getDescriptors()) {
+										if (!serverManager.isShared(descriptor)) {
+											if (descriptorValues == null)
+												descriptorValues = new HashMap<>();
+											descriptorValues.put(descriptor, descriptor.getValue());
+										}
+									}
+								}
+							}
+							onServerReady(server);
+						}
+					}
 
 					// Obtain the queue of initialization requests.
 					// First, let's call the deprecated initGatt(...).
@@ -1621,7 +1762,7 @@ abstract class BleManagerHandler extends RequestHandler {
 						manager.readBatteryLevel();
 						// 3. Enable Battery Level notifications if required (if this char. does not
 						//    exist, this operation will be skipped)
-						if (manager.userCallbacks.shouldEnableBatteryLevelNotifications(gatt.getDevice()))
+						if (manager.callbacks.shouldEnableBatteryLevelNotifications(gatt.getDevice()))
 							manager.enableBatteryLevelNotifications();
 					}
 					// End
@@ -1631,7 +1772,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					nextRequest(true);
 				} else {
 					log(Log.WARN, "Device is not supported");
-					manager.userCallbacks.onDeviceNotSupported(gatt.getDevice());
+					manager.callbacks.onDeviceNotSupported(gatt.getDevice());
 					internalDisconnect();
 				}
 			} else {
@@ -1657,15 +1798,15 @@ abstract class BleManagerHandler extends RequestHandler {
 
 				BleManagerHandler.this.onCharacteristicRead(gatt, characteristic);
 				if (request instanceof ReadRequest) {
-					final ReadRequest request = (ReadRequest) BleManagerHandler.this.request;
-					final boolean matches = request.matches(data);
+					final ReadRequest rr = (ReadRequest) request;
+					final boolean matches = rr.matches(data);
 					if (matches) {
-						request.notifyValueChanged(gatt.getDevice(), data);
+						rr.notifyValueChanged(gatt.getDevice(), data);
 					}
-					if (!matches || request.hasMore()) {
-						enqueueFirst(request);
+					if (!matches || rr.hasMore()) {
+						enqueueFirst(rr);
 					} else {
-						request.notifySuccess(gatt.getDevice());
+						rr.notifySuccess(gatt.getDevice());
 					}
 				}
 			} else if (status == BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION
@@ -1675,7 +1816,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				if (gatt.getDevice().getBondState() != BluetoothDevice.BOND_NONE) {
 					// This should never happen but it used to: http://stackoverflow.com/a/20093695/2115352
 					Log.w(TAG, ERROR_AUTH_ERROR_WHILE_BONDED);
-					manager.userCallbacks.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status);
+					manager.callbacks.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status);
 				}
 				// The request will be repeated when the bond state changes to BONDED.
 				return;
@@ -1684,9 +1825,10 @@ abstract class BleManagerHandler extends RequestHandler {
 				if (request instanceof ReadRequest) {
 					request.notifyFail(gatt.getDevice(), status);
 				}
-				valueChangedRequest = null;
+				awaitingRequest = null;
 				onError(gatt.getDevice(), ERROR_READ_CHARACTERISTIC, status);
 			}
+			checkCondition();
 			nextRequest(true);
 		}
 
@@ -1702,15 +1844,15 @@ abstract class BleManagerHandler extends RequestHandler {
 
 				BleManagerHandler.this.onCharacteristicWrite(gatt, characteristic);
 				if (request instanceof WriteRequest) {
-					final WriteRequest request = (WriteRequest) BleManagerHandler.this.request;
-					final boolean valid = request.notifyPacketSent(gatt.getDevice(), data);
+					final WriteRequest wr = (WriteRequest) request;
+					final boolean valid = wr.notifyPacketSent(gatt.getDevice(), data);
 					if (!valid && requestQueue instanceof ReliableWriteRequest) {
-						request.notifyFail(gatt.getDevice(), FailCallback.REASON_VALIDATION);
+						wr.notifyFail(gatt.getDevice(), FailCallback.REASON_VALIDATION);
 						requestQueue.cancelQueue();
-					} else if (request.hasMore()) {
-						enqueueFirst(request);
+					} else if (wr.hasMore()) {
+						enqueueFirst(wr);
 					} else {
-						request.notifySuccess(gatt.getDevice());
+						wr.notifySuccess(gatt.getDevice());
 					}
 				}
 			} else if (status == BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION
@@ -1720,7 +1862,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				if (gatt.getDevice().getBondState() != BluetoothDevice.BOND_NONE) {
 					// This should never happen but it used to: http://stackoverflow.com/a/20093695/2115352
 					Log.w(TAG, ERROR_AUTH_ERROR_WHILE_BONDED);
-					manager.userCallbacks.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status);
+					manager.callbacks.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status);
 				}
 				// The request will be repeated when the bond state changes to BONDED.
 				return;
@@ -1732,9 +1874,10 @@ abstract class BleManagerHandler extends RequestHandler {
 					if (requestQueue instanceof ReliableWriteRequest)
 						requestQueue.cancelQueue();
 				}
-				valueChangedRequest = null;
+				awaitingRequest = null;
 				onError(gatt.getDevice(), ERROR_WRITE_CHARACTERISTIC, status);
 			}
+			checkCondition();
 			nextRequest(true);
 		}
 
@@ -1757,6 +1900,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				request.notifyFail(gatt.getDevice(), status);
 				onError(gatt.getDevice(), ERROR_RELIABLE_WRITE, status);
 			}
+			checkCondition();
 			nextRequest(true);
 		}
 
@@ -1785,7 +1929,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				if (gatt.getDevice().getBondState() != BluetoothDevice.BOND_NONE) {
 					// This should never happen but it used to: http://stackoverflow.com/a/20093695/2115352
 					Log.w(TAG, ERROR_AUTH_ERROR_WHILE_BONDED);
-					manager.userCallbacks.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status);
+					manager.callbacks.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status);
 				}
 				// The request will be repeated when the bond state changes to BONDED.
 				return;
@@ -1794,9 +1938,10 @@ abstract class BleManagerHandler extends RequestHandler {
 				if (request instanceof ReadRequest) {
 					request.notifyFail(gatt.getDevice(), status);
 				}
-				valueChangedRequest = null;
+				awaitingRequest = null;
 				onError(gatt.getDevice(), ERROR_READ_DESCRIPTOR, status);
 			}
+			checkCondition();
 			nextRequest(true);
 		}
 
@@ -1831,15 +1976,15 @@ abstract class BleManagerHandler extends RequestHandler {
 					BleManagerHandler.this.onDescriptorWrite(gatt, descriptor);
 				}
 				if (request instanceof WriteRequest) {
-					final WriteRequest request = (WriteRequest) BleManagerHandler.this.request;
-					final boolean valid = request.notifyPacketSent(gatt.getDevice(), data);
+					final WriteRequest wr = (WriteRequest) request;
+					final boolean valid = wr.notifyPacketSent(gatt.getDevice(), data);
 					if (!valid && requestQueue instanceof ReliableWriteRequest) {
-						request.notifyFail(gatt.getDevice(), FailCallback.REASON_VALIDATION);
+						wr.notifyFail(gatt.getDevice(), FailCallback.REASON_VALIDATION);
 						requestQueue.cancelQueue();
-					} else if (request.hasMore()) {
-						enqueueFirst(request);
+					} else if (wr.hasMore()) {
+						enqueueFirst(wr);
 					} else {
-						request.notifySuccess(gatt.getDevice());
+						wr.notifySuccess(gatt.getDevice());
 					}
 				}
 			} else if (status == BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION
@@ -1849,7 +1994,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				if (gatt.getDevice().getBondState() != BluetoothDevice.BOND_NONE) {
 					// This should never happen but it used to: http://stackoverflow.com/a/20093695/2115352
 					Log.w(TAG, ERROR_AUTH_ERROR_WHILE_BONDED);
-					manager.userCallbacks.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status);
+					manager.callbacks.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status);
 				}
 				// The request will be repeated when the bond state changes to BONDED.
 				return;
@@ -1861,9 +2006,10 @@ abstract class BleManagerHandler extends RequestHandler {
 					if (requestQueue instanceof ReliableWriteRequest)
 						requestQueue.cancelQueue();
 				}
-				valueChangedRequest = null;
+				awaitingRequest = null;
 				onError(gatt.getDevice(), ERROR_WRITE_DESCRIPTOR, status);
 			}
+			checkCondition();
 			nextRequest(true);
 		}
 
@@ -1877,7 +2023,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				// Forbid enqueuing more operations.
 				operationInProgress = true;
 				// Clear queues, services are no longer valid.
-				cancelQueue();
+				taskQueue.clear();
 				initQueue = null;
 				log(Log.INFO, "Service Changed indication received");
 				log(Log.VERBOSE, "Discovering Services...");
@@ -1908,30 +2054,33 @@ abstract class BleManagerHandler extends RequestHandler {
 					request.notifyValueChanged(gatt.getDevice(), data);
 				}
 				// If there is a value change request,
-				final WaitForValueChangedRequest valueChangedRequest = BleManagerHandler.this.valueChangedRequest;
-				if (valueChangedRequest != null
+				if (awaitingRequest instanceof WaitForValueChangedRequest
 						// registered for this characteristic
-						&& valueChangedRequest.characteristic == characteristic
+						&& awaitingRequest.characteristic == characteristic
 						// and didn't have a trigger, or the trigger was started
 						// (not necessarily completed)
-						&& !valueChangedRequest.isTriggerPending()
-						// and the data matches the filter (if set)
-						&& valueChangedRequest.matches(data)) {
-					// notify that new data was received.
-					valueChangedRequest.notifyValueChanged(gatt.getDevice(), data);
+						&& !awaitingRequest.isTriggerPending()) {
+					final WaitForValueChangedRequest valueChangedRequest = (WaitForValueChangedRequest) awaitingRequest;
+					if (valueChangedRequest.matches(data)) {
+						// notify that new data was received.
+						valueChangedRequest.notifyValueChanged(gatt.getDevice(), data);
 
-					// If no more data are expected
-					if (!valueChangedRequest.hasMore()) {
-						// notify success,
-						valueChangedRequest.notifySuccess(gatt.getDevice());
-						// and proceed to the next request only if the trigger has completed.
-						// Otherwise, the next request will be started when the request's callback
-						// will be received.
-						BleManagerHandler.this.valueChangedRequest = null;
-						if (valueChangedRequest.isTriggerCompleteOrNull()) {
-							nextRequest(true);
+						// If no more data are expected
+						if (!valueChangedRequest.hasMore()) {
+							// notify success,
+							valueChangedRequest.notifySuccess(gatt.getDevice());
+							// and proceed to the next request only if the trigger has completed.
+							// Otherwise, the next request will be started when the request's callback
+							// will be received.
+							awaitingRequest = null;
+							if (valueChangedRequest.isTriggerCompleteOrNull()) {
+								nextRequest(true);
+							}
 						}
 					}
+				}
+				if (checkCondition()) {
+					nextRequest(true);
 				}
 			}
 		}
@@ -1953,10 +2102,11 @@ abstract class BleManagerHandler extends RequestHandler {
 				Log.e(TAG, "onMtuChanged error: " + status + ", mtu: " + mtu);
 				if (request instanceof MtuRequest) {
 					request.notifyFail(gatt.getDevice(), status);
-					valueChangedRequest = null;
+					awaitingRequest = null;
 				}
 				onError(gatt.getDevice(), ERROR_MTU_REQUEST, status);
 			}
+			checkCondition();
 			nextRequest(true);
 		}
 
@@ -2002,7 +2152,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				// This callback may be called af any time, also when some other request is executed
 				if (request instanceof ConnectionPriorityRequest) {
 					request.notifyFail(gatt.getDevice(), status);
-					valueChangedRequest = null;
+					awaitingRequest = null;
 				}
 			} else {
 				Log.e(TAG, "onConnectionUpdated received status: " + status + ", " +
@@ -2014,12 +2164,13 @@ abstract class BleManagerHandler extends RequestHandler {
 				// This callback may be called af any time, also when some other request is executed
 				if (request instanceof ConnectionPriorityRequest) {
 					request.notifyFail(gatt.getDevice(), status);
-					valueChangedRequest = null;
+					awaitingRequest = null;
 				}
-				manager.userCallbacks.onError(gatt.getDevice(), ERROR_CONNECTION_PRIORITY_REQUEST, status);
+				manager.callbacks.onError(gatt.getDevice(), ERROR_CONNECTION_PRIORITY_REQUEST, status);
 			}
 			if (connectionPriorityOperationInProgress) {
 				connectionPriorityOperationInProgress = false;
+				checkCondition();
 				nextRequest(true);
 			}
 		}
@@ -2040,13 +2191,13 @@ abstract class BleManagerHandler extends RequestHandler {
 				log(Log.WARN, "PHY updated failed with status " + status);
 				if (request instanceof PhyRequest) {
 					request.notifyFail(gatt.getDevice(), status);
-					valueChangedRequest = null;
+					awaitingRequest = null;
 				}
-				manager.userCallbacks.onError(gatt.getDevice(), ERROR_PHY_UPDATE, status);
+				manager.callbacks.onError(gatt.getDevice(), ERROR_PHY_UPDATE, status);
 			}
 			// PHY update may be requested by the other side, or the Android, without explicitly
 			// requesting it. Proceed with the queue only when update was requested.
-			if (request instanceof PhyRequest) {
+			if (checkCondition() || request instanceof PhyRequest) {
 				nextRequest(true);
 			}
 		}
@@ -2068,9 +2219,10 @@ abstract class BleManagerHandler extends RequestHandler {
 				if (request instanceof PhyRequest) {
 					request.notifyFail(gatt.getDevice(), status);
 				}
-				valueChangedRequest = null;
-				manager.userCallbacks.onError(gatt.getDevice(), ERROR_READ_PHY, status);
+				awaitingRequest = null;
+				manager.callbacks.onError(gatt.getDevice(), ERROR_READ_PHY, status);
 			}
+			checkCondition();
 			nextRequest(true);
 		}
 
@@ -2089,12 +2241,386 @@ abstract class BleManagerHandler extends RequestHandler {
 				if (request instanceof ReadRssiRequest) {
 					request.notifyFail(gatt.getDevice(), status);
 				}
-				valueChangedRequest = null;
-				manager.userCallbacks.onError(gatt.getDevice(), ERROR_READ_RSSI, status);
+				awaitingRequest = null;
+				manager.callbacks.onError(gatt.getDevice(), ERROR_READ_RSSI, status);
 			}
+			checkCondition();
 			nextRequest(true);
 		}
 	};
+
+	final void onCharacteristicReadRequest(@NonNull final BluetoothGattServer server,
+										   @NonNull final BluetoothDevice device,
+										   final int requestId, final int offset,
+										   @NonNull final BluetoothGattCharacteristic characteristic) {
+		log(Log.DEBUG, "[Server callback] Read request for characteristic " + characteristic.getUuid()
+				+ " (requestId=" + requestId + ", offset: " + offset + ")");
+		if (offset == 0)
+			log(Log.INFO, "[Server] READ request for characteristic " + characteristic.getUuid() + " received");
+
+		byte[] data = characteristicValues == null || !characteristicValues.containsKey(characteristic)
+				? characteristic.getValue() : characteristicValues.get(characteristic);
+
+		WaitForReadRequest waitForReadRequest = null;
+		// First, try to get the data from the WaitForReadRequest if the request awaits,
+		if (awaitingRequest instanceof WaitForReadRequest
+				// is registered for this characteristic
+				&& awaitingRequest.characteristic == characteristic
+				// and didn't have a trigger, or the trigger was started
+				// (not necessarily completed)
+				&& !awaitingRequest.isTriggerPending()) {
+			waitForReadRequest = (WaitForReadRequest) awaitingRequest;
+			waitForReadRequest.setDataIfNull(data);
+			data = waitForReadRequest.getData(mtu);
+		}
+		// If data are longer than MTU - 1, cut the array. Only ATT_MTU - 1 bytes can be sent in Long Read.
+		if (data != null && data.length > mtu - 1) {
+			data = Bytes.copy(data, offset, mtu - 1);
+		}
+
+		sendResponse(server, device, BluetoothGatt.GATT_SUCCESS, requestId, offset, data);
+
+		if (waitForReadRequest != null) {
+			waitForReadRequest.notifyPacketRead(device, data);
+
+			// If the request is complete, start next one.
+			if (!waitForReadRequest.hasMore() && (data == null || data.length < mtu - 1)) {
+				waitForReadRequest.notifySuccess(device);
+				awaitingRequest = null;
+				nextRequest(true);
+			}
+		} else if (checkCondition()) {
+			nextRequest(true);
+		}
+	}
+
+	final void onCharacteristicWriteRequest(@NonNull final BluetoothGattServer server,
+											@NonNull final BluetoothDevice device, final int requestId,
+											@NonNull final BluetoothGattCharacteristic characteristic,
+											final boolean preparedWrite, final boolean responseNeeded,
+											final int offset, @NonNull final byte[] value) {
+		log(Log.DEBUG, "[Server callback] Write " + (responseNeeded ? "request" : "command")
+				+ " to characteristic " + characteristic.getUuid()
+				+ " (requestId=" + requestId + ", prepareWrite=" + preparedWrite + ", responseNeeded="
+				+ responseNeeded + ", offset: " + offset + ", value=" + ParserUtils.parseDebug(value) + ")");
+		if (offset == 0) {
+			final String type = responseNeeded ? "WRITE REQUEST" : "WRITE COMMAND";
+			final String option = preparedWrite ? "Prepare " : "";
+			log(Log.INFO, "[Server] " + option + type + " for characteristic " + characteristic.getUuid()
+					+ " received, value: " + ParserUtils.parse(value));
+		}
+
+		if (responseNeeded) {
+			sendResponse(server, device, BluetoothGatt.GATT_SUCCESS, requestId, offset, value);
+		}
+
+		// If Prepare Write or Long Write is sent, store the data in a temporary queue until it's executed.
+		if (preparedWrite) {
+			if (preparedValues == null) {
+				preparedValues = new LinkedList<>();
+			}
+			if (offset == 0) {
+				// Add new value to the operations.
+				preparedValues.offer(new Pair<>(characteristic, value));
+			} else {
+				// Concatenate the value to the end of previous value, if the previous request was
+				// also for the same characteristic.
+				final Pair<Object, byte[]> last = preparedValues.peekLast();
+				if (last != null && characteristic.equals(last.first)) {
+					preparedValues.pollLast();
+					preparedValues.offer(new Pair<>(characteristic, Bytes.concat(last.second, value, offset)));
+				} else {
+					prepareError = BluetoothGatt.GATT_INVALID_OFFSET;
+				}
+			}
+		} else {
+			// Otherwise, save the data immediately.
+			if (assignAndNotify(device, characteristic, value) || checkCondition()) {
+				nextRequest(true);
+			}
+		}
+	}
+
+	final void onDescriptorReadRequest(@NonNull final BluetoothGattServer server,
+									   @NonNull final BluetoothDevice device, final int requestId, final int offset,
+									   @NonNull final BluetoothGattDescriptor descriptor) {
+		log(Log.DEBUG, "[Server callback] Read request for descriptor " + descriptor.getUuid() + " (requestId=" + requestId + ", offset: " + offset + ")");
+		if (offset == 0)
+			log(Log.INFO, "[Server] READ request for descriptor " + descriptor.getUuid() + " received");
+
+		byte[] data = descriptorValues == null || !descriptorValues.containsKey(descriptor)
+				? descriptor.getValue() : descriptorValues.get(descriptor);
+
+		WaitForReadRequest waitForReadRequest = null;
+		// First, try to get the data from the WaitForReadRequest if the request awaits,
+		if (awaitingRequest instanceof WaitForReadRequest
+				// is registered for this descriptor
+				&& awaitingRequest.descriptor == descriptor
+				// and didn't have a trigger, or the trigger was started
+				// (not necessarily completed)
+				&& !awaitingRequest.isTriggerPending()) {
+			waitForReadRequest = (WaitForReadRequest) awaitingRequest;
+			waitForReadRequest.setDataIfNull(data);
+			data = waitForReadRequest.getData(mtu);
+		}
+		// If data are longer than MTU - 1, cut the array. Only ATT_MTU - 1 bytes can be sent in Long Read.
+		if (data != null && data.length > mtu - 1) {
+			data = Bytes.copy(data, offset, mtu - 1);
+		}
+
+		sendResponse(server, device, BluetoothGatt.GATT_SUCCESS, requestId, offset, data);
+
+		if (waitForReadRequest != null) {
+			waitForReadRequest.notifyPacketRead(device, data);
+
+			// If the request is complete, start next one.
+			if (!waitForReadRequest.hasMore() && (data == null || data.length < mtu - 1)) {
+				waitForReadRequest.notifySuccess(device);
+				awaitingRequest = null;
+				nextRequest(true);
+			}
+		} else if (checkCondition()) {
+			nextRequest(true);
+		}
+	}
+
+	final void onDescriptorWriteRequest(@NonNull final BluetoothGattServer server,
+										@NonNull final BluetoothDevice device, final int requestId,
+										@NonNull final BluetoothGattDescriptor descriptor,
+										final boolean preparedWrite, final boolean responseNeeded,
+										final int offset, @NonNull final byte[] value) {
+		log(Log.DEBUG, "[Server callback] Write " + (responseNeeded ? "request" : "command")
+				+ " to descriptor " + descriptor.getUuid()
+				+ " (requestId=" + requestId + ", prepareWrite=" + preparedWrite + ", responseNeeded="
+				+ responseNeeded + ", offset: " + offset + ", value=" + ParserUtils.parseDebug(value) + ")");
+		if (offset == 0) {
+			final String type = responseNeeded ? "WRITE REQUEST" : "WRITE COMMAND";
+			final String option = preparedWrite ? "Prepare " : "";
+			log(Log.INFO, "[Server] " + option + type + " request for descriptor " + descriptor.getUuid()
+					+ " received, value: " + ParserUtils.parse(value));
+		}
+
+		if (responseNeeded) {
+			sendResponse(server, device, BluetoothGatt.GATT_SUCCESS, requestId, offset, value);
+		}
+
+		// If Prepare Write or Long Write is sent, store the data in a temporary queue until it's executed.
+		if (preparedWrite) {
+			if (preparedValues == null) {
+				preparedValues = new LinkedList<>();
+			}
+			if (offset == 0) {
+				// Add new value to the operations.
+				preparedValues.offer(new Pair<>(descriptor, value));
+			} else {
+				// Concatenate the value to the end of previous value, if the previous request was
+				// also for the same descriptor.
+				final Pair<Object, byte[]> last = preparedValues.peekLast();
+				if (last != null && descriptor.equals(last.first)) {
+					preparedValues.pollLast();
+					preparedValues.offer(new Pair<>(descriptor, Bytes.concat(last.second, value, offset)));
+				} else {
+					prepareError = BluetoothGatt.GATT_INVALID_OFFSET;
+				}
+			}
+		} else {
+			// Otherwise, save the data immediately.
+			if (assignAndNotify(device, descriptor, value) || checkCondition()) {
+				nextRequest(true);
+			}
+		}
+	}
+
+	final void onExecuteWrite(@NonNull final BluetoothGattServer server,
+							  @NonNull final BluetoothDevice device, final int requestId,
+							  final boolean execute) {
+		log(Log.DEBUG, "[Server callback] Execute write request (requestId=" + requestId + ", execute=" + execute + ")");
+		if (execute) {
+			final Deque<Pair<Object, byte[]>> values = preparedValues;
+			log(Log.INFO, "[Server] Execute write request received");
+			preparedValues = null;
+			if (prepareError != 0) {
+				sendResponse(server, device, prepareError, requestId, 0, null);
+				prepareError = 0;
+				return;
+			}
+			sendResponse(server, device, BluetoothGatt.GATT_SUCCESS, requestId, 0, null);
+
+			if (values == null || values.isEmpty()) {
+				return;
+			}
+			boolean startNextRequest = false;
+			for (final Pair<Object, byte[]> value: values) {
+				if (value.first instanceof BluetoothGattCharacteristic) {
+					final BluetoothGattCharacteristic characteristic = (BluetoothGattCharacteristic) value.first;
+					startNextRequest = assignAndNotify(device, characteristic, value.second) || startNextRequest;
+				} else if (value.first instanceof BluetoothGattDescriptor){
+					final BluetoothGattDescriptor descriptor = (BluetoothGattDescriptor) value.first;
+					startNextRequest = assignAndNotify(device, descriptor, value.second) || startNextRequest;
+				}
+			}
+			if (checkCondition() || startNextRequest) {
+				nextRequest(true);
+			}
+		} else {
+			log(Log.INFO, "[Server] Cancel write request received");
+			preparedValues = null;
+			sendResponse(server, device, BluetoothGatt.GATT_SUCCESS, requestId, 0, null);
+		}
+	}
+
+	final void onNotificationSent(@NonNull final BluetoothGattServer server,
+								  @NonNull final BluetoothDevice device, final int status) {
+		if (status == BluetoothGatt.GATT_SUCCESS) {
+			if (request instanceof WriteRequest) {
+				final WriteRequest wr = (WriteRequest) request;
+				switch (wr.type) {
+					case NOTIFY:
+						log(Log.INFO, "[Server] Notification sent");
+						break;
+					case INDICATE:
+						log(Log.INFO, "[Server] Indication sent");
+						break;
+				}
+				wr.notifyPacketSent(device, wr.characteristic.getValue());
+				if (wr.hasMore()) {
+					enqueueFirst(wr);
+				} else {
+					wr.notifySuccess(device);
+				}
+			}
+		} else {
+			Log.e(TAG, "onNotificationSent error " + status);
+			if (request instanceof WriteRequest) {
+				request.notifyFail(device, status);
+			}
+			awaitingRequest = null;
+			onError(device, ERROR_NOTIFY, status);
+		}
+		checkCondition();
+		nextRequest(true);
+	}
+
+	final void onMtuChanged(@NonNull final BluetoothGattServer server,
+							@NonNull final BluetoothDevice device,
+							final int mtu) {
+		log(Log.INFO, "[Server] MTU changed to: " + mtu);
+		BleManagerHandler.this.mtu = mtu;
+		checkCondition();
+		nextRequest(false);
+	}
+
+	private boolean assignAndNotify(@NonNull final BluetoothDevice device,
+									@NonNull final BluetoothGattCharacteristic characteristic,
+									@NonNull final byte[] value) {
+		final boolean isShared = characteristicValues == null || !characteristicValues.containsKey(characteristic);
+		if (isShared) {
+			characteristic.setValue(value);
+		} else {
+			characteristicValues.put(characteristic, value);
+		}
+		// Notify listener
+		ValueChangedCallback callback;
+		if ((callback = notificationCallbacks.get(characteristic)) != null) {
+			callback.notifyValueChanged(device, value);
+		}
+
+		// Check if a request awaits,
+		if (awaitingRequest instanceof WaitForValueChangedRequest
+				// is registered for this characteristic
+				&& awaitingRequest.characteristic == characteristic
+				// and didn't have a trigger, or the trigger was started
+				// (not necessarily completed)
+				&& !awaitingRequest.isTriggerPending()) {
+			final WaitForValueChangedRequest waitForWrite = (WaitForValueChangedRequest) awaitingRequest;
+			if (waitForWrite.matches(value)) {
+				// notify that new data was received.
+				waitForWrite.notifyValueChanged(device, value);
+
+				// If no more data are expected
+				if (!waitForWrite.hasMore()) {
+					// notify success,
+					waitForWrite.notifySuccess(device);
+					// and proceed to the next request only if the trigger has completed.
+					// Otherwise, the next request will be started when the request's callback
+					// will be received.
+					awaitingRequest = null;
+					return waitForWrite.isTriggerCompleteOrNull();
+				}
+			}
+		}
+		return false;
+	}
+
+	private boolean assignAndNotify(@NonNull final BluetoothDevice device,
+									@NonNull final BluetoothGattDescriptor descriptor,
+									@NonNull final byte[] value) {
+		final boolean isShared = descriptorValues == null || !descriptorValues.containsKey(descriptor);
+		if (isShared) {
+			descriptor.setValue(value);
+		} else {
+			descriptorValues.put(descriptor, value);
+		}
+		// Notify listener
+		ValueChangedCallback callback;
+		if ((callback = notificationCallbacks.get(descriptor)) != null) {
+			callback.notifyValueChanged(device, value);
+		}
+
+		// Check if a request awaits,
+		if (awaitingRequest instanceof WaitForValueChangedRequest
+				// is registered for this descriptor
+				&& awaitingRequest.descriptor == descriptor
+				// and didn't have a trigger, or the trigger was started
+				// (not necessarily completed)
+				&& !awaitingRequest.isTriggerPending()) {
+			final WaitForValueChangedRequest waitForWrite = (WaitForValueChangedRequest) awaitingRequest;
+			if (waitForWrite.matches(value)) {
+				// notify that new data was received.
+				waitForWrite.notifyValueChanged(device, value);
+
+				// If no more data are expected
+				if (!waitForWrite.hasMore()) {
+					// notify success,
+					waitForWrite.notifySuccess(device);
+					// and proceed to the next request only if the trigger has completed.
+					// Otherwise, the next request will be started when the request's callback
+					// will be received.
+					awaitingRequest = null;
+					return waitForWrite.isTriggerCompleteOrNull();
+				}
+			}
+		}
+		return false;
+	}
+
+	private void sendResponse(@NonNull final BluetoothGattServer server,
+							  @NonNull final BluetoothDevice device, final int status,
+							  final int requestId, final int offset,
+							  @Nullable final byte[] response) {
+		String msg;
+		switch (status) {
+			case BluetoothGatt.GATT_SUCCESS: 				msg = "GATT_SUCCESS"; break;
+			case BluetoothGatt.GATT_REQUEST_NOT_SUPPORTED: 	msg = "GATT_REQUEST_NOT_SUPPORTED"; break;
+			case BluetoothGatt.GATT_INVALID_OFFSET: 		msg = "GATT_INVALID_OFFSET"; break;
+			default: throw new InvalidParameterException();
+		}
+		log(Log.DEBUG, "server.sendResponse(" + msg + ", offset=" + offset + ", value=" + ParserUtils.parseDebug(response) + ")");
+		server.sendResponse(device, requestId, status, offset, response);
+		log(Log.VERBOSE, "[Server] Response sent");
+	}
+
+	private boolean checkCondition() {
+		if (awaitingRequest instanceof ConditionalWaitRequest) {
+			final ConditionalWaitRequest cwr = (ConditionalWaitRequest) awaitingRequest;
+			if (cwr.isFulfilled()) {
+				cwr.notifySuccess(bluetoothDevice);
+				awaitingRequest = null;
+				return true;
+			}
+		}
+		return false;
+	}
 
 	/**
 	 * Executes the next request. If the last element from the initialization queue has
@@ -2103,7 +2629,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	@SuppressWarnings("ConstantConditions")
 	private synchronized void nextRequest(final boolean force) {
 		if (force) {
-			operationInProgress = valueChangedRequest != null;
+			operationInProgress = awaitingRequest != null;
 		}
 
 		if (operationInProgress) {
@@ -2144,7 +2670,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				operationInProgress = true;
 				ready = true;
 				onDeviceReady();
-				manager.userCallbacks.onDeviceReady(bluetoothGatt.getDevice());
+				manager.callbacks.onDeviceReady(bluetoothGatt.getDevice());
 				if (connectRequest != null) {
 					connectRequest.notifySuccess(connectRequest.getDevice());
 					connectRequest = null;
@@ -2166,52 +2692,70 @@ abstract class BleManagerHandler extends RequestHandler {
 		operationInProgress = true;
 		this.request = request;
 
-		// The WAIT_FOR_* request types may override the request with a trigger.
-		// This is to ensure that the trigger is done after the valueChangedRequest was set.
-		int requiredProperty = BluetoothGattCharacteristic.PROPERTY_NOTIFY;
-		switch (request.type) {
-			case WAIT_FOR_INDICATION:
-				requiredProperty = BluetoothGattCharacteristic.PROPERTY_INDICATE;
-				// fall-through intended
-			case WAIT_FOR_NOTIFICATION: {
-				final WaitForValueChangedRequest r = (WaitForValueChangedRequest) request;
-				result = connected && bluetoothDevice != null
-						&& getCccd(r.characteristic, requiredProperty) != null;
-				if (result) {
-					valueChangedRequest = r;
-					// Call notifyStarted for the WaitForValueChangedRequest.
-					r.notifyStarted(bluetoothDevice);
+		if (request instanceof AwaitingRequest) {
+			final AwaitingRequest r = (AwaitingRequest) request;
 
-					if (r.getTrigger() == null)
-						break;
-
-					// If the request has another request set as a trigger, update the
-					// request with the trigger.
-					request = r.getTrigger();
-					this.request = request;
-				}
-				// fall-through intended
+			// The WAIT_FOR_* request types may override the request with a trigger.
+			// This is to ensure that the trigger is done after the awaitingRequest was set.
+			int requiredProperty = 0;
+			switch (request.type) {
+				case WAIT_FOR_NOTIFICATION:
+					requiredProperty = BluetoothGattCharacteristic.PROPERTY_NOTIFY;
+					break;
+				case WAIT_FOR_INDICATION:
+					requiredProperty = BluetoothGattCharacteristic.PROPERTY_INDICATE;
+					break;
+				case WAIT_FOR_READ:
+					requiredProperty = BluetoothGattCharacteristic.PROPERTY_READ;
+					break;
+				case WAIT_FOR_WRITE:
+					requiredProperty = BluetoothGattCharacteristic.PROPERTY_WRITE
+							| BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE
+							| BluetoothGattCharacteristic.PROPERTY_SIGNED_WRITE;
+					break;
 			}
-			default: {
-				// Call notifyStarted on the request before it's executed.
-				if (request.type == Request.Type.CONNECT) {
-					// When the Connect Request is started, the bluetoothDevice is not set yet.
-					// It may also be a connect request to a different device, which is an error
-					// that is handled in internalConnect()
-					final ConnectRequest cr = (ConnectRequest) request;
-					cr.notifyStarted(cr.getDevice());
-				} else {
-					if (bluetoothDevice != null) {
-						request.notifyStarted(bluetoothDevice);
-					} else {
-						// The device wasn't connected before. Target is unknown.
-						request.notifyInvalidRequest();
-
-						valueChangedRequest = null;
+			result = connected && bluetoothDevice != null
+					&& (r.characteristic == null ||
+					   (r.characteristic.getProperties() & requiredProperty) != 0);
+			if (result) {
+				if (r instanceof ConditionalWaitRequest) {
+					final ConditionalWaitRequest cwr = (ConditionalWaitRequest) r;
+					if (cwr.isFulfilled()) {
+						cwr.notifyStarted(bluetoothDevice);
+						cwr.notifySuccess(bluetoothDevice);
 						nextRequest(true);
 						return;
 					}
 				}
+				awaitingRequest = r;
+
+				if (r.getTrigger() != null) {
+					// Call notifyStarted for the awaiting request.
+					r.notifyStarted(bluetoothDevice);
+
+					// If the request has another request set as a trigger, update the
+					// request with the trigger.
+					this.request = request = r.getTrigger();
+				}
+			}
+		}
+		// Call notifyStarted on the request before it's executed.
+		if (request.type == Request.Type.CONNECT) {
+			// When the Connect Request is started, the bluetoothDevice is not set yet.
+			// It may also be a connect request to a different device, which is an error
+			// that is handled in internalConnect()
+			final ConnectRequest cr = (ConnectRequest) request;
+			cr.notifyStarted(cr.getDevice());
+		} else {
+			if (bluetoothDevice != null) {
+				request.notifyStarted(bluetoothDevice);
+			} else {
+				// The device wasn't connected before. Target is unknown.
+				request.notifyInvalidRequest();
+
+				awaitingRequest = null;
+				nextRequest(true);
+				return;
 			}
 		}
 
@@ -2265,6 +2809,44 @@ abstract class BleManagerHandler extends RequestHandler {
 					descriptor.setValue(wr.getData(mtu));
 				}
 				result = internalWriteDescriptor(descriptor);
+				break;
+			}
+			case NOTIFY:
+			case INDICATE: {
+				final WriteRequest wr = (WriteRequest) request;
+				final BluetoothGattCharacteristic characteristic = request.characteristic;
+				if (characteristic != null) {
+					characteristic.setValue(wr.getData(mtu));
+					if (characteristicValues != null && characteristicValues.containsKey(characteristic))
+						characteristicValues.put(characteristic, characteristic.getValue());
+				}
+				result = internalSendNotification(request.characteristic, request.type == Request.Type.INDICATE);
+				break;
+			}
+			case SET_VALUE: {
+				final SetValueRequest svr = (SetValueRequest) request;
+				if (svr.characteristic != null) {
+					if (characteristicValues != null && characteristicValues.containsKey(svr.characteristic))
+						characteristicValues.put(svr.characteristic, svr.getData(mtu));
+					else
+						svr.characteristic.setValue(svr.getData(mtu));
+					result = true;
+					svr.notifySuccess(bluetoothDevice);
+					nextRequest(true);
+				}
+				break;
+			}
+			case SET_DESCRIPTOR_VALUE: {
+				final SetValueRequest svr = (SetValueRequest) request;
+				if (svr.descriptor != null) {
+					if (descriptorValues != null && descriptorValues.containsKey(svr.descriptor))
+						descriptorValues.put(svr.descriptor, svr.getData(mtu));
+					else
+						svr.descriptor.setValue(svr.getData(mtu));
+					result = true;
+					svr.notifySuccess(bluetoothDevice);
+					nextRequest(true);
+				}
 				break;
 			}
 			case BEGIN_RELIABLE_WRITE: {
@@ -2397,11 +2979,11 @@ abstract class BleManagerHandler extends RequestHandler {
 						log(Log.INFO, "Cache refreshed");
 						r.notifySuccess(device);
 						this.request = null;
-						if (valueChangedRequest != null) {
-							valueChangedRequest.notifyFail(device, FailCallback.REASON_NULL_ATTRIBUTE);
-							valueChangedRequest = null;
+						if (awaitingRequest != null) {
+							awaitingRequest.notifyFail(device, FailCallback.REASON_NULL_ATTRIBUTE);
+							awaitingRequest = null;
 						}
-						cancelQueue();
+						taskQueue.clear();
 						initQueue = null;
 						if (connected) {
 							// Invalidate all services and characteristics
@@ -2443,7 +3025,7 @@ abstract class BleManagerHandler extends RequestHandler {
 							BluetoothAdapter.getDefaultAdapter().isEnabled() ?
 									FailCallback.REASON_DEVICE_DISCONNECTED :
 									FailCallback.REASON_BLUETOOTH_DISABLED);
-			valueChangedRequest = null;
+			awaitingRequest = null;
 			connectionPriorityOperationInProgress = false;
 			nextRequest(true);
 		}
@@ -2491,10 +3073,17 @@ abstract class BleManagerHandler extends RequestHandler {
 	 * @param descriptor the descriptor to be checked
 	 * @return true if the descriptor is a CCCD
 	 */
-	private boolean isCCCD(final BluetoothGattDescriptor descriptor) {
+	private boolean isCCCD(@Nullable final BluetoothGattDescriptor descriptor) {
 		return descriptor != null &&
 				BleManager.CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID.equals(descriptor.getUuid());
 	}
+
+//	private boolean isReliableWriteSupported(@Nullable final BluetoothGattCharacteristic characteristic) {
+//		if (characteristic == null)
+//			return false;
+//		final BluetoothGattDescriptor cep = characteristic.getDescriptor(BleServerManager.CHARACTERISTIC_EXTENDED_PROPERTIES_DESCRIPTOR_UUID);
+//		return cep != null && cep.getValue() != null && cep.getValue().length >= 2 && (cep.getValue()[0] & 0x01) != 0;
+//	}
 
 	private void log(final int priority, @NonNull final String message) {
 		manager.log(priority, message);
