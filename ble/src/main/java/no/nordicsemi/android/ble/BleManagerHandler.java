@@ -38,11 +38,7 @@ import no.nordicsemi.android.ble.annotation.ConnectionState;
 import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.annotation.PhyOption;
 import no.nordicsemi.android.ble.annotation.PhyValue;
-import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
-import no.nordicsemi.android.ble.callback.DataReceivedCallback;
-import no.nordicsemi.android.ble.callback.FailCallback;
-import no.nordicsemi.android.ble.callback.MtuCallback;
-import no.nordicsemi.android.ble.callback.SuccessCallback;
+import no.nordicsemi.android.ble.callback.*;
 import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.error.GattError;
 import no.nordicsemi.android.ble.utils.ParserUtils;
@@ -1604,6 +1600,11 @@ abstract class BleManagerHandler extends RequestHandler {
 						log(Log.WARN, "Error: (0x" + Integer.toHexString(status) + "): " +
 								GattError.parseConnectionError(status));
 
+					// send status to disconnectCallback
+					if(manager.disconnectCallback != null) {
+						manager.disconnectCallback.onDeviceDisconnected(gatt.getDevice(), mapDisconnectStatusToReason(status));
+					}
+
 					// In case of a connection error, retry if required.
 					if (status != BluetoothGatt.GATT_SUCCESS && canTimeout && !timeout
 							&& connectRequest != null && connectRequest.canRetry()) {
@@ -2248,6 +2249,19 @@ abstract class BleManagerHandler extends RequestHandler {
 			nextRequest(true);
 		}
 	};
+
+	private int mapDisconnectStatusToReason(int status) {
+		switch (status) {
+			case GattError.GATT_SUCCESS:
+				return DisconnectCallback.REASON_SUCCESS;
+			case GattError.GATT_CONN_TERMINATE_LOCAL_HOST:
+				return DisconnectCallback.REASON_TERMINATE_LOCAL_HOST;
+			case GattError.GATT_CONN_TIMEOUT:
+				return DisconnectCallback.REASON_TIMEOUT;
+			default:
+				return DisconnectCallback.REASON_UNKNOWN;
+		}
+	}
 
 	final void onCharacteristicReadRequest(@NonNull final BluetoothGattServer server,
 										   @NonNull final BluetoothDevice device,

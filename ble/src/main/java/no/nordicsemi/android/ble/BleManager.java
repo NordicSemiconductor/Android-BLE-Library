@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Nordic Semiconductor
+ * Copyright (c) 2020, Nordic Semiconductor
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -47,6 +47,7 @@ import no.nordicsemi.android.ble.annotation.ConnectionState;
 import no.nordicsemi.android.ble.annotation.PairingVariant;
 import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.annotation.PhyOption;
+import no.nordicsemi.android.ble.callback.DisconnectCallback;
 import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.MtuCallback;
@@ -118,6 +119,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	BleManager.BleManagerGattCallback requestHandler;
 	/** Manager callbacks, set using {@link #setManagerCallbacks(BleManagerCallbacks)}. */
 	protected E callbacks;
+	protected DisconnectCallback disconnectCallback;
 
 	private final BroadcastReceiver mPairingRequestBroadcastReceiver = new BroadcastReceiver() {
 		@Override
@@ -214,6 +216,15 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	public final void setManagerCallbacks(@NonNull final E callbacks) {
 		this.callbacks = callbacks;
+	}
+
+	/**
+	 * Sets the disconnect callback.
+	 *
+	 * @param disconnectCallback the callback listener.
+	 */
+	public void setDisconnectCallback(@NonNull final DisconnectCallback disconnectCallback) {
+		this.disconnectCallback = disconnectCallback;
 	}
 
 	/**
