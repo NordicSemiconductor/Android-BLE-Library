@@ -11,7 +11,7 @@ import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
-public final class ConditionalWaitRequest<T> extends AwaitingRequest {
+public final class ConditionalWaitRequest<T> extends AwaitingRequest implements Operation {
 
 	/**
 	 * The condition object.

@@ -31,7 +31,7 @@ import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
-public final class SleepRequest extends SimpleRequest {
+public final class SleepRequest extends SimpleRequest implements Operation {
 	private final long delay;
 
 	SleepRequest(@NonNull final Type type, @IntRange(from = 0) final long delay) {

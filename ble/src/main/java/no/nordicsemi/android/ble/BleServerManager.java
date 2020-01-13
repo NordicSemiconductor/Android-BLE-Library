@@ -9,6 +9,7 @@ import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
+import android.os.Build;
 import android.util.Log;
 
 import java.util.ArrayList;
@@ -20,6 +21,7 @@ import java.util.UUID;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
 import androidx.annotation.StringRes;
 import no.nordicsemi.android.ble.utils.ILogger;
 
@@ -414,6 +416,19 @@ public abstract class BleServerManager implements ILogger {
 	}
 
 	/**
+	 * This helper method returns a new instance of Client Characteristic Configuration Descriptor
+	 * (CCCD) that can be added to a server characteristic in {@link #initializeServer()}.
+	 *
+	 * @return The CCC descriptor used to enable and disable notifications or indications.
+	 */
+	@NonNull
+	protected final BluetoothGattDescriptor sharedCccd() {
+		return sharedDescriptor(CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID,
+				BluetoothGattDescriptor.PERMISSION_READ | BluetoothGattDescriptor.PERMISSION_WRITE,
+				new byte[] { 0, 0 });
+	}
+
+	/**
 	 * This helper method returns a new instance of Characteristic Extended Properties descriptor
 	 * that can be added to a server characteristic.
 	 * This descriptor should be added it {@link BluetoothGattCharacteristic#PROPERTY_EXTENDED_PROPS}
@@ -529,6 +544,7 @@ public abstract class BleServerManager implements ILogger {
 			}
 		}
 
+		@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 		@Override
 		public void onNotificationSent(@NonNull final BluetoothDevice device, final int status) {
 			final BleManagerHandler handler = getRequestHandler(device);
@@ -537,6 +553,7 @@ public abstract class BleServerManager implements ILogger {
 			}
 		}
 
+		@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
 		@Override
 		public void onMtuChanged(@NonNull final BluetoothDevice device, final int mtu) {
 			final BleManagerHandler handler = getRequestHandler(device);
