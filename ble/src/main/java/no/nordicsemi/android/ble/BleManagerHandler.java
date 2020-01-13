@@ -1601,8 +1601,9 @@ abstract class BleManagerHandler extends RequestHandler {
 								GattError.parseConnectionError(status));
 
 					// send status to disconnectCallback
-					if(manager.disconnectCallback != null) {
-						manager.disconnectCallback.onDeviceDisconnected(gatt.getDevice(), mapDisconnectStatusToReason(status));
+					if (manager.disconnectCallback != null) {
+						manager.disconnectCallback.onDeviceDisconnected(gatt.getDevice(),
+                mapDisconnectStatusToReason(status));
 					}
 
 					// In case of a connection error, retry if required.
