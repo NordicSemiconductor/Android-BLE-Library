@@ -424,7 +424,6 @@ abstract class BleManagerHandler extends RequestHandler {
 			taskQueue.clear();
 			initQueue = null;
 			bluetoothDevice = null;
-			serverManager = null;
 		}
 	}
 
@@ -774,8 +773,15 @@ abstract class BleManagerHandler extends RequestHandler {
 		final byte[] value = descriptorValues.containsKey(cccd) ? descriptorValues.get(cccd) : cccd.getValue();
 		if (value != null && value.length == 2 && value[0] != 0) {
 			log(Log.VERBOSE, "[Server] Sending " + (confirm ? "indication" : "notification") + " to " + serverCharacteristic.getUuid());
-			log(Log.DEBUG, "server.notifyCharacteristicChanged(device, " + serverCharacteristic.getUuid() + ", " + confirm);
-			return serverManager.getServer().notifyCharacteristicChanged(bluetoothDevice, serverCharacteristic, confirm);
+			log(Log.DEBUG, "server.notifyCharacteristicChanged(device, " + serverCharacteristic.getUuid() + ", " + confirm + ")");
+			final boolean result = serverManager.getServer().notifyCharacteristicChanged(bluetoothDevice, serverCharacteristic, confirm);
+			if (result && Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+				handler.post(() -> {
+					notifyNotificationSent(bluetoothDevice);
+					nextRequest(true);
+				});
+			}
+			return result;
 		}
 		// Otherwise, assume the data was sent. The remote side has not registered for them.
 		nextRequest(true);
@@ -2471,24 +2477,9 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	final void onNotificationSent(@NonNull final BluetoothGattServer server,
 								  @NonNull final BluetoothDevice device, final int status) {
+		log(Log.DEBUG, "[Server callback] Notification sent (status=" + status + ")");
 		if (status == BluetoothGatt.GATT_SUCCESS) {
-			if (request instanceof WriteRequest) {
-				final WriteRequest wr = (WriteRequest) request;
-				switch (wr.type) {
-					case NOTIFY:
-						log(Log.INFO, "[Server] Notification sent");
-						break;
-					case INDICATE:
-						log(Log.INFO, "[Server] Indication sent");
-						break;
-				}
-				wr.notifyPacketSent(device, wr.characteristic.getValue());
-				if (wr.hasMore()) {
-					enqueueFirst(wr);
-				} else {
-					wr.notifySuccess(device);
-				}
-			}
+			notifyNotificationSent(device);
 		} else {
 			Log.e(TAG, "onNotificationSent error " + status);
 			if (request instanceof WriteRequest) {
@@ -2501,6 +2492,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		nextRequest(true);
 	}
 
+	@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP_MR1)
 	final void onMtuChanged(@NonNull final BluetoothGattServer server,
 							@NonNull final BluetoothDevice device,
 							final int mtu) {
@@ -2508,6 +2500,26 @@ abstract class BleManagerHandler extends RequestHandler {
 		BleManagerHandler.this.mtu = mtu;
 		checkCondition();
 		nextRequest(false);
+	}
+
+	private void notifyNotificationSent(@NonNull final BluetoothDevice device) {
+		if (request instanceof WriteRequest) {
+			final WriteRequest wr = (WriteRequest) request;
+			switch (wr.type) {
+				case NOTIFY:
+					log(Log.INFO, "[Server] Notification sent");
+					break;
+				case INDICATE:
+					log(Log.INFO, "[Server] Indication sent");
+					break;
+			}
+			wr.notifyPacketSent(device, wr.characteristic.getValue());
+			if (wr.hasMore()) {
+				enqueueFirst(wr);
+			} else {
+				wr.notifySuccess(device);
+			}
+		}
 	}
 
 	private boolean assignAndNotify(@NonNull final BluetoothDevice device,

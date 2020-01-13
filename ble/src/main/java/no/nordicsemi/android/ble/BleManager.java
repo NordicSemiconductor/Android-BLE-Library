@@ -859,7 +859,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	protected ConditionalWaitRequest waitUntilNotificationsEnabled(
 			@Nullable final BluetoothGattCharacteristic serverCharacteristic) {
 		return waitUntil(serverCharacteristic, (characteristic) -> {
-			//noinspection ConstantConditions
+			if (characteristic == null)
+				return false;
 			final BluetoothGattDescriptor cccd = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID);
 			if (cccd == null)
 				return false;
@@ -879,7 +880,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	protected ConditionalWaitRequest<BluetoothGattCharacteristic> waitUntilIndicationsEnabled(
 			@Nullable final BluetoothGattCharacteristic serverCharacteristic) {
 		return waitUntil(serverCharacteristic, (characteristic) -> {
-			//noinspection ConstantConditions
+			if (characteristic == null)
+				return false;
 			final BluetoothGattDescriptor cccd = characteristic.getDescriptor(CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID);
 			if (cccd == null)
 				return false;

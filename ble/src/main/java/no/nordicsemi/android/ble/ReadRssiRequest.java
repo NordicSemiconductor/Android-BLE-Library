@@ -33,7 +33,7 @@ import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.RssiCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
-public final class ReadRssiRequest extends SimpleValueRequest<RssiCallback> {
+public final class ReadRssiRequest extends SimpleValueRequest<RssiCallback> implements Operation {
 
 	ReadRssiRequest(@NonNull final Type type) {
 		super(type);
