@@ -1,46 +1,50 @@
-apply plugin: 'maven'
+apply plugin: 'maven-publish'
+apply plugin: 'digital.wup.android-maven-publish'
 apply plugin: 'com.jfrog.bintray'
 
 version = VERSION_NAME
 group   = GROUP
 
-afterEvaluate { project ->
-    task install(type: Upload) {
-        repositories.mavenInstaller {
-            configuration = configurations.archives
+publishing {
+    publications {
+        library(MavenPublication) {
+            from components.android
+            groupId = GROUP
+            artifactId = POM_ARTIFACT_ID
+            version = VERSION_NAME
 
-            pom.groupId = GROUP
-            pom.artifactId = POM_ARTIFACT_ID
-            pom.version = VERSION_NAME
-
-            pom.project {
-                name POM_NAME
-                packaging POM_PACKAGING
-                description POM_DESCRIPTION
-                url POM_URL
+            pom {
+                name = POM_NAME
+                packaging = POM_PACKAGING
+                description = POM_DESCRIPTION
+                url = POM_URL
 
                 scm {
-                    url POM_SCM_URL
-                    connection POM_SCM_CONNECTION
-                    developerConnection POM_SCM_DEV_CONNECTION
+                    url = POM_SCM_URL
+                    connection = POM_SCM_CONNECTION
+                    developerConnection = POM_SCM_DEV_CONNECTION
                 }
 
                 licenses {
                     license {
-                        name POM_LICENCE_NAME
-                        url POM_LICENCE_URL
+                        name = POM_LICENCE_NAME
+                        url = POM_LICENCE_URL
                     }
                 }
 
                 developers {
                     developer {
-                        id POM_DEVELOPER_ID
-                        name POM_DEVELOPER_NAME
+                        id = POM_DEVELOPER_ID
+                        name = POM_DEVELOPER_NAME
+                        email = POM_DEVELOPER_EMAIL
                     }
                 }
             }
         }
     }
+}
+
+afterEvaluate { project ->
 
     task javadoc(type: Javadoc) {
         failOnError false
@@ -91,7 +95,8 @@ bintray {
     user = properties.getProperty("BINTRAY_USER")
     key  = properties.getProperty("BINTRAY_APIKEY")
 
-    configurations = ['archives']
+    publications = ['library']
+
     pkg {
         name = GROUP + ":" + POM_ARTIFACT_ID
         desc = POM_DESCRIPTION
