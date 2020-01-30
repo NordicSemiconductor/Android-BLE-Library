@@ -23,6 +23,10 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.StringRes;
+import no.nordicsemi.android.ble.annotation.CharacteristicPermissions;
+import no.nordicsemi.android.ble.annotation.CharacteristicProperties;
+import no.nordicsemi.android.ble.annotation.DescriptorPermissions;
+import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.utils.ILogger;
 
 /**
@@ -253,7 +257,8 @@ public abstract class BleServerManager implements ILogger {
 	 */
 	@NonNull
 	protected final BluetoothGattCharacteristic characteristic(@NonNull final UUID uuid,
-															   int properties, final int permissions,
+															   @CharacteristicProperties int properties,
+															   @CharacteristicPermissions final int permissions,
 															   @Nullable final byte[] initialValue,
 															   final BluetoothGattDescriptor... descriptors) {
 		// Look for Client Characteristic Configuration descriptor,
@@ -330,6 +335,74 @@ public abstract class BleServerManager implements ILogger {
 	 * (see {@link #description(String, boolean)}) the
 	 * {@link BluetoothGattCharacteristic#PROPERTY_EXTENDED_PROPS} property will be added automatically.
 	 * <p>
+	 * The value of the characteristic will NOT be shared between clients. Each client will write
+	 * and read its own copy. To create a shared characteristic, use
+	 * {@link #sharedCharacteristic(UUID, int, int, byte[], BluetoothGattDescriptor...)} instead.
+	 *
+	 * @param uuid The characteristic UUID.
+	 * @param properties The bit mask of characteristic properties. See {@link BluetoothGattCharacteristic}
+	 *                   for details.
+	 * @param permissions The bit mask or characteristic permissions. See {@link BluetoothGattCharacteristic}
+	 *                    for details.
+	 * @param initialValue The optional initial value of the characteristic.
+	 * @param descriptors The optional list of descriptors.
+	 * @return The characteristic.
+	 */
+	@NonNull
+	protected final BluetoothGattCharacteristic characteristic(@NonNull final UUID uuid,
+															   @CharacteristicProperties final int properties,
+															   @CharacteristicPermissions final int permissions,
+															   @Nullable final Data initialValue,
+															   final BluetoothGattDescriptor... descriptors) {
+		return characteristic(uuid, properties, permissions, initialValue != null ? initialValue.getValue() : null, descriptors);
+	}
+
+	/**
+	 * A helper method that creates a characteristic with given UUID, properties and permissions.
+	 * Optionally, a list of descriptors may be set.
+	 * <p>
+	 * The Client Characteristic Configuration Descriptor (CCCD) will be added automatically if
+	 * {@link BluetoothGattCharacteristic#PROPERTY_NOTIFY} or {@link BluetoothGattCharacteristic#PROPERTY_INDICATE}
+	 * was set, if not added explicitly in the descriptors list.
+	 * <p>
+	 * If {@link #reliableWrite()} was added as one of the descriptors or the Characteristic User
+	 * Description descriptor was created with any of write permissions
+	 * (see {@link #description(String, boolean)}) the
+	 * {@link BluetoothGattCharacteristic#PROPERTY_EXTENDED_PROPS} property will be added automatically.
+	 * <p>
+	 * The value of the characteristic will NOT be shared between clients. Each client will write
+	 * and read its own copy. To create a shared characteristic, use
+	 * {@link #sharedCharacteristic(UUID, int, int, byte[], BluetoothGattDescriptor...)} instead.
+	 *
+	 * @param uuid The characteristic UUID.
+	 * @param properties The bit mask of characteristic properties. See {@link BluetoothGattCharacteristic}
+	 *                   for details.
+	 * @param permissions The bit mask or characteristic permissions. See {@link BluetoothGattCharacteristic}
+	 *                    for details.
+	 * @param descriptors The optional list of descriptors.
+	 * @return The characteristic.
+	 */
+	@NonNull
+	protected final BluetoothGattCharacteristic characteristic(@NonNull final UUID uuid,
+															   @CharacteristicProperties final int properties,
+															   @CharacteristicPermissions final int permissions,
+															   final BluetoothGattDescriptor... descriptors) {
+		return characteristic(uuid, properties, permissions, (byte[]) null, descriptors);
+	}
+
+	/**
+	 * A helper method that creates a characteristic with given UUID, properties and permissions.
+	 * Optionally, an initial value and a list of descriptors may be set.
+	 * <p>
+	 * The Client Characteristic Configuration Descriptor (CCCD) will be added automatically if
+	 * {@link BluetoothGattCharacteristic#PROPERTY_NOTIFY} or {@link BluetoothGattCharacteristic#PROPERTY_INDICATE}
+	 * was set, if not added explicitly in the descriptors list.
+	 * <p>
+	 * If {@link #reliableWrite()} was added as one of the descriptors or the Characteristic User
+	 * Description descriptor was created with any of write permissions
+	 * (see {@link #description(String, boolean)}) the
+	 * {@link BluetoothGattCharacteristic#PROPERTY_EXTENDED_PROPS} property will be added automatically.
+	 * <p>
 	 * The value of the characteristic is shared between clients. A value written by one of the
 	 * connected clients will be available for all other clients. To create a sandboxed characteristic,
 	 * use {@link #characteristic(UUID, int, int, byte[], BluetoothGattDescriptor...)} instead.
@@ -345,7 +418,8 @@ public abstract class BleServerManager implements ILogger {
 	 */
 	@NonNull
 	protected final BluetoothGattCharacteristic sharedCharacteristic(@NonNull final UUID uuid,
-																	 final int properties, final int permissions,
+																	 @CharacteristicProperties final int properties,
+																	 @CharacteristicPermissions final int permissions,
 																	 @Nullable final byte[] initialValue,
 																	 final BluetoothGattDescriptor... descriptors) {
 		final BluetoothGattCharacteristic characteristic = characteristic(uuid, properties, permissions, initialValue, descriptors);
@@ -353,6 +427,74 @@ public abstract class BleServerManager implements ILogger {
 			sharedCharacteristics = new ArrayList<>();
 		sharedCharacteristics.add(characteristic);
 		return characteristic;
+	}
+
+	/**
+	 * A helper method that creates a characteristic with given UUID, properties and permissions.
+	 * Optionally, an initial value and a list of descriptors may be set.
+	 * <p>
+	 * The Client Characteristic Configuration Descriptor (CCCD) will be added automatically if
+	 * {@link BluetoothGattCharacteristic#PROPERTY_NOTIFY} or {@link BluetoothGattCharacteristic#PROPERTY_INDICATE}
+	 * was set, if not added explicitly in the descriptors list.
+	 * <p>
+	 * If {@link #reliableWrite()} was added as one of the descriptors or the Characteristic User
+	 * Description descriptor was created with any of write permissions
+	 * (see {@link #description(String, boolean)}) the
+	 * {@link BluetoothGattCharacteristic#PROPERTY_EXTENDED_PROPS} property will be added automatically.
+	 * <p>
+	 * The value of the characteristic is shared between clients. A value written by one of the
+	 * connected clients will be available for all other clients. To create a sandboxed characteristic,
+	 * use {@link #characteristic(UUID, int, int, byte[], BluetoothGattDescriptor...)} instead.
+	 *
+	 * @param uuid The characteristic UUID.
+	 * @param properties The bit mask of characteristic properties. See {@link BluetoothGattCharacteristic}
+	 *                   for details.
+	 * @param permissions The bit mask or characteristic permissions. See {@link BluetoothGattCharacteristic}
+	 *                    for details.
+	 * @param initialValue The optional initial value of the characteristic.
+	 * @param descriptors The optional list of descriptors.
+	 * @return The characteristic.
+	 */
+	@NonNull
+	protected final BluetoothGattCharacteristic sharedCharacteristic(@NonNull final UUID uuid,
+																	 @CharacteristicProperties final int properties,
+																	 @CharacteristicPermissions final int permissions,
+																	 @Nullable final Data initialValue,
+																	 final BluetoothGattDescriptor... descriptors) {
+		return sharedCharacteristic(uuid, properties, permissions, initialValue != null ? initialValue.getValue() : null, descriptors);
+	}
+
+	/**
+	 * A helper method that creates a characteristic with given UUID, properties and permissions.
+	 * Optionally, a list of descriptors may be set.
+	 * <p>
+	 * The Client Characteristic Configuration Descriptor (CCCD) will be added automatically if
+	 * {@link BluetoothGattCharacteristic#PROPERTY_NOTIFY} or {@link BluetoothGattCharacteristic#PROPERTY_INDICATE}
+	 * was set, if not added explicitly in the descriptors list.
+	 * <p>
+	 * If {@link #reliableWrite()} was added as one of the descriptors or the Characteristic User
+	 * Description descriptor was created with any of write permissions
+	 * (see {@link #description(String, boolean)}) the
+	 * {@link BluetoothGattCharacteristic#PROPERTY_EXTENDED_PROPS} property will be added automatically.
+	 * <p>
+	 * The value of the characteristic is shared between clients. A value written by one of the
+	 * connected clients will be available for all other clients. To create a sandboxed characteristic,
+	 * use {@link #characteristic(UUID, int, int, byte[], BluetoothGattDescriptor...)} instead.
+	 *
+	 * @param uuid The characteristic UUID.
+	 * @param properties The bit mask of characteristic properties. See {@link BluetoothGattCharacteristic}
+	 *                   for details.
+	 * @param permissions The bit mask or characteristic permissions. See {@link BluetoothGattCharacteristic}
+	 *                    for details.
+	 * @param descriptors The optional list of descriptors.
+	 * @return The characteristic.
+	 */
+	@NonNull
+	protected final BluetoothGattCharacteristic sharedCharacteristic(@NonNull final UUID uuid,
+																	 @CharacteristicProperties final int properties,
+																	 @CharacteristicPermissions final int permissions,
+																	 final BluetoothGattDescriptor... descriptors) {
+		return sharedCharacteristic(uuid, properties, permissions, (byte[]) null, descriptors);
 	}
 
 	/**
@@ -364,16 +506,63 @@ public abstract class BleServerManager implements ILogger {
 	 * {@link #sharedDescriptor(UUID, int, byte[])} instead.
 	 *
 	 * @param uuid The characteristic UUID.
+	 * @param permissions The bit mask or descriptor permissions. See {@link BluetoothGattCharacteristic}
+	 *                    for details.
+	 * @param initialValue The optional initial value of the descriptor.
+	 * @return The characteristic.
+	 */
+	@NonNull
+	protected final BluetoothGattDescriptor descriptor(@NonNull final UUID uuid,
+													   @DescriptorPermissions final int permissions,
+													   @Nullable final byte[] initialValue) {
+		final BluetoothGattDescriptor descriptor = new BluetoothGattDescriptor(uuid, permissions);
+		descriptor.setValue(initialValue);
+		return descriptor;
+	}
+
+	/**
+	 * A helper method that creates a descriptor with given UUID and permissions.
+	 * Optionally, an initial value may be set.
+	 * <p>
+	 * The value of the descriptor will NOT be shared between clients. Each client will write
+	 * and read its own copy. To create a shared descriptor, use
+	 * {@link #sharedDescriptor(UUID, int, byte[])} instead.
+	 *
+	 * @param uuid The characteristic UUID.
+	 * @param permissions The bit mask or descriptor permissions. See {@link BluetoothGattCharacteristic}
+	 *                    for details.
+	 * @param initialValue The optional initial value of the descriptor.
+	 * @return The characteristic.
+	 */
+	@NonNull
+	protected final BluetoothGattDescriptor descriptor(@NonNull final UUID uuid,
+													   @DescriptorPermissions final int permissions,
+													   @Nullable final Data initialValue) {
+		return descriptor(uuid, permissions, initialValue != null ? initialValue.getValue() : null);
+	}
+
+	/**
+	 * A helper method that creates a descriptor with given UUID and permissions.
+	 * Optionally, an initial value may be set.
+	 * <p>
+	 * The value of the characteristic is shared between clients. A value written by one of the
+	 * connected clients will be available for all other clients. To create a sandboxed characteristic,
+	 * use {@link #characteristic(UUID, int, int, byte[], BluetoothGattDescriptor...)} instead.
+	 *
+	 * @param uuid The characteristic UUID.
 	 * @param permissions The bit mask or characteristic permissions. See {@link BluetoothGattCharacteristic}
 	 *                    for details.
 	 * @param initialValue The optional initial value of the characteristic.
 	 * @return The characteristic.
 	 */
 	@NonNull
-	protected final BluetoothGattDescriptor descriptor(@NonNull final UUID uuid, final int permissions,
-													   @Nullable final byte[] initialValue) {
-		final BluetoothGattDescriptor descriptor = new BluetoothGattDescriptor(uuid, permissions);
-		descriptor.setValue(initialValue);
+	protected final BluetoothGattDescriptor sharedDescriptor(@NonNull final UUID uuid,
+															 @DescriptorPermissions final int permissions,
+															 @Nullable final byte[] initialValue) {
+		final BluetoothGattDescriptor descriptor = descriptor(uuid, permissions, initialValue);
+		if (sharedDescriptors == null)
+			sharedDescriptors = new ArrayList<>();
+		sharedDescriptors.add(descriptor);
 		return descriptor;
 	}
 
@@ -393,13 +582,9 @@ public abstract class BleServerManager implements ILogger {
 	 */
 	@NonNull
 	protected final BluetoothGattDescriptor sharedDescriptor(@NonNull final UUID uuid,
-															 final int permissions,
-															 @Nullable final byte[] initialValue) {
-		final BluetoothGattDescriptor descriptor = descriptor(uuid, permissions, initialValue);
-		if (sharedDescriptors == null)
-			sharedDescriptors = new ArrayList<>();
-		sharedDescriptors.add(descriptor);
-		return descriptor;
+															 @DescriptorPermissions final int permissions,
+															 @Nullable final Data initialValue) {
+		return sharedDescriptor(uuid, permissions, initialValue != null ? initialValue.getValue() : null);
 	}
 
 	/**
@@ -484,9 +669,15 @@ public abstract class BleServerManager implements ILogger {
 		@Override
 		public void onConnectionStateChange(@NonNull final BluetoothDevice device, final int status, final int newState) {
 			if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothGatt.STATE_CONNECTED) {
+				log(Log.INFO, "[Server] " + device.getAddress() + " is now connected");
 				if (callbacks != null)
 					callbacks.onDeviceConnectedToServer(device);
 			} else {
+				if (status == BluetoothGatt.GATT_SUCCESS) {
+					log(Log.INFO, "[Server] " + device.getAddress() + " is disconnected");
+				} else {
+					log(Log.WARN, "[Server] " + device.getAddress() + " has disconnected connected with status: " + status);
+				}
 				if (callbacks != null)
 					callbacks.onDeviceDisconnectedFromServer(device);
 			}
