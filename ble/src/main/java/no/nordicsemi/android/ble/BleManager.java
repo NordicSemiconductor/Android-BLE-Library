@@ -113,9 +113,9 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	public static final int PAIRING_VARIANT_OOB_CONSENT = 6;
 
 	private final Context context;
-	private final Handler handler;
 	private BleServerManager serverManager;
-	BleManager.BleManagerGattCallback requestHandler;
+	@NonNull
+	final BleManager.BleManagerGattCallback requestHandler;
 	/** Manager callbacks, set using {@link #setManagerCallbacks(BleManagerCallbacks)}. */
 	protected E callbacks;
 
@@ -125,8 +125,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 			final BluetoothDevice device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
 
 			// Skip other devices.
-			if (requestHandler == null)
-				return;
 			final BluetoothDevice bluetoothDevice = requestHandler.getBluetoothDevice();
 			if (bluetoothDevice == null || device == null
 					|| !device.getAddress().equals(bluetoothDevice.getAddress()))
@@ -169,7 +167,8 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	public BleManager(@NonNull final Context context, @NonNull final Handler handler) {
 		this.context = context;
-		this.handler = handler;
+		this.requestHandler = getGattCallback();
+		this.requestHandler.init(this, handler);
 
 		context.registerReceiver(mPairingRequestBroadcastReceiver,
 				// BluetoothDevice.ACTION_PAIRING_REQUEST
@@ -191,9 +190,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		if (serverManager != null) {
 			serverManager.removeManager(this);
 		}
-		if (requestHandler != null) {
-			requestHandler.close();
-		}
+		requestHandler.close();
 	}
 
 	/**
@@ -229,16 +226,12 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		}
 		serverManager = server;
 		server.addManager(this);
-		if (requestHandler != null) {
-			requestHandler.useServer(server);
-		}
+		requestHandler.useServer(server);
 	}
 
 	final void closeServer() {
 		serverManager = null;
-		if (requestHandler != null) {
-			requestHandler.useServer(null);
-		}
+		requestHandler.useServer(null);
 	}
 
 	/**
@@ -261,9 +254,12 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	/**
-	 * This method must return the gatt callback used by the manager.
+	 * This method must return the GATT callback used by the manager.
 	 * This method must not create a new gatt callback each time it is being invoked, but rather
 	 * return a single object.
+	 * The object must exist when this method is called, that is in the BleManager's constructor.
+	 * Therefore, it cannot return a local field in the extending manager, as this is created after
+	 * the constructor finishes.
 	 *
 	 * @return The gatt callback object.
 	 */
@@ -498,11 +494,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 		}
 		if (device == null) {
 			throw new NullPointerException("Bluetooth device not specified");
-		}
-		if (requestHandler == null) {
-			requestHandler = getGattCallback();
-			requestHandler.init(this, handler);
-			requestHandler.useServer(serverManager);
 		}
 		return Request.connect(device)
 				.useAutoConnect(shouldAutoConnect())
