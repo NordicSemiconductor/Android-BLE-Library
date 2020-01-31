@@ -108,6 +108,9 @@ public abstract class BleServerManager implements ILogger {
 		}
 		serverServices = null;
 		for (BleManager manager: managers) {
+			// closeServer() must be called before close(). Otherwise close() would remove
+			// the manager from managers list while iterating this loop.
+			manager.closeServer();
 			manager.close();
 		}
 		managers.clear();
