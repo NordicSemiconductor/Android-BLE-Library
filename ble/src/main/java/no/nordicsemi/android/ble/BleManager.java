@@ -1374,7 +1374,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	@NonNull
 	protected WriteRequest sendNotification(@Nullable final BluetoothGattCharacteristic serverCharacteristic,
 											@Nullable final Data data) {
-		return Request.newWriteRequest(serverCharacteristic, data != null ? data.getValue() : null)
+		return Request.newNotificationRequest(serverCharacteristic, data != null ? data.getValue() : null)
 				.setRequestHandler(requestHandler);
 	}
 
