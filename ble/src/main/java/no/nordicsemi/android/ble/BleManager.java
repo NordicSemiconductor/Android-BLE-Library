@@ -26,6 +26,7 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattServer;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -48,6 +49,7 @@ import no.nordicsemi.android.ble.annotation.PairingVariant;
 import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.annotation.PhyOption;
 import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
+import no.nordicsemi.android.ble.callback.DataReceivedCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.MtuCallback;
 import no.nordicsemi.android.ble.data.Data;
@@ -1807,5 +1809,28 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	protected abstract class BleManagerGattCallback extends BleManagerHandler {
 		// All methods defined in the super class.
+
+		private BluetoothGattCharacteristic serverCharacteristic;
+		private BluetoothGattCharacteristic otherCharacteristic;
+
+		@Override
+		protected void onServerReady(@NonNull final BluetoothGattServer server) {
+			UUID SERVICE_UUID = UUID.randomUUID();
+			UUID CHAR_UUID = UUID.randomUUID();
+
+			// Obtain your server attributes.
+			serverCharacteristic = server
+					.getService(SERVICE_UUID)
+					.getCharacteristic(CHAR_UUID);
+
+			//  set write callback, if you need
+			setWriteCallback(serverCharacteristic)
+					.with((device, data) ->
+						sendNotification(otherCharacteristic, "any data".getBytes())
+								.enqueue()
+					);
+			}
+		}
+
 	}
 }

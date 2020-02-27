@@ -327,7 +327,7 @@ class MyBleManager extends BleManager<BleManagerCallbacks> {
 					.getService(SERVICE_UUID)
 					.getCharacteristic(CHAR_UUID);
 			
-            //  set write callback, if you need
+			//  set write callback, if you need
 			setWriteCallback(serverCharacteristic)
 					.with((device, data) ->
 						sendNotification(otherCharacteristic, "any data".getBytes())
