@@ -28,7 +28,6 @@ import java.lang.annotation.Retention;
 import java.lang.annotation.RetentionPolicy;
 
 import androidx.annotation.IntDef;
-import no.nordicsemi.android.ble.PhyRequest;
 
 @Retention(RetentionPolicy.SOURCE)
 @IntDef(flag = true, value = {
