@@ -48,6 +48,27 @@ public class ValueChangedCallback {
 		this.handler = handler;
 	}
 
+	@NonNull
+	public ValueChangedCallback setHandler(@NonNull final Handler handler) {
+		this.handler = new CallbackHandler() {
+			@Override
+			public void post(@NonNull final Runnable r) {
+				handler.post(r);
+			}
+
+			@Override
+			public void postDelayed(@NonNull final Runnable r, final long delayMillis) {
+				handler.postDelayed(r, delayMillis);
+			}
+
+			@Override
+			public void removeCallbacks(@NonNull final Runnable r) {
+				handler.removeCallbacks(r);
+			}
+		};
+		return this;
+	}
+
 	/**
 	 * Sets the asynchronous data callback that will be called whenever a notification or
 	 * an indication is received on given characteristic.
