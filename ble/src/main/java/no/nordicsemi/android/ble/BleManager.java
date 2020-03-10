@@ -608,7 +608,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	@NonNull
 	protected ValueChangedCallback setNotificationCallback(@Nullable final BluetoothGattCharacteristic characteristic) {
-		return requestHandler.setNotificationCallback(characteristic);
+		return requestHandler.getValueChangedCallback(characteristic);
 	}
 
 	/**
@@ -642,7 +642,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	@NonNull
 	protected ValueChangedCallback setWriteCallback(@Nullable final BluetoothGattCharacteristic serverCharacteristic) {
-		return requestHandler.setNotificationCallback(serverCharacteristic);
+		return requestHandler.getValueChangedCallback(serverCharacteristic);
 	}
 
 	/**
@@ -658,7 +658,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	@NonNull
 	protected ValueChangedCallback setWriteCallback(@Nullable final BluetoothGattDescriptor serverDescriptor) {
-		return requestHandler.setNotificationCallback(serverDescriptor);
+		return requestHandler.getValueChangedCallback(serverDescriptor);
 	}
 
 	/**
@@ -668,7 +668,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @param characteristic characteristic to unbind the callback from.
 	 */
 	protected void removeNotificationCallback(@Nullable final BluetoothGattCharacteristic characteristic) {
-		requestHandler.removeNotificationCallback(characteristic);
+		requestHandler.removeValueChangedCallback(characteristic);
 	}
 
 	/**
@@ -688,7 +688,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @param serverCharacteristic characteristic to unbind the callback from.
 	 */
 	protected void removeWriteCallback(@Nullable final BluetoothGattCharacteristic serverCharacteristic) {
-		requestHandler.removeNotificationCallback(serverCharacteristic);
+		requestHandler.removeValueChangedCallback(serverCharacteristic);
 	}
 
 	/**
@@ -698,7 +698,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @param serverDescriptor descriptor to unbind the callback from.
 	 */
 	protected void removeWriteCallback(@Nullable final BluetoothGattDescriptor serverDescriptor) {
-		requestHandler.removeNotificationCallback(serverDescriptor);
+		requestHandler.removeValueChangedCallback(serverDescriptor);
 	}
 
 	/**

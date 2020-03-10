@@ -41,10 +41,10 @@ public class ValueChangedCallback {
 	private DataMerger dataMerger;
 	private DataStream buffer;
 	private DataFilter filter;
-	private final Handler handler;
+	private CallbackHandler handler;
 	private int count = 0;
 
-	ValueChangedCallback(final Handler handler) {
+	ValueChangedCallback(final CallbackHandler handler) {
 		this.handler = handler;
 	}
 

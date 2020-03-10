@@ -97,7 +97,7 @@ public abstract class Request {
 	}
 
 	protected RequestHandler requestHandler;
-	protected Handler handler;
+	protected CallbackHandler handler;
 
 	final ConditionVariable syncLock;
 	final Type type;
@@ -143,7 +143,7 @@ public abstract class Request {
 	Request setRequestHandler(@NonNull final RequestHandler requestHandler) {
 		this.requestHandler = requestHandler;
 		if (this.handler == null) {
-			this.handler = requestHandler.getHandler();
+			this.handler = requestHandler;
 		}
 		return this;
 	}
@@ -157,7 +157,22 @@ public abstract class Request {
 	 */
 	@NonNull
 	public Request setHandler(@NonNull final Handler handler) {
-		this.handler = handler;
+		this.handler = new CallbackHandler() {
+			@Override
+			public void post(@NonNull final Runnable r) {
+				handler.post(r);
+			}
+
+			@Override
+			public void postDelayed(@NonNull final Runnable r, final long delayMillis) {
+				handler.postDelayed(r, delayMillis);
+			}
+
+			@Override
+			public void removeCallbacks(@NonNull final Runnable r) {
+				handler.removeCallbacks(r);
+			}
+		};
 		return this;
 	}
 
