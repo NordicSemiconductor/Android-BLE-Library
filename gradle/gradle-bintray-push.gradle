@@ -1,5 +1,4 @@
 apply plugin: 'maven-publish'
-apply plugin: 'digital.wup.android-maven-publish'
 apply plugin: 'com.jfrog.bintray'
 
 version = VERSION_NAME
@@ -7,8 +6,8 @@ group   = GROUP
 
 publishing {
     publications {
-        library(MavenPublication) {
-            from components.android
+        released(MavenPublication) {
+            from components.release
             groupId = GROUP
             artifactId = POM_ARTIFACT_ID
             version = VERSION_NAME
@@ -95,7 +94,7 @@ bintray {
     user = properties.getProperty("BINTRAY_USER")
     key  = properties.getProperty("BINTRAY_APIKEY")
 
-    publications = ['library']
+    publications = ['release']
 
     pkg {
         name = GROUP + ":" + POM_ARTIFACT_ID
