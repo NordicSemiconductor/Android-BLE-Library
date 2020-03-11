@@ -315,6 +315,11 @@ abstract class BleManagerHandler extends RequestHandler {
 							request.notifySuccess(device);
 							request = null;
 						}
+						// When the bond information has been removed (either with Remove Bond request
+						// or in Android Settings), the BluetoothGatt object should be closed, so
+						// the library won't reconnect to the device automatically.
+						// See: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/157
+						close();
 					}
 					break;
 				case BluetoothDevice.BOND_BONDING:
