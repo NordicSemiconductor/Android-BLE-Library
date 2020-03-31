@@ -645,8 +645,11 @@ public abstract class BleServerManager implements ILogger {
 		final BluetoothGattDescriptor cud = descriptor(CLIENT_USER_DESCRIPTION_DESCRIPTOR_UUID,
 				BluetoothGattDescriptor.PERMISSION_READ | (writableAuxiliaries ? BluetoothGattDescriptor.PERMISSION_WRITE : 0),
 				description != null ? description.getBytes() : null);
-		if (!writableAuxiliaries)
+		if (!writableAuxiliaries) {
+			if (sharedDescriptors == null)
+				sharedDescriptors = new ArrayList<>();
 			sharedDescriptors.add(cud);
+		}
 		return cud;
 	}
 

@@ -41,11 +41,32 @@ public class ValueChangedCallback {
 	private DataMerger dataMerger;
 	private DataStream buffer;
 	private DataFilter filter;
-	private final Handler handler;
+	private CallbackHandler handler;
 	private int count = 0;
 
-	ValueChangedCallback(final Handler handler) {
+	ValueChangedCallback(final CallbackHandler handler) {
 		this.handler = handler;
+	}
+
+	@NonNull
+	public ValueChangedCallback setHandler(@NonNull final Handler handler) {
+		this.handler = new CallbackHandler() {
+			@Override
+			public void post(@NonNull final Runnable r) {
+				handler.post(r);
+			}
+
+			@Override
+			public void postDelayed(@NonNull final Runnable r, final long delayMillis) {
+				handler.postDelayed(r, delayMillis);
+			}
+
+			@Override
+			public void removeCallbacks(@NonNull final Runnable r) {
+				handler.removeCallbacks(r);
+			}
+		};
+		return this;
 	}
 
 	/**

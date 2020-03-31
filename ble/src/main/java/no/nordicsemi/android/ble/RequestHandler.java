@@ -1,11 +1,8 @@
 package no.nordicsemi.android.ble;
 
-
-import android.os.Handler;
-
 import androidx.annotation.NonNull;
 
-abstract class RequestHandler {
+abstract class RequestHandler implements CallbackHandler {
 	/**
 	 * Enqueues the given request at the end of the the init or task queue, depending
 	 * on whether the initialization is in progress, or not.
@@ -33,11 +30,4 @@ abstract class RequestHandler {
 	 * @param request the request that timed out.
 	 */
 	abstract void onRequestTimeout(@NonNull final TimeoutableRequest request);
-
-	/**
-	 * Returns the handler to invoke callbacks on.
-	 *
-	 * @return the handler.
-	 */
-	abstract Handler getHandler();
 }

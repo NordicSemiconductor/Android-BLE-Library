@@ -29,6 +29,8 @@ import org.junit.Test;
 
 import java.util.UUID;
 
+import androidx.annotation.NonNull;
+
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertFalse;
@@ -37,6 +39,23 @@ import static org.junit.Assert.assertTrue;
 
 @SuppressWarnings("ConstantConditions")
 public class RequestTest {
+	private final static class SynchronousHandler implements CallbackHandler {
+		@Override
+		public void post(@NonNull final Runnable r) {
+			r.run();
+		}
+
+		@Override
+		public void postDelayed(@NonNull final Runnable r, final long delayMillis) {
+			r.run();
+		}
+
+		@Override
+		public void removeCallbacks(@NonNull final Runnable r) {
+			// do nothing
+		}
+	}
+
 	private final String text =
 			"Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod " +
 			"tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis " +
@@ -94,6 +113,7 @@ public class RequestTest {
 					assertArrayEquals(chunk, data);
 					assertTrue(data.length <= MTU - 3);
 				}).done(device -> done = true);
+		request.handler = new SynchronousHandler();
 
 		done = false;
 		do {
@@ -126,6 +146,7 @@ public class RequestTest {
 		// The WriteRequest is only to split the text into chunks
 		final WriteRequest request = Request.newWriteRequest(characteristic, text.getBytes(), BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
 				.split();
+		request.handler = new SynchronousHandler();
 
 		// Create ReadRequest that will merge packets until the complete text is in the stream
 		final ReadRequest readRequest = Request.newReadRequest(characteristic)
@@ -146,6 +167,7 @@ public class RequestTest {
 					assertArrayEquals(text.getBytes(), data.getValue());
 				})
 				.done(device -> done = true);
+		readRequest.handler = new SynchronousHandler();
 
 		done = false;
 		do {

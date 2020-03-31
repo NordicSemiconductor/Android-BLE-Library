@@ -38,11 +38,7 @@ import no.nordicsemi.android.ble.annotation.ConnectionState;
 import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.annotation.PhyOption;
 import no.nordicsemi.android.ble.annotation.PhyValue;
-import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
-import no.nordicsemi.android.ble.callback.DataReceivedCallback;
-import no.nordicsemi.android.ble.callback.FailCallback;
-import no.nordicsemi.android.ble.callback.MtuCallback;
-import no.nordicsemi.android.ble.callback.SuccessCallback;
+import no.nordicsemi.android.ble.callback.*;
 import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.error.GattError;
 import no.nordicsemi.android.ble.utils.ParserUtils;
@@ -192,10 +188,11 @@ abstract class BleManagerHandler extends RequestHandler {
 	 */
 	private RequestQueue requestQueue;
 	/**
-	 * A map of {@link ValueChangedCallback}s for handling notifications and indications.
+	 * A map of {@link ValueChangedCallback}s for handling notifications, indications and
+	 * write callbacks to server characteristic and descriptors.
 	 */
 	@NonNull
-	private final HashMap<Object, ValueChangedCallback> notificationCallbacks = new HashMap<>();
+	private final HashMap<Object, ValueChangedCallback> valueChangedCallbacks = new HashMap<>();
 	/**
 	 * A special handler for Battery Level notifications.
 	 */
@@ -314,6 +311,11 @@ abstract class BleManagerHandler extends RequestHandler {
 							request.notifySuccess(device);
 							request = null;
 						}
+						// When the bond information has been removed (either with Remove Bond request
+						// or in Android Settings), the BluetoothGatt object should be closed, so
+						// the library won't reconnect to the device automatically.
+						// See: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/157
+						close();
 					}
 					break;
 				case BluetoothDevice.BOND_BONDING:
@@ -331,7 +333,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					// established the services were not discovered.
 					if (!servicesDiscovered && !serviceDiscoveryRequested) {
 						serviceDiscoveryRequested = true;
-						handler.post(() -> {
+						post(() -> {
 							log(Log.VERBOSE, "Discovering services...");
 							log(Log.DEBUG, "gatt.discoverServices()");
 							bluetoothGatt.discoverServices();
@@ -416,7 +418,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			}
 			reliableWriteInProgress = false;
 			initialConnection = false;
-			notificationCallbacks.clear();
+			valueChangedCallbacks.clear();
 			// close() is called in notifyDeviceDisconnected, which may enqueue new requests.
 			// Setting this flag to false would allow to enqueue a new request before the
 			// current one ends processing. The following line should not be uncommented.
@@ -628,6 +630,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			try {
 				final Method createBond = device.getClass().getMethod("createBond");
 				log(Log.DEBUG, "device.createBond() (hidden)");
+				//noinspection ConstantConditions
 				return (Boolean) createBond.invoke(device);
 			} catch (final Exception e) {
 				Log.w(TAG, "An exception occurred while creating bond", e);
@@ -658,6 +661,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			//noinspection JavaReflectionMemberAccess
 			final Method removeBond = device.getClass().getMethod("removeBond");
 			log(Log.DEBUG, "device.removeBond() (hidden)");
+			//noinspection ConstantConditions
 			return (Boolean) removeBond.invoke(device);
 		} catch (final Exception e) {
 			Log.w(TAG, "An exception occurred while removing bond", e);
@@ -776,7 +780,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			log(Log.DEBUG, "server.notifyCharacteristicChanged(device, " + serverCharacteristic.getUuid() + ", " + confirm + ")");
 			final boolean result = serverManager.getServer().notifyCharacteristicChanged(bluetoothDevice, serverCharacteristic, confirm);
 			if (result && Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-				handler.post(() -> {
+				post(() -> {
 					notifyNotificationSent(bluetoothDevice);
 					nextRequest(true);
 				});
@@ -1042,22 +1046,31 @@ abstract class BleManagerHandler extends RequestHandler {
 	}
 
 	/**
-	 * Sets and returns notification callback.
+	 * Sets and returns a callback that will respond to value changes.
 	 *
-	 * @param characteristic characteristic to bind the callback with. If null, the returned
-	 *                       callback will not be null, but will not be used.
+	 * @param attribute attribute to bind the callback with. If null, the returned
+	 *                  callback will not be null, but will not be used.
 	 * @return The callback.
 	 */
 	@NonNull
-	ValueChangedCallback setNotificationCallback(@Nullable final Object characteristic) {
-		ValueChangedCallback callback = notificationCallbacks.get(characteristic);
+	ValueChangedCallback getValueChangedCallback(@Nullable final Object attribute) {
+		ValueChangedCallback callback = valueChangedCallbacks.get(attribute);
 		if (callback == null) {
-			callback = new ValueChangedCallback(handler);
-			if (characteristic != null) {
-				notificationCallbacks.put(characteristic, callback);
+			callback = new ValueChangedCallback(this);
+			if (attribute != null) {
+				valueChangedCallbacks.put(attribute, callback);
 			}
 		}
 		return callback.free();
+	}
+
+	/**
+	 * Removes the callback set using {@link #getValueChangedCallback(Object)}.
+	 *
+	 * @param attribute attribute to unbind the callback from.
+	 */
+	void removeValueChangedCallback(@Nullable final Object attribute) {
+		valueChangedCallbacks.remove(attribute);
 	}
 
 	@Deprecated
@@ -1077,7 +1090,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	@Deprecated
 	void setBatteryLevelNotificationCallback() {
 		if (batteryLevelNotificationCallback == null) {
-			batteryLevelNotificationCallback = new ValueChangedCallback(handler)
+			batteryLevelNotificationCallback = new ValueChangedCallback(this)
 					.with((device, data) -> {
 						if (data.size() == 1) {
 							//noinspection ConstantConditions
@@ -1088,16 +1101,6 @@ abstract class BleManagerHandler extends RequestHandler {
 						}
 					});
 		}
-	}
-
-	/**
-	 * Removes the notifications callback set using
-	 * {@link #setNotificationCallback(Object)}.
-	 *
-	 * @param characteristic characteristic to unbind the callback from.
-	 */
-	void removeNotificationCallback(@Nullable final Object characteristic) {
-		notificationCallbacks.remove(characteristic);
 	}
 
 	/**
@@ -1117,6 +1120,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		 */
 		try {
 			final Method refresh = gatt.getClass().getMethod("refresh");
+			//noinspection ConstantConditions
 			return (Boolean) refresh.invoke(gatt);
 		} catch (final Exception e) {
 			Log.w(TAG, "An exception occurred while refreshing device", e);
@@ -1185,8 +1189,18 @@ abstract class BleManagerHandler extends RequestHandler {
 	}
 
 	@Override
-	final Handler getHandler() {
-		return handler;
+	public void post(@NonNull final Runnable r) {
+		handler.post(r);
+	}
+
+	@Override
+	public void postDelayed(@NonNull final Runnable r, final long delayMillis) {
+		handler.postDelayed(r, delayMillis);
+	}
+
+	@Override
+	public void removeCallbacks(@NonNull final Runnable r) {
+		handler.removeCallbacks(r);
 	}
 
 	/**
@@ -1582,7 +1596,7 @@ abstract class BleManagerHandler extends RequestHandler {
 						log(Log.DEBUG, "wait(" + delay + ")");
 
 					final int connectionCount = ++BleManagerHandler.this.connectionCount;
-					handler.postDelayed(() -> {
+					postDelayed(() -> {
 						if (connectionCount != BleManagerHandler.this.connectionCount) {
 							// Ensure that we will not try to discover services for a lost connection.
 							return;
@@ -1610,13 +1624,22 @@ abstract class BleManagerHandler extends RequestHandler {
 						log(Log.WARN, "Error: (0x" + Integer.toHexString(status) + "): " +
 								GattError.parseConnectionError(status));
 
+					// Send status to disconnectCallback.
+					final DisconnectCallback dc = manager.disconnectCallback;
+					if (dc != null) {
+						post(() -> dc.onDeviceDisconnected(
+								gatt.getDevice(),
+								mapDisconnectStatusToReason(status, timeout)
+						));
+					}
+
 					// In case of a connection error, retry if required.
 					if (status != BluetoothGatt.GATT_SUCCESS && canTimeout && !timeout
 							&& connectRequest != null && connectRequest.canRetry()) {
 						final int delay = connectRequest.getRetryDelay();
 						if (delay > 0)
 							log(Log.DEBUG, "wait(" + delay + ")");
-						handler.postDelayed(() -> internalConnect(gatt.getDevice(), connectRequest), delay);
+						postDelayed(() -> internalConnect(gatt.getDevice(), connectRequest), delay);
 						return;
 					}
 
@@ -2055,7 +2078,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					batteryLevelNotificationCallback.notifyValueChanged(gatt.getDevice(), data);
 				}
 				// Notify the notification registered listener, if set
-				final ValueChangedCallback request = notificationCallbacks.get(characteristic);
+				final ValueChangedCallback request = valueChangedCallbacks.get(characteristic);
 				if (request != null && request.matches(data)) {
 					request.notifyValueChanged(gatt.getDevice(), data);
 				}
@@ -2254,6 +2277,23 @@ abstract class BleManagerHandler extends RequestHandler {
 			nextRequest(true);
 		}
 	};
+
+	private int mapDisconnectStatusToReason(final int status, final boolean timeout) {
+		if (timeout)
+			return DisconnectCallback.REASON_TIMEOUT;
+		switch (status) {
+			case GattError.GATT_SUCCESS:
+				return DisconnectCallback.REASON_SUCCESS;
+			case GattError.GATT_CONN_TERMINATE_LOCAL_HOST:
+				return DisconnectCallback.REASON_TERMINATE_LOCAL_HOST;
+			case GattError.GATT_CONN_TERMINATE_PEER_USER:
+				return DisconnectCallback.REASON_TERMINATE_PEER_USER;
+			case GattError.GATT_CONN_TIMEOUT:
+				return DisconnectCallback.REASON_TIMEOUT;
+			default:
+				return DisconnectCallback.REASON_UNKNOWN;
+		}
+	}
 
 	final void onCharacteristicReadRequest(@NonNull final BluetoothGattServer server,
 										   @NonNull final BluetoothDevice device,
@@ -2513,6 +2553,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					log(Log.INFO, "[Server] Indication sent");
 					break;
 			}
+			//noinspection ConstantConditions
 			wr.notifyPacketSent(device, wr.characteristic.getValue());
 			if (wr.hasMore()) {
 				enqueueFirst(wr);
@@ -2533,7 +2574,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		}
 		// Notify listener
 		ValueChangedCallback callback;
-		if ((callback = notificationCallbacks.get(characteristic)) != null) {
+		if ((callback = valueChangedCallbacks.get(characteristic)) != null) {
 			callback.notifyValueChanged(device, value);
 		}
 
@@ -2575,7 +2616,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		}
 		// Notify listener
 		ValueChangedCallback callback;
-		if ((callback = notificationCallbacks.get(descriptor)) != null) {
+		if ((callback = valueChangedCallbacks.get(descriptor)) != null) {
 			callback.notifyValueChanged(device, value);
 		}
 
@@ -2939,7 +2980,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					// Let's give it some time to finish as the request is an asynchronous operation.
 					if (result) {
 						final BluetoothDevice device = bluetoothDevice;
-						handler.postDelayed(() -> {
+						postDelayed(() -> {
 							cpr.notifySuccess(device);
 							nextRequest(true);
 						}, 100);
@@ -2987,7 +3028,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				result = internalRefreshDeviceCache();
 				if (result) {
 					final BluetoothDevice device = bluetoothDevice;
-					handler.postDelayed(() -> {
+					postDelayed(() -> {
 						log(Log.INFO, "Cache refreshed");
 						r.notifySuccess(device);
 						this.request = null;
@@ -3014,7 +3055,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				if (device != null) {
 					final SleepRequest sr = (SleepRequest) request;
 					log(Log.DEBUG, "sleep(" + sr.getDelay() + ")");
-					handler.postDelayed(() -> {
+					postDelayed(() -> {
 						sr.notifySuccess(device);
 						nextRequest(true);
 					}, sr.getDelay());

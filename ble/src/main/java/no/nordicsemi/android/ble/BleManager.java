@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Nordic Semiconductor
+ * Copyright (c) 2020, Nordic Semiconductor
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -47,6 +47,7 @@ import no.nordicsemi.android.ble.annotation.ConnectionState;
 import no.nordicsemi.android.ble.annotation.PairingVariant;
 import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.annotation.PhyOption;
+import no.nordicsemi.android.ble.callback.DisconnectCallback;
 import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.MtuCallback;
@@ -118,6 +119,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	final BleManager.BleManagerGattCallback requestHandler;
 	/** Manager callbacks, set using {@link #setManagerCallbacks(BleManagerCallbacks)}. */
 	protected E callbacks;
+	protected DisconnectCallback disconnectCallback;
 
 	private final BroadcastReceiver mPairingRequestBroadcastReceiver = new BroadcastReceiver() {
 		@Override
@@ -194,6 +196,16 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	/**
+	 * Runs the given runnable using a handler given to the constructor.
+	 * If no handler was given, the callbacks will be called on UI thread.
+	 *
+	 * @param runnable the runnable to be executed.
+	 */
+	protected void runOnCallbackThread(@NonNull final Runnable runnable) {
+		requestHandler.post(runnable);
+	}
+
+	/**
 	 * Sets the manager callback listener.
 	 *
 	 * @param callbacks the callback listener.
@@ -211,6 +223,15 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	public final void setManagerCallbacks(@NonNull final E callbacks) {
 		this.callbacks = callbacks;
+	}
+
+	/**
+	 * Sets the disconnect callback.
+	 *
+	 * @param callback the callback listener.
+	 */
+	public void setDisconnectCallback(@Nullable final DisconnectCallback callback) {
+		this.disconnectCallback = callback;
 	}
 
 	/**
@@ -608,7 +629,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	@NonNull
 	protected ValueChangedCallback setNotificationCallback(@Nullable final BluetoothGattCharacteristic characteristic) {
-		return requestHandler.setNotificationCallback(characteristic);
+		return requestHandler.getValueChangedCallback(characteristic);
 	}
 
 	/**
@@ -642,7 +663,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	@NonNull
 	protected ValueChangedCallback setWriteCallback(@Nullable final BluetoothGattCharacteristic serverCharacteristic) {
-		return requestHandler.setNotificationCallback(serverCharacteristic);
+		return requestHandler.getValueChangedCallback(serverCharacteristic);
 	}
 
 	/**
@@ -658,7 +679,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	@NonNull
 	protected ValueChangedCallback setWriteCallback(@Nullable final BluetoothGattDescriptor serverDescriptor) {
-		return requestHandler.setNotificationCallback(serverDescriptor);
+		return requestHandler.getValueChangedCallback(serverDescriptor);
 	}
 
 	/**
@@ -668,7 +689,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @param characteristic characteristic to unbind the callback from.
 	 */
 	protected void removeNotificationCallback(@Nullable final BluetoothGattCharacteristic characteristic) {
-		requestHandler.removeNotificationCallback(characteristic);
+		requestHandler.removeValueChangedCallback(characteristic);
 	}
 
 	/**
@@ -688,7 +709,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @param serverCharacteristic characteristic to unbind the callback from.
 	 */
 	protected void removeWriteCallback(@Nullable final BluetoothGattCharacteristic serverCharacteristic) {
-		requestHandler.removeNotificationCallback(serverCharacteristic);
+		requestHandler.removeValueChangedCallback(serverCharacteristic);
 	}
 
 	/**
@@ -698,7 +719,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * @param serverDescriptor descriptor to unbind the callback from.
 	 */
 	protected void removeWriteCallback(@Nullable final BluetoothGattDescriptor serverDescriptor) {
-		requestHandler.removeNotificationCallback(serverDescriptor);
+		requestHandler.removeValueChangedCallback(serverDescriptor);
 	}
 
 	/**
@@ -1374,7 +1395,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	@NonNull
 	protected WriteRequest sendNotification(@Nullable final BluetoothGattCharacteristic serverCharacteristic,
 											@Nullable final Data data) {
-		return Request.newWriteRequest(serverCharacteristic, data != null ? data.getValue() : null)
+		return Request.newNotificationRequest(serverCharacteristic, data != null ? data.getValue() : null)
 				.setRequestHandler(requestHandler);
 	}
 
@@ -1805,7 +1826,7 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 * The GATT Callback handler. An object of this class must be returned by
 	 * {@link #getGattCallback()}. It is responsible for all GATT operations.
 	 */
-	protected abstract class BleManagerGattCallback extends BleManagerHandler {
+	protected abstract static class BleManagerGattCallback extends BleManagerHandler {
 		// All methods defined in the super class.
 	}
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2018, Nordic Semiconductor
+ * Copyright (c) 2020, Nordic Semiconductor
  * All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without modification, are permitted provided that the following conditions are met:
@@ -19,25 +19,40 @@
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+package no.nordicsemi.android.ble.callback;
 
-package no.nordicsemi.android.ble.annotation;
+import android.bluetooth.BluetoothDevice;
+import android.bluetooth.BluetoothGatt;
+import android.bluetooth.BluetoothGattCallback;
 
-import android.bluetooth.BluetoothGattDescriptor;
+import androidx.annotation.NonNull;
 
-import java.lang.annotation.Retention;
-import java.lang.annotation.RetentionPolicy;
+/**
+ * Additional callback for device disconnect with more information about state.
+ */
+public interface DisconnectCallback {
+	/** The reason of disconnection is unknown. */
+	int REASON_UNKNOWN = -1;
+	/** The disconnection was initiated by the user. */
+	int REASON_SUCCESS = 0;
+	/** The local device initiated disconnection. */
+	int REASON_TERMINATE_LOCAL_HOST = 1;
+	/** The remote device initiated graceful disconnection. */
+	int REASON_TERMINATE_PEER_USER = 2;
+	/**
+	 * The connection timed out. The device might have reboot, is out of range, turned off
+	 * or doesn't respond for another reason.
+	 */
+	int REASON_TIMEOUT = 10;
 
-import androidx.annotation.IntDef;
-
-@Retention(RetentionPolicy.SOURCE)
-@IntDef(flag = true, value = {
-		BluetoothGattDescriptor.PERMISSION_READ,
-		BluetoothGattDescriptor.PERMISSION_WRITE,
-		BluetoothGattDescriptor.PERMISSION_READ_ENCRYPTED,
-		BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED,
-		BluetoothGattDescriptor.PERMISSION_READ_ENCRYPTED_MITM,
-		BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED_MITM,
-		BluetoothGattDescriptor.PERMISSION_WRITE_SIGNED,
-		BluetoothGattDescriptor.PERMISSION_WRITE_SIGNED_MITM
-})
-public @interface DescriptorPermissions {}
+	/**
+	 * Called when the device has disconnected (when the callback returned
+	 * {@link BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int, int)} with state
+	 * DISCONNECTED).
+	 *
+	 * @param device the device that got disconnected.
+	 * @param reason reason of the disconnect (mapped from the status code reported by the GATT
+	 *               callback to the library specific status codes).
+	 */
+	void onDeviceDisconnected(@NonNull final BluetoothDevice device, final int reason);
+}

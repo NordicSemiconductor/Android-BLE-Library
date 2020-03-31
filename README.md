@@ -47,7 +47,7 @@ The last version not migrated to AndroidX is 2.0.5.
 
 To test the latest features, use the **alpha version**:
 ```grovy
-implementation 'no.nordicsemi.android:ble:2.2.0-alpha06'
+implementation 'no.nordicsemi.android:ble:2.2.0-alpha07'
 ```
 Features available in version 2.2.0:
 1. GATT Server support. This includes setting up the local GATT server on the Android device, new 
@@ -291,11 +291,15 @@ serverManager.setManagerCallbacks(this);
 ```
 Set the server manager for each client connection:
 ```java
+// e.g. at BleServerManagerCallbacks#onDeviceConnectedToServer(@NonNull final BluetoothDevice device)
 final MyBleManager manager = new MyBleManager(context);
 manager.setManagerCallbacks(this);
 // Use the manager with the server
 manager.useServer(serverManager);
+//  set connected device
+manager.connect(device).enqueue()
 // [...]
+
 ```
 The `BleServermanagerCallbacks.onServerReady()` will be invoked when all service were added.
 You may initiate your connection there.
@@ -322,6 +326,14 @@ class MyBleManager extends BleManager<BleManagerCallbacks> {
 			serverCharacteristic = server
 					.getService(SERVICE_UUID)
 					.getCharacteristic(CHAR_UUID);
+			
+			//  set write callback, if you need
+			setWriteCallback(serverCharacteristic)
+					.with((device, data) ->
+						sendNotification(otherCharacteristic, "any data".getBytes())
+								.enqueue()
+					);
+            }
 		}
 		
 		// [...]
