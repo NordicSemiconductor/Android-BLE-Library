@@ -251,7 +251,7 @@ abstract class BleManagerHandler extends RequestHandler {
 						operationInProgress = false;
 						// This will call close()
 						if (device != null) {
-							notifyDeviceDisconnected(device);
+							notifyDeviceDisconnected(device, GattError.GATT_CONN_TERMINATE_LOCAL_HOST);
 						}
 					} else {
 						// Calling close() will prevent the STATE_OFF event from being logged
@@ -1380,7 +1380,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	 */
 	protected abstract void onDeviceDisconnected();
 
-	private void notifyDeviceDisconnected(@NonNull final BluetoothDevice device) {
+	private void notifyDeviceDisconnected(@NonNull final BluetoothDevice device, final int status) {
 		final boolean wasConnected = connected;
 		connected = false;
 		servicesDiscovered = false;
@@ -1391,11 +1391,13 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (!wasConnected) {
 			log(Log.WARN, "Connection attempt timed out");
 			close();
+			manager.callbacks.onDeviceDisconnected(device, status);
 			manager.callbacks.onDeviceDisconnected(device);
 			// ConnectRequest was already notified
 		} else if (userDisconnected) {
 			log(Log.INFO, "Disconnected");
 			close();
+			manager.callbacks.onDeviceDisconnected(device, status);
 			manager.callbacks.onDeviceDisconnected(device);
 			final Request request = this.request;
 			if (request != null && request.type == Request.Type.DISCONNECT) {
@@ -1403,6 +1405,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			}
 		} else {
 			log(Log.WARN, "Connection lost");
+			manager.callbacks.onLinkLossOccurred(device, status);
 			manager.callbacks.onLinkLossOccurred(device);
 			// We are not closing the connection here as the device should try to reconnect
 			// automatically.
@@ -1624,15 +1627,6 @@ abstract class BleManagerHandler extends RequestHandler {
 						log(Log.WARN, "Error: (0x" + Integer.toHexString(status) + "): " +
 								GattError.parseConnectionError(status));
 
-					// Send status to disconnectCallback.
-					final DisconnectCallback dc = manager.disconnectCallback;
-					if (dc != null) {
-						post(() -> dc.onDeviceDisconnected(
-								gatt.getDevice(),
-								mapDisconnectStatusToReason(status, timeout)
-						));
-					}
-
 					// In case of a connection error, retry if required.
 					if (status != BluetoothGatt.GATT_SUCCESS && canTimeout && !timeout
 							&& connectRequest != null && connectRequest.canRetry()) {
@@ -1651,7 +1645,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					// Store the current value of the connected flag...
 					final boolean wasConnected = connected;
 					// ...because this method sets the connected flag to false.
-					notifyDeviceDisconnected(gatt.getDevice()); // this may call close()
+					notifyDeviceDisconnected(gatt.getDevice(), timeout ? GattError.GATT_CONN_TIMEOUT : status); // this may call close()
 
 					// Signal the current request, if any.
 					if (request != null) {
@@ -2277,23 +2271,6 @@ abstract class BleManagerHandler extends RequestHandler {
 			nextRequest(true);
 		}
 	};
-
-	private int mapDisconnectStatusToReason(final int status, final boolean timeout) {
-		if (timeout)
-			return DisconnectCallback.REASON_TIMEOUT;
-		switch (status) {
-			case GattError.GATT_SUCCESS:
-				return DisconnectCallback.REASON_SUCCESS;
-			case GattError.GATT_CONN_TERMINATE_LOCAL_HOST:
-				return DisconnectCallback.REASON_TERMINATE_LOCAL_HOST;
-			case GattError.GATT_CONN_TERMINATE_PEER_USER:
-				return DisconnectCallback.REASON_TERMINATE_PEER_USER;
-			case GattError.GATT_CONN_TIMEOUT:
-				return DisconnectCallback.REASON_TIMEOUT;
-			default:
-				return DisconnectCallback.REASON_UNKNOWN;
-		}
-	}
 
 	final void onCharacteristicReadRequest(@NonNull final BluetoothGattServer server,
 										   @NonNull final BluetoothDevice device,

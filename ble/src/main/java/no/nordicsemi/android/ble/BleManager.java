@@ -47,7 +47,6 @@ import no.nordicsemi.android.ble.annotation.ConnectionState;
 import no.nordicsemi.android.ble.annotation.PairingVariant;
 import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.annotation.PhyOption;
-import no.nordicsemi.android.ble.callback.DisconnectCallback;
 import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.MtuCallback;
@@ -119,7 +118,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	final BleManager.BleManagerGattCallback requestHandler;
 	/** Manager callbacks, set using {@link #setManagerCallbacks(BleManagerCallbacks)}. */
 	protected E callbacks;
-	protected DisconnectCallback disconnectCallback;
 
 	private final BroadcastReceiver mPairingRequestBroadcastReceiver = new BroadcastReceiver() {
 		@Override
@@ -223,15 +221,6 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	 */
 	public final void setManagerCallbacks(@NonNull final E callbacks) {
 		this.callbacks = callbacks;
-	}
-
-	/**
-	 * Sets the disconnect callback.
-	 *
-	 * @param callback the callback listener.
-	 */
-	public void setDisconnectCallback(@Nullable final DisconnectCallback callback) {
-		this.disconnectCallback = callback;
 	}
 
 	/**

@@ -74,8 +74,24 @@ public interface BleManagerCallbacks {
 	 * Otherwise the {@link #onLinkLossOccurred(BluetoothDevice)} method will be called instead.
 	 *
 	 * @param device the device that got disconnected.
+	 * @deprecated Use {@link #onDeviceDisconnected(BluetoothDevice, int)} instead.
 	 */
-	void onDeviceDisconnected(@NonNull final BluetoothDevice device);
+	@Deprecated
+	default void onDeviceDisconnected(@NonNull final BluetoothDevice device) {
+		// do nothing
+	}
+
+	/**
+	 * Called when the device has disconnected (when the callback returned
+	 * {@link BluetoothGattCallback#onConnectionStateChange(BluetoothGatt, int status, int)} with
+	 * newstate DISCONNECTED), but ONLY if the {@link ConnectRequest#shouldAutoConnect()} method
+	 * returned false for this device when it was connecting.
+	 * Otherwise the {@link #onLinkLossOccurred(BluetoothDevice)} method will be called instead.
+	 *
+	 * @param device the device that got disconnected.
+	 * @param status the status code.
+	 */
+	void onDeviceDisconnected(@NonNull final BluetoothDevice device, final int status);
 
 	/**
 	 * This callback is invoked when the Ble Manager lost connection to a device that has been
@@ -84,8 +100,23 @@ public interface BleManagerCallbacks {
 	 * event.
 	 *
 	 * @param device the device that got disconnected due to a link loss.
+	 * @deprecated Use {@link #onLinkLossOccurred(BluetoothDevice, int)} instead.
 	 */
-	void onLinkLossOccurred(@NonNull final BluetoothDevice device);
+	@Deprecated
+	default void onLinkLossOccurred(@NonNull final BluetoothDevice device) {
+		// do nothing
+	}
+
+	/**
+	 * This callback is invoked when the Ble Manager lost connection to a device that has been
+	 * connected with autoConnect option (see {@link ConnectRequest#shouldAutoConnect()}.
+	 * Otherwise a {@link #onDeviceDisconnected(BluetoothDevice)} method will be called on such
+	 * event.
+	 *
+	 * @param device the device that got disconnected due to a link loss.
+	 * @param status the status code.
+	 */
+	void onLinkLossOccurred(@NonNull final BluetoothDevice device, final int status);
 
 	/**
 	 * Called when service discovery has finished and primary services has been found.
