@@ -1621,10 +1621,13 @@ abstract class BleManagerHandler extends RequestHandler {
 						log(Log.WARN, "Error: (0x" + Integer.toHexString(status) + "): " +
 								GattError.parseConnectionError(status));
 
-					// send status to disconnectCallback
-					if (manager.disconnectCallback != null) {
-						manager.disconnectCallback.onDeviceDisconnected(gatt.getDevice(),
-                mapDisconnectStatusToReason(status));
+					// Send status to disconnectCallback.
+					final DisconnectCallback dc = manager.disconnectCallback;
+					if (dc != null) {
+						post(() -> dc.onDeviceDisconnected(
+								gatt.getDevice(),
+								mapDisconnectStatusToReason(status, timeout)
+						));
 					}
 
 					// In case of a connection error, retry if required.
@@ -2272,12 +2275,16 @@ abstract class BleManagerHandler extends RequestHandler {
 		}
 	};
 
-	private int mapDisconnectStatusToReason(int status) {
+	private int mapDisconnectStatusToReason(final int status, final boolean timeout) {
+		if (timeout)
+			return DisconnectCallback.REASON_TIMEOUT;
 		switch (status) {
 			case GattError.GATT_SUCCESS:
 				return DisconnectCallback.REASON_SUCCESS;
 			case GattError.GATT_CONN_TERMINATE_LOCAL_HOST:
 				return DisconnectCallback.REASON_TERMINATE_LOCAL_HOST;
+			case GattError.GATT_CONN_TERMINATE_PEER_USER:
+				return DisconnectCallback.REASON_TERMINATE_PEER_USER;
 			case GattError.GATT_CONN_TIMEOUT:
 				return DisconnectCallback.REASON_TIMEOUT;
 			default:

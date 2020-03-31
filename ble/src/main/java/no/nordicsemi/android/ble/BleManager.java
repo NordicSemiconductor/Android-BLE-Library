@@ -228,10 +228,10 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	/**
 	 * Sets the disconnect callback.
 	 *
-	 * @param disconnectCallback the callback listener.
+	 * @param callback the callback listener.
 	 */
-	public void setDisconnectCallback(@NonNull final DisconnectCallback disconnectCallback) {
-		this.disconnectCallback = disconnectCallback;
+	public void setDisconnectCallback(@Nullable final DisconnectCallback callback) {
+		this.disconnectCallback = callback;
 	}
 
 	/**

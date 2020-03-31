@@ -31,11 +31,19 @@ import androidx.annotation.NonNull;
  * Additional callback for device disconnect with more information about state.
  */
 public interface DisconnectCallback {
-
-	public int REASON_UNKNOWN = -1;
-	public int REASON_SUCCESS = 0;
-	public int REASON_TERMINATE_LOCAL_HOST = 1;
-	public int REASON_TIMEOUT = 2;
+	/** The reason of disconnection is unknown. */
+	int REASON_UNKNOWN = -1;
+	/** The disconnection was initiated by the user. */
+	int REASON_SUCCESS = 0;
+	/** The local device initiated disconnection. */
+	int REASON_TERMINATE_LOCAL_HOST = 1;
+	/** The remote device initiated graceful disconnection. */
+	int REASON_TERMINATE_PEER_USER = 2;
+	/**
+	 * The connection timed out. The device might have reboot, is out of range, turned off
+	 * or doesn't respond for another reason.
+	 */
+	int REASON_TIMEOUT = 10;
 
 	/**
 	 * Called when the device has disconnected (when the callback returned
