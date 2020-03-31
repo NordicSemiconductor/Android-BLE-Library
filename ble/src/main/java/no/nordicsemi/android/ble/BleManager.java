@@ -196,6 +196,16 @@ public abstract class BleManager<E extends BleManagerCallbacks> implements ILogg
 	}
 
 	/**
+	 * Runs the given runnable using a handler given to the constructor.
+	 * If no handler was given, the callbacks will be called on UI thread.
+	 *
+	 * @param runnable the runnable to be executed.
+	 */
+	protected void runOnCallbackThread(@NonNull final Runnable runnable) {
+		requestHandler.post(runnable);
+	}
+
+	/**
 	 * Sets the manager callback listener.
 	 *
 	 * @param callbacks the callback listener.
