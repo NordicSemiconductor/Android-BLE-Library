@@ -26,6 +26,7 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 
 import androidx.annotation.NonNull;
+import no.nordicsemi.android.ble.ConnectRequest;
 
 /**
  * Additional callback for device disconnect with more information about state.
@@ -39,6 +40,11 @@ public interface DisconnectCallback {
 	int REASON_TERMINATE_LOCAL_HOST = 1;
 	/** The remote device initiated graceful disconnection. */
 	int REASON_TERMINATE_PEER_USER = 2;
+	/**
+	 * This reason will only be reported when {@link ConnectRequest#shouldAutoConnect()} was called
+	 * and connection to the device was lost. Android will try to connect automatically.
+	 */
+	int REASON_LINK_LOSS = 3;
 	/**
 	 * The connection timed out. The device might have reboot, is out of range, turned off
 	 * or doesn't respond for another reason.
