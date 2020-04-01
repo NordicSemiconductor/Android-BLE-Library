@@ -93,7 +93,7 @@ The first step is to create your BLE Manager implementation, like below. The man
 act as API of your remote device, to separate lower BLE layer from the application layer.
 ```java
 
-class MyBleManager extends BleManage {
+class MyBleManager extends BleManager {
 	final static UUID SERVICE_UUID = UUID.fromString("XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX");
 	final static UUID FIRST_CHAR   = UUID.fromString("XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX");
 	final static UUID SECOND_CHAR  = UUID.fromString("XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX");
@@ -248,7 +248,7 @@ To connect to a Bluetooth LE device using GATT, create a manager instance:
 
 ```java
 final MyBleManager manager = new MyBleManager(context);
-manager.setDisconnectCallbacks(abortCallback);
+manager.setDisconnectCallback(abortCallback);
 manager.connect(device)
 	.timeout(100000)
 	.retry(3, 100)
@@ -265,7 +265,7 @@ methods, like `characteristic(...)`, `descriptor(...)` and their shared counterp
 for making the initialization more readable.
 
 ```java
-public class ServerManager extends BleServerManager<BleServerManagerCallbacks> {
+public class ServerManager extends BleServerManager {
 
 	ServerManager(@NonNull final Context context) {
 		super(context);
@@ -291,7 +291,7 @@ public class ServerManager extends BleServerManager<BleServerManagerCallbacks> {
 Instantiate the server and set the callback listener:
 ```java
 final ServerManager serverManager = new ServerManager(context);
-serverManager.setManagerCallbacks(this);
+serverManager.setServerCallback(this);
 ```
 Set the server manager for each client connection:
 ```java
