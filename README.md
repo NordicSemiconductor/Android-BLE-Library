@@ -26,7 +26,7 @@ The API is clean and easy to read.
 13. Operation timeouts (for *connect*, *disconnect* and *wait for notification* requests)
 14. Error handling
 15. Logging
-16. GATT server
+16. GATT server (since version 2.2.0)
 
 The library **does not provide support for scanning** for Bluetooth LE devices.
 For scanning, we recommend using 
@@ -47,7 +47,7 @@ The last version not migrated to AndroidX is 2.0.5.
 
 To test the latest features, use the **alpha version**:
 ```grovy
-implementation 'no.nordicsemi.android:ble:2.2.0-alpha07'
+implementation 'no.nordicsemi.android:ble:2.2.0-alpha08'
 ```
 Features available in version 2.2.0:
 1. GATT Server support. This includes setting up the local GATT server on the Android device, new 
