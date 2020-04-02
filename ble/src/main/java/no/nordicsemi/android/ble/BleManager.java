@@ -47,8 +47,8 @@ import no.nordicsemi.android.ble.annotation.ConnectionState;
 import no.nordicsemi.android.ble.annotation.PairingVariant;
 import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.annotation.PhyOption;
-import no.nordicsemi.android.ble.callback.BondingCallback;
-import no.nordicsemi.android.ble.callback.DisconnectCallback;
+import no.nordicsemi.android.ble.observer.BondingObserver;
+import no.nordicsemi.android.ble.observer.ConnectionObserver;
 import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.MtuCallback;
@@ -118,9 +118,9 @@ public abstract class BleManager implements ILogger {
 	@Deprecated
 	protected BleManagerCallbacks callbacks;
 	@Nullable
-	BondingCallback bondingCallback;
+	BondingObserver bondingObserver;
 	@Nullable
-	DisconnectCallback disconnectCallback;
+	ConnectionObserver connectionObserver;
 
 	private final BroadcastReceiver mPairingRequestBroadcastReceiver = new BroadcastReceiver() {
 		@Override
@@ -212,24 +212,24 @@ public abstract class BleManager implements ILogger {
 	}
 
 	/**
-	 * Sets the disconnect callback.
-	 * This callback will be called using the handler given in the constructor.
+	 * Sets the connection observer.
+	 * This callback will be called using the handler given in {@link BleManager#BleManager(Context, Handler)}.
 	 *
 	 * @param callback the callback listener.
 	 */
-	public final void setDisconnectCallback(@Nullable final DisconnectCallback callback) {
-		this.disconnectCallback = callback;
+	public final void setConnectionObserver(@Nullable final ConnectionObserver callback) {
+		this.connectionObserver = callback;
 	}
 
 	/**
-	 * Sets the callback, that will receive events related to bonding.
-	 * This callback will be called using the handler given in the constructor.
+	 * Sets the observer, that will receive events related to bonding.
+	 * This callback will be called using the handler given in {@link BleManager#BleManager(Context, Handler)}.
 	 *
 	 * @param callback the callback.
-	 * @see BondingCallback
+	 * @see BondingObserver
 	 */
-	public final void setBondingCallback(@Nullable final BondingCallback callback) {
-		this.bondingCallback = callback;
+	public final void setBondingObserver(@Nullable final BondingObserver callback) {
+		this.bondingObserver = callback;
 	}
 
 	/**
