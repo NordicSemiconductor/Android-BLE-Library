@@ -1,11 +1,11 @@
-package no.nordicsemi.android.ble.callback;
+package no.nordicsemi.android.ble.observer;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 
 import androidx.annotation.NonNull;
 
-public interface BondingCallback {
+public interface BondingObserver {
 	/**
 	 * Called when an {@link BluetoothGatt#GATT_INSUFFICIENT_AUTHENTICATION} error occurred and the
 	 * device bond state is {@link BluetoothDevice#BOND_NONE}.

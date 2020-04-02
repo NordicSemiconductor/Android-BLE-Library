@@ -28,8 +28,8 @@ import android.bluetooth.BluetoothGattCallback;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
-import no.nordicsemi.android.ble.callback.BondingCallback;
-import no.nordicsemi.android.ble.callback.DisconnectCallback;
+import no.nordicsemi.android.ble.observer.BondingObserver;
+import no.nordicsemi.android.ble.observer.ConnectionObserver;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
@@ -88,7 +88,7 @@ public interface BleManagerCallbacks {
 	 * Otherwise the {@link #onLinkLossOccurred(BluetoothDevice)} method will be called instead.
 	 *
 	 * @param device the device that got disconnected.
-	 * @deprecated Use {@link BleManager#setDisconnectCallback(DisconnectCallback)} instead.
+	 * @deprecated Use {@link BleManager#setConnectionObserver(ConnectionObserver)} instead.
 	 */
 	@Deprecated
 	void onDeviceDisconnected(@NonNull final BluetoothDevice device);
@@ -100,8 +100,8 @@ public interface BleManagerCallbacks {
 	 * event.
 	 *
 	 * @param device the device that got disconnected due to a link loss.
-	 * @deprecated Use {@link BleManager#setDisconnectCallback(DisconnectCallback)} and await
-	 * {@link DisconnectCallback#REASON_LINK_LOSS} instead.
+	 * @deprecated Use {@link BleManager#setConnectionObserver(ConnectionObserver)} and await
+	 * {@link ConnectionObserver#REASON_LINK_LOSS} instead.
 	 */
 	@Deprecated
 	void onLinkLossOccurred(@NonNull final BluetoothDevice device);
@@ -193,7 +193,7 @@ public interface BleManagerCallbacks {
 	 * device bond state is {@link BluetoothDevice#BOND_NONE}.
 	 *
 	 * @param device the device that requires bonding.
-	 * @deprecated Use {@link BleManager#setBondingCallback(BondingCallback)} instead.
+	 * @deprecated Use {@link BleManager#setBondingObserver(BondingObserver)} instead.
 	 */
 	@Deprecated
 	void onBondingRequired(@NonNull final BluetoothDevice device);
@@ -202,7 +202,7 @@ public interface BleManagerCallbacks {
 	 * Called when the device has been successfully bonded.
 	 *
 	 * @param device the device that got bonded.
-	 * @deprecated Use {@link BleManager#setBondingCallback(BondingCallback)} instead.
+	 * @deprecated Use {@link BleManager#setBondingObserver(BondingObserver)} instead.
 	 */
 	@Deprecated
 	void onBonded(@NonNull final BluetoothDevice device);
@@ -212,7 +212,7 @@ public interface BleManagerCallbacks {
 	 * {@link BluetoothDevice#BOND_NONE}.
 	 *
 	 * @param device the device that failed to bond.
-	 * @deprecated Use {@link BleManager#setBondingCallback(BondingCallback)} instead.
+	 * @deprecated Use {@link BleManager#setBondingObserver(BondingObserver)} instead.
 	 */
 	@Deprecated
 	void onBondingFailed(@NonNull final BluetoothDevice device);
