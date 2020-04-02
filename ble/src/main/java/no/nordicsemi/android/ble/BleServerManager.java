@@ -26,7 +26,7 @@ import androidx.annotation.StringRes;
 import no.nordicsemi.android.ble.annotation.CharacteristicPermissions;
 import no.nordicsemi.android.ble.annotation.CharacteristicProperties;
 import no.nordicsemi.android.ble.annotation.DescriptorPermissions;
-import no.nordicsemi.android.ble.callback.ServerCallback;
+import no.nordicsemi.android.ble.observer.ServerObserver;
 import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.utils.ILogger;
 
@@ -46,7 +46,7 @@ public abstract class BleServerManager implements ILogger {
 
 	private final List<BleManager> managers = new ArrayList<>();
 	private final Context context;
-	private ServerCallback callbacks;
+	private ServerObserver serverObserver;
 
 	/**
 	 * List of server services returned by {@link #initializeServer()}.
@@ -64,7 +64,7 @@ public abstract class BleServerManager implements ILogger {
 
 	/**
 	 * Opens the GATT server and starts initializing services. This method only starts initializing
-	 * services. The {@link ServerCallback#onServerReady()} will be called when all
+	 * services. The {@link ServerObserver#onServerReady()} will be called when all
 	 * services are done.
 	 *
 	 * @return true, if the server has been started successfully. If GATT server could not
@@ -86,8 +86,8 @@ public abstract class BleServerManager implements ILogger {
 				final BluetoothGattService service = serverServices.remove();
 				server.addService(service);
 			} catch (final NoSuchElementException e) {
-				if (callbacks != null)
-					callbacks.onServerReady();
+				if (serverObserver != null)
+					serverObserver.onServerReady();
 			} catch (final Exception e) {
 				close();
 				return false;
@@ -118,12 +118,12 @@ public abstract class BleServerManager implements ILogger {
 	}
 
 	/**
-	 * Sets the server callback listener.
+	 * Sets the server observer.
 	 *
-	 * @param callbacks the callback listener.
+	 * @param observer the observer.
 	 */
-	public final void setServerCallback(@NonNull final ServerCallback callbacks) {
-		this.callbacks = callbacks;
+	public final void setServerObserver(@NonNull final ServerObserver observer) {
+		this.serverObserver = observer;
 	}
 
 	/**
@@ -664,8 +664,8 @@ public abstract class BleServerManager implements ILogger {
 					server.addService(nextService);
 				} catch (final Exception e) {
 					log(Log.INFO, "[Server] All services added successfully");
-					if (callbacks != null)
-						callbacks.onServerReady();
+					if (serverObserver != null)
+						serverObserver.onServerReady();
 					serverServices = null;
 				}
 			} else {
@@ -677,16 +677,16 @@ public abstract class BleServerManager implements ILogger {
 		public void onConnectionStateChange(@NonNull final BluetoothDevice device, final int status, final int newState) {
 			if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothGatt.STATE_CONNECTED) {
 				log(Log.INFO, "[Server] " + device.getAddress() + " is now connected");
-				if (callbacks != null)
-					callbacks.onDeviceConnectedToServer(device);
+				if (serverObserver != null)
+					serverObserver.onDeviceConnectedToServer(device);
 			} else {
 				if (status == BluetoothGatt.GATT_SUCCESS) {
 					log(Log.INFO, "[Server] " + device.getAddress() + " is disconnected");
 				} else {
 					log(Log.WARN, "[Server] " + device.getAddress() + " has disconnected connected with status: " + status);
 				}
-				if (callbacks != null)
-					callbacks.onDeviceDisconnectedFromServer(device);
+				if (serverObserver != null)
+					serverObserver.onDeviceDisconnectedFromServer(device);
 			}
 		}
 
