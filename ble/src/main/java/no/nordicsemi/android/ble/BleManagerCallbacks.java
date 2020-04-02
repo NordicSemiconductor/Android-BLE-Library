@@ -35,7 +35,7 @@ import no.nordicsemi.android.ble.callback.SuccessCallback;
 
 /**
  * The BleManagerCallbacks should be overridden in your app and all the 'high level' callbacks
- * should be added there. See examples in Android nRF Blinky or Android nRF Toolbox.
+ * should be added there.
  *
  * @deprecated Use per-request callbacks instead. Check out deprecation descriptions for methods
  * below for details.
@@ -50,7 +50,7 @@ public interface BleManagerCallbacks {
 	 * or {@link #onError(BluetoothDevice, String, int)} in case of error.
 	 *
 	 * @param device the device that got connected.
-	 * @deprecated This is equivalent to calling {@link ConnectRequest#before(BeforeCallback)}.
+	 * @deprecated Use {@link ConnectionObserver#onDeviceConnecting(BluetoothDevice)} instead.
 	 */
 	@Deprecated
 	void onDeviceConnecting(@NonNull final BluetoothDevice device);
@@ -63,8 +63,7 @@ public interface BleManagerCallbacks {
 	 * {@link #onDeviceNotSupported(BluetoothDevice)} if required services have not been found.
 	 *
 	 * @param device the device that got connected.
-	 * @deprecated This information is internal to the manager. User should wait for
-	 * {@link ConnectRequest#done(SuccessCallback)} to be informed when the device is ready.
+	 * @deprecated Use {@link ConnectionObserver#onDeviceConnected(BluetoothDevice)} instead.
 	 */
 	@Deprecated
 	void onDeviceConnected(@NonNull final BluetoothDevice device);
@@ -73,9 +72,7 @@ public interface BleManagerCallbacks {
 	 * Called when user initialized disconnection.
 	 *
 	 * @param device the device that gets disconnecting.
-	 * @deprecated The device goes into DISCONNECTING state when {@link DisconnectRequest} has
-	 * started being executed. {@link DisconnectRequest#before(BeforeCallback)} will be called
-	 * at that moment.
+	 * @deprecated Use {@link ConnectionObserver#onDeviceDisconnecting(BluetoothDevice)} instead.
 	 */
 	@Deprecated
 	void onDeviceDisconnecting(@NonNull final BluetoothDevice device);
@@ -88,7 +85,8 @@ public interface BleManagerCallbacks {
 	 * Otherwise the {@link #onLinkLossOccurred(BluetoothDevice)} method will be called instead.
 	 *
 	 * @param device the device that got disconnected.
-	 * @deprecated Use {@link BleManager#setConnectionObserver(ConnectionObserver)} instead.
+	 * @deprecated Use {@link ConnectionObserver#onDeviceDisconnected(BluetoothDevice, int)} or
+	 * {@link ConnectionObserver#onDeviceFailedToConnect(BluetoothDevice, int)} instead.
 	 */
 	@Deprecated
 	void onDeviceDisconnected(@NonNull final BluetoothDevice device);
@@ -100,8 +98,8 @@ public interface BleManagerCallbacks {
 	 * event.
 	 *
 	 * @param device the device that got disconnected due to a link loss.
-	 * @deprecated Use {@link BleManager#setConnectionObserver(ConnectionObserver)} and await
-	 * {@link ConnectionObserver#REASON_LINK_LOSS} instead.
+	 * @deprecated Use {@link ConnectionObserver#onDeviceDisconnected(BluetoothDevice, int)} and
+	 * await {@link ConnectionObserver#REASON_LINK_LOSS} instead.
 	 */
 	@Deprecated
 	void onLinkLossOccurred(@NonNull final BluetoothDevice device);
@@ -130,7 +128,7 @@ public interface BleManagerCallbacks {
 	 * Method called when all initialization requests has been completed.
 	 *
 	 * @param device the device that get ready.
-	 * @deprecated Use {@link ConnectRequest#done(SuccessCallback)} instead.
+	 * @deprecated Use {@link ConnectionObserver#onDeviceReady(BluetoothDevice)} instead.
 	 */
 	@Deprecated
 	void onDeviceReady(@NonNull final BluetoothDevice device);
@@ -235,6 +233,8 @@ public interface BleManagerCallbacks {
 	 * @param device the device that failed to connect due to lack of required services.
 	 * @deprecated {@link ConnectRequest#fail(FailCallback)} with reason
 	 * {@link FailCallback#REASON_DEVICE_NOT_SUPPORTED} will be called instead.
+	 * {@link ConnectionObserver#onDeviceDisconnected(BluetoothDevice, int)} with
+	 * {@link ConnectionObserver#REASON_NOT_SUPPORTED} can also be used.
 	 */
 	@Deprecated
 	void onDeviceNotSupported(@NonNull final BluetoothDevice device);
