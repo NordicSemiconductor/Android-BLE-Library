@@ -57,7 +57,11 @@ Features available in version 2.2.0:
 3. BLE operations are no longer called from the main thread.
 4. There's a new option to set a handler for invoking callbacks. A handler can also be set per-callback.
 5. Breaking change: some fields in the *BleManager* got rid of the Hungarian Notation. In particular,
-   *mCallbacks* was renamed to *callbacks*.
+   *mCallbacks* was renamed to *callbacks*, and it got deprecated.
+6. Breaking change: `BleManager` is no longer a generic class.
+7. Breaking change: `setGattCallbacks(BleManagerCallbacks)` has been deprecated. Instead, use new 
+   `setDisconnectCallback(DisconnectCallback)` and `setBondingCallback(BondingCallback)`. For other
+   callbacks, check out the deprecation messages in `BleManagerCallbacks` interface. 
 The API of version 2.2.0 is not finished and may slightly change in the near future.
 
 #### As a library module
@@ -89,7 +93,7 @@ The first step is to create your BLE Manager implementation, like below. The man
 act as API of your remote device, to separate lower BLE layer from the application layer.
 ```java
 
-class MyBleManager extends BleManager<BleManagerCallbacks> {
+class MyBleManager extends BleManager {
 	final static UUID SERVICE_UUID = UUID.fromString("XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX");
 	final static UUID FIRST_CHAR   = UUID.fromString("XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX");
 	final static UUID SECOND_CHAR  = UUID.fromString("XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX");
@@ -244,7 +248,7 @@ To connect to a Bluetooth LE device using GATT, create a manager instance:
 
 ```java
 final MyBleManager manager = new MyBleManager(context);
-manager.setManagerCallbacks(fluxCallbacks);
+manager.setDisconnectCallback(abortCallback);
 manager.connect(device)
 	.timeout(100000)
 	.retry(3, 100)
@@ -261,7 +265,7 @@ methods, like `characteristic(...)`, `descriptor(...)` and their shared counterp
 for making the initialization more readable.
 
 ```java
-public class ServerManager extends BleServerManager<BleServerManagerCallbacks> {
+public class ServerManager extends BleServerManager {
 
 	ServerManager(@NonNull final Context context) {
 		super(context);
@@ -287,26 +291,27 @@ public class ServerManager extends BleServerManager<BleServerManagerCallbacks> {
 Instantiate the server and set the callback listener:
 ```java
 final ServerManager serverManager = new ServerManager(context);
-serverManager.setManagerCallbacks(this);
+serverManager.setServerCallback(this);
 ```
 Set the server manager for each client connection:
 ```java
 // e.g. at BleServerManagerCallbacks#onDeviceConnectedToServer(@NonNull final BluetoothDevice device)
 final MyBleManager manager = new MyBleManager(context);
-manager.setManagerCallbacks(this);
+manager.setDisconnectCallback(this);
+manager.setBondingCallback(this);
 // Use the manager with the server
 manager.useServer(serverManager);
-//  set connected device
+// Set connected device
 manager.connect(device).enqueue()
 // [...]
 
 ```
-The `BleServermanagerCallbacks.onServerReady()` will be invoked when all service were added.
+The `BleServerManagerCallbacks.onServerReady()` will be invoked when all service were added.
 You may initiate your connection there.
 
 In your client manager class, override the following method:
 ```java
-class MyBleManager extends BleManager<BleManagerCallbacks> {
+class MyBleManager extends BleManager {
 	// [...]	
 
 	// Server characteristics

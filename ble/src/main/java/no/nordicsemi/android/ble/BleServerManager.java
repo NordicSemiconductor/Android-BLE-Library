@@ -26,6 +26,7 @@ import androidx.annotation.StringRes;
 import no.nordicsemi.android.ble.annotation.CharacteristicPermissions;
 import no.nordicsemi.android.ble.annotation.CharacteristicProperties;
 import no.nordicsemi.android.ble.annotation.DescriptorPermissions;
+import no.nordicsemi.android.ble.callback.ServerCallback;
 import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.utils.ILogger;
 
@@ -45,7 +46,7 @@ public abstract class BleServerManager implements ILogger {
 
 	private final List<BleManager> managers = new ArrayList<>();
 	private final Context context;
-	private BleServerManagerCallbacks callbacks;
+	private ServerCallback callbacks;
 
 	/**
 	 * List of server services returned by {@link #initializeServer()}.
@@ -63,7 +64,7 @@ public abstract class BleServerManager implements ILogger {
 
 	/**
 	 * Opens the GATT server and starts initializing services. This method only starts initializing
-	 * services. The {@link BleServerManagerCallbacks#onServerReady()} will be called when all
+	 * services. The {@link ServerCallback#onServerReady()} will be called when all
 	 * services are done.
 	 *
 	 * @return true, if the server has been started successfully. If GATT server could not
@@ -117,11 +118,11 @@ public abstract class BleServerManager implements ILogger {
 	}
 
 	/**
-	 * Sets the manager callback listener.
+	 * Sets the server callback listener.
 	 *
 	 * @param callbacks the callback listener.
 	 */
-	public final void setManagerCallbacks(@NonNull final BleServerManagerCallbacks callbacks) {
+	public final void setServerCallback(@NonNull final ServerCallback callbacks) {
 		this.callbacks = callbacks;
 	}
 
