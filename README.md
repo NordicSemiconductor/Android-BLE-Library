@@ -291,7 +291,7 @@ public class ServerManager extends BleServerManager {
 Instantiate the server and set the callback listener:
 ```java
 final ServerManager serverManager = new ServerManager(context);
-serverManager.setServerCallback(this);
+serverManager.setServerObserver(this);
 ```
 Set the server manager for each client connection:
 ```java
