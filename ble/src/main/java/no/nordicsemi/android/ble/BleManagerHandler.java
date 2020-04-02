@@ -586,12 +586,14 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (bluetoothGatt != null) {
 			connectionState = BluetoothGatt.STATE_DISCONNECTING;
 			log(Log.VERBOSE, connected ? "Disconnecting..." : "Cancelling connection...");
-			postCallback(c -> c.onDeviceDisconnecting(bluetoothGatt.getDevice()));
-			postConnectionStateChange(o -> o.onDeviceDisconnecting(bluetoothGatt.getDevice()));
-			final boolean wasConnected = connected;
+			final BluetoothDevice device = bluetoothGatt.getDevice();
+			if (connected) {
+				postCallback(c -> c.onDeviceDisconnecting(device));
+				postConnectionStateChange(o -> o.onDeviceDisconnecting(device));
+			}
 			log(Log.DEBUG, "gatt.disconnect()");
 			bluetoothGatt.disconnect();
-
+			final boolean wasConnected = connected;
 			if (wasConnected)
 				return true;
 
@@ -599,8 +601,8 @@ abstract class BleManagerHandler extends RequestHandler {
 			// gatt.disconnect(), the connection attempt will be stopped.
 			connectionState = BluetoothGatt.STATE_DISCONNECTED;
 			log(Log.INFO, "Disconnected");
-			postCallback(c -> c.onDeviceDisconnected(bluetoothGatt.getDevice()));
-			postConnectionStateChange(o -> o.onDeviceDisconnected(bluetoothGatt.getDevice(), ConnectionObserver.REASON_SUCCESS));
+			postCallback(c -> c.onDeviceDisconnected(device));
+			postConnectionStateChange(o -> o.onDeviceDisconnected(device, ConnectionObserver.REASON_SUCCESS));
 		}
 		// request may be of type DISCONNECT or CONNECT (timeout).
 		// For the latter, it has already been notified with REASON_TIMEOUT.
@@ -2767,8 +2769,9 @@ abstract class BleManagerHandler extends RequestHandler {
 				operationInProgress = true;
 				ready = true;
 				onDeviceReady();
-				postCallback(c -> c.onDeviceReady(bluetoothGatt.getDevice()));
-				postConnectionStateChange(o -> o.onDeviceReady(bluetoothGatt.getDevice()));
+				final BluetoothDevice device = bluetoothGatt.getDevice();
+				postCallback(c -> c.onDeviceReady(device));
+				postConnectionStateChange(o -> o.onDeviceReady(device));
 				if (connectRequest != null) {
 					connectRequest.notifySuccess(connectRequest.getDevice());
 					connectRequest = null;
