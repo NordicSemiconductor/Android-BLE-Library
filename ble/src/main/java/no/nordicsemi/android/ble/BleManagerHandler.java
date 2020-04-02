@@ -41,6 +41,8 @@ import no.nordicsemi.android.ble.annotation.PhyValue;
 import no.nordicsemi.android.ble.callback.*;
 import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.error.GattError;
+import no.nordicsemi.android.ble.observer.BondingObserver;
+import no.nordicsemi.android.ble.observer.ConnectionObserver;
 import no.nordicsemi.android.ble.utils.ParserUtils;
 
 @SuppressWarnings({"WeakerAccess", "DeprecatedIsStillUsed", "unused", "deprecation"})
@@ -251,7 +253,7 @@ abstract class BleManagerHandler extends RequestHandler {
 						operationInProgress = false;
 						// This will call close()
 						if (device != null) {
-							notifyDeviceDisconnected(device, DisconnectCallback.REASON_TERMINATE_LOCAL_HOST);
+							notifyDeviceDisconnected(device, ConnectionObserver.REASON_TERMINATE_LOCAL_HOST);
 						}
 					} else {
 						// Calling close() will prevent the STATE_OFF event from being logged
@@ -298,8 +300,8 @@ abstract class BleManagerHandler extends RequestHandler {
 			switch (bondState) {
 				case BluetoothDevice.BOND_NONE:
 					if (previousBondState == BluetoothDevice.BOND_BONDING) {
-						postCallback(callbacks -> callbacks.onBondingFailed(device));
-						postBondingStateChange(callback -> callback.onBondingFailed(device));
+						postCallback(c -> c.onBondingFailed(device));
+						postBondingStateChange(o -> o.onBondingFailed(device));
 						log(Log.WARN, "Bonding failed");
 						if (request != null) { // CREATE_BOND request
 							request.notifyFail(device, FailCallback.REASON_REQUEST_FAILED);
@@ -320,13 +322,13 @@ abstract class BleManagerHandler extends RequestHandler {
 					}
 					break;
 				case BluetoothDevice.BOND_BONDING:
-					postCallback(callbacks -> callbacks.onBondingRequired(device));
-					postBondingStateChange(callback -> callback.onBondingRequired(device));
+					postCallback(c -> c.onBondingRequired(device));
+					postBondingStateChange(o -> o.onBondingRequired(device));
 					return;
 				case BluetoothDevice.BOND_BONDED:
 					log(Log.INFO, "Device bonded");
-					postCallback(callbacks -> callbacks.onBonded(device));
-					postBondingStateChange(callback -> callback.onBonded(device));
+					postCallback(c -> c.onBonded(device));
+					postBondingStateChange(o -> o.onBonded(device));
 					if (request != null && request.type == Request.Type.CREATE_BOND) {
 						request.notifySuccess(device);
 						request = null;
@@ -522,7 +524,8 @@ abstract class BleManagerHandler extends RequestHandler {
 					connectionTime = 0L; // no timeout possible when autoConnect used
 					connectionState = BluetoothGatt.STATE_CONNECTING;
 					log(Log.VERBOSE, "Connecting...");
-					postCallback(callbacks -> callbacks.onDeviceConnecting(device));
+					postCallback(c -> c.onDeviceConnecting(device));
+					postConnectionStateChange(o -> o.onDeviceConnecting(device));
 					log(Log.DEBUG, "gatt.connect()");
 					bluetoothGatt.connect();
 					return true;
@@ -552,7 +555,8 @@ abstract class BleManagerHandler extends RequestHandler {
 		bluetoothDevice = device;
 		log(Log.VERBOSE, connectRequest.isFirstAttempt() ? "Connecting..." : "Retrying...");
 		connectionState = BluetoothGatt.STATE_CONNECTING;
-		postCallback(callbacks -> callbacks.onDeviceConnecting(device));
+		postCallback(c -> c.onDeviceConnecting(device));
+		postConnectionStateChange(o -> o.onDeviceConnecting(device));
 		connectionTime = SystemClock.elapsedRealtime();
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 			// connectRequest will never be null here.
@@ -582,7 +586,8 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (bluetoothGatt != null) {
 			connectionState = BluetoothGatt.STATE_DISCONNECTING;
 			log(Log.VERBOSE, connected ? "Disconnecting..." : "Cancelling connection...");
-			postCallback(callbacks -> callbacks.onDeviceDisconnecting(bluetoothGatt.getDevice()));
+			postCallback(c -> c.onDeviceDisconnecting(bluetoothGatt.getDevice()));
+			postConnectionStateChange(o -> o.onDeviceDisconnecting(bluetoothGatt.getDevice()));
 			final boolean wasConnected = connected;
 			log(Log.DEBUG, "gatt.disconnect()");
 			bluetoothGatt.disconnect();
@@ -594,8 +599,8 @@ abstract class BleManagerHandler extends RequestHandler {
 			// gatt.disconnect(), the connection attempt will be stopped.
 			connectionState = BluetoothGatt.STATE_DISCONNECTED;
 			log(Log.INFO, "Disconnected");
-			postCallback(callbacks -> callbacks.onDeviceDisconnected(bluetoothGatt.getDevice()));
-			// no disconnectCallback here.
+			postCallback(c -> c.onDeviceDisconnected(bluetoothGatt.getDevice()));
+			postConnectionStateChange(o -> o.onDeviceDisconnected(bluetoothGatt.getDevice(), ConnectionObserver.REASON_SUCCESS));
 		}
 		// request may be of type DISCONNECT or CONNECT (timeout).
 		// For the latter, it has already been notified with REASON_TIMEOUT.
@@ -1086,7 +1091,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				log(Log.INFO, "Battery Level received: " + batteryLevel + "%");
 				batteryValue = batteryLevel;
 				onBatteryValueReceived(bluetoothGatt, batteryLevel);
-				postCallback(callbacks -> callbacks.onBatteryValueReceived(device, batteryLevel));
+				postCallback(c -> c.onBatteryValueReceived(device, batteryLevel));
 			}
 		};
 	}
@@ -1101,7 +1106,7 @@ abstract class BleManagerHandler extends RequestHandler {
 							final int batteryLevel = data.getIntValue(Data.FORMAT_UINT8, 0);
 							batteryValue = batteryLevel;
 							onBatteryValueReceived(bluetoothGatt, batteryLevel);
-							postCallback(callbacks -> callbacks.onBatteryValueReceived(device, batteryLevel));
+							postCallback(c -> c.onBatteryValueReceived(device, batteryLevel));
 						}
 					});
 		}
@@ -1221,25 +1226,25 @@ abstract class BleManagerHandler extends RequestHandler {
 		}
 	}
 
-	private interface BondingCallbackRunnable {
-		void run(@NonNull final BondingCallback callback);
+	private interface BondingObserverRunnable {
+		void run(@NonNull final BondingObserver observer);
 	}
 
-	private void postBondingStateChange(@NonNull final BondingCallbackRunnable r) {
-		final BondingCallback callback = manager.bondingCallback;
-		if (callback != null) {
-			post(() -> r.run(callback));
+	private void postBondingStateChange(@NonNull final BondingObserverRunnable r) {
+		final BondingObserver observer = manager.bondingObserver;
+		if (observer != null) {
+			post(() -> r.run(observer));
 		}
 	}
 
-	private interface DisconnectCallbackRunnable {
-		void run(@NonNull final DisconnectCallback callback);
+	private interface ConnectionObserverRunnable {
+		void run(@NonNull final ConnectionObserver observer);
 	}
 
-	private void postDisconnection(@NonNull final DisconnectCallbackRunnable r) {
-		final DisconnectCallback callback = manager.disconnectCallback;
-		if (callback != null) {
-			post(() -> r.run(callback));
+	private void postConnectionStateChange(@NonNull final ConnectionObserverRunnable r) {
+		final ConnectionObserver observer = manager.connectionObserver;
+		if (observer != null) {
+			post(() -> r.run(observer));
 		}
 	}
 
@@ -1431,22 +1436,22 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (!wasConnected) {
 			log(Log.WARN, "Connection attempt timed out");
 			close();
-			postCallback(callbacks -> callbacks.onDeviceDisconnected(device));
-			postDisconnection(callback -> callback.onDeviceDisconnected(device, mapDisconnectStatusToReason(status)));
+			postCallback(c -> c.onDeviceDisconnected(device));
+			postConnectionStateChange(o -> o.onDeviceFailedToConnect(device, status));
 			// ConnectRequest was already notified
 		} else if (userDisconnected) {
 			log(Log.INFO, "Disconnected");
 			close();
-			postCallback(callbacks -> callbacks.onDeviceDisconnected(device));
-			postDisconnection(callback -> callback.onDeviceDisconnected(device, mapDisconnectStatusToReason(status)));
+			postCallback(c -> c.onDeviceDisconnected(device));
+			postConnectionStateChange(o -> o.onDeviceDisconnected(device, status));
 			final Request request = this.request;
 			if (request != null && request.type == Request.Type.DISCONNECT) {
 				request.notifySuccess(device);
 			}
 		} else {
 			log(Log.WARN, "Connection lost");
-			postCallback(callbacks -> callbacks.onLinkLossOccurred(device));
-			postDisconnection(callback -> callback.onDeviceDisconnected(device, DisconnectCallback.REASON_LINK_LOSS));
+			postCallback(c -> c.onLinkLossOccurred(device));
+			postConnectionStateChange(o -> o.onDeviceDisconnected(device, ConnectionObserver.REASON_LINK_LOSS));
 			// We are not closing the connection here as the device should try to reconnect
 			// automatically.
 			// This may be only called when the shouldAutoConnect() method returned true.
@@ -1598,7 +1603,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	private void onError(final BluetoothDevice device, final String message, final int errorCode) {
 		log(Log.ERROR, "Error (0x" + Integer.toHexString(errorCode) + "): "
 				+ GattError.parse(errorCode));
-		postCallback(callbacks -> callbacks.onError(device, message, errorCode));
+		postCallback(c -> c.onError(device, message, errorCode));
 	}
 
 	private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
@@ -1630,7 +1635,8 @@ abstract class BleManagerHandler extends RequestHandler {
 				connected = true;
 				connectionTime = 0L;
 				connectionState = BluetoothGatt.STATE_CONNECTED;
-				postCallback(callbacks -> callbacks.onDeviceConnected(gatt.getDevice()));
+				postCallback(c -> c.onDeviceConnected(gatt.getDevice()));
+				postConnectionStateChange(o -> o.onDeviceConnected(gatt.getDevice()));
 
 				if (!serviceDiscoveryRequested) {
 					final boolean bonded = gatt.getDevice().getBondState() == BluetoothDevice.BOND_BONDED;
@@ -1685,7 +1691,12 @@ abstract class BleManagerHandler extends RequestHandler {
 					// Store the current value of the connected flag...
 					final boolean wasConnected = connected;
 					// ...because this method sets the connected flag to false.
-					notifyDeviceDisconnected(gatt.getDevice(), timeout ? DisconnectCallback.REASON_TIMEOUT : status); // this may call close()
+					notifyDeviceDisconnected(gatt.getDevice(), // this may call close()
+							timeout ?
+								ConnectionObserver.REASON_TIMEOUT :
+								servicesDiscovered ?
+										ConnectionObserver.REASON_NOT_SUPPORTED :
+										mapDisconnectStatusToReason(status));
 
 					// Signal the current request, if any.
 					if (request != null) {
@@ -1739,7 +1750,7 @@ abstract class BleManagerHandler extends RequestHandler {
 						log(Log.ERROR, "Error (0x" + Integer.toHexString(status) + "): " +
 								GattError.parseConnectionError(status));
 				}
-				postCallback(callbacks -> callbacks.onError(gatt.getDevice(), ERROR_CONNECTION_STATE_CHANGE, status));
+				postCallback(c -> c.onError(gatt.getDevice(), ERROR_CONNECTION_STATE_CHANGE, status));
 			}
 		}
 
@@ -1756,7 +1767,7 @@ abstract class BleManagerHandler extends RequestHandler {
 						log(Log.VERBOSE, "Secondary service found");
 
 					// Notify the parent activity.
-					postCallback(callbacks -> callbacks.onServicesDiscovered(gatt.getDevice(), optionalServicesFound));
+					postCallback(c -> c.onServicesDiscovered(gatt.getDevice(), optionalServicesFound));
 
 					// Initialize server attributes.
 					if (serverManager != null) {
@@ -1836,7 +1847,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					nextRequest(true);
 				} else {
 					log(Log.WARN, "Device is not supported");
-					postCallback(callbacks -> callbacks.onDeviceNotSupported(gatt.getDevice()));
+					postCallback(c -> c.onDeviceNotSupported(gatt.getDevice()));
 					internalDisconnect();
 				}
 			} else {
@@ -1880,7 +1891,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				if (gatt.getDevice().getBondState() != BluetoothDevice.BOND_NONE) {
 					// This should never happen but it used to: http://stackoverflow.com/a/20093695/2115352
 					Log.w(TAG, ERROR_AUTH_ERROR_WHILE_BONDED);
-					postCallback(callbacks -> callbacks.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status));
+					postCallback(c -> c.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status));
 				}
 				// The request will be repeated when the bond state changes to BONDED.
 				return;
@@ -1926,7 +1937,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				if (gatt.getDevice().getBondState() != BluetoothDevice.BOND_NONE) {
 					// This should never happen but it used to: http://stackoverflow.com/a/20093695/2115352
 					Log.w(TAG, ERROR_AUTH_ERROR_WHILE_BONDED);
-					postCallback(callbacks -> callbacks.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status));
+					postCallback(c -> c.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status));
 				}
 				// The request will be repeated when the bond state changes to BONDED.
 				return;
@@ -1993,7 +2004,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				if (gatt.getDevice().getBondState() != BluetoothDevice.BOND_NONE) {
 					// This should never happen but it used to: http://stackoverflow.com/a/20093695/2115352
 					Log.w(TAG, ERROR_AUTH_ERROR_WHILE_BONDED);
-					postCallback(callbacks -> callbacks.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status));
+					postCallback(c -> c.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status));
 				}
 				// The request will be repeated when the bond state changes to BONDED.
 				return;
@@ -2058,7 +2069,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				if (gatt.getDevice().getBondState() != BluetoothDevice.BOND_NONE) {
 					// This should never happen but it used to: http://stackoverflow.com/a/20093695/2115352
 					Log.w(TAG, ERROR_AUTH_ERROR_WHILE_BONDED);
-					postCallback(callbacks -> callbacks.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status));
+					postCallback(c -> c.onError(gatt.getDevice(), ERROR_AUTH_ERROR_WHILE_BONDED, status));
 				}
 				// The request will be repeated when the bond state changes to BONDED.
 				return;
@@ -2230,7 +2241,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					request.notifyFail(gatt.getDevice(), status);
 					awaitingRequest = null;
 				}
-				postCallback(callbacks -> callbacks.onError(gatt.getDevice(), ERROR_CONNECTION_PRIORITY_REQUEST, status));
+				postCallback(c -> c.onError(gatt.getDevice(), ERROR_CONNECTION_PRIORITY_REQUEST, status));
 			}
 			if (connectionPriorityOperationInProgress) {
 				connectionPriorityOperationInProgress = false;
@@ -2257,7 +2268,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					request.notifyFail(gatt.getDevice(), status);
 					awaitingRequest = null;
 				}
-				postCallback(callbacks -> callbacks.onError(gatt.getDevice(), ERROR_PHY_UPDATE, status));
+				postCallback(c -> c.onError(gatt.getDevice(), ERROR_PHY_UPDATE, status));
 			}
 			// PHY update may be requested by the other side, or the Android, without explicitly
 			// requesting it. Proceed with the queue only when update was requested.
@@ -2284,7 +2295,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					request.notifyFail(gatt.getDevice(), status);
 				}
 				awaitingRequest = null;
-				postCallback(callbacks -> callbacks.onError(gatt.getDevice(), ERROR_READ_PHY, status));
+				postCallback(c -> c.onError(gatt.getDevice(), ERROR_READ_PHY, status));
 			}
 			checkCondition();
 			nextRequest(true);
@@ -2306,7 +2317,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					request.notifyFail(gatt.getDevice(), status);
 				}
 				awaitingRequest = null;
-				postCallback(callbacks -> callbacks.onError(gatt.getDevice(), ERROR_READ_RSSI, status));
+				postCallback(c -> c.onError(gatt.getDevice(), ERROR_READ_RSSI, status));
 			}
 			checkCondition();
 			nextRequest(true);
@@ -2316,15 +2327,15 @@ abstract class BleManagerHandler extends RequestHandler {
 	private int mapDisconnectStatusToReason(final int status) {
 		switch (status) {
 			case GattError.GATT_SUCCESS:
-				return DisconnectCallback.REASON_SUCCESS;
+				return ConnectionObserver.REASON_SUCCESS;
 			case GattError.GATT_CONN_TERMINATE_LOCAL_HOST:
-				return DisconnectCallback.REASON_TERMINATE_LOCAL_HOST;
+				return ConnectionObserver.REASON_TERMINATE_LOCAL_HOST;
 			case GattError.GATT_CONN_TERMINATE_PEER_USER:
-				return DisconnectCallback.REASON_TERMINATE_PEER_USER;
+				return ConnectionObserver.REASON_TERMINATE_PEER_USER;
 			case GattError.GATT_CONN_TIMEOUT:
-				return DisconnectCallback.REASON_TIMEOUT;
+				return ConnectionObserver.REASON_TIMEOUT;
 			default:
-				return DisconnectCallback.REASON_UNKNOWN;
+				return ConnectionObserver.REASON_UNKNOWN;
 		}
 	}
 
@@ -2756,7 +2767,8 @@ abstract class BleManagerHandler extends RequestHandler {
 				operationInProgress = true;
 				ready = true;
 				onDeviceReady();
-				postCallback(callbacks -> callbacks.onDeviceReady(bluetoothGatt.getDevice()));
+				postCallback(c -> c.onDeviceReady(bluetoothGatt.getDevice()));
+				postConnectionStateChange(o -> o.onDeviceReady(bluetoothGatt.getDevice()));
 				if (connectRequest != null) {
 					connectRequest.notifySuccess(connectRequest.getDevice());
 					connectRequest = null;

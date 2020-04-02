@@ -19,7 +19,7 @@
  * ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE
  * USE OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package no.nordicsemi.android.ble.callback;
+package no.nordicsemi.android.ble.observer;
 
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -31,7 +31,7 @@ import no.nordicsemi.android.ble.ConnectRequest;
 /**
  * Additional callback for device disconnect with more information about state.
  */
-public interface DisconnectCallback {
+public interface ConnectionObserver {
 	/** The reason of disconnection is unknown. */
 	int REASON_UNKNOWN = -1;
 	/** The disconnection was initiated by the user. */
@@ -45,11 +45,51 @@ public interface DisconnectCallback {
 	 * and connection to the device was lost. Android will try to connect automatically.
 	 */
 	int REASON_LINK_LOSS = 3;
+	/** The device does not hav required services. */
+	int REASON_NOT_SUPPORTED = 4;
 	/**
 	 * The connection timed out. The device might have reboot, is out of range, turned off
 	 * or doesn't respond for another reason.
 	 */
 	int REASON_TIMEOUT = 10;
+
+	/**
+	 * Called when the Android device started connecting to given device.
+	 * The {@link #onDeviceConnected(BluetoothDevice)} will be called when the device is connected,
+	 * or {@link #onDeviceFailedToConnect(BluetoothDevice, int)} if connection will fail.
+	 *
+	 * @param device the device that got connected.
+	 */
+	void onDeviceConnecting(@NonNull final BluetoothDevice device);
+
+	/**
+	 * Called when the device has been connected. This does not mean that the application may start
+	 * communication. Service discovery will be handled automatically after this call.
+	 *
+	 * @param device the device that got connected.
+	 */
+	void onDeviceConnected(@NonNull final BluetoothDevice device);
+
+	/**
+	 * Called when the device failed to connect.
+	 * @param device the device that failed to connect.
+	 * @param reason the reason of failure.
+	 */
+	void onDeviceFailedToConnect(@NonNull final BluetoothDevice device, final int reason);
+
+	/**
+	 * Method called when all initialization requests has been completed.
+	 *
+	 * @param device the device that get ready.
+	 */
+	void onDeviceReady(@NonNull final BluetoothDevice device);
+
+	/**
+	 * Called when user initialized disconnection.
+	 *
+	 * @param device the device that gets disconnecting.
+	 */
+	void onDeviceDisconnecting(@NonNull final BluetoothDevice device);
 
 	/**
 	 * Called when the device has disconnected (when the callback returned

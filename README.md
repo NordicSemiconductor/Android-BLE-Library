@@ -60,7 +60,7 @@ Features available in version 2.2.0:
    *mCallbacks* was renamed to *callbacks*, and it got deprecated.
 6. Breaking change: `BleManager` is no longer a generic class.
 7. Breaking change: `setGattCallbacks(BleManagerCallbacks)` has been deprecated. Instead, use new 
-   `setDisconnectCallback(DisconnectCallback)` and `setBondingCallback(BondingCallback)`. For other
+   `setConnectionObserver(ConnectionObserver)` and `setBondingObserver(BondingObserver)`. For other
    callbacks, check out the deprecation messages in `BleManagerCallbacks` interface. 
 The API of version 2.2.0 is not finished and may slightly change in the near future.
 
@@ -248,7 +248,7 @@ To connect to a Bluetooth LE device using GATT, create a manager instance:
 
 ```java
 final MyBleManager manager = new MyBleManager(context);
-manager.setDisconnectCallback(abortCallback);
+manager.setConnectionObserver(connectionObserver);
 manager.connect(device)
 	.timeout(100000)
 	.retry(3, 100)
@@ -297,8 +297,8 @@ Set the server manager for each client connection:
 ```java
 // e.g. at BleServerManagerCallbacks#onDeviceConnectedToServer(@NonNull final BluetoothDevice device)
 final MyBleManager manager = new MyBleManager(context);
-manager.setDisconnectCallback(this);
-manager.setBondingCallback(this);
+manager.setConnectionObserver(this);
+manager.setBondingObserver(this);
 // Use the manager with the server
 manager.useServer(serverManager);
 // Set connected device
