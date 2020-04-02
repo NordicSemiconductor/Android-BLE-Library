@@ -1170,11 +1170,11 @@ public abstract class Request {
 		if (!started) {
 			started = true;
 
+			if (internalBeforeCallback != null)
+				internalBeforeCallback.onRequestStarted(device);
 			handler.post(() -> {
 				if (beforeCallback != null)
 					beforeCallback.onRequestStarted(device);
-				if (internalBeforeCallback != null)
-					internalBeforeCallback.onRequestStarted(device);
 			});
 		}
 	}
@@ -1183,11 +1183,11 @@ public abstract class Request {
 		if (!finished) {
 			finished = true;
 
+			if (internalSuccessCallback != null)
+				internalSuccessCallback.onRequestCompleted(device);
 			handler.post(() -> {
 				if (successCallback != null)
 					successCallback.onRequestCompleted(device);
-				if (internalSuccessCallback != null)
-					internalSuccessCallback.onRequestCompleted(device);
 			});
 		}
 	}
@@ -1196,11 +1196,11 @@ public abstract class Request {
 		if (!finished) {
 			finished = true;
 
+			if (internalFailCallback != null)
+				internalFailCallback.onRequestFailed(device, status);
 			handler.post(() -> {
 				if (failCallback != null)
 					failCallback.onRequestFailed(device, status);
-				if (internalFailCallback != null)
-					internalFailCallback.onRequestFailed(device, status);
 			});
 		}
 	}
