@@ -1,11 +1,11 @@
-package no.nordicsemi.android.ble.callback;
+package no.nordicsemi.android.ble.observer;
 
 import android.bluetooth.BluetoothDevice;
 
 import androidx.annotation.NonNull;
 import no.nordicsemi.android.ble.BleServerManager;
 
-public interface ServerCallback {
+public interface ServerObserver {
 
 	/**
 	 * Called when the server was started and all services have been added successfully.

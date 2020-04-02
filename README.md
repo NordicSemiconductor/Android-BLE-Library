@@ -47,7 +47,7 @@ The last version not migrated to AndroidX is 2.0.5.
 
 To test the latest features, use the **alpha version**:
 ```grovy
-implementation 'no.nordicsemi.android:ble:2.2.0-alpha09'
+implementation 'no.nordicsemi.android:ble:2.2.0-alpha10'
 ```
 Features available in version 2.2.0:
 1. GATT Server support. This includes setting up the local GATT server on the Android device, new 
@@ -291,7 +291,7 @@ public class ServerManager extends BleServerManager {
 Instantiate the server and set the callback listener:
 ```java
 final ServerManager serverManager = new ServerManager(context);
-serverManager.setServerCallback(this);
+serverManager.setServerObserver(this);
 ```
 Set the server manager for each client connection:
 ```java
