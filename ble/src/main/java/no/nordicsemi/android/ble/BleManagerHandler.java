@@ -1690,13 +1690,14 @@ abstract class BleManagerHandler extends RequestHandler {
 					initQueue = null;
 					ready = false;
 
-					// Store the current value of the connected flag...
+					// Store the current value of the connected and servicesDiscovered flags...
 					final boolean wasConnected = connected;
-					// ...because this method sets the connected flag to false.
+					final boolean notSupported = servicesDiscovered;
+					// ...because the next method sets them to false.
 					notifyDeviceDisconnected(gatt.getDevice(), // this may call close()
 							timeout ?
 								ConnectionObserver.REASON_TIMEOUT :
-								servicesDiscovered ?
+									notSupported ?
 										ConnectionObserver.REASON_NOT_SUPPORTED :
 										mapDisconnectStatusToReason(status));
 
@@ -1720,7 +1721,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					}
 					if (connectRequest != null) {
 						int reason;
-						if (servicesDiscovered)
+						if (notSupported)
 							reason = FailCallback.REASON_DEVICE_NOT_SUPPORTED;
 						else if (status == BluetoothGatt.GATT_SUCCESS)
 							reason = FailCallback.REASON_DEVICE_DISCONNECTED;
