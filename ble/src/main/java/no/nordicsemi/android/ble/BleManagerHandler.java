@@ -88,6 +88,10 @@ abstract class BleManagerHandler extends RequestHandler {
 	 */
 	private boolean servicesDiscovered;
 	/**
+	 * Flag set to true when the {@link #isRequiredServiceSupported(BluetoothGatt)} returned false.
+	 */
+	private boolean deviceNotSupported;
+	/**
 	 * Flag set when service discovery was requested.
 	 */
 	private boolean serviceDiscoveryRequested;
@@ -1432,6 +1436,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		connected = false;
 		servicesDiscovered = false;
 		serviceDiscoveryRequested = false;
+		deviceNotSupported = false;
 		initInProgress = false;
 		connectionState = BluetoothGatt.STATE_DISCONNECTED;
 		checkCondition();
@@ -1690,9 +1695,9 @@ abstract class BleManagerHandler extends RequestHandler {
 					initQueue = null;
 					ready = false;
 
-					// Store the current value of the connected and servicesDiscovered flags...
+					// Store the current value of the connected and deviceNotSupported flags...
 					final boolean wasConnected = connected;
-					final boolean notSupported = servicesDiscovered;
+					final boolean notSupported = deviceNotSupported;
 					// ...because the next method sets them to false.
 					notifyDeviceDisconnected(gatt.getDevice(), // this may call close()
 							timeout ?
@@ -1765,6 +1770,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				servicesDiscovered = true;
 				if (isRequiredServiceSupported(gatt)) {
 					log(Log.VERBOSE, "Primary service found");
+					deviceNotSupported = false;
 					final boolean optionalServicesFound = isOptionalServiceSupported(gatt);
 					if (optionalServicesFound)
 						log(Log.VERBOSE, "Secondary service found");
@@ -1850,6 +1856,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					nextRequest(true);
 				} else {
 					log(Log.WARN, "Device is not supported");
+					deviceNotSupported = true;
 					postCallback(c -> c.onDeviceNotSupported(gatt.getDevice()));
 					internalDisconnect();
 				}
