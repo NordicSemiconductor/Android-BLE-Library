@@ -45,9 +45,9 @@ implementation 'no.nordicsemi.android:ble:2.1.1'
 ```
 The last version not migrated to AndroidX is 2.0.5.
 
-To test the latest features, use the **alpha version**:
+To test the latest features, use the **beta version**:
 ```grovy
-implementation 'no.nordicsemi.android:ble:2.2.0-alpha13'
+implementation 'no.nordicsemi.android:ble:2.2.0-beta01'
 ```
 Features available in version 2.2.0:
 1. GATT Server support. This includes setting up the local GATT server on the Android device, new 
@@ -62,7 +62,7 @@ Features available in version 2.2.0:
 7. Breaking change: `setGattCallbacks(BleManagerCallbacks)` has been deprecated. Instead, use new 
    `setConnectionObserver(ConnectionObserver)` and `setBondingObserver(BondingObserver)`. For other
    callbacks, check out the deprecation messages in `BleManagerCallbacks` interface. 
-The API of version 2.2.0 is not finished and may slightly change in the near future.
+The API of version 2.2.0 is now finished. Some bugs may be fixed before it is promoted to 2.2.0 final.
 
 #### As a library module
 
