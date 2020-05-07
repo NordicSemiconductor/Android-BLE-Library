@@ -33,6 +33,30 @@ For scanning, we recommend using
 [Android Scanner Compat Library](https://github.com/NordicSemiconductor/Android-Scanner-Compat-Library)
 which brings almost all recent features, introduced in Lollipop and later, to the older platforms. 
 
+### Version 2.2.0 (BETA)
+
+Features available in version 2.2.0:
+
+1. GATT Server support. This includes setting up the local GATT server on the Android device, new 
+   requests for server operations (*wait for read*, *wait for write*, *send notification*, *send indication*,
+   *set characteristic value*, *set descriptor value*).
+2. New conditional requests: *waif if* and *wait until*.
+3. BLE operations are no longer called from the main thread.
+4. There's a new option to set a handler for invoking callbacks. A handler can also be set per-callback.
+5. Breaking change: some fields in the *BleManager* got rid of the Hungarian Notation. In particular,
+   *mCallbacks* was renamed to *callbacks*, and it got deprecated.
+6. Breaking change: `BleManager` is no longer a generic class.
+7. Breaking change: `setGattCallbacks(BleManagerCallbacks)` has been deprecated. Instead, use new 
+   `setConnectionObserver(ConnectionObserver)` and `setBondingObserver(BondingObserver)`. For other
+   callbacks, check out the deprecation messages in `BleManagerCallbacks` interface. 
+8. To make the migration easier, a new class `LegacyBleManager` is still a generic class, and
+   `mCallbacks` field is working just like before. It's marked as deprecated.
+9. Breaking change: The protected method `getGattCallback()` in `BleManager` is now called from the 
+   constructor, so can't return a final field of a manager, as they are not initialized yet.
+   Instead, instantiate the `BleManagerGattCallback` class from there (see example below).
+   
+The API of version 2.2.0 is now finished. Some bugs may be fixed before it is promoted to 2.2.0 final.
+
 ## Importing
 
 #### Maven Central or jcenter
@@ -47,22 +71,8 @@ The last version not migrated to AndroidX is 2.0.5.
 
 To test the latest features, use the **beta version**:
 ```grovy
-implementation 'no.nordicsemi.android:ble:2.2.0-beta01'
+implementation 'no.nordicsemi.android:ble:2.2.0-beta02'
 ```
-Features available in version 2.2.0:
-1. GATT Server support. This includes setting up the local GATT server on the Android device, new 
-   requests for server operations (*wait for read*, *wait for write*, *send notification*, *send indication*,
-   *set characteristic value*, *set descriptor value*).
-2. New conditional requests: *waif if* and *wait until*.
-3. BLE operations are no longer called from the main thread.
-4. There's a new option to set a handler for invoking callbacks. A handler can also be set per-callback.
-5. Breaking change: some fields in the *BleManager* got rid of the Hungarian Notation. In particular,
-   *mCallbacks* was renamed to *callbacks*, and it got deprecated.
-6. Breaking change: `BleManager` is no longer a generic class.
-7. Breaking change: `setGattCallbacks(BleManagerCallbacks)` has been deprecated. Instead, use new 
-   `setConnectionObserver(ConnectionObserver)` and `setBondingObserver(BondingObserver)`. For other
-   callbacks, check out the deprecation messages in `BleManagerCallbacks` interface. 
-The API of version 2.2.0 is now finished. Some bugs may be fixed before it is promoted to 2.2.0 final.
 
 #### As a library module
 
@@ -113,9 +123,9 @@ class MyBleManager extends BleManager {
 
 	@Override
 	public void log(final int priority, @NonNull final String message) {
-		// Please, don't log in production.
-		if (Build.DEBUG || priority == Log.ERROR)
+		if (Build.DEBUG || priority == Log.ERROR) {
 			Log.println(priority, "MyBleManager", message);
+        }
 	}
 
 	/**
@@ -192,7 +202,7 @@ class MyBleManager extends BleManager {
 			firstCharacteristic = null;
 			secondCharacteristic = null;
 		}
-	};
+	}
 	
 	// Define your API.
 	
@@ -247,13 +257,24 @@ interface FluxCallbacks extends BleManagerCallbacks {
 To connect to a Bluetooth LE device using GATT, create a manager instance:
 
 ```java
-final MyBleManager manager = new MyBleManager(context);
-manager.setConnectionObserver(connectionObserver);
-manager.connect(device)
-	.timeout(100000)
-	.retry(3, 100)
-	.done(device -> Log.i(TAG, "Device initiated"))
-	.enqueue();
+class MyRepo {
+    private MyBleManager manager;
+
+    // [...]
+
+    void connect(@NonNull final BluetoothDevice device) {
+        manager = new MyBleManager(context);
+        manager.setConnectionObserver(connectionObserver);
+        manager.connect(device)
+        	.timeout(100000)
+        	.retry(3, 100)
+        	.done(device -> Log.i(TAG, "Device initiated"))
+        	.enqueue();
+    }
+    
+    // [...]
+
+}
 ```
 
 #### Adding GATT Server support
@@ -290,23 +311,44 @@ public class ServerManager extends BleServerManager {
 ```
 Instantiate the server and set the callback listener:
 ```java
-final ServerManager serverManager = new ServerManager(context);
-serverManager.setServerObserver(this);
+class MyRepo {
+    private ServerManager serverManager;
+
+    // [...]
+
+    void init() {
+        serverManager = new ServerManager(context);
+        serverManager.setServerObserver(this);
+    }
+    
+    // [...]
+
+}
 ```
 Set the server manager for each client connection:
 ```java
-// e.g. at BleServerManagerCallbacks#onDeviceConnectedToServer(@NonNull final BluetoothDevice device)
-final MyBleManager manager = new MyBleManager(context);
-manager.setConnectionObserver(this);
-manager.setBondingObserver(this);
-// Use the manager with the server
-manager.useServer(serverManager);
-// Set connected device
-manager.connect(device).enqueue()
-// [...]
+class MyRepo {
+    private ServerManager serverManager;
+    private MyBleManager manager;
 
+    // [...]
+
+    // This method may be called from e.g. 
+    // ServerObserver#onDeviceConnectedToServer(@NonNull final BluetoothDevice device)
+    void connect(@NonNull final BluetoothDevice device) {
+        manager = new MyBleManager(context);
+        manager.setConnectionObserver(this);
+        manager.setBondingObserver(this);
+        // Use the manager with the server.
+        manager.useServer(serverManager);
+
+        manager.connect(device)
+            // [...]
+            .enqueue();
+    }
+}
 ```
-The `BleServerManagerCallbacks.onServerReady()` will be invoked when all service were added.
+The `ServerObserver.onServerReady()` will be invoked when all service were added.
 You may initiate your connection there.
 
 In your client manager class, override the following method:
@@ -338,7 +380,6 @@ class MyBleManager extends BleManager {
 						sendNotification(otherCharacteristic, "any data".getBytes())
 								.enqueue()
 					);
-            }
 		}
 		
 		// [...]
@@ -348,7 +389,7 @@ class MyBleManager extends BleManager {
 			// [...]
 			serverCharacteristic = null;
 		}
-	};
+	}
 	
 	// [...]
 }
@@ -370,10 +411,8 @@ Find the simple example here [Android nRF Blinky](https://github.com/NordicSemic
 For an example how to use it from an Activity or a Service, check the base Activity and Service 
 classes in [nRF Toolbox](https://github.com/NordicSemiconductor/Android-nRF-Toolbox/tree/master/app/src/main/java/no/nordicsemi/android/nrftoolbox/profile).
 
-1. Define your device API by extending `BleManagerCallbacks`:
-[example](https://github.com/NordicSemiconductor/Android-nRF-Blinky/blob/master/app/src/main/java/no/nordicsemi/android/blinky/profile/BlinkyManagerCallbacks.java)
-2. Extend `BleManager` class and implement required methods:
-[example](https://github.com/NordicSemiconductor/Android-nRF-Blinky/blob/master/app/src/main/java/no/nordicsemi/android/blinky/profile/BlinkyManager.java)
+*Note:*
+nRF Toolbox has not yet been migrated to BLE Library v.2.2.0.
 
 ## Version 1.x
 
