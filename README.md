@@ -101,8 +101,8 @@ and [nRF Blinky](https://github.com/NordicSemiconductor/Android-nRF-Blinky),
 
 The first step is to create your BLE Manager implementation, like below. The manager should
 act as API of your remote device, to separate lower BLE layer from the application layer.
-```java
 
+```java
 class MyBleManager extends BleManager {
     final static UUID SERVICE_UUID = UUID.fromString("XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX");
     final static UUID FIRST_CHAR   = UUID.fromString("XXXXXXXX-XXXX-XXXX-XXXX-XXXXXXXXXXXX");
@@ -206,11 +206,15 @@ class MyBleManager extends BleManager {
     
     // Define your API.
     
-    private abstract class FluxHandler implements DataReceivedCallback {		
+    private abstract class FluxHandler implements ProfileDataCallback {		
         @Override
         public void onDataReceived(@NonNull final BluetoothDevice device, @NonNull final Data data) {
-            if (data.getByte(0) == 0x01)
-                onFluxCapacitorEngaged();
+            // Some validation?
+            if (data.size() != 1) {
+                onInvalidDataReceived(device, data);
+                return;
+            }
+            onFluxCapacitorEngaged();
         }
         
         abstract void onFluxCapacitorEngaged();
@@ -226,7 +230,6 @@ class MyBleManager extends BleManager {
             .with(new FluxHandler() {
                 public void onFluxCapacitorEngaged() {
                     log(Log.WARN, "Flux Capacitor enabled! Going back to the future in 3 seconds!");
-                    callbacks.onFluxCapacitorEngaged();
                     
                     sleep(3000).enqueue();
                     write(secondCharacteristic, "Hold on!".getBytes())
@@ -245,12 +248,6 @@ class MyBleManager extends BleManager {
     public void abort() {
         cancelQueue();
     }
-}
-```
-Create the callbacks for your device:
-```java
-interface FluxCallbacks extends BleManagerCallbacks {
-    void onFluxCapacitorEngaged();
 }
 ```
 
@@ -374,7 +371,8 @@ class MyBleManager extends BleManager {
                 .getService(SERVICE_UUID)
                 .getCharacteristic(CHAR_UUID);
             
-            //  set write callback, if you need
+            // Set write callback, if you need. It will be called when the remote device writes
+            // something to the given server characteristic.
             setWriteCallback(serverCharacteristic)
                 .with((device, data) ->
                     sendNotification(otherCharacteristic, "any data".getBytes())
