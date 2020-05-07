@@ -254,14 +254,14 @@ class MyBleManager extends BleManager {
 To connect to a Bluetooth LE device using GATT, create a manager instance:
 
 ```java
-class MyRepo {
+class MyRepo implements ConnectionObserver {
     private MyBleManager manager;
 
     // [...]
 
     void connect(@NonNull final BluetoothDevice device) {
         manager = new MyBleManager(context);
-        manager.setConnectionObserver(connectionObserver);
+        manager.setConnectionObserver(this);
         manager.connect(device)
             .timeout(100000)
             .retry(3, 100)
@@ -292,15 +292,16 @@ public class ServerManager extends BleServerManager {
     @NonNull
     @Override
     protected List<BluetoothGattService> initializeServer() {
+        // In this example there's only one service, so singleton list is created.
         return Collections.singletonList(
             service(SERVICE_UUID,
-            characteristic(CHAR_UUID,
-                BluetoothGattCharacteristic.PROPERTY_WRITE // properties
-                  | BluetoothGattCharacteristic.PROPERTY_NOTIFY
-                  | BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS,
-                BluetoothGattCharacteristic.PERMISSION_WRITE, // permissions
-                null, // initial data
-                cccd(), reliableWrite(), description("Some description", false) // descriptors
+                characteristic(CHAR_UUID,
+                    BluetoothGattCharacteristic.PROPERTY_WRITE // properties
+                      | BluetoothGattCharacteristic.PROPERTY_NOTIFY
+                      | BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS,
+                    BluetoothGattCharacteristic.PERMISSION_WRITE, // permissions
+                    null, // initial data
+                    cccd(), reliableWrite(), description("Some description", false) // descriptors
             ))
         );
     }
@@ -308,7 +309,7 @@ public class ServerManager extends BleServerManager {
 ```
 Instantiate the server and set the callback listener:
 ```java
-class MyRepo {
+class MyRepo implements ServerObserver {
     private ServerManager serverManager;
 
     // [...]
@@ -324,7 +325,7 @@ class MyRepo {
 ```
 Set the server manager for each client connection:
 ```java
-class MyRepo {
+class MyRepo implements ConnectionObserver, BondingObserver {
     private ServerManager serverManager;
     private MyBleManager manager;
 
@@ -343,6 +344,8 @@ class MyRepo {
             // [...]
             .enqueue();
     }
+
+    // [...]
 }
 ```
 The `ServerObserver.onServerReady()` will be invoked when all service were added.
