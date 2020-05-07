@@ -196,12 +196,12 @@ public abstract class TimeoutableRequest extends Request {
 	}
 
 	@Override
-	void notifySuccess(@NonNull final BluetoothDevice device) {
+	boolean notifySuccess(@NonNull final BluetoothDevice device) {
 		if (!finished) {
 			handler.removeCallbacks(timeoutCallback);
 			timeoutCallback = null;
 		}
-		super.notifySuccess(device);
+		return super.notifySuccess(device);
 	}
 
 	@Override

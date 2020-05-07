@@ -1179,7 +1179,7 @@ public abstract class Request {
 		}
 	}
 
-	void notifySuccess(@NonNull final BluetoothDevice device) {
+	boolean notifySuccess(@NonNull final BluetoothDevice device) {
 		if (!finished) {
 			finished = true;
 
@@ -1189,7 +1189,9 @@ public abstract class Request {
 				if (successCallback != null)
 					successCallback.onRequestCompleted(device);
 			});
+			return true;
 		}
+		return false;
 	}
 
 	void notifyFail(@NonNull final BluetoothDevice device, final int status) {
