@@ -3027,19 +3027,26 @@ abstract class BleManagerHandler extends RequestHandler {
 			}
 			case REQUEST_CONNECTION_PRIORITY: {
 				final ConnectionPriorityRequest cpr = (ConnectionPriorityRequest) request;
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-					connectionPriorityOperationInProgress = true;
+				connectionPriorityOperationInProgress = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
 					result = internalRequestConnectionPriority(cpr.getRequiredPriority());
-				} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-					result = internalRequestConnectionPriority(cpr.getRequiredPriority());
+
 					// There is no callback for requestConnectionPriority(...) before Android Oreo.
 					// Let's give it some time to finish as the request is an asynchronous operation.
+					// Note:
+					// According to https://github.com/NordicSemiconductor/Android-BLE-Library/issues/186
+					// some Android 8+ phones don't call this callback. Let's make sure it will be
+					// called in any case.
 					if (result) {
 						final BluetoothDevice device = bluetoothDevice;
 						postDelayed(() -> {
-							cpr.notifySuccess(device);
-							nextRequest(true);
-						}, 100);
+							if (cpr.notifySuccess(device)) {
+								connectionPriorityOperationInProgress = false;
+								nextRequest(true);
+							}
+						}, 200);
+					} else {
+						connectionPriorityOperationInProgress = false;
 					}
 				}
 				break;

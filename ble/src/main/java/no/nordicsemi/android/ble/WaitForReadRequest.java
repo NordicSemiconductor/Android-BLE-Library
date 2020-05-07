@@ -233,12 +233,12 @@ public final class WaitForReadRequest extends AwaitingRequest<DataSentCallback> 
 	}
 
 	@Override
-	void notifySuccess(@NonNull final BluetoothDevice device) {
+	boolean notifySuccess(@NonNull final BluetoothDevice device) {
 		handler.post(() -> {
 			if (valueCallback != null)
 				valueCallback.onDataSent(device, new Data(data));
 		});
-		super.notifySuccess(device);
+		return super.notifySuccess(device);
 	}
 
 	/**
