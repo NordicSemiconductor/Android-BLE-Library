@@ -27,6 +27,7 @@ import android.bluetooth.BluetoothGattCallback;
 
 import androidx.annotation.NonNull;
 import no.nordicsemi.android.ble.ConnectRequest;
+import no.nordicsemi.android.ble.annotation.DisconnectionReason;
 
 /**
  * Additional callback for device disconnect with more information about state.
@@ -75,7 +76,8 @@ public interface ConnectionObserver {
 	 * @param device the device that failed to connect.
 	 * @param reason the reason of failure.
 	 */
-	void onDeviceFailedToConnect(@NonNull final BluetoothDevice device, final int reason);
+	void onDeviceFailedToConnect(@NonNull final BluetoothDevice device,
+								 @DisconnectionReason final int reason);
 
 	/**
 	 * Method called when all initialization requests has been completed.
@@ -100,5 +102,6 @@ public interface ConnectionObserver {
 	 * @param reason reason of the disconnect (mapped from the status code reported by the GATT
 	 *               callback to the library specific status codes).
 	 */
-	void onDeviceDisconnected(@NonNull final BluetoothDevice device, final int reason);
+	void onDeviceDisconnected(@NonNull final BluetoothDevice device,
+							  @DisconnectionReason final int reason);
 }
