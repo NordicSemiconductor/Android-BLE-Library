@@ -1,2 +1,3 @@
 include ':ble'
+include ':ble-common'
 include ':ble-livedata'
