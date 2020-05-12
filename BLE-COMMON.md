@@ -32,7 +32,7 @@ The BLE Library v2 allows to set a callback for BLE operations using `.with(Data
 It is common, that you application needs to parse the received data. 
 
 Let's have a look at HRM profile. 
-The [Heart Rate Measurement](https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.heart_rate_measurement.xml) 
+The [Heart Rate Measurement](https://www.bluetooth.com/xml-viewer/?src=https://www.bluetooth.com/wp-content/uploads/Sitecore-Media-Library/Gatt/Xml/Characteristics/org.bluetooth.characteristic.heart_rate_measurement.xml) 
 characteristic specifies the structure of data sent by a remote sensor.
 
 Using just the BLE Library, one would have to write code that looks something like this:
