@@ -1,4 +1,4 @@
-## Changes in version 2.0:
+## Changes in version 2.0
 
 1. BLE operation methods (i.e. `writeCharacteristic(...)`, etc.) return the `Request` class now, 
 instead of boolean.
@@ -16,7 +16,7 @@ in order to perform the next operation.
 having this be a default. As of AGP 3.2 there is no reason not to do this
 (via [butterknife](https://github.com/JakeWharton/butterknife)).
 
-## Migration guide:
+### Migration guide
 
 1. Replace `initGatt(BluetoothGatt)` with `initialize()`:
 
@@ -61,3 +61,75 @@ feel free to include the **BLE Common Library** in your project.
 It has all the parsers implemented. If your profile isn't there, we are happy to accept PRs.
 4. `connect()` and `disconnect()` methods also require calling `.enqueue()` in asynchronous use.
 5. Replace the `shouldAutoConnect()` method in the manager with `connect(device).useAutConnect(true).enqueue()/await()`.
+
+## Changes in version 2.2
+
+1. `BleManager` is no longer a generic class. The `BleManagerCallbacks` interface, previously used 
+   to notify about connection and bond states, battery level (deprecated) and application-level 
+   callbacks, has been deprecated, together with `BleManager#setGattCallbacks(...)`. Instead:
+   * Use `BlaManager#setConnectionObserver(...)` to get connection state updates.
+   * Use `BleManager#setBondingObserver(...)` to get bonding events.
+   * If required, manage application-level callbacks in your manager (that extends `BleManager`).
+   * To make transition easier, `LegacyBleManager` class was introduced that can be used pretty
+     much like the old `BleManager`. It even has `mCallbacks` property.
+2. Some fields in the *BleManager* got rid of the Hungarian Notation. In particular,
+   *mCallbacks* was renamed to *callbacks* (except in `LegacyBleManager`), and it got deprecated.
+3. The protected method `getGattCallback()` in `BleManager` is now called from the 
+   constructor, so can't return a final field of a manager, as they are not initialized yet.
+   Instead, instantiate the `BleManagerGattCallback` class from there.
+   
+### Migration guide
+
+#### Quick migration (using deprecated API)
+
+1. To make quick transition from 2.1 to 2.2, change the base class of your `BleManager` implementation
+   to `LegacyBleManager` and make sure you return an object (not *null*) from `getGattCallback()`:
+   
+```java
+class MyBleManager extends LegacyBleManager<MyBleManagerCallbacks> {
+
+    // [...]
+
+    @NonNull
+    @Override
+    protected BleManagerGattCallback getGattCallback() {
+        // Before 2.2 it was allowed to return a class property here, but properties are initiated
+        // after the constructor, so they would still be null here. Instead, create a new object:
+        return new MyBleManagerGattCallback();
+    }
+
+    // [...]
+
+}
+```
+
+#### Proper migration
+
+1. Remove the type parameter from your `BleManager` implementation class:
+
+```java
+class MyBleManager extends BleManager {
+    // [...]
+}
+```  
+
+2. Replace `setGattCallbacks(callbacks)` with `setConnectionObserver(observer)` and optionally
+   `setBondingObserver(observer)`. If you are using `androidx.lifecycle.LiveData`, consider using
+   `no.nordicsemi.android:ble-livedata:$ble-version` dependency in your gradle file. In that case,
+   extend `ObservableBleManager` instead of `BleManager` and use `getState()` and `getBondingState()` 
+   (or `state` and `bondingState` properties in Kotlin) to get `LiveData` objects. See 
+   [nRF Blinky](https://github.com/NordicSemiconductor/Android-nRF-Blinky) for an example.
+   
+   a) The `ConnectionObserver` no longer has `onServicesDiscovered` method. 
+
+   b) `onLinkLossOccurred` was replaced with `onDeviceDisconnected` with reason 
+      `ConnectionObserver#REASON_LINK_LOSS`.
+      
+   c) `onDeviceNotSupported` was replaced with `onDeviceDisconnected` with reason
+      `ConnectionObserver#REASON_NOT_SUPPORTED`.
+      
+3. In 2.1.x the implementation of `BleManager` had access to user defined callbacks (`mCallbacks`), 
+   which could have been used to notify a Service or Activity about incoming notifications, etc. 
+   As `BleManager` is no longer a generic type, you'll have to implement this logic on your own.
+   E.g., nRF Blinky is exposing LED and Button state using `LiveData`, which are available for the
+   Activity through `ViewModel`.

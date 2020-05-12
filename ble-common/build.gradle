@@ -1,0 +1,31 @@
+apply plugin: 'com.android.library'
+
+android {
+    compileSdkVersion 29
+
+    defaultConfig {
+        minSdkVersion 18
+        targetSdkVersion 29
+        versionCode 30
+    }
+
+    buildTypes {
+        release {
+            minifyEnabled false
+            consumerProguardFiles 'ble-common-proguard-rules.pro'
+        }
+    }
+
+    compileOptions {
+        targetCompatibility JavaVersion.VERSION_1_8
+        sourceCompatibility JavaVersion.VERSION_1_8
+    }
+}
+
+dependencies {
+    api project(':ble')
+
+    testImplementation 'junit:junit:4.13'
+}
+
+apply from: rootProject.file('gradle/gradle-bintray-push.gradle')
