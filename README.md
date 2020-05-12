@@ -86,7 +86,7 @@ The last version not migrated to AndroidX is 2.0.5.
 
 To import the BLE library with set of parsers for common Bluetooth SIG characteristics, use:
 ```grovy
-implementation 'no.nordicsemi.android:ble-common:$ble-version'
+implementation 'no.nordicsemi.android:ble-common:2.1.1'
 ```
 For more information, read [this](BLE-COMMON.md).
 
