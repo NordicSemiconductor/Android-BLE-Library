@@ -40,11 +40,11 @@ Using just the BLE Library, one would have to write code that looks something li
 class HrmBleManager extends BleManager {
     // [...]
 
-	@NonNull
-	@Override
-	protected BleManagerGattCallback getGattCallback() {
-		return new HrmBleManagerGattCallbacks();
-	}
+    @NonNull
+    @Override
+    protected BleManagerGattCallback getGattCallback() {
+        return new HrmBleManagerGattCallbacks();
+    }
     
     private class HrmBleManagerGattCallbacks extends BleManagerGattCallbacks {
 
@@ -83,14 +83,14 @@ To make working with standard profiles easier, this library allows to replace th
 class HrmBleManager extends BleManager {
     // [...]
 
-	@NonNull
-	@Override
-	protected BleManagerGattCallback getGattCallback() {
-		return new HrmBleManagerGattCallbacks();
-	}
+    @NonNull
+    @Override
+    protected BleManagerGattCallback getGattCallback() {
+        return new HrmBleManagerGattCallbacks();
+    }
     
     private class HrmBleManagerGattCallbacks extends BleManagerGattCallbacks {
-	    
+        
         @Override
         protected void initialize() {
           // ...
