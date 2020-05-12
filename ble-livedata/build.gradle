@@ -25,7 +25,8 @@ android {
 }
 
 dependencies {
-    api project(":ble")
+    api project(':ble')
+
     api 'androidx.lifecycle:lifecycle-livedata-core:2.2.0'
 }
 
