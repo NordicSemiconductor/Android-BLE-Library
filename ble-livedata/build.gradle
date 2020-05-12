@@ -30,4 +30,8 @@ dependencies {
     api 'androidx.lifecycle:lifecycle-livedata-core:2.2.0'
 }
 
+tasks.withType(Javadoc).all {
+    enabled = false
+}
+
 apply from: rootProject.file('gradle/gradle-bintray-push.gradle')
