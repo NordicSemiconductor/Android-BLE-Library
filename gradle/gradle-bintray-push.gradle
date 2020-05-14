@@ -69,33 +69,6 @@ afterEvaluate { project ->
         }
     }
 
-    // task javadoc(type: Javadoc) {
-    //     failOnError false
-    //     source = android.sourceSets.main.java.sourceFiles
-
-    //     title = POM_DESCRIPTION
-
-    //     options.links("https://docs.oracle.com/javase/8/docs/api/")
-    //     options.linksOffline("https://d.android.com/reference","${android.sdkDirectory}/docs/reference")
-
-    //     classpath += project.files(android.getBootClasspath().join(File.pathSeparator))
-    //     classpath += configurations.compile
-
-    //     // We're excluding these generated files
-    //     exclude '**/BuildConfig.java'
-    //     exclude '**/R.java'
-    // }
-
-    // task androidJavadocsJar(type: Jar, dependsOn: javadoc) {
-    //     classifier = 'javadoc'
-    //     from javadoc.destinationDir
-    // }
-
-    // task androidSourcesJar(type: Jar) {
-    //     classifier = 'sources'
-    //     from android.sourceSets.main.java.source
-    // }
-
     if (JavaVersion.current().isJava8Compatible()) {
         allprojects {
             tasks.withType(Javadoc) {
@@ -103,11 +76,6 @@ afterEvaluate { project ->
             }
         }
     }
-
-    // artifacts {
-    //     archives androidSourcesJar
-    //     archives androidJavadocsJar
-    // }
 }
 
 // Bintray

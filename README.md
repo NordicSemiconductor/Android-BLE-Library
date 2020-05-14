@@ -33,9 +33,9 @@ For scanning, we recommend using
 [Android Scanner Compat Library](https://github.com/NordicSemiconductor/Android-Scanner-Compat-Library)
 which brings almost all recent features, introduced in Lollipop and later, to the older platforms. 
 
-### Version 2.2.0 (BETA)
+### Version 2.2.0
 
-Features available in version 2.2.0:
+New features added in version 2.2.0:
 
 1. GATT Server support. This includes setting up the local GATT server on the Android device, new 
    requests for server operations: 
@@ -51,25 +51,10 @@ Features available in version 2.2.0:
 3. BLE operations are no longer called from the main thread.
 4. There's a new option to set a handler for invoking callbacks. A handler can also be set per-callback.
 
-### Migration to version 2.2.0 (BETA)
+### Migration to version 2.2.0
 
-Version 2.2.0 breaks some API known from version 2.1.x.
-
-1. `BleManager` is no longer a template class. The `BleManagerCallbacks` interface, previously used 
-   to notify about connection and bond states, battery level (deprecated) and application-level 
-   callbacks, has been deprecated, together with `BleManager#setGattCallbacks(...)`. Instead:
-   * Use `BlaManager#setConnectionObserver(...)` to get connection state updates.
-   * Use `BleManager#setBondingObserver(...)` to get bonding events.
-   * If required, manage application-level callbacks in your manager (that extends `BleManager`).
-   * To make transition easier, `LegacyBleManager` class was introduced that can be used pretty
-     much like the old `BleManager`. It even has `mCallbacks` property.
-2. Some fields in the *BleManager* got rid of the Hungarian Notation. In particular,
-   *mCallbacks* was renamed to *callbacks* (except in `LegacyBleManager`), and it got deprecated.
-3. The protected method `getGattCallback()` in `BleManager` is now called from the 
-   constructor, so can't return a final field of a manager, as they are not initialized yet.
-   Instead, instantiate the `BleManagerGattCallback` class from there (see example below).
-   
-The API of version 2.2.0 is now finished. Some bugs may be fixed before it is promoted to 2.2.0 final.
+Version 2.2.0 breaks some API known from version 2.1.1.
+Check out [migration guide](MIGRATION.md).
 
 ## Importing
 
@@ -79,29 +64,19 @@ The library may be found on jcenter and Maven Central repository.
 Add it to your project by adding the following dependency:
 
 ```grovy
-implementation 'no.nordicsemi.android:ble:2.1.1'
+implementation 'no.nordicsemi.android:ble:2.2.0'
 ```
-Latest stable version is 2.1.1.
 The last version not migrated to AndroidX is 2.0.5.
 
 To import the BLE library with set of parsers for common Bluetooth SIG characteristics, use:
 ```grovy
-implementation 'no.nordicsemi.android:ble-common:2.1.1'
+implementation 'no.nordicsemi.android:ble-common:2.2.0'
 ```
 For more information, read [this](BLE-COMMON.md).
 
-To test the latest features, use the **beta version**:
-```grovy
-implementation 'no.nordicsemi.android:ble:2.2.0-beta03'
-```
-or:
-```grovy
-implementation 'no.nordicsemi.android:ble-common:2.2.0-beta03'
-```
-
 An extension for easier integration with `LiveData` is available after adding:
 ```grovy
-implementation 'no.nordicsemi.android:ble-livedata:2.2.0-beta03'
+implementation 'no.nordicsemi.android:ble-livedata:2.2.0'
 ```
 This extension adds `ObservableBleManager` with `state` and `bondingState` properties, which 
 notify about connection and bond state using `androidx.lifecycle.LiveData`.
@@ -311,7 +286,7 @@ class MyRepo implements ConnectionObserver {
 
 #### Adding GATT Server support
 
-Starting from version 2.2 you may now define and use the GATT server in the BLE Library.
+Starting from version 2.2.0 you may now define and use the GATT server in the BLE Library.
 
 First, override a `BleServerManager` class and override `initializeServer()` method. Some helper
 methods, like `characteristic(...)`, `descriptor(...)` and their shared counterparts were created 
