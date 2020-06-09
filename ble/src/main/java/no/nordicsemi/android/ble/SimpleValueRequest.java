@@ -27,6 +27,8 @@ import android.bluetooth.BluetoothGattDescriptor;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.exception.BluetoothDisabledException;
@@ -72,8 +74,8 @@ public abstract class SimpleValueRequest<T> extends SimpleRequest {
 	 * Synchronously waits until the request is done. The given response object will be filled
 	 * with the request response.
 	 * <p>
-	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)} and
-	 * {@link #with(T)} will be ignored.
+	 * Callbacks set using {@link #before(BeforeCallback)}, {@link #done(SuccessCallback)} and
+	 * {@link #fail(FailCallback)} will be ignored.
 	 * <p>
 	 * This method may not be called from the main (UI) thread.
 	 *
@@ -109,8 +111,8 @@ public abstract class SimpleValueRequest<T> extends SimpleRequest {
 	/**
 	 * Synchronously waits until the request is done.
 	 * <p>
-	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)} and
-	 * {@link #with(T)} will be ignored.
+	 * Callbacks set using {@link #before(BeforeCallback)}, {@link #done(SuccessCallback)} and
+	 * {@link #fail(FailCallback)} will be ignored.
 	 * <p>
 	 * This method may not be called from the main (UI) thread.
 	 *
