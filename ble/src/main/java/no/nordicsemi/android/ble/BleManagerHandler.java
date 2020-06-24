@@ -1151,6 +1151,13 @@ abstract class BleManagerHandler extends RequestHandler {
 		final Deque<Request> queue = initInProgress ? initQueue : taskQueue;
 		queue.addFirst(request);
 		request.enqueued = true;
+		// This ensures that the request that was put as first will be executed.
+		// The reason this was added is stated in
+		// https://github.com/NordicSemiconductor/Android-BLE-Library/issues/200
+		// Basically, an operation done in several requests (like WriteRequest with split())
+		// must be able to be performed despite awaiting request.
+		operationInProgress = false;
+		// nextRequest(...) must be called after enqueuing this request.
 	}
 
 	@Override
@@ -2735,7 +2742,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	 */
 	@SuppressWarnings("ConstantConditions")
 	private synchronized void nextRequest(final boolean force) {
-		if (force) {
+		if (force && operationInProgress) {
 			operationInProgress = awaitingRequest != null;
 		}
 
