@@ -96,6 +96,22 @@ project(':ble').projectDir = file('../Android-BLE-Library/ble')
 You may do the same with other modules available in this project. Keep in mind, that
 *ble-livedata* module requires Kotlin, but no special changes are required in the app.
 
+#### Setting up
+
+The library uses Java 1.8 features. Make sure your *build.gradle* includes the following 
+configuration:
+
+```groovy
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
+    }
+    // For Kotlin projects additionally:
+    kotlinOptions {
+        jvmTarget = "1.8"
+    }
+```
+
 ## Usage
 
 A `BleManager` instance is responsible for connecting and communicating with a single peripheral.
