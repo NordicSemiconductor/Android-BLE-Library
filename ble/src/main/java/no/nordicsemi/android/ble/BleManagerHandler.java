@@ -1146,8 +1146,16 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	// Request Handler methods
 
-	@Override
-	final void enqueueFirst(@NonNull final Request request) {
+	/**
+	 * Enqueues the given request at the front of the the init or task queue, depending
+	 * on whether the initialization is in progress, or not.
+	 *
+	 * This method sets the {@link #operationInProgress} to false, assuming the newly added
+	 * request will be executed immediately after this method ends.
+	 *
+	 * @param request the request to be added.
+	 */
+	private final void enqueueFirst(@NonNull final Request request) {
 		final Deque<Request> queue = initInProgress ? initQueue : taskQueue;
 		queue.addFirst(request);
 		request.enqueued = true;
