@@ -210,7 +210,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	 * There may be only a single instance of such request at a time as this is a blocking request.
 	 */
 	@Nullable
-	private AwaitingRequest awaitingRequest;
+	private AwaitingRequest<?> awaitingRequest;
 
 	private final BroadcastReceiver bluetoothStateBroadcastReceiver = new BroadcastReceiver() {
 		@Override
@@ -2734,7 +2734,7 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	private boolean checkCondition() {
 		if (awaitingRequest instanceof ConditionalWaitRequest) {
-			final ConditionalWaitRequest cwr = (ConditionalWaitRequest) awaitingRequest;
+			final ConditionalWaitRequest<?> cwr = (ConditionalWaitRequest<?>) awaitingRequest;
 			if (cwr.isFulfilled()) {
 				cwr.notifySuccess(bluetoothDevice);
 				awaitingRequest = null;
@@ -2817,7 +2817,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		this.request = request;
 
 		if (request instanceof AwaitingRequest) {
-			final AwaitingRequest r = (AwaitingRequest) request;
+			final AwaitingRequest<?> r = (AwaitingRequest<?>) request;
 
 			// The WAIT_FOR_* request types may override the request with a trigger.
 			// This is to ensure that the trigger is done after the awaitingRequest was set.
@@ -2843,7 +2843,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					   (r.characteristic.getProperties() & requiredProperty) != 0);
 			if (result) {
 				if (r instanceof ConditionalWaitRequest) {
-					final ConditionalWaitRequest cwr = (ConditionalWaitRequest) r;
+					final ConditionalWaitRequest<?> cwr = (ConditionalWaitRequest<?>) r;
 					if (cwr.isFulfilled()) {
 						cwr.notifyStarted(bluetoothDevice);
 						cwr.notifySuccess(bluetoothDevice);
