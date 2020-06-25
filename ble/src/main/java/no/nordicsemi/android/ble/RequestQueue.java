@@ -24,8 +24,8 @@ package no.nordicsemi.android.ble;
 
 import android.os.Handler;
 
+import java.util.Deque;
 import java.util.LinkedList;
-import java.util.Queue;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
@@ -41,7 +41,7 @@ public class RequestQueue extends SimpleRequest {
 	 * A list of operations that will be executed together.
 	 */
 	@NonNull
-	private final Queue<Request> requests;
+	private final Deque<Request> requests;
 
 	RequestQueue() {
 		super(Type.SET);
@@ -113,6 +113,14 @@ public class RequestQueue extends SimpleRequest {
 		} else {
 			throw new IllegalArgumentException("Operation does not extend Request");
 		}
+	}
+
+	/**
+	 * Enqueues given request again in the request queue, putting it to the front of it.
+	 * @param request the request to be enqueued.
+	 */
+	void addFirst(@NonNull final Request request) {
+		requests.addFirst(request);
 	}
 
 	/**

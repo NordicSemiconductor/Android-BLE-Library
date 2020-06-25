@@ -1155,9 +1155,14 @@ abstract class BleManagerHandler extends RequestHandler {
 	 *
 	 * @param request the request to be added.
 	 */
-	private final void enqueueFirst(@NonNull final Request request) {
-		final Deque<Request> queue = initInProgress ? initQueue : taskQueue;
-		queue.addFirst(request);
+	private void enqueueFirst(@NonNull final Request request) {
+		final RequestQueue rq = requestQueue;
+		if (rq == null) {
+			final Deque<Request> queue = initInProgress ? initQueue : taskQueue;
+			queue.addFirst(request);
+		} else {
+			rq.addFirst(request);
+		}
 		request.enqueued = true;
 		// This ensures that the request that was put as first will be executed.
 		// The reason this was added is stated in
