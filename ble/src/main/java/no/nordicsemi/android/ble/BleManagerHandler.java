@@ -3122,13 +3122,12 @@ abstract class BleManagerHandler extends RequestHandler {
 				final Request r = request;
 				result = internalRefreshDeviceCache();
 				if (result) {
-					final BluetoothDevice device = bluetoothDevice;
 					postDelayed(() -> {
 						log(Log.INFO, "Cache refreshed");
-						r.notifySuccess(device);
+						r.notifySuccess(bluetoothDevice);
 						this.request = null;
 						if (awaitingRequest != null) {
-							awaitingRequest.notifyFail(device, FailCallback.REASON_NULL_ATTRIBUTE);
+							awaitingRequest.notifyFail(bluetoothDevice, FailCallback.REASON_NULL_ATTRIBUTE);
 							awaitingRequest = null;
 						}
 						taskQueue.clear();
@@ -3146,16 +3145,13 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case SLEEP: {
-				final BluetoothDevice device = bluetoothDevice;
-				if (device != null) {
-					final SleepRequest sr = (SleepRequest) request;
-					log(Log.DEBUG, "sleep(" + sr.getDelay() + ")");
-					postDelayed(() -> {
-						sr.notifySuccess(device);
-						nextRequest(true);
-					}, sr.getDelay());
-					result = true;
-				}
+				final SleepRequest sr = (SleepRequest) request;
+				log(Log.DEBUG, "sleep(" + sr.getDelay() + ")");
+				postDelayed(() -> {
+					sr.notifySuccess(bluetoothDevice);
+					nextRequest(true);
+				}, sr.getDelay());
+				result = true;
 				break;
 			}
 			case WAIT_FOR_NOTIFICATION:
