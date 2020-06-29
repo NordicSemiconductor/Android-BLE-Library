@@ -210,7 +210,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	 * There may be only a single instance of such request at a time as this is a blocking request.
 	 */
 	@Nullable
-	private AwaitingRequest awaitingRequest;
+	private AwaitingRequest<?> awaitingRequest;
 
 	private final BroadcastReceiver bluetoothStateBroadcastReceiver = new BroadcastReceiver() {
 		@Override
@@ -1146,11 +1146,31 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	// Request Handler methods
 
-	@Override
-	final void enqueueFirst(@NonNull final Request request) {
-		final Deque<Request> queue = initInProgress ? initQueue : taskQueue;
-		queue.addFirst(request);
+	/**
+	 * Enqueues the given request at the front of the the init or task queue, depending
+	 * on whether the initialization is in progress, or not.
+	 *
+	 * This method sets the {@link #operationInProgress} to false, assuming the newly added
+	 * request will be executed immediately after this method ends.
+	 *
+	 * @param request the request to be added.
+	 */
+	private void enqueueFirst(@NonNull final Request request) {
+		final RequestQueue rq = requestQueue;
+		if (rq == null) {
+			final Deque<Request> queue = initInProgress ? initQueue : taskQueue;
+			queue.addFirst(request);
+		} else {
+			rq.addFirst(request);
+		}
 		request.enqueued = true;
+		// This ensures that the request that was put as first will be executed.
+		// The reason this was added is stated in
+		// https://github.com/NordicSemiconductor/Android-BLE-Library/issues/200
+		// Basically, an operation done in several requests (like WriteRequest with split())
+		// must be able to be performed despite awaiting request.
+		operationInProgress = false;
+		// nextRequest(...) must be called after enqueuing this request.
 	}
 
 	@Override
@@ -2719,7 +2739,7 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	private boolean checkCondition() {
 		if (awaitingRequest instanceof ConditionalWaitRequest) {
-			final ConditionalWaitRequest cwr = (ConditionalWaitRequest) awaitingRequest;
+			final ConditionalWaitRequest<?> cwr = (ConditionalWaitRequest<?>) awaitingRequest;
 			if (cwr.isFulfilled()) {
 				cwr.notifySuccess(bluetoothDevice);
 				awaitingRequest = null;
@@ -2735,7 +2755,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	 */
 	@SuppressWarnings("ConstantConditions")
 	private synchronized void nextRequest(final boolean force) {
-		if (force) {
+		if (force && operationInProgress) {
 			operationInProgress = awaitingRequest != null;
 		}
 
@@ -2802,7 +2822,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		this.request = request;
 
 		if (request instanceof AwaitingRequest) {
-			final AwaitingRequest r = (AwaitingRequest) request;
+			final AwaitingRequest<?> r = (AwaitingRequest<?>) request;
 
 			// The WAIT_FOR_* request types may override the request with a trigger.
 			// This is to ensure that the trigger is done after the awaitingRequest was set.
@@ -2828,7 +2848,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					   (r.characteristic.getProperties() & requiredProperty) != 0);
 			if (result) {
 				if (r instanceof ConditionalWaitRequest) {
-					final ConditionalWaitRequest cwr = (ConditionalWaitRequest) r;
+					final ConditionalWaitRequest<?> cwr = (ConditionalWaitRequest<?>) r;
 					if (cwr.isFulfilled()) {
 						cwr.notifyStarted(bluetoothDevice);
 						cwr.notifySuccess(bluetoothDevice);
