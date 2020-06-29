@@ -2762,6 +2762,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (operationInProgress) {
 			return;
 		}
+		final BluetoothDevice bluetoothDevice = this.bluetoothDevice;
 
 		// Get the first request from the init queue
 		Request request = null;
@@ -2797,9 +2798,10 @@ abstract class BleManagerHandler extends RequestHandler {
 				operationInProgress = true;
 				ready = true;
 				onDeviceReady();
-				final BluetoothDevice device = bluetoothGatt.getDevice();
-				postCallback(c -> c.onDeviceReady(device));
-				postConnectionStateChange(o -> o.onDeviceReady(device));
+				if (bluetoothDevice != null) {
+					postCallback(c -> c.onDeviceReady(bluetoothDevice));
+					postConnectionStateChange(o -> o.onDeviceReady(bluetoothDevice));
+				}
 				if (connectRequest != null) {
 					connectRequest.notifySuccess(connectRequest.getDevice());
 					connectRequest = null;
@@ -3058,9 +3060,8 @@ abstract class BleManagerHandler extends RequestHandler {
 					// some Android 8+ phones don't call this callback. Let's make sure it will be
 					// called in any case.
 					if (result) {
-						final BluetoothDevice device = bluetoothDevice;
 						postDelayed(() -> {
-							if (cpr.notifySuccess(device)) {
+							if (cpr.notifySuccess(bluetoothDevice)) {
 								connectionPriorityOperationInProgress = false;
 								nextRequest(true);
 							}
@@ -3103,7 +3104,18 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case READ_RSSI: {
+				final Request r = request;
 				result = internalReadRssi();
+				if (result) {
+					postDelayed(() -> {
+						// This check makes sure that only the failed request will be notified,
+						// not some subsequent one.
+						if (this.request == r) {
+							r.notifyFail(bluetoothDevice, FailCallback.REASON_TIMEOUT);
+							nextRequest(true);
+						}
+					}, 1000);
+				}
 				break;
 			}
 			case REFRESH_CACHE: {
