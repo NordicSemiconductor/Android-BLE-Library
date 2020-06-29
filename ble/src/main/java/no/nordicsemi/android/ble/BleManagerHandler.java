@@ -3104,7 +3104,18 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case READ_RSSI: {
+				final Request r = request;
 				result = internalReadRssi();
+				if (result) {
+					postDelayed(() -> {
+						// This check makes sure that only the failed request will be notified,
+						// not some subsequent one.
+						if (this.request == r) {
+							r.notifyFail(bluetoothDevice, FailCallback.REASON_TIMEOUT);
+							nextRequest(true);
+						}
+					}, 1000);
+				}
 				break;
 			}
 			case REFRESH_CACHE: {
