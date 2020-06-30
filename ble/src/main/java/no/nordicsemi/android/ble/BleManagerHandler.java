@@ -625,10 +625,24 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (device == null)
 			return false;
 
-		log(Log.VERBOSE, "Starting pairing...");
+		log(Log.VERBOSE, "Starting bonding...");
 
+		// Warning: The check below only ensures that the bond information is present on the
+		//          Android side, not on both. If the bond information has been remove from the
+		//          peripheral side, the code below will notify bonding as success, but in fact the
+		//          link will not be encrypted! Currently there is no way to ensure that the link
+		//          is secure.
+		//          Android, despite reporting bond state as BONDED, creates an unencrypted link
+		//          and does not report this as a problem. Calling createBond() on a valid,
+		//          encrypted link, to ensure that the link is encrypted, returns false (error).
+		//          The same result is returned if only the Android side has bond information,
+		//          making both cases indistinguishable.
+		//
+		// Solution: To make sure that sensitive data are sent only on encrypted link make sure
+		//           the characteristic/descriptor is protected and reading/writing to it will
+		//           initiate bonding request.
 		if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
-			log(Log.WARN, "Device already bonded");
+			log(Log.WARN, "Bond information present on client, skipping bonding");
 			request.notifySuccess(device);
 			nextRequest(true);
 			return true;

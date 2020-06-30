@@ -574,11 +574,46 @@ public abstract class BleManager implements ILogger {
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
 	 * asynchronous use, or awaited using await() in synchronous execution.
+	 * <p>
+	 * <b>Important:</b> This request does NOT guarantee that the link will be encrypted.
+	 * If the bond information is present on the phone, but was removed from the peripheral
+	 * (or another peripheral is pretending to be the one) this request will succeed, as it
+	 * immediately returns if the bond information is present on the Android client.
+	 * To make sure no sensitive information is stolen, protect your characteristics and/or
+	 * descriptors by assigning them security level. Also, clearly inform user that a device
+	 * is being bonded to avoid MITM.
 	 *
 	 * @return The request.
+	 * @deprecated Use {@link #createBondInsecure()} instead. Deprecated in 2.2.1.
 	 */
+	@Deprecated
 	@NonNull
 	protected Request createBond() {
+		return createBondInsecure();
+	}
+
+	/**
+	 * Returns a request to create bond with the device. The device must be first set using
+	 * {@link #connect(BluetoothDevice)} which will try to connect to the device.
+	 * If you need to pair with a device before connecting to it you may do it without
+	 * the use of BleManager object and connect after bond is established.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 * <p>
+	 * <b>Important:</b> This request does NOT guarantee that the link will be encrypted.
+	 * If the bond information is present on the phone, but was removed from the peripheral
+	 * (or another peripheral is pretending to be the one) this request will succeed, as it
+	 * immediately returns if the bond information is present on the Android client.
+	 * To make sure no sensitive information is stolen, protect your characteristics and/or
+	 * descriptors by assigning them security level. Also, clearly inform user which device
+	 * is being bonded to avoid MITM.
+	 *
+	 * @return The request.
+	 * @since 2.2.1
+	 */
+	@NonNull
+	protected Request createBondInsecure() {
 		return Request.createBond().setRequestHandler(requestHandler);
 	}
 
