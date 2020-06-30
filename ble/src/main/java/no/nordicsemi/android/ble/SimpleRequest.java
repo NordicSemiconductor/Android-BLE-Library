@@ -28,6 +28,8 @@ import android.bluetooth.BluetoothGattDescriptor;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.exception.BluetoothDisabledException;
@@ -58,8 +60,8 @@ public class SimpleRequest extends Request {
 	/**
 	 * Synchronously waits until the request is done.
 	 * <p>
-	 * Callbacks set using {@link #done(SuccessCallback)} and {@link #fail(FailCallback)}
-	 * will be ignored.
+	 * Callbacks set using {@link #before(BeforeCallback)}, {@link #done(SuccessCallback)} and
+	 * {@link #fail(FailCallback)} will be ignored.
 	 * <p>
 	 * This method may not be called from the main (UI) thread.
 	 *
@@ -77,11 +79,13 @@ public class SimpleRequest extends Request {
 			BluetoothDisabledException, InvalidRequestException {
 		assertNotMainThread();
 
+		final BeforeCallback bc = beforeCallback;
 		final SuccessCallback sc = successCallback;
 		final FailCallback fc = failCallback;
 		try {
 			syncLock.close();
 			final RequestCallback callback = new RequestCallback();
+			beforeCallback = null;
 			done(callback).fail(callback).invalid(callback).enqueue();
 
 			syncLock.block();
@@ -98,6 +102,7 @@ public class SimpleRequest extends Request {
 				throw new RequestFailedException(this, callback.status);
 			}
 		} finally {
+			beforeCallback = bc;
 			successCallback = sc;
 			failCallback = fc;
 		}

@@ -210,7 +210,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	 * There may be only a single instance of such request at a time as this is a blocking request.
 	 */
 	@Nullable
-	private AwaitingRequest awaitingRequest;
+	private AwaitingRequest<?> awaitingRequest;
 
 	private final BroadcastReceiver bluetoothStateBroadcastReceiver = new BroadcastReceiver() {
 		@Override
@@ -625,10 +625,24 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (device == null)
 			return false;
 
-		log(Log.VERBOSE, "Starting pairing...");
+		log(Log.VERBOSE, "Starting bonding...");
 
+		// Warning: The check below only ensures that the bond information is present on the
+		//          Android side, not on both. If the bond information has been remove from the
+		//          peripheral side, the code below will notify bonding as success, but in fact the
+		//          link will not be encrypted! Currently there is no way to ensure that the link
+		//          is secure.
+		//          Android, despite reporting bond state as BONDED, creates an unencrypted link
+		//          and does not report this as a problem. Calling createBond() on a valid,
+		//          encrypted link, to ensure that the link is encrypted, returns false (error).
+		//          The same result is returned if only the Android side has bond information,
+		//          making both cases indistinguishable.
+		//
+		// Solution: To make sure that sensitive data are sent only on encrypted link make sure
+		//           the characteristic/descriptor is protected and reading/writing to it will
+		//           initiate bonding request.
 		if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
-			log(Log.WARN, "Device already bonded");
+			log(Log.WARN, "Bond information present on client, skipping bonding");
 			request.notifySuccess(device);
 			nextRequest(true);
 			return true;
@@ -1146,11 +1160,31 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	// Request Handler methods
 
-	@Override
-	final void enqueueFirst(@NonNull final Request request) {
-		final Deque<Request> queue = initInProgress ? initQueue : taskQueue;
-		queue.addFirst(request);
+	/**
+	 * Enqueues the given request at the front of the the init or task queue, depending
+	 * on whether the initialization is in progress, or not.
+	 *
+	 * This method sets the {@link #operationInProgress} to false, assuming the newly added
+	 * request will be executed immediately after this method ends.
+	 *
+	 * @param request the request to be added.
+	 */
+	private void enqueueFirst(@NonNull final Request request) {
+		final RequestQueue rq = requestQueue;
+		if (rq == null) {
+			final Deque<Request> queue = initInProgress ? initQueue : taskQueue;
+			queue.addFirst(request);
+		} else {
+			rq.addFirst(request);
+		}
 		request.enqueued = true;
+		// This ensures that the request that was put as first will be executed.
+		// The reason this was added is stated in
+		// https://github.com/NordicSemiconductor/Android-BLE-Library/issues/200
+		// Basically, an operation done in several requests (like WriteRequest with split())
+		// must be able to be performed despite awaiting request.
+		operationInProgress = false;
+		// nextRequest(...) must be called after enqueuing this request.
 	}
 
 	@Override
@@ -2719,7 +2753,7 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	private boolean checkCondition() {
 		if (awaitingRequest instanceof ConditionalWaitRequest) {
-			final ConditionalWaitRequest cwr = (ConditionalWaitRequest) awaitingRequest;
+			final ConditionalWaitRequest<?> cwr = (ConditionalWaitRequest<?>) awaitingRequest;
 			if (cwr.isFulfilled()) {
 				cwr.notifySuccess(bluetoothDevice);
 				awaitingRequest = null;
@@ -2735,13 +2769,14 @@ abstract class BleManagerHandler extends RequestHandler {
 	 */
 	@SuppressWarnings("ConstantConditions")
 	private synchronized void nextRequest(final boolean force) {
-		if (force) {
+		if (force && operationInProgress) {
 			operationInProgress = awaitingRequest != null;
 		}
 
 		if (operationInProgress) {
 			return;
 		}
+		final BluetoothDevice bluetoothDevice = this.bluetoothDevice;
 
 		// Get the first request from the init queue
 		Request request = null;
@@ -2777,9 +2812,10 @@ abstract class BleManagerHandler extends RequestHandler {
 				operationInProgress = true;
 				ready = true;
 				onDeviceReady();
-				final BluetoothDevice device = bluetoothGatt.getDevice();
-				postCallback(c -> c.onDeviceReady(device));
-				postConnectionStateChange(o -> o.onDeviceReady(device));
+				if (bluetoothDevice != null) {
+					postCallback(c -> c.onDeviceReady(bluetoothDevice));
+					postConnectionStateChange(o -> o.onDeviceReady(bluetoothDevice));
+				}
 				if (connectRequest != null) {
 					connectRequest.notifySuccess(connectRequest.getDevice());
 					connectRequest = null;
@@ -2802,7 +2838,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		this.request = request;
 
 		if (request instanceof AwaitingRequest) {
-			final AwaitingRequest r = (AwaitingRequest) request;
+			final AwaitingRequest<?> r = (AwaitingRequest<?>) request;
 
 			// The WAIT_FOR_* request types may override the request with a trigger.
 			// This is to ensure that the trigger is done after the awaitingRequest was set.
@@ -2828,7 +2864,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					   (r.characteristic.getProperties() & requiredProperty) != 0);
 			if (result) {
 				if (r instanceof ConditionalWaitRequest) {
-					final ConditionalWaitRequest cwr = (ConditionalWaitRequest) r;
+					final ConditionalWaitRequest<?> cwr = (ConditionalWaitRequest<?>) r;
 					if (cwr.isFulfilled()) {
 						cwr.notifyStarted(bluetoothDevice);
 						cwr.notifySuccess(bluetoothDevice);
@@ -3038,9 +3074,8 @@ abstract class BleManagerHandler extends RequestHandler {
 					// some Android 8+ phones don't call this callback. Let's make sure it will be
 					// called in any case.
 					if (result) {
-						final BluetoothDevice device = bluetoothDevice;
 						postDelayed(() -> {
-							if (cpr.notifySuccess(device)) {
+							if (cpr.notifySuccess(bluetoothDevice)) {
 								connectionPriorityOperationInProgress = false;
 								nextRequest(true);
 							}
@@ -3083,20 +3118,30 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case READ_RSSI: {
+				final Request r = request;
 				result = internalReadRssi();
+				if (result) {
+					postDelayed(() -> {
+						// This check makes sure that only the failed request will be notified,
+						// not some subsequent one.
+						if (this.request == r) {
+							r.notifyFail(bluetoothDevice, FailCallback.REASON_TIMEOUT);
+							nextRequest(true);
+						}
+					}, 1000);
+				}
 				break;
 			}
 			case REFRESH_CACHE: {
 				final Request r = request;
 				result = internalRefreshDeviceCache();
 				if (result) {
-					final BluetoothDevice device = bluetoothDevice;
 					postDelayed(() -> {
 						log(Log.INFO, "Cache refreshed");
-						r.notifySuccess(device);
+						r.notifySuccess(bluetoothDevice);
 						this.request = null;
 						if (awaitingRequest != null) {
-							awaitingRequest.notifyFail(device, FailCallback.REASON_NULL_ATTRIBUTE);
+							awaitingRequest.notifyFail(bluetoothDevice, FailCallback.REASON_NULL_ATTRIBUTE);
 							awaitingRequest = null;
 						}
 						taskQueue.clear();
@@ -3114,16 +3159,13 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case SLEEP: {
-				final BluetoothDevice device = bluetoothDevice;
-				if (device != null) {
-					final SleepRequest sr = (SleepRequest) request;
-					log(Log.DEBUG, "sleep(" + sr.getDelay() + ")");
-					postDelayed(() -> {
-						sr.notifySuccess(device);
-						nextRequest(true);
-					}, sr.getDelay());
-					result = true;
-				}
+				final SleepRequest sr = (SleepRequest) request;
+				log(Log.DEBUG, "sleep(" + sr.getDelay() + ")");
+				postDelayed(() -> {
+					sr.notifySuccess(bluetoothDevice);
+					nextRequest(true);
+				}, sr.getDelay());
+				result = true;
 				break;
 			}
 			case WAIT_FOR_NOTIFICATION:
