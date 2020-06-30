@@ -33,9 +33,9 @@ For scanning, we recommend using
 [Android Scanner Compat Library](https://github.com/NordicSemiconductor/Android-Scanner-Compat-Library)
 which brings almost all recent features, introduced in Lollipop and later, to the older platforms. 
 
-### Version 2.2.0
+### Version 2.2
 
-New features added in version 2.2.0:
+New features added in version 2.2:
 
 1. GATT Server support. This includes setting up the local GATT server on the Android device, new 
    requests for server operations: 
@@ -51,9 +51,9 @@ New features added in version 2.2.0:
 3. BLE operations are no longer called from the main thread.
 4. There's a new option to set a handler for invoking callbacks. A handler can also be set per-callback.
 
-### Migration to version 2.2.0
+### Migration to version 2.2
 
-Version 2.2.0 breaks some API known from version 2.1.1.
+Version 2.2 breaks some API known from version 2.1.1.
 Check out [migration guide](MIGRATION.md).
 
 ## Importing
@@ -64,19 +64,19 @@ The library may be found on jcenter and Maven Central repository.
 Add it to your project by adding the following dependency:
 
 ```grovy
-implementation 'no.nordicsemi.android:ble:2.2.0'
+implementation 'no.nordicsemi.android:ble:2.2.1'
 ```
 The last version not migrated to AndroidX is 2.0.5.
 
 To import the BLE library with set of parsers for common Bluetooth SIG characteristics, use:
 ```grovy
-implementation 'no.nordicsemi.android:ble-common:2.2.0'
+implementation 'no.nordicsemi.android:ble-common:2.2.1'
 ```
 For more information, read [this](BLE-COMMON.md).
 
 An extension for easier integration with `LiveData` is available after adding:
 ```grovy
-implementation 'no.nordicsemi.android:ble-livedata:2.2.0'
+implementation 'no.nordicsemi.android:ble-livedata:2.2.1'
 ```
 This extension adds `ObservableBleManager` with `state` and `bondingState` properties, which 
 notify about connection and bond state using `androidx.lifecycle.LiveData`.
@@ -302,7 +302,7 @@ class MyRepo implements ConnectionObserver {
 
 #### Adding GATT Server support
 
-Starting from version 2.2.0 you may now define and use the GATT server in the BLE Library.
+Starting from version 2.2 you may now define and use the GATT server in the BLE Library.
 
 First, override a `BleServerManager` class and override `initializeServer()` method. Some helper
 methods, like `characteristic(...)`, `descriptor(...)` and their shared counterparts were created 
@@ -429,12 +429,9 @@ Find the simple example here [Android nRF Blinky](https://github.com/NordicSemic
 For an example how to use it from an Activity or a Service, check the base Activity and Service 
 classes in [nRF Toolbox](https://github.com/NordicSemiconductor/Android-nRF-Toolbox/tree/master/app/src/main/java/no/nordicsemi/android/nrftoolbox/profile).
 
-*Note:*
-nRF Toolbox has not yet been migrated to BLE Library v.2.2.0.
-
 ## Version 1.x
 
-The BLE library v 1.x is no longer supported. Please migrate to 2.x for bug fixing releases.
+The BLE library v 1.x is no longer supported. Please migrate to 2.2+ for bug fixing releases.
 Find it on [version/1x branch](https://github.com/NordicSemiconductor/Android-BLE-Library/tree/version/1x).
 
 Migration guide is available [here](MIGRATION.md).
