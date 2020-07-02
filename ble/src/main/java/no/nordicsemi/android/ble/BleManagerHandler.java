@@ -2773,7 +2773,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			operationInProgress = awaitingRequest != null;
 		}
 
-		if (operationInProgress) {
+		if (operationInProgress || initInProgress) {
 			return;
 		}
 		final BluetoothDevice bluetoothDevice = this.bluetoothDevice;
@@ -3185,9 +3185,7 @@ abstract class BleManagerHandler extends RequestHandler {
 									FailCallback.REASON_BLUETOOTH_DISABLED);
 			awaitingRequest = null;
 			connectionPriorityOperationInProgress = false;
-			if (!initInProgress) {
-				nextRequest(true);
-			}
+			nextRequest(true);
 		}
 	}
 
