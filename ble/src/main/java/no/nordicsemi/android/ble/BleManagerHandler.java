@@ -3185,7 +3185,9 @@ abstract class BleManagerHandler extends RequestHandler {
 									FailCallback.REASON_BLUETOOTH_DISABLED);
 			awaitingRequest = null;
 			connectionPriorityOperationInProgress = false;
-			nextRequest(true);
+			if (!initInProgress) {
+				nextRequest(true);
+			}
 		}
 	}
 
