@@ -26,7 +26,7 @@ The API is clean and easy to read.
 13. Operation timeouts (for *connect*, *disconnect* and *wait for notification* requests)
 14. Error handling
 15. Logging
-16. GATT server (since version 2.2.0)
+16. GATT server (since version 2.2)
 
 The library **does not provide support for scanning** for Bluetooth LE devices.
 For scanning, we recommend using 
@@ -64,19 +64,19 @@ The library may be found on jcenter and Maven Central repository.
 Add it to your project by adding the following dependency:
 
 ```grovy
-implementation 'no.nordicsemi.android:ble:2.2.1'
+implementation 'no.nordicsemi.android:ble:2.2.2'
 ```
 The last version not migrated to AndroidX is 2.0.5.
 
 To import the BLE library with set of parsers for common Bluetooth SIG characteristics, use:
 ```grovy
-implementation 'no.nordicsemi.android:ble-common:2.2.1'
+implementation 'no.nordicsemi.android:ble-common:2.2.2'
 ```
 For more information, read [this](BLE-COMMON.md).
 
 An extension for easier integration with `LiveData` is available after adding:
 ```grovy
-implementation 'no.nordicsemi.android:ble-livedata:2.2.1'
+implementation 'no.nordicsemi.android:ble-livedata:2.2.2'
 ```
 This extension adds `ObservableBleManager` with `state` and `bondingState` properties, which 
 notify about connection and bond state using `androidx.lifecycle.LiveData`.
