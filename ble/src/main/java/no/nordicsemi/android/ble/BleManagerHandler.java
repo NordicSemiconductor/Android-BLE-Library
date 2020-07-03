@@ -2773,7 +2773,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			operationInProgress = awaitingRequest != null;
 		}
 
-		if (operationInProgress) {
+		if (operationInProgress || initInProgress) {
 			return;
 		}
 		final BluetoothDevice bluetoothDevice = this.bluetoothDevice;
