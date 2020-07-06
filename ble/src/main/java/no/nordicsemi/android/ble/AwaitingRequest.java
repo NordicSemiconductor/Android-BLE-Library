@@ -39,7 +39,7 @@ public abstract class AwaitingRequest<T> extends TimeoutableValueRequest<T> {
 	 * @return The request.
 	 */
 	@NonNull
-	public AwaitingRequest trigger(@NonNull final Operation trigger) {
+	public AwaitingRequest<T> trigger(@NonNull final Operation trigger) {
 		if (trigger instanceof Request) {
 			this.trigger = (Request) trigger;
 			this.triggerStatus = NOT_STARTED;

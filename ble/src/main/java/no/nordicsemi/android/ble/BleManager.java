@@ -889,7 +889,7 @@ public abstract class BleManager implements ILogger {
 	 * @return The request.
 	 */
 	@NonNull
-	protected ConditionalWaitRequest waitUntilNotificationsEnabled(
+	protected ConditionalWaitRequest<BluetoothGattCharacteristic> waitUntilNotificationsEnabled(
 			@Nullable final BluetoothGattCharacteristic serverCharacteristic) {
 		return waitUntil(serverCharacteristic, (characteristic) -> {
 			if (characteristic == null)
