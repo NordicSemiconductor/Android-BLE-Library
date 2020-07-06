@@ -647,7 +647,7 @@ public abstract class BleManager implements ILogger {
 	 * asynchronous use, or awaited using await() in synchronous execution.
 	 *
 	 * @return The request.
-	 * @since 2.2.2
+	 * @since 2.2.3
 	 */
 	protected Request ensureBond() {
 		return Request.ensureBond().setRequestHandler(requestHandler);
