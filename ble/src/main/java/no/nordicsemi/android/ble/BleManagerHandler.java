@@ -620,12 +620,15 @@ abstract class BleManagerHandler extends RequestHandler {
 		return true;
 	}
 
-	private boolean internalCreateBond() {
+	private boolean internalCreateBond(final boolean ensure) {
 		final BluetoothDevice device = bluetoothDevice;
 		if (device == null)
 			return false;
 
-		log(Log.VERBOSE, "Starting bonding...");
+		if (ensure)
+			log(Log.VERBOSE, "Ensuring bonding...");
+		else
+			log(Log.VERBOSE, "Starting bonding...");
 
 		// Warning: The check below only ensures that the bond information is present on the
 		//          Android side, not on both. If the bond information has been remove from the
@@ -640,14 +643,41 @@ abstract class BleManagerHandler extends RequestHandler {
 		//
 		// Solution: To make sure that sensitive data are sent only on encrypted link make sure
 		//           the characteristic/descriptor is protected and reading/writing to it will
-		//           initiate bonding request.
-		if (device.getBondState() == BluetoothDevice.BOND_BONDED) {
+		//           initiate bonding request. To make sure link is encrypted, use ensureBond()
+		//           method in BleManager, which will remove old and recreate bonding until this
+		//           Android bug is fixed.
+		if (!ensure && device.getBondState() == BluetoothDevice.BOND_BONDED) {
 			log(Log.WARN, "Bond information present on client, skipping bonding");
 			request.notifySuccess(device);
 			nextRequest(true);
 			return true;
 		}
+		final boolean result = createBond(device);
+		if (ensure && !result) {
+			// This will be added as a second.
+			// Copy all callbacks from the current request and clear them in the original.
+			final Request bond = Request.createBond().setRequestHandler(this);
+			// bond.beforeCallback was already fired.
+			bond.successCallback = request.successCallback;
+			bond.invalidRequestCallback = request.invalidRequestCallback;
+			bond.failCallback = request.failCallback;
+			bond.internalSuccessCallback = request.internalSuccessCallback;
+			bond.internalFailCallback = request.internalFailCallback;
+			request.successCallback = null;
+			request.invalidRequestCallback = null;
+			request.failCallback = null;
+			request.internalSuccessCallback = null;
+			request.internalFailCallback = null;
+			enqueueFirst(bond);
+			// This will be added as first.
+			enqueueFirst(Request.removeBond().setRequestHandler(this));
+			nextRequest(true);
+			return true;
+		}
+		return result;
+	}
 
+	private boolean createBond(@NonNull final BluetoothDevice device) {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
 			log(Log.DEBUG, "device.createBond()");
 			return device.createBond();
@@ -663,9 +693,9 @@ abstract class BleManagerHandler extends RequestHandler {
 				return (Boolean) createBond.invoke(device);
 			} catch (final Exception e) {
 				Log.w(TAG, "An exception occurred while creating bond", e);
+				return false;
 			}
 		}
-		return false;
 	}
 
 	private boolean internalRemoveBond() {
@@ -2916,8 +2946,12 @@ abstract class BleManagerHandler extends RequestHandler {
 				result = internalDisconnect();
 				break;
 			}
+			case ENSURE_BOND: {
+				result = internalCreateBond(true);
+				break;
+			}
 			case CREATE_BOND: {
-				result = internalCreateBond();
+				result = internalCreateBond(false);
 				break;
 			}
 			case REMOVE_BOND: {

@@ -584,7 +584,10 @@ public abstract class BleManager implements ILogger {
 	 * is being bonded to avoid MITM.
 	 *
 	 * @return The request.
-	 * @deprecated Use {@link #createBondInsecure()} instead. Deprecated in 2.2.1.
+	 * @deprecated Use {@link #createBondInsecure()} or {@link #ensureBond()} instead.
+	 * Deprecated in 2.2.1.
+	 * @see #ensureBond()
+	 * @see #createBondInsecure()
 	 */
 	@Deprecated
 	@NonNull
@@ -608,13 +611,46 @@ public abstract class BleManager implements ILogger {
 	 * To make sure no sensitive information is stolen, protect your characteristics and/or
 	 * descriptors by assigning them security level. Also, clearly inform user which device
 	 * is being bonded to avoid MITM.
+	 * <p>To ensure link encryption, use {@link #ensureBond()}.
 	 *
 	 * @return The request.
 	 * @since 2.2.1
+	 * @see #ensureBond()
 	 */
 	@NonNull
 	protected Request createBondInsecure() {
 		return Request.createBond().setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Returns a request to ensure the device is bonded and link is encrypted. On Android versions
+	 * 4.3-10 (and perhaps later as well) the {@link BluetoothDevice#getBondState()} returns true
+	 * even if the link is not encrypted, or the device is not connected at all, checking only
+	 * if the bond information is present on Android. Moreover, calling
+	 * {@link BluetoothDevice#createBond()} returns false if bond is already present on Android,
+	 * despite not being used, giving no trustworthy method to ensure that link is encrypted.
+	 * <p>
+	 * This method will always call {@link BluetoothDevice#createBond()}. If this method returns
+	 * false (e.g. because the bond information is already present on Android), this will remove the
+	 * current bond information and call {@link BluetoothDevice#createBond()} again.
+	 * <p>
+	 * <b>Important:</b> This may fail, if:
+	 * <ul>
+	 *     <li>The device already has bonding, but encryption wasn't started, and your device
+	 *     does not support multiple bondings.</li>
+	 *     <li>Someone is pretending to be your device, and advertising with the same MAC. Calling
+	 *     this method may remove the valid bond and create a new one against the intruder. Always
+	 *     make sure the user bonds to the right devices and indicate it to the user.</li>
+	 * </ul>
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @return The request.
+	 * @since 2.2.2
+	 */
+	protected Request ensureBond() {
+		return Request.ensureBond().setRequestHandler(requestHandler);
 	}
 
 	/**
@@ -889,7 +925,7 @@ public abstract class BleManager implements ILogger {
 	 * @return The request.
 	 */
 	@NonNull
-	protected ConditionalWaitRequest waitUntilNotificationsEnabled(
+	protected ConditionalWaitRequest<BluetoothGattCharacteristic> waitUntilNotificationsEnabled(
 			@Nullable final BluetoothGattCharacteristic serverCharacteristic) {
 		return waitUntil(serverCharacteristic, (characteristic) -> {
 			if (characteristic == null)
