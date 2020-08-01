@@ -172,12 +172,12 @@ class MyBleManager extends BleManager {
             // Validate properties
             boolean notify = false;
             if (firstCharacteristic != null) {
-                final int properties = dataCharacteristic.getProperties();
+                final int properties = firstCharacteristic.getProperties();
                 notify = (properties & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0;
             }
             boolean writeRequest = false;
             if (secondCharacteristic != null) {
-                final int properties = controlPointCharacteristic.getProperties();
+                final int properties = secondCharacteristic.getProperties();
                 writeRequest = (properties & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0;
                 secondCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
             }
@@ -217,7 +217,7 @@ class MyBleManager extends BleManager {
             setNotificationCallback(firstCharacteristic, callback);
             // If you need to send very long data using Write Without Response, use split()
             // or define your own splitter in split(DataSplitter splitter, WriteProgressCallback cb). 
-            writeCharacteristic(secondCharacteristic, "Very, very long data that will no fit into MTU")
+            writeCharacteristic(secondCharacteristic, "Very, very long data that will no fit into MTU".getBytes())
                 .split()
                 .enqueue();
         }
