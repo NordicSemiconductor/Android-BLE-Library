@@ -251,7 +251,7 @@ class MyBleManager extends BleManager {
         waitForNotification(firstCharacteristic)
             .trigger(
                 writeCharacteristic(secondCharacteristic, new FluxJumpRequest(year))
-                    .done(device -> log(Log.INDO, "Power on command sent"))
+                    .done(device -> log(Log.INFO, "Power on command sent"))
              )
             .with(new FluxHandler() {
                 public void onFluxCapacitorEngaged() {
