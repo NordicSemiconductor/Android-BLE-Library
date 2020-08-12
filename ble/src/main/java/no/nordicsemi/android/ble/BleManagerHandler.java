@@ -535,11 +535,13 @@ abstract class BleManagerHandler extends RequestHandler {
 					return true;
 				}
 			} else {
-				// Register bonding broadcast receiver
-				context.registerReceiver(bluetoothStateBroadcastReceiver,
-						new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
-				context.registerReceiver(mBondingBroadcastReceiver,
-						new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED));
+				if (connectRequest != null) {
+					// Register bonding broadcast receiver
+					context.registerReceiver(bluetoothStateBroadcastReceiver,
+							new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
+					context.registerReceiver(mBondingBroadcastReceiver,
+							new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED));
+				}
 			}
 		}
 
@@ -606,6 +608,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			// gatt.disconnect(), the connection attempt will be stopped.
 			connectionState = BluetoothGatt.STATE_DISCONNECTED;
 			log(Log.INFO, "Disconnected");
+			close();
 			postCallback(c -> c.onDeviceDisconnected(device));
 			postConnectionStateChange(o -> o.onDeviceDisconnected(device, ConnectionObserver.REASON_SUCCESS));
 		}
@@ -613,8 +616,8 @@ abstract class BleManagerHandler extends RequestHandler {
 		// For the latter, it has already been notified with REASON_TIMEOUT.
 		final Request r = request;
 		if (r != null && r.type == Request.Type.DISCONNECT) {
-			if (bluetoothDevice != null)
-				r.notifySuccess(bluetoothDevice);
+			if (bluetoothDevice != null || gatt != null)
+				r.notifySuccess(bluetoothDevice != null ? bluetoothDevice : gatt.getDevice());
 			else
 				r.notifyInvalidRequest();
 		}
