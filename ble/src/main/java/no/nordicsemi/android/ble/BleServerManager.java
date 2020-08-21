@@ -87,7 +87,7 @@ public abstract class BleServerManager implements ILogger {
 				server.addService(service);
 			} catch (final NoSuchElementException e) {
 				if (serverObserver != null)
-					serverObserver.onServerReady();
+					serverObserver.onServerReady(server);
 			} catch (final Exception e) {
 				close();
 				return false;
@@ -665,7 +665,7 @@ public abstract class BleServerManager implements ILogger {
 				} catch (final Exception e) {
 					log(Log.INFO, "[Server] All services added successfully");
 					if (serverObserver != null)
-						serverObserver.onServerReady();
+						serverObserver.onServerReady(server);
 					serverServices = null;
 				}
 			} else {

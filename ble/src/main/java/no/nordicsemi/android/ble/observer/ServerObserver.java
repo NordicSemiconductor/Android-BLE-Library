@@ -2,6 +2,7 @@ package no.nordicsemi.android.ble.observer;
 
 import android.bluetooth.BluetoothDevice;
 
+import android.bluetooth.BluetoothGattServer;
 import androidx.annotation.NonNull;
 import no.nordicsemi.android.ble.BleServerManager;
 
@@ -10,7 +11,7 @@ public interface ServerObserver {
 	/**
 	 * Called when the server was started and all services have been added successfully.
 	 */
-	void onServerReady();
+	void onServerReady(BluetoothGattServer server);
 
 	/**
 	 * This methods is called whenever a Bluetooth LE device connects or when was already connected
