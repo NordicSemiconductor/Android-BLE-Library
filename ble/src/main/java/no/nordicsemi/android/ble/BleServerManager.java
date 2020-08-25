@@ -13,6 +13,7 @@ import android.os.Build;
 import android.util.Log;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.NoSuchElementException;
@@ -64,7 +65,7 @@ public abstract class BleServerManager implements ILogger {
 
 	/**
 	 * Opens the GATT server and starts initializing services. This method only starts initializing
-	 * services. The {@link ServerObserver#onServerReady()} will be called when all
+	 * services. The {@link ServerObserver#onServerReady(BluetoothGattServer)} will be called when all
 	 * services are done.
 	 *
 	 * @return true, if the server has been started successfully. If GATT server could not
@@ -86,8 +87,7 @@ public abstract class BleServerManager implements ILogger {
 				final BluetoothGattService service = serverServices.remove();
 				server.addService(service);
 			} catch (final NoSuchElementException e) {
-				if (serverObserver != null)
-					serverObserver.onServerReady(server);
+				onServerReady();
 			} catch (final Exception e) {
 				close();
 				return false;
@@ -168,6 +168,15 @@ public abstract class BleServerManager implements ILogger {
 			}
 		}
 		return null;
+	}
+
+	private void onServerReady() {
+		for (BleManager manager : managers) {
+			manager.onServerReady(server);
+		}
+		if (serverObserver != null) {
+			serverObserver.onServerReady(server);
+		}
 	}
 
 	@Override
@@ -664,8 +673,7 @@ public abstract class BleServerManager implements ILogger {
 					server.addService(nextService);
 				} catch (final Exception e) {
 					log(Log.INFO, "[Server] All services added successfully");
-					if (serverObserver != null)
-						serverObserver.onServerReady(server);
+					onServerReady();
 					serverServices = null;
 				}
 			} else {

@@ -65,7 +65,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	private final static String ERROR_NOTIFY = "Error on sending notification/indication";
 
 	private final Object LOCK = new Object();
-	private BluetoothDevice bluetoothDevice;
+	BluetoothDevice bluetoothDevice;
 	private BluetoothGatt bluetoothGatt;
 	private BleManager manager;
 	private BleServerManager serverManager;
@@ -1464,8 +1464,7 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	/**
 	 * In this method the manager should get references to server characteristics and descriptors
-	 * that will use. The method is called after the service discovery of a remote device has
-	 * finished and {@link #isRequiredServiceSupported(BluetoothGatt)} returned true.
+	 * that will use. The method is called after the server has been successfully opened.
 	 * <p>
 	 * The references obtained in this method should be released in {@link #onDeviceDisconnected()}.
 	 * <p>
@@ -1476,7 +1475,22 @@ abstract class BleManagerHandler extends RequestHandler {
 	 *               obtain service instance.
 	 */
 	protected void onServerReady(@NonNull final BluetoothGattServer server) {
-		// empty initialization
+		for (final BluetoothGattService service: server.getServices()) {
+			for (final BluetoothGattCharacteristic characteristic: service.getCharacteristics()) {
+				if (!serverManager.isShared(characteristic)) {
+					if (characteristicValues == null)
+						characteristicValues = new HashMap<>();
+					characteristicValues.put(characteristic, characteristic.getValue());
+				}
+				for (final BluetoothGattDescriptor descriptor: characteristic.getDescriptors()) {
+					if (!serverManager.isShared(descriptor)) {
+						if (descriptorValues == null)
+							descriptorValues = new HashMap<>();
+						descriptorValues.put(descriptor, descriptor.getValue());
+					}
+				}
+			}
+		}
 	}
 
 	/**
@@ -1846,30 +1860,6 @@ abstract class BleManagerHandler extends RequestHandler {
 
 					// Notify the parent activity.
 					postCallback(c -> c.onServicesDiscovered(gatt.getDevice(), optionalServicesFound));
-
-					// Initialize server attributes.
-					if (serverManager != null) {
-						final BluetoothGattServer server = serverManager.getServer();
-						if (server != null) {
-							for (final BluetoothGattService service: server.getServices()) {
-								for (final BluetoothGattCharacteristic characteristic: service.getCharacteristics()) {
-									if (!serverManager.isShared(characteristic)) {
-										if (characteristicValues == null)
-											characteristicValues = new HashMap<>();
-										characteristicValues.put(characteristic, characteristic.getValue());
-									}
-									for (final BluetoothGattDescriptor descriptor: characteristic.getDescriptors()) {
-										if (!serverManager.isShared(descriptor)) {
-											if (descriptorValues == null)
-												descriptorValues = new HashMap<>();
-											descriptorValues.put(descriptor, descriptor.getValue());
-										}
-									}
-								}
-							}
-							onServerReady(server);
-						}
-					}
 
 					// Obtain the queue of initialization requests.
 					// First, let's call the deprecated initGatt(...).

@@ -26,6 +26,7 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
+import android.bluetooth.BluetoothGattServer;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -253,6 +254,10 @@ public abstract class BleManager implements ILogger {
 		requestHandler.useServer(null);
 	}
 
+	final void onServerReady(BluetoothGattServer server) {
+		requestHandler.onServerReady(server);
+	}
+
 	/**
 	 * This method will be called if a remote device requires a non-'just works' pairing.
 	 * See PAIRING_* constants for possible options.
@@ -305,6 +310,18 @@ public abstract class BleManager implements ILogger {
 	// constructor. Those can return the device object even without calling connect(device).
 	public BluetoothDevice getBluetoothDevice() {
 		return requestHandler.getBluetoothDevice();
+	}
+
+	/**
+	 * Sets the Bluetooth device object the Manager is currently connected to. Useful when only
+	 * operating a BluetoothGattServer, since those are connected to,
+	 * not connected via {@link #connect(BluetoothDevice)}.
+	 */
+	@Nullable
+	// This method is not final, as some Managers may be created with BluetoothDevice in a
+	// constructor. Those can return the device object even without calling connect(device).
+	public void setBluetoothDevice(BluetoothDevice bluetoothDevice) {
+		requestHandler.bluetoothDevice = bluetoothDevice;
 	}
 
 	/**
