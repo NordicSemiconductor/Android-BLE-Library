@@ -1,3 +1,4 @@
+include ':examples:ble-gatt-client'
 include ':examples:ble-gatt-server'
 include ':ble'
 include ':ble-common'
