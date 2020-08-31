@@ -179,6 +179,8 @@ class GattService : Service() {
                 BluetoothGattCharacteristic.PROPERTY_READ // properties
                         or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
                 BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED_MITM,  // permissions
+                descriptor(CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID,
+                        BluetoothGattDescriptor.PERMISSION_READ_ENCRYPTED_MITM or BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED_MITM, byteArrayOf(0, 0)),
                 description("A characteristic to be read", false) // descriptors
         )
         private val myGattService = service(MyServiceProfile.MY_SERVICE_UUID, myGattCharacteristic)
@@ -260,6 +262,10 @@ class GattService : Service() {
                 override fun onDeviceDisconnected() {
                 }
             }
+        }
+
+        companion object {
+            private val CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
         }
     }
 
