@@ -214,7 +214,8 @@ class MyBleManager extends BleManager {
                 .enqueue();
             // Set a callback for your notifications. You may also use waitForNotification(...).
             // Both callbacks will be called when notification is received.
-            setNotificationCallback(firstCharacteristic, callback);
+           setNotificationCallback(firstCharacteristic)
+				.with((device, data) -> log(Log.INFO, "Notification received: " + data));
             // If you need to send very long data using Write Without Response, use split()
             // or define your own splitter in split(DataSplitter splitter, WriteProgressCallback cb). 
             writeCharacteristic(secondCharacteristic, "Very, very long data that will not fit into MTU".getBytes())
