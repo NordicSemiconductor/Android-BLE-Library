@@ -1759,6 +1759,13 @@ abstract class BleManagerHandler extends RequestHandler {
 						return;
 					}
 
+					if (connectRequest != null && connectRequest.shouldAutoConnect() && initialConnection
+							&& gatt.getDevice().getBondState() == BluetoothDevice.BOND_BONDED) {
+						log(Log.DEBUG, "autoConnect = false called failed; retrying with autoConnect = true");
+						post(() -> internalConnect(gatt.getDevice(), connectRequest));
+						return;
+					}
+
 					operationInProgress = true; // no more calls are possible
 					taskQueue.clear();
 					initQueue = null;
