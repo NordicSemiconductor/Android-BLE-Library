@@ -172,12 +172,12 @@ class MyBleManager extends BleManager {
             // Validate properties
             boolean notify = false;
             if (firstCharacteristic != null) {
-                final int properties = dataCharacteristic.getProperties();
+                final int properties = firstCharacteristic.getProperties();
                 notify = (properties & BluetoothGattCharacteristic.PROPERTY_NOTIFY) != 0;
             }
             boolean writeRequest = false;
             if (secondCharacteristic != null) {
-                final int properties = controlPointCharacteristic.getProperties();
+                final int properties = secondCharacteristic.getProperties();
                 writeRequest = (properties & BluetoothGattCharacteristic.PROPERTY_WRITE) != 0;
                 secondCharacteristic.setWriteType(BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT);
             }
@@ -214,10 +214,11 @@ class MyBleManager extends BleManager {
                 .enqueue();
             // Set a callback for your notifications. You may also use waitForNotification(...).
             // Both callbacks will be called when notification is received.
-            setNotificationCallback(firstCharacteristic, callback);
+           setNotificationCallback(firstCharacteristic)
+				.with((device, data) -> log(Log.INFO, "Notification received: " + data));
             // If you need to send very long data using Write Without Response, use split()
             // or define your own splitter in split(DataSplitter splitter, WriteProgressCallback cb). 
-            writeCharacteristic(secondCharacteristic, "Very, very long data that will no fit into MTU")
+            writeCharacteristic(secondCharacteristic, "Very, very long data that will not fit into MTU".getBytes())
                 .split()
                 .enqueue();
         }
@@ -251,7 +252,7 @@ class MyBleManager extends BleManager {
         waitForNotification(firstCharacteristic)
             .trigger(
                 writeCharacteristic(secondCharacteristic, new FluxJumpRequest(year))
-                    .done(device -> log(Log.INDO, "Power on command sent"))
+                    .done(device -> log(Log.INFO, "Power on command sent"))
              )
             .with(new FluxHandler() {
                 public void onFluxCapacitorEngaged() {
