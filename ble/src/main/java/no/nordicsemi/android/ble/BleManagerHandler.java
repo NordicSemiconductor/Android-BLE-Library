@@ -564,13 +564,22 @@ abstract class BleManagerHandler extends RequestHandler {
 		postCallback(c -> c.onDeviceConnecting(device));
 		postConnectionStateChange(o -> o.onDeviceConnecting(device));
 		connectionTime = SystemClock.elapsedRealtime();
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+		if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
+			// connectRequest will never be null here.
+			final int preferredPhy = connectRequest.getPreferredPhy();
+			log(Log.DEBUG, "gatt = device.connectGatt(autoConnect = false, TRANSPORT_LE, "
+					+ ParserUtils.phyMaskToString(preferredPhy) + ")");
+
+			bluetoothGatt = device.connectGatt(context, false, gattCallback,
+					BluetoothDevice.TRANSPORT_LE, preferredPhy, handler);
+		} else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) {
 			// connectRequest will never be null here.
 			final int preferredPhy = connectRequest.getPreferredPhy();
 			log(Log.DEBUG, "gatt = device.connectGatt(autoConnect = false, TRANSPORT_LE, "
 					+ ParserUtils.phyMaskToString(preferredPhy) + ")");
 			// A variant of connectGatt with Handled can't be used here.
 			// Check https://github.com/NordicSemiconductor/Android-BLE-Library/issues/54
+			// This bug specifically occurs in SDK 26 and is fixed in SDK 27
 			bluetoothGatt = device.connectGatt(context, false, gattCallback,
 					BluetoothDevice.TRANSPORT_LE, preferredPhy/*, handler*/);
 		} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
