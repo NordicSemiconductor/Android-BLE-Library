@@ -1507,6 +1507,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		serviceDiscoveryRequested = false;
 		deviceNotSupported = false;
 		initInProgress = false;
+		mtu = 23;
 		connectionState = BluetoothGatt.STATE_DISCONNECTED;
 		checkCondition();
 		if (!wasConnected) {
