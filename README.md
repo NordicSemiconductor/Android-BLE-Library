@@ -305,125 +305,12 @@ class MyRepo implements ConnectionObserver {
 
 Starting from version 2.2 you may now define and use the GATT server in the BLE Library.
 
-First, override a `BleServerManager` class and override `initializeServer()` method. Some helper
-methods, like `characteristic(...)`, `descriptor(...)` and their shared counterparts were created 
-for making the initialization more readable.
+Please refer to the `examples/ble-gatt-server folder` for a project that illustrates the GATT
+server provided as a foreground service. There's a simple UI with a text field to update
+the value of a characteristic that can be read and subscribed to. This characteristic also
+demands encryption as an illustration of best-practice.
 
-```java
-public class ServerManager extends BleServerManager {
-
-    ServerManager(@NonNull final Context context) {
-        super(context);
-    }
-
-    @NonNull
-    @Override
-    protected List<BluetoothGattService> initializeServer() {
-        // In this example there's only one service, so singleton list is created.
-        return Collections.singletonList(
-            service(SERVICE_UUID,
-                characteristic(CHAR_UUID,
-                    BluetoothGattCharacteristic.PROPERTY_WRITE // properties
-                      | BluetoothGattCharacteristic.PROPERTY_NOTIFY
-                      | BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS,
-                    BluetoothGattCharacteristic.PERMISSION_WRITE, // permissions
-                    null, // initial data
-                    cccd(), reliableWrite(), description("Some description", false) // descriptors
-            ))
-        );
-    }
-}
-```
-Instantiate the server and set the callback listener:
-```java
-class MyRepo implements ServerObserver {
-    private ServerManager serverManager;
-
-    // [...]
-
-    void init() {
-        serverManager = new ServerManager(context);
-        serverManager.setServerObserver(this);
-    }
-    
-    // [...]
-
-}
-```
-Set the server manager for each client connection:
-```java
-class MyRepo implements ConnectionObserver, BondingObserver {
-    private ServerManager serverManager;
-    private MyBleManager manager;
-
-    // [...]
-
-    // This method may be called from e.g. 
-    // ServerObserver#onDeviceConnectedToServer(@NonNull final BluetoothDevice device)
-    void connect(@NonNull final BluetoothDevice device) {
-        manager = new MyBleManager(context);
-        manager.setConnectionObserver(this);
-        manager.setBondingObserver(this);
-        // Use the manager with the server.
-        manager.useServer(serverManager);
-
-        manager.connect(device)
-            // [...]
-            .enqueue();
-    }
-
-    // [...]
-}
-```
-The `ServerObserver.onServerReady()` will be invoked when all service were added.
-You may initiate your connection there.
-
-In your client manager class, override the following method:
-```java
-class MyBleManager extends BleManager {
-    // [...]	
-
-    // Server characteristics
-    private BluetoothGattCharacteristic serverCharacteristic;
-
-    // [...]
-
-    /**
-     * BluetoothGatt callbacks object.
-     */
-    private class MyManagerGattCallback extends BleManagerGattCallback {
-        // [...]	
-    
-        @Override
-        protected void onServerReady(@NonNull final BluetoothGattServer server) {
-            // Obtain your server attributes.
-            serverCharacteristic = server
-                .getService(SERVICE_UUID)
-                .getCharacteristic(CHAR_UUID);
-            
-            // Set write callback, if you need. It will be called when the remote device writes
-            // something to the given server characteristic.
-            setWriteCallback(serverCharacteristic)
-                .with((device, data) ->
-                    sendNotification(otherCharacteristic, "any data".getBytes())
-                        .enqueue()
-                );
-        }
-        
-        // [...]
-
-        @Override
-        protected void onDeviceDisconnected() {
-            // [...]
-            serverCharacteristic = null;
-        }
-    }
-    
-    // [...]
-}
-``` 
-
-## Examples
+## More examples
 
 Find the simple example here [Android nRF Blinky](https://github.com/NordicSemiconductor/Android-nRF-Blinky).
 
@@ -435,4 +322,4 @@ classes in [nRF Toolbox](https://github.com/NordicSemiconductor/Android-nRF-Tool
 The BLE library v 1.x is no longer supported. Please migrate to 2.2+ for bug fixing releases.
 Find it on [version/1x branch](https://github.com/NordicSemiconductor/Android-BLE-Library/tree/version/1x).
 
-Migration guide is available [here](MIGRATION.md).
+A migration guide is available [here](MIGRATION.md).

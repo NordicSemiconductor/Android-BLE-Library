@@ -847,7 +847,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (cccd == null)
 			return false;
 		// If notifications/indications were enabled, send the notification/indication.
-		final byte[] value = descriptorValues.containsKey(cccd) ? descriptorValues.get(cccd) : cccd.getValue();
+		final byte[] value = descriptorValues != null && descriptorValues.containsKey(cccd) ? descriptorValues.get(cccd) : cccd.getValue();
 		if (value != null && value.length == 2 && value[0] != 0) {
 			log(Log.VERBOSE, "[Server] Sending " + (confirm ? "indication" : "notification") + " to " + serverCharacteristic.getUuid());
 			log(Log.DEBUG, "server.notifyCharacteristicChanged(device, " + serverCharacteristic.getUuid() + ", " + confirm + ")");
