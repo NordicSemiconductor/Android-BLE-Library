@@ -16,7 +16,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "no.nordicsemi.android.ble.ble_gatt_server"
+        applicationId "no.nordicsemi.android.ble.ble_gatt_client"
         minSdkVersion 27
         targetSdkVersion 30
         versionCode 1
