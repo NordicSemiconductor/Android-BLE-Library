@@ -46,7 +46,7 @@ New features added in version 2.2:
    * *set characteristic value*,
    * *set descriptor value*.
 2. New conditional requests: 
-   * *waif if*,
+   * *wait if*,
    * *wait until*.
 3. BLE operations are no longer called from the main thread.
 4. There's a new option to set a handler for invoking callbacks. A handler can also be set per-callback.
