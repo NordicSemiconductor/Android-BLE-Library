@@ -274,8 +274,7 @@ public abstract class BleManager implements ILogger {
 
 	/**
 	 * This method must return the GATT callback used by the manager.
-	 * This method must not create a new gatt callback each time it is being invoked, but rather
-	 * return a single object.
+	 *
 	 * The object must exist when this method is called, that is in the BleManager's constructor.
 	 * Therefore, it cannot return a local field in the extending manager, as this is created after
 	 * the constructor finishes.
