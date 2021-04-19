@@ -38,7 +38,11 @@ import no.nordicsemi.android.ble.annotation.ConnectionState;
 import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.annotation.PhyOption;
 import no.nordicsemi.android.ble.annotation.PhyValue;
-import no.nordicsemi.android.ble.callback.*;
+import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
+import no.nordicsemi.android.ble.callback.DataReceivedCallback;
+import no.nordicsemi.android.ble.callback.FailCallback;
+import no.nordicsemi.android.ble.callback.MtuCallback;
+import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.error.GattError;
 import no.nordicsemi.android.ble.observer.BondingObserver;
@@ -703,7 +707,6 @@ abstract class BleManagerHandler extends RequestHandler {
 			try {
 				final Method createBond = device.getClass().getMethod("createBond");
 				log(Log.DEBUG, "device.createBond() (hidden)");
-				//noinspection ConstantConditions
 				return (Boolean) createBond.invoke(device);
 			} catch (final Exception e) {
 				Log.w(TAG, "An exception occurred while creating bond", e);
@@ -734,7 +737,6 @@ abstract class BleManagerHandler extends RequestHandler {
 			//noinspection JavaReflectionMemberAccess
 			final Method removeBond = device.getClass().getMethod("removeBond");
 			log(Log.DEBUG, "device.removeBond() (hidden)");
-			//noinspection ConstantConditions
 			return (Boolean) removeBond.invoke(device);
 		} catch (final Exception e) {
 			Log.w(TAG, "An exception occurred while removing bond", e);
@@ -1150,7 +1152,6 @@ abstract class BleManagerHandler extends RequestHandler {
 	DataReceivedCallback getBatteryLevelCallback() {
 		return (device, data) -> {
 			if (data.size() == 1) {
-				//noinspection ConstantConditions
 				final int batteryLevel = data.getIntValue(Data.FORMAT_UINT8, 0);
 				log(Log.INFO, "Battery Level received: " + batteryLevel + "%");
 				batteryValue = batteryLevel;
@@ -1166,7 +1167,6 @@ abstract class BleManagerHandler extends RequestHandler {
 			batteryLevelNotificationCallback = new ValueChangedCallback(this)
 					.with((device, data) -> {
 						if (data.size() == 1) {
-							//noinspection ConstantConditions
 							final int batteryLevel = data.getIntValue(Data.FORMAT_UINT8, 0);
 							batteryValue = batteryLevel;
 							onBatteryValueReceived(bluetoothGatt, batteryLevel);
@@ -1193,7 +1193,6 @@ abstract class BleManagerHandler extends RequestHandler {
 		 */
 		try {
 			final Method refresh = gatt.getClass().getMethod("refresh");
-			//noinspection ConstantConditions
 			return (Boolean) refresh.invoke(gatt);
 		} catch (final Exception e) {
 			Log.w(TAG, "An exception occurred while refreshing device", e);
@@ -2693,7 +2692,6 @@ abstract class BleManagerHandler extends RequestHandler {
 					log(Log.INFO, "[Server] Indication sent");
 					break;
 			}
-			//noinspection ConstantConditions
 			wr.notifyPacketSent(device, wr.characteristic.getValue());
 			if (wr.hasMore()) {
 				enqueueFirst(wr);
@@ -2819,7 +2817,6 @@ abstract class BleManagerHandler extends RequestHandler {
 	 * Executes the next request. If the last element from the initialization queue has
 	 * been executed the {@link #onDeviceReady()} callback is called.
 	 */
-	@SuppressWarnings("ConstantConditions")
 	private synchronized void nextRequest(final boolean force) {
 		if (force && operationInProgress) {
 			operationInProgress = awaitingRequest != null;
