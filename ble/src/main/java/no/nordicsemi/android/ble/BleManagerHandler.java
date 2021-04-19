@@ -439,6 +439,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			taskQueue.clear();
 			initQueue = null;
 			bluetoothDevice = null;
+			connected = false;
 		}
 	}
 
