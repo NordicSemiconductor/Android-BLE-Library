@@ -3,11 +3,11 @@ apply plugin: 'kotlin-android'
 apply plugin: 'kotlin-android-extensions'
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
 
     defaultConfig {
         minSdkVersion 18
-        targetSdkVersion 29
+        targetSdkVersion 30
         versionCode 30
     }
 
@@ -27,7 +27,7 @@ android {
 dependencies {
     api project(':ble')
 
-    api 'androidx.lifecycle:lifecycle-livedata-core:2.2.0'
+    api 'androidx.lifecycle:lifecycle-livedata-core-ktx:2.3.1'
 }
 
 tasks.withType(Javadoc).all {
