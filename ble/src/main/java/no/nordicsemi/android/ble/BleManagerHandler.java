@@ -345,8 +345,8 @@ abstract class BleManagerHandler extends RequestHandler {
 					// If the device started to pair just after the connection was
 					// established the services were not discovered.
 					if (!servicesDiscovered && !serviceDiscoveryRequested) {
-						serviceDiscoveryRequested = true;
 						post(() -> {
+							serviceDiscoveryRequested = true;
 							log(Log.VERBOSE, "Discovering services...");
 							log(Log.DEBUG, "gatt.discoverServices()");
 							bluetoothGatt.discoverServices();
@@ -1850,6 +1850,8 @@ abstract class BleManagerHandler extends RequestHandler {
 
 		@Override
 		public final void onServicesDiscovered(@NonNull final BluetoothGatt gatt, final int status) {
+			if (!serviceDiscoveryRequested)
+				return;
 			serviceDiscoveryRequested = false;
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, "Services discovered");
@@ -2196,6 +2198,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				// Clear queues, services are no longer valid.
 				taskQueue.clear();
 				initQueue = null;
+				serviceDiscoveryRequested = true;
 				log(Log.INFO, "Service Changed indication received");
 				log(Log.VERBOSE, "Discovering Services...");
 				log(Log.DEBUG, "gatt.discoverServices()");
@@ -3204,6 +3207,7 @@ abstract class BleManagerHandler extends RequestHandler {
 							// Invalidate all services and characteristics
 							onDeviceDisconnected();
 							// And discover services again
+							serviceDiscoveryRequested = true;
 							log(Log.VERBOSE, "Discovering Services...");
 							log(Log.DEBUG, "gatt.discoverServices()");
 							bluetoothGatt.discoverServices();
