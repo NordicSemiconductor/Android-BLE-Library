@@ -9,19 +9,19 @@ android {
     defaultConfig {
         minSdkVersion 18
         targetSdkVersion 30
-        versionCode 30
+        versionCode 1
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            consumerProguardFiles 'ble-livedata-proguard-rules.pro'
+            consumerProguardFiles 'ble-ktx-proguard-rules.pro'
         }
     }
 
     compileOptions {
-        targetCompatibility JavaVersion.VERSION_1_8
         sourceCompatibility JavaVersion.VERSION_1_8
+        targetCompatibility JavaVersion.VERSION_1_8
     }
     kotlinOptions {
         jvmTarget = '1.8'
@@ -29,9 +29,7 @@ android {
 }
 
 dependencies {
-    api project(':ble-ktx')
-
-    api 'androidx.lifecycle:lifecycle-livedata-core-ktx:2.3.1'
+    api project(':ble')
 }
 
 apply from: rootProject.file('gradle/gradle-bintray-push.gradle')
