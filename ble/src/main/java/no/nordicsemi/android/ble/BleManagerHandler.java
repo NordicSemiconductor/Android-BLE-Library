@@ -1740,7 +1740,7 @@ abstract class BleManagerHandler extends RequestHandler {
 						// automatically when connected. Wait with the discovery until bonding is
 						// complete. It will be initiated again in the bond state broadcast receiver
 						// on the top of this file.
-						if (connected && !servicesDiscovered &&
+						if (connected && !servicesDiscovered && !serviceDiscoveryRequested &&
 								gatt.getDevice().getBondState() != BluetoothDevice.BOND_BONDING) {
 							serviceDiscoveryRequested = true;
 							log(Log.VERBOSE, "Discovering services...");
