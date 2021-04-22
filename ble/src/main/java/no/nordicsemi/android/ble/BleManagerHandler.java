@@ -1,5 +1,7 @@
 package no.nordicsemi.android.ble;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -33,6 +35,7 @@ import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.annotation.RequiresPermission;
 import no.nordicsemi.android.ble.annotation.ConnectionPriority;
 import no.nordicsemi.android.ble.annotation.ConnectionState;
 import no.nordicsemi.android.ble.annotation.PhyMask;
@@ -639,6 +642,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		return true;
 	}
 
+	@RequiresPermission(Manifest.permission.BLUETOOTH_ADMIN)
 	private boolean internalCreateBond(final boolean ensure) {
 		final BluetoothDevice device = bluetoothDevice;
 		if (device == null)
@@ -696,6 +700,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		return result;
 	}
 
+	@RequiresPermission(Manifest.permission.BLUETOOTH_ADMIN)
 	private boolean createBond(@NonNull final BluetoothDevice device) {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
 			log(Log.DEBUG, "device.createBond()");
@@ -716,6 +721,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		}
 	}
 
+	@RequiresPermission(Manifest.permission.BLUETOOTH_ADMIN)
 	private boolean internalRemoveBond() {
 		final BluetoothDevice device = bluetoothDevice;
 		if (device == null)
@@ -2821,6 +2827,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	 * Executes the next request. If the last element from the initialization queue has
 	 * been executed the {@link #onDeviceReady()} callback is called.
 	 */
+	@SuppressLint("MissingPermission")
 	private synchronized void nextRequest(final boolean force) {
 		if (force && operationInProgress) {
 			operationInProgress = awaitingRequest != null;
