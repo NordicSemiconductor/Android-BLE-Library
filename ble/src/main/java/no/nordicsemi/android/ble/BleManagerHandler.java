@@ -1543,7 +1543,12 @@ abstract class BleManagerHandler extends RequestHandler {
 		} else {
 			log(Log.WARN, "Connection lost");
 			postCallback(c -> c.onLinkLossOccurred(device));
-			postConnectionStateChange(o -> o.onDeviceDisconnected(device, ConnectionObserver.REASON_LINK_LOSS));
+			// When the device indicated disconnection, return the REASON_TERMINATE_PEER_USER.
+			// Otherwise, return REASON_LINK_LOSS.
+			// See: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/284
+			final int reason = status == ConnectionObserver.REASON_TERMINATE_PEER_USER ?
+					ConnectionObserver.REASON_TERMINATE_PEER_USER : ConnectionObserver.REASON_LINK_LOSS;
+			postConnectionStateChange(o -> o.onDeviceDisconnected(device, reason));
 			// We are not closing the connection here as the device should try to reconnect
 			// automatically.
 			// This may be only called when the shouldAutoConnect() method returned true.
