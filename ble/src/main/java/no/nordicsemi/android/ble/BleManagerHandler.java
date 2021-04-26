@@ -601,7 +601,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		return true;
 	}
 
-	private boolean internalDisconnect() {
+	private boolean internalDisconnect(final int reason) {
 		userDisconnected = true;
 		initialConnection = false;
 		ready = false;
@@ -627,7 +627,8 @@ abstract class BleManagerHandler extends RequestHandler {
 			log(Log.INFO, "Disconnected");
 			close();
 			postCallback(c -> c.onDeviceDisconnected(device));
-			postConnectionStateChange(o -> o.onDeviceDisconnected(device, ConnectionObserver.REASON_SUCCESS));
+			postConnectionStateChange(o -> o.onDeviceDisconnected(device, reason)
+			);
 		}
 		// request may be of type DISCONNECT or CONNECT (timeout).
 		// For the latter, it has already been notified with REASON_TIMEOUT.
@@ -1268,7 +1269,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (connectRequest != null) {
 			connectRequest.notifyFail(device, FailCallback.REASON_CANCELLED);
 			connectRequest = null;
-			internalDisconnect();
+			internalDisconnect(ConnectionObserver.REASON_CANCELLED);
 		} else {
 			nextRequest(true);
 		}
@@ -1280,7 +1281,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		awaitingRequest = null;
 		if (request.type == Request.Type.CONNECT) {
 			connectRequest = null;
-			internalDisconnect();
+			internalDisconnect(ConnectionObserver.REASON_TIMEOUT);
 			// The method above will call mGattCallback.nextRequest(true) so we have to return here.
 			return;
 		}
@@ -1961,7 +1962,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					log(Log.WARN, "Device is not supported");
 					deviceNotSupported = true;
 					postCallback(c -> c.onDeviceNotSupported(gatt.getDevice()));
-					internalDisconnect();
+					internalDisconnect(ConnectionObserver.REASON_NOT_SUPPORTED);
 				}
 			} else {
 				Log.e(TAG, "onServicesDiscovered error " + status);
@@ -1970,7 +1971,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					connectRequest.notifyFail(gatt.getDevice(), FailCallback.REASON_REQUEST_FAILED);
 					connectRequest = null;
 				}
-				internalDisconnect();
+				internalDisconnect(ConnectionObserver.REASON_UNKNOWN);
 			}
 		}
 
@@ -2982,7 +2983,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case DISCONNECT: {
-				result = internalDisconnect();
+				result = internalDisconnect(ConnectionObserver.REASON_SUCCESS);
 				break;
 			}
 			case ENSURE_BOND: {

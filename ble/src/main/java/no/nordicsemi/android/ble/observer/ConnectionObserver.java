@@ -48,6 +48,8 @@ public interface ConnectionObserver {
 	int REASON_LINK_LOSS = 3;
 	/** The device does not hav required services. */
 	int REASON_NOT_SUPPORTED = 4;
+	/** Connection attempt was cancelled. */
+	int REASON_CANCELLED = 5;
 	/**
 	 * The connection timed out. The device might have reboot, is out of range, turned off
 	 * or doesn't respond for another reason.
