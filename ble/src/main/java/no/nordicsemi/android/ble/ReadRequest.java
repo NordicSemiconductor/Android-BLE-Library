@@ -30,6 +30,7 @@ import android.os.Handler;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.DataReceivedCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
@@ -106,6 +107,13 @@ public final class ReadRequest extends SimpleValueRequest<DataReceivedCallback> 
 	@NonNull
 	public ReadRequest before(@NonNull final BeforeCallback callback) {
 		super.before(callback);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public ReadRequest then(@NonNull final AfterCallback callback) {
+		super.then(callback);
 		return this;
 	}
 

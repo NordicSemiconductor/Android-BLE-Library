@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.annotation.PhyOption;
 import no.nordicsemi.android.ble.annotation.PhyValue;
+import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
@@ -135,6 +136,13 @@ public final class PhyRequest extends SimpleValueRequest<PhyCallback> implements
 	@NonNull
 	public PhyRequest before(@NonNull final BeforeCallback callback) {
 		super.before(callback);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public PhyRequest then(@NonNull final AfterCallback callback) {
+		super.then(callback);
 		return this;
 	}
 

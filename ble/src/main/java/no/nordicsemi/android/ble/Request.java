@@ -38,6 +38,7 @@ import no.nordicsemi.android.ble.annotation.ConnectionPriority;
 import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.annotation.PhyOption;
 import no.nordicsemi.android.ble.annotation.WriteType;
+import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
@@ -105,6 +106,7 @@ public abstract class Request {
 	final BluetoothGattCharacteristic characteristic;
 	final BluetoothGattDescriptor descriptor;
 	BeforeCallback beforeCallback;
+	AfterCallback afterCallback;
 	SuccessCallback successCallback;
 	FailCallback failCallback;
 	InvalidRequestCallback invalidRequestCallback;
@@ -1173,6 +1175,26 @@ public abstract class Request {
 	}
 
 	/**
+	 * Sets a callback that will be executed when the request has been processed, no matter
+	 * the request result.
+	 * <p>
+	 * Set {@link #done(SuccessCallback)} or {@link #fail(FailCallback)} if you need a callback
+	 * called in a specific situation.
+	 * <p>
+	 * This request will not be called if the {@link BluetoothDevice} was not set. Instead,
+	 * {@link InvalidRequestCallback} will be called.
+	 *
+	 * @param callback the callback.
+	 * @return The request.
+	 * @see #invalid(InvalidRequestCallback)
+	 */
+	@NonNull
+	public Request then(@NonNull final AfterCallback callback) {
+		this.afterCallback = callback;
+		return this;
+	}
+
+	/**
 	 * Enqueues the request for asynchronous execution.
 	 */
 	public void enqueue() {
@@ -1201,6 +1223,8 @@ public abstract class Request {
 			handler.post(() -> {
 				if (successCallback != null)
 					successCallback.onRequestCompleted(device);
+				if (afterCallback != null)
+					afterCallback.onRequestFinished(device);
 			});
 			return true;
 		}
@@ -1216,6 +1240,8 @@ public abstract class Request {
 			handler.post(() -> {
 				if (failCallback != null)
 					failCallback.onRequestFailed(device, status);
+				if (afterCallback != null)
+					afterCallback.onRequestFinished(device);
 			});
 		}
 	}

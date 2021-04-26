@@ -26,6 +26,7 @@ import android.os.Handler;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
+import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
@@ -83,6 +84,13 @@ public class DisconnectRequest extends TimeoutableRequest {
 	@NonNull
 	public DisconnectRequest before(@NonNull final BeforeCallback callback) {
 		super.before(callback);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public DisconnectRequest then(@NonNull final AfterCallback callback) {
+		super.then(callback);
 		return this;
 	}
 }

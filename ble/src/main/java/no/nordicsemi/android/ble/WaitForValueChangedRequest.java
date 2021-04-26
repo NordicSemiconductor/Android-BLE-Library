@@ -30,6 +30,7 @@ import android.os.Handler;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.DataReceivedCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
@@ -113,6 +114,13 @@ public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceiv
 	@NonNull
 	public WaitForValueChangedRequest before(@NonNull final BeforeCallback callback) {
 		super.before(callback);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public WaitForValueChangedRequest then(@NonNull final AfterCallback callback) {
+		super.then(callback);
 		return this;
 	}
 

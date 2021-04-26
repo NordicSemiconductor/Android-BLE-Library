@@ -32,6 +32,7 @@ import android.os.Handler;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import no.nordicsemi.android.ble.annotation.PhyMask;
+import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
@@ -49,7 +50,7 @@ import no.nordicsemi.android.ble.callback.SuccessCallback;
 @SuppressWarnings({"WeakerAccess", "unused"})
 public class ConnectRequest extends TimeoutableRequest {
 	@NonNull
-	private BluetoothDevice device;
+	private final BluetoothDevice device;
 	@PhyMask
 	private int preferredPhy;
 	@IntRange(from = 0)
@@ -124,6 +125,13 @@ public class ConnectRequest extends TimeoutableRequest {
 	@NonNull
 	public ConnectRequest before(@NonNull final BeforeCallback callback) {
 		super.before(callback);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public ConnectRequest then(@NonNull final AfterCallback callback) {
+		super.then(callback);
 		return this;
 	}
 

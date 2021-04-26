@@ -34,6 +34,7 @@ import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import no.nordicsemi.android.ble.annotation.WriteType;
+import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.DataSentCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
@@ -134,6 +135,13 @@ public final class WriteRequest extends SimpleValueRequest<DataSentCallback> imp
 	@NonNull
 	public WriteRequest before(@NonNull final BeforeCallback callback) {
 		super.before(callback);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public WriteRequest then(@NonNull final AfterCallback callback) {
+		super.then(callback);
 		return this;
 	}
 

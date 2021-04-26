@@ -8,6 +8,7 @@ import android.os.Handler;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.DataSentCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
@@ -103,6 +104,13 @@ public final class WaitForReadRequest extends AwaitingRequest<DataSentCallback> 
 	@NonNull
 	public WaitForReadRequest before(@NonNull final BeforeCallback callback) {
 		super.before(callback);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public WaitForReadRequest then(@NonNull final AfterCallback callback) {
+		super.then(callback);
 		return this;
 	}
 
