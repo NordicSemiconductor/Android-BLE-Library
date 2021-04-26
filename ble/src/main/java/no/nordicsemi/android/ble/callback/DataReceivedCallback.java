@@ -28,6 +28,7 @@ import androidx.annotation.NonNull;
 import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.data.DataMerger;
 
+@FunctionalInterface
 public interface DataReceivedCallback {
 
 	/**

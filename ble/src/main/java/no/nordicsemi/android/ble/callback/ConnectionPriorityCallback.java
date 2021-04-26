@@ -46,6 +46,7 @@ import androidx.annotation.NonNull;
  * Android Oreo added a hidden callback to {@link android.bluetooth.BluetoothGattCallback}
  * notifying about connection parameters change. Those values will be reported with this callback.
  */
+@FunctionalInterface
 public interface ConnectionPriorityCallback {
 
 	/**
