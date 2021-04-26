@@ -1249,20 +1249,24 @@ abstract class BleManagerHandler extends RequestHandler {
 	final void cancelQueue() {
 		taskQueue.clear();
 		initQueue = null;
+		final BluetoothDevice device = this.bluetoothDevice;
+		if (device == null) {
+			return;
+		}
 		if (awaitingRequest != null) {
-			awaitingRequest.notifyFail(bluetoothDevice, FailCallback.REASON_CANCELLED);
+			awaitingRequest.notifyFail(device, FailCallback.REASON_CANCELLED);
 		}
 		if (request != null && awaitingRequest != request) {
-			request.notifyFail(bluetoothDevice, FailCallback.REASON_CANCELLED);
+			request.notifyFail(device, FailCallback.REASON_CANCELLED);
 			request = null;
 		}
 		awaitingRequest = null;
 		if (requestQueue != null) {
-			requestQueue.notifyFail(bluetoothDevice, FailCallback.REASON_CANCELLED);
+			requestQueue.notifyFail(device, FailCallback.REASON_CANCELLED);
 			requestQueue = null;
 		}
 		if (connectRequest != null) {
-			connectRequest.notifyFail(bluetoothDevice, FailCallback.REASON_CANCELLED);
+			connectRequest.notifyFail(device, FailCallback.REASON_CANCELLED);
 			connectRequest = null;
 			internalDisconnect();
 		} else {

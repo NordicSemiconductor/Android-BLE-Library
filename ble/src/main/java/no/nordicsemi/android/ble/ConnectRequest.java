@@ -221,6 +221,19 @@ public class ConnectRequest extends TimeoutableRequest {
 		return this;
 	}
 
+	/**
+	 * This method cancels the pending connection attempt. All requests enqueued after this one
+	 * will be removed form the queue.
+	 * <p>
+	 * This method does nothing if the connection request has finished successfully, or
+	 * with an error.
+	 */
+	public void cancelPendingConnection() {
+		if (started && !finished) {
+			this.requestHandler.cancelQueue();
+		}
+	}
+
 	@NonNull
 	public BluetoothDevice getDevice() {
 		return device;
