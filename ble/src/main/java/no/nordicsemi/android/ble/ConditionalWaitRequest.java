@@ -5,6 +5,7 @@ import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
@@ -73,6 +74,13 @@ public final class ConditionalWaitRequest<T> extends AwaitingRequest<T> implemen
 	@NonNull
 	public ConditionalWaitRequest<T> before(@NonNull final BeforeCallback callback) {
 		super.before(callback);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public ConditionalWaitRequest<T> then(@NonNull final AfterCallback callback) {
+		super.then(callback);
 		return this;
 	}
 

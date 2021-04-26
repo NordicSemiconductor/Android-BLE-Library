@@ -26,6 +26,7 @@ import android.bluetooth.BluetoothDevice;
 
 import androidx.annotation.NonNull;
 
+@FunctionalInterface
 public interface SuccessCallback {
 
 	/**

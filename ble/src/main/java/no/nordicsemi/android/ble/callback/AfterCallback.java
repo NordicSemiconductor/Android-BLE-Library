@@ -25,19 +25,15 @@ package no.nordicsemi.android.ble.callback;
 import android.bluetooth.BluetoothDevice;
 
 import androidx.annotation.NonNull;
-import no.nordicsemi.android.ble.data.Data;
-import no.nordicsemi.android.ble.data.DataMerger;
 
 @FunctionalInterface
-public interface DataReceivedCallback {
+public interface AfterCallback {
 
 	/**
-	 * Callback received each time the value was read or has changed using
-	 * notifications or indications.
+	 * A callback invoked when the request has been precessed. It is called no matter the result
+	 * of the request was.
 	 *
 	 * @param device the target device.
-	 * @param data the data received. If the {@link DataMerger} was used,
-	 *             this contains the merged result.
 	 */
-	void onDataReceived(@NonNull final BluetoothDevice device, @NonNull final Data data);
+	void onRequestFinished(@NonNull final BluetoothDevice device);
 }

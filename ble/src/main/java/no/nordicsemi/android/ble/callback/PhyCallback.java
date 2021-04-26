@@ -27,7 +27,7 @@ import android.bluetooth.BluetoothDevice;
 import androidx.annotation.NonNull;
 import no.nordicsemi.android.ble.annotation.PhyValue;
 
-@SuppressWarnings("unused")
+@FunctionalInterface
 public interface PhyCallback {
 	/**
 	 * Bluetooth LE 1M PHY. Used to refer to LE 1M Physical Channel for advertising, scanning or

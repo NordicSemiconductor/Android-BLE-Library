@@ -25,6 +25,7 @@ package no.nordicsemi.android.ble;
 import android.os.Handler;
 
 import androidx.annotation.NonNull;
+import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
@@ -75,6 +76,13 @@ public final class ReliableWriteRequest extends RequestQueue {
 	@NonNull
 	public ReliableWriteRequest before(@NonNull final BeforeCallback callback) {
 		super.before(callback);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public ReliableWriteRequest then(@NonNull final AfterCallback callback) {
+		super.then(callback);
 		return this;
 	}
 

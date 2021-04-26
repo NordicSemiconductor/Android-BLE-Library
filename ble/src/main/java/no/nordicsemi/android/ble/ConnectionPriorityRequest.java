@@ -30,6 +30,7 @@ import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.RequiresApi;
 import no.nordicsemi.android.ble.annotation.ConnectionPriority;
+import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
@@ -119,6 +120,13 @@ public final class ConnectionPriorityRequest extends SimpleValueRequest<Connecti
 	@NonNull
 	public ConnectionPriorityRequest before(@NonNull final BeforeCallback callback) {
 		super.before(callback);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public ConnectionPriorityRequest then(@NonNull final AfterCallback callback) {
+		super.then(callback);
 		return this;
 	}
 

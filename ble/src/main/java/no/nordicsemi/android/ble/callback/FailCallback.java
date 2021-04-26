@@ -26,6 +26,7 @@ import android.bluetooth.BluetoothDevice;
 
 import androidx.annotation.NonNull;
 
+@FunctionalInterface
 public interface FailCallback {
 	int REASON_DEVICE_DISCONNECTED = -1;
 	int REASON_DEVICE_NOT_SUPPORTED = -2;

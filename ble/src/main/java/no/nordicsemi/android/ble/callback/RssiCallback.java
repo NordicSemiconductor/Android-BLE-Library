@@ -27,6 +27,7 @@ import android.bluetooth.BluetoothDevice;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 
+@FunctionalInterface
 public interface RssiCallback {
 
 	/**
