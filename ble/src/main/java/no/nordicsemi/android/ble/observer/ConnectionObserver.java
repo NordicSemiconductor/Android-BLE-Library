@@ -42,8 +42,11 @@ public interface ConnectionObserver {
 	/** The remote device initiated graceful disconnection. */
 	int REASON_TERMINATE_PEER_USER = 2;
 	/**
-	 * This reason will only be reported when {@link ConnectRequest#shouldAutoConnect()} was called
-	 * and connection to the device was lost. Android will try to connect automatically.
+	 * This reason will only be reported when {@link ConnectRequest#useAutoConnect(boolean)}} was
+	 * called with parameter set to true, and connection to the device was lost for any reason
+	 * other than graceful disconnection initiated by the peer user.
+	 * <p>
+	 * Android will try to reconnect automatically.
 	 */
 	int REASON_LINK_LOSS = 3;
 	/** The device does not hav required services. */
