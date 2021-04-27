@@ -80,7 +80,6 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	private final Deque<Request> taskQueue = new LinkedBlockingDeque<>();
 	private Deque<Request> initQueue;
-	private boolean initInProgress;
 
 	/**
 	 * A time after which receiving 133 error is considered a timeout, instead of a
@@ -1223,7 +1222,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	private void enqueueFirst(@NonNull final Request request) {
 		final RequestQueue rq = requestQueue;
 		if (rq == null) {
-			final Deque<Request> queue = initInProgress ? initQueue : taskQueue;
+			final Deque<Request> queue = initQueue != null ? initQueue : taskQueue;
 			queue.addFirst(request);
 		} else {
 			rq.addFirst(request);
@@ -1240,7 +1239,7 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	@Override
 	final void enqueue(@NonNull final Request request) {
-		final Deque<Request> queue = initInProgress ? initQueue : taskQueue;
+		final Deque<Request> queue = initQueue != null ? initQueue : taskQueue;
 		queue.add(request);
 		request.enqueued = true;
 		nextRequest(false);
@@ -1526,7 +1525,6 @@ abstract class BleManagerHandler extends RequestHandler {
 		servicesDiscovered = false;
 		serviceDiscoveryRequested = false;
 		deviceNotSupported = false;
-		initInProgress = false;
 		mtu = 23;
 		connectionState = BluetoothGatt.STATE_DISCONNECTED;
 		checkCondition();
@@ -1908,7 +1906,6 @@ abstract class BleManagerHandler extends RequestHandler {
 
 					// Obtain the queue of initialization requests.
 					// First, let's call the deprecated initGatt(...).
-					initInProgress = true;
 					operationInProgress = true;
 					initQueue = initGatt(gatt);
 
@@ -1956,7 +1953,6 @@ abstract class BleManagerHandler extends RequestHandler {
 					// End
 
 					initialize();
-					initInProgress = false;
 					nextRequest(true);
 				} else {
 					log(Log.WARN, "Device is not supported");
@@ -2843,7 +2839,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			operationInProgress = awaitingRequest != null;
 		}
 
-		if (operationInProgress || initInProgress) {
+		if (operationInProgress) {
 			return;
 		}
 		final BluetoothDevice bluetoothDevice = this.bluetoothDevice;
