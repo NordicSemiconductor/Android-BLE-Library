@@ -1912,6 +1912,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					final boolean deprecatedApiUsed = initQueue != null;
 					if (deprecatedApiUsed) {
 						for (final Request request : initQueue) {
+							request.setRequestHandler(BleManagerHandler.this);
 							request.enqueued = true;
 						}
 					}
