@@ -1932,9 +1932,12 @@ abstract class BleManagerHandler extends RequestHandler {
 					if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M
 							|| Build.VERSION.SDK_INT == Build.VERSION_CODES.O
 							|| Build.VERSION.SDK_INT == Build.VERSION_CODES.O_MR1
-							|| Build.VERSION.SDK_INT == Build.VERSION_CODES.P)
+							|| Build.VERSION.SDK_INT == Build.VERSION_CODES.P) {
 						enqueueFirst(Request.newEnableServiceChangedIndicationsRequest()
 								.setRequestHandler(BleManagerHandler.this));
+						// The above enqueueFirst sets this flag to false.
+						operationInProgress = true;
+					}
 
 					// Deprecated:
 					if (deprecatedApiUsed) {
