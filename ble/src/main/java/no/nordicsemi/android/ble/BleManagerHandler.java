@@ -32,6 +32,7 @@ import java.util.UUID;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import androidx.annotation.IntRange;
+import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -1516,10 +1517,26 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	/**
 	 * This method should nullify all services and characteristics of the device.
+	 * <p>
 	 * It's called when the device is no longer connected, either due to user action
-	 * or a link loss.
+	 * or a link loss, or when the services have changed and new service discovery will be
+	 * performed.
+	 *
+	 * @deprecated Use {@link #onServicesInvalidated()} instead.
 	 */
-	protected abstract void onDeviceDisconnected();
+	@Deprecated
+	protected void onDeviceDisconnected() {
+	}
+
+	/**
+	 * This method should nullify all services and characteristics of the device.
+	 * <p>
+	 * It's called when the services were invalidated and can no longer be used. Most probably the
+	 * device has disconnected, Service Changed indication was received, or
+	 * {@link BleManager#refreshDeviceCache()} request was executed, which has invalidated cached
+	 * services.
+	 */
+	protected abstract void onServicesInvalidated();
 
 	private void notifyDeviceDisconnected(@NonNull final BluetoothDevice device, final int status) {
 		final boolean wasConnected = connected;
@@ -1558,6 +1575,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			// automatically.
 			// This may be only called when the shouldAutoConnect() method returned true.
 		}
+		onServicesInvalidated();
 		onDeviceDisconnected();
 	}
 
@@ -1977,6 +1995,34 @@ abstract class BleManagerHandler extends RequestHandler {
 			}
 		}
 
+		// @Override
+		/**
+		 * Callback indicating service changed event is received.
+		 * <p>
+		 * Receiving this event means that the GATT database is out of sync with the remote device.
+		 * <p>
+		 * Requires API 31+.
+		 */
+		@Keep
+		public final void onServiceChanged(@NonNull final BluetoothGatt gatt) {
+			log(Log.INFO, "Service changed, invalidating services");
+
+			// Forbid enqueuing more operations.
+			operationInProgress = true;
+			// Invalidate all services and characteristics
+			onServicesInvalidated();
+			onDeviceDisconnected();
+			// Clear queues, services are no longer valid.
+			taskQueue.clear();
+			initQueue = null;
+			// And discover services again
+			serviceDiscoveryRequested = true;
+			servicesDiscovered = false;
+			log(Log.VERBOSE, "Discovering Services...");
+			log(Log.DEBUG, "gatt.discoverServices()");
+			bluetoothGatt.discoverServices();
+		}
+
 		@Override
 		public void onCharacteristicRead(final BluetoothGatt gatt,
 										 final BluetoothGattCharacteristic characteristic,
@@ -2210,70 +2256,79 @@ abstract class BleManagerHandler extends RequestHandler {
 			final byte[] data = characteristic.getValue();
 
 			if (isServiceChangedCharacteristic(characteristic)) {
-				// TODO this should be tested. Should services be invalidated?
-				// Forbid enqueuing more operations.
-				operationInProgress = true;
-				// Clear queues, services are no longer valid.
-				taskQueue.clear();
-				initQueue = null;
-				serviceDiscoveryRequested = true;
-				log(Log.INFO, "Service Changed indication received");
-				log(Log.VERBOSE, "Discovering Services...");
-				log(Log.DEBUG, "gatt.discoverServices()");
-				gatt.discoverServices();
-			} else {
-				final BluetoothGattDescriptor cccd =
-						characteristic.getDescriptor(BleManager.CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID);
-				final boolean notifications = cccd == null || cccd.getValue() == null ||
-						cccd.getValue().length != 2 || cccd.getValue()[0] == 0x01;
+				// Android S added onServiceChanged() callback, which should be called in this
+				// situation. Again, this has not been tested.
+				if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
+					log(Log.INFO, "Service Changed indication received");
+					// For older APIs, trigger service discovery.
+					// TODO this should be tested. Should services be invalidated?
+					// Forbid enqueuing more operations.
+					operationInProgress = true;
+					// Invalidate all services and characteristics
+					onServicesInvalidated();
+					onDeviceDisconnected();
+					// Clear queues, services are no longer valid.
+					taskQueue.clear();
+					initQueue = null;
+					serviceDiscoveryRequested = true;
+					log(Log.VERBOSE, "Discovering Services...");
+					log(Log.DEBUG, "gatt.discoverServices()");
+					gatt.discoverServices();
+				}
+				return;
+			}
 
-				final String dataString = ParserUtils.parse(data);
-				if (notifications) {
-					log(Log.INFO, "Notification received from " +
-							characteristic.getUuid() + ", value: " + dataString);
-					onCharacteristicNotified(gatt, characteristic);
-				} else { // indications
-					log(Log.INFO, "Indication received from " +
-							characteristic.getUuid() + ", value: " + dataString);
-					onCharacteristicIndicated(gatt, characteristic);
-				}
-				if (batteryLevelNotificationCallback != null && isBatteryLevelCharacteristic(characteristic)) {
-					batteryLevelNotificationCallback.notifyValueChanged(gatt.getDevice(), data);
-				}
-				// Notify the notification registered listener, if set
-				final ValueChangedCallback request = valueChangedCallbacks.get(characteristic);
-				if (request != null && request.matches(data)) {
-					request.notifyValueChanged(gatt.getDevice(), data);
-				}
-				// If there is a value change request,
-				if (awaitingRequest instanceof WaitForValueChangedRequest
-						// registered for this characteristic
-						&& awaitingRequest.characteristic == characteristic
-						// and didn't have a trigger, or the trigger was started
-						// (not necessarily completed)
-						&& !awaitingRequest.isTriggerPending()) {
-					final WaitForValueChangedRequest valueChangedRequest = (WaitForValueChangedRequest) awaitingRequest;
-					if (valueChangedRequest.matches(data)) {
-						// notify that new data was received.
-						valueChangedRequest.notifyValueChanged(gatt.getDevice(), data);
+			final BluetoothGattDescriptor cccd =
+					characteristic.getDescriptor(BleManager.CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID);
+			final boolean notifications = cccd == null || cccd.getValue() == null ||
+					cccd.getValue().length != 2 || cccd.getValue()[0] == 0x01;
 
-						// If no more data are expected
-						if (!valueChangedRequest.hasMore()) {
-							// notify success,
-							valueChangedRequest.notifySuccess(gatt.getDevice());
-							// and proceed to the next request only if the trigger has completed.
-							// Otherwise, the next request will be started when the request's callback
-							// will be received.
-							awaitingRequest = null;
-							if (valueChangedRequest.isTriggerCompleteOrNull()) {
-								nextRequest(true);
-							}
+			final String dataString = ParserUtils.parse(data);
+			if (notifications) {
+				log(Log.INFO, "Notification received from " +
+						characteristic.getUuid() + ", value: " + dataString);
+				onCharacteristicNotified(gatt, characteristic);
+			} else { // indications
+				log(Log.INFO, "Indication received from " +
+						characteristic.getUuid() + ", value: " + dataString);
+				onCharacteristicIndicated(gatt, characteristic);
+			}
+			if (batteryLevelNotificationCallback != null && isBatteryLevelCharacteristic(characteristic)) {
+				batteryLevelNotificationCallback.notifyValueChanged(gatt.getDevice(), data);
+			}
+			// Notify the notification registered listener, if set
+			final ValueChangedCallback request = valueChangedCallbacks.get(characteristic);
+			if (request != null && request.matches(data)) {
+				request.notifyValueChanged(gatt.getDevice(), data);
+			}
+			// If there is a value change request,
+			if (awaitingRequest instanceof WaitForValueChangedRequest
+					// registered for this characteristic
+					&& awaitingRequest.characteristic == characteristic
+					// and didn't have a trigger, or the trigger was started
+					// (not necessarily completed)
+					&& !awaitingRequest.isTriggerPending()) {
+				final WaitForValueChangedRequest valueChangedRequest = (WaitForValueChangedRequest) awaitingRequest;
+				if (valueChangedRequest.matches(data)) {
+					// notify that new data was received.
+					valueChangedRequest.notifyValueChanged(gatt.getDevice(), data);
+
+					// If no more data are expected
+					if (!valueChangedRequest.hasMore()) {
+						// notify success,
+						valueChangedRequest.notifySuccess(gatt.getDevice());
+						// and proceed to the next request only if the trigger has completed.
+						// Otherwise, the next request will be started when the request's callback
+						// will be received.
+						awaitingRequest = null;
+						if (valueChangedRequest.isTriggerCompleteOrNull()) {
+							nextRequest(true);
 						}
 					}
 				}
-				if (checkCondition()) {
-					nextRequest(true);
-				}
+			}
+			if (checkCondition()) {
+				nextRequest(true);
 			}
 		}
 
@@ -3239,9 +3294,11 @@ abstract class BleManagerHandler extends RequestHandler {
 						initQueue = null;
 						if (connected) {
 							// Invalidate all services and characteristics
+							onServicesInvalidated();
 							onDeviceDisconnected();
 							// And discover services again
 							serviceDiscoveryRequested = true;
+							servicesDiscovered = false;
 							log(Log.VERBOSE, "Discovering Services...");
 							log(Log.DEBUG, "gatt.discoverServices()");
 							bluetoothGatt.discoverServices();
