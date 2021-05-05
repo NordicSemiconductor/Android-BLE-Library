@@ -52,7 +52,7 @@ import no.nordicsemi.android.ble.observer.BondingObserver;
 import no.nordicsemi.android.ble.observer.ConnectionObserver;
 import no.nordicsemi.android.ble.utils.ParserUtils;
 
-@SuppressWarnings({"WeakerAccess", "DeprecatedIsStillUsed", "unused", "deprecation"})
+@SuppressWarnings({"WeakerAccess", "unused", "deprecation"})
 abstract class BleManagerHandler extends RequestHandler {
 	private final static String TAG = "BleManager";
 
@@ -713,7 +713,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			try {
 				final Method createBond = device.getClass().getMethod("createBond");
 				log(Log.DEBUG, "device.createBond() (hidden)");
-				return (Boolean) createBond.invoke(device);
+				return createBond.invoke(device) == Boolean.TRUE;
 			} catch (final Exception e) {
 				Log.w(TAG, "An exception occurred while creating bond", e);
 				return false;
@@ -744,7 +744,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			//noinspection JavaReflectionMemberAccess
 			final Method removeBond = device.getClass().getMethod("removeBond");
 			log(Log.DEBUG, "device.removeBond() (hidden)");
-			return (Boolean) removeBond.invoke(device);
+			return removeBond.invoke(device) == Boolean.TRUE;
 		} catch (final Exception e) {
 			Log.w(TAG, "An exception occurred while removing bond", e);
 		}
@@ -1159,6 +1159,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	DataReceivedCallback getBatteryLevelCallback() {
 		return (device, data) -> {
 			if (data.size() == 1) {
+				//noinspection ConstantConditions
 				final int batteryLevel = data.getIntValue(Data.FORMAT_UINT8, 0);
 				log(Log.INFO, "Battery Level received: " + batteryLevel + "%");
 				batteryValue = batteryLevel;
@@ -1174,6 +1175,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			batteryLevelNotificationCallback = new ValueChangedCallback(this)
 					.with((device, data) -> {
 						if (data.size() == 1) {
+							//noinspection ConstantConditions
 							final int batteryLevel = data.getIntValue(Data.FORMAT_UINT8, 0);
 							batteryValue = batteryLevel;
 							onBatteryValueReceived(bluetoothGatt, batteryLevel);
@@ -1200,7 +1202,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		 */
 		try {
 			final Method refresh = gatt.getClass().getMethod("refresh");
-			return (Boolean) refresh.invoke(gatt);
+			return refresh.invoke(gatt) == Boolean.TRUE;
 		} catch (final Exception e) {
 			Log.w(TAG, "An exception occurred while refreshing device", e);
 			log(Log.WARN, "gatt.refresh() method not found");
@@ -2712,6 +2714,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					log(Log.INFO, "[Server] Indication sent");
 					break;
 			}
+			//noinspection ConstantConditions
 			wr.notifyPacketSent(device, wr.characteristic.getValue());
 			if (wr.hasMore()) {
 				enqueueFirst(wr);
@@ -2854,6 +2857,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			// If Request set is present, try taking next request from it
 			if (requestQueue != null) {
 				if (requestQueue.hasMore()) {
+					//noinspection ConstantConditions
 					request = requestQueue.getNext().setRequestHandler(this);
 				} else {
 					// Set is completed
@@ -2869,6 +2873,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			// On older Android versions poll() may in some cases throw NoSuchElementException,
 			// as it's using removeFirst() internally.
 			// See: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/37
+			//noinspection ConstantConditions
 			request = null;
 		}
 
@@ -2959,6 +2964,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			// When the Connect Request is started, the bluetoothDevice is not set yet.
 			// It may also be a connect request to a different device, which is an error
 			// that is handled in internalConnect()
+			//noinspection ConstantConditions
 			final ConnectRequest cr = (ConnectRequest) request;
 			cr.notifyStarted(cr.getDevice());
 		} else {
@@ -2976,6 +2982,7 @@ abstract class BleManagerHandler extends RequestHandler {
 
 		switch (request.type) {
 			case CONNECT: {
+				//noinspection ConstantConditions
 				final ConnectRequest cr = (ConnectRequest) request;
 				connectRequest = cr;
 				this.request = null;
@@ -2999,6 +3006,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case SET: {
+				//noinspection ConstantConditions
 				requestQueue = (RequestQueue) request;
 				nextRequest(true);
 				return;
@@ -3008,6 +3016,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case WRITE: {
+				//noinspection ConstantConditions
 				final WriteRequest wr = (WriteRequest) request;
 				final BluetoothGattCharacteristic characteristic = request.characteristic;
 				if (characteristic != null) {
@@ -3022,6 +3031,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case WRITE_DESCRIPTOR: {
+				//noinspection ConstantConditions
 				final WriteRequest wr = (WriteRequest) request;
 				final BluetoothGattDescriptor descriptor = request.descriptor;
 				if (descriptor != null) {
@@ -3032,6 +3042,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			}
 			case NOTIFY:
 			case INDICATE: {
+				//noinspection ConstantConditions
 				final WriteRequest wr = (WriteRequest) request;
 				final BluetoothGattCharacteristic characteristic = request.characteristic;
 				if (characteristic != null) {
@@ -3043,6 +3054,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case SET_VALUE: {
+				//noinspection ConstantConditions
 				final SetValueRequest svr = (SetValueRequest) request;
 				if (svr.characteristic != null) {
 					if (characteristicValues != null && characteristicValues.containsKey(svr.characteristic))
@@ -3056,6 +3068,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case SET_DESCRIPTOR_VALUE: {
+				//noinspection ConstantConditions
 				final SetValueRequest svr = (SetValueRequest) request;
 				if (svr.descriptor != null) {
 					if (descriptorValues != null && descriptorValues.containsKey(svr.descriptor))
@@ -3120,6 +3133,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case REQUEST_MTU: {
+				//noinspection ConstantConditions
 				final MtuRequest mr = (MtuRequest) request;
 				if (mtu != mr.getRequiredMtu()
 						&& Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -3136,6 +3150,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case REQUEST_CONNECTION_PRIORITY: {
+				//noinspection ConstantConditions
 				final ConnectionPriorityRequest cpr = (ConnectionPriorityRequest) request;
 				connectionPriorityOperationInProgress = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -3161,6 +3176,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case SET_PREFERRED_PHY: {
+				//noinspection ConstantConditions
 				final PhyRequest pr = (PhyRequest) request;
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 					result = internalSetPreferredPhy(pr.getPreferredTxPhy(),
@@ -3177,6 +3193,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case READ_PHY: {
+				//noinspection ConstantConditions
 				final PhyRequest pr = (PhyRequest) request;
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 					result = internalReadPhy();
@@ -3234,6 +3251,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case SLEEP: {
+				//noinspection ConstantConditions
 				final SleepRequest sr = (SleepRequest) request;
 				log(Log.DEBUG, "sleep(" + sr.getDelay() + ")");
 				postDelayed(() -> {
@@ -3251,7 +3269,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		// The result may be false if given characteristic or descriptor were not found
 		// on the device, or the feature is not supported on the Android.
 		// In that case, proceed with next operation and ignore the one that failed.
-		if (!result) {
+		if (!result && bluetoothDevice != null) {
 			request.notifyFail(bluetoothDevice,
 					connected ?
 							FailCallback.REASON_NULL_ATTRIBUTE :
