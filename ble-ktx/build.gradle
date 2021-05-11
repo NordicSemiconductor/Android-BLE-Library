@@ -30,6 +30,7 @@ android {
 
 dependencies {
     api project(':ble')
+    api 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.4.3'
 }
 
 // === Maven Central configuration ===
