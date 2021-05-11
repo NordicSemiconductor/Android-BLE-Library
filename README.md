@@ -58,9 +58,9 @@ Check out [migration guide](MIGRATION.md).
 
 ## Importing
 
-#### Maven Central or jcenter
+#### Maven Central
 
-The library may be found on jcenter and Maven Central repository. 
+The library may be found on Maven Central repository. 
 Add it to your project by adding the following dependency:
 
 ```grovy
@@ -98,8 +98,8 @@ You may do the same with other modules available in this project. Keep in mind, 
 
 #### Setting up
 
-The library uses Java 1.8 features. Make sure your *build.gradle* includes the following 
-configuration:
+The library uses Java 1.8 features. If you're using Android Studio below 4.2, make sure your 
+*build.gradle* includes the following configuration:
 
 ```groovy
     compileOptions {
@@ -150,7 +150,7 @@ classes in [nRF Toolbox](https://github.com/NordicSemiconductor/Android-nRF-Tool
 
 ## Version 1.x
 
-The BLE library v 1.x is no longer supported. Please migrate to 2.2+ for bug fixing releases.
+The BLE library v 1.x is no longer supported. Please migrate to 2.x for bug fixing releases.
 Find it on [version/1x branch](https://github.com/NordicSemiconductor/Android-BLE-Library/tree/version/1x).
 
 A migration guide is available [here](MIGRATION.md).
