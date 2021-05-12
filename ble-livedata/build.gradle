@@ -30,7 +30,6 @@ android {
 
 dependencies {
     api project(':ble-ktx')
-
     api 'androidx.lifecycle:lifecycle-livedata-core-ktx:2.3.1'
 }
 
