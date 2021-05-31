@@ -1915,7 +1915,8 @@ abstract class BleManagerHandler extends RequestHandler {
 										if (!serverManager.isShared(descriptor)) {
 											if (descriptorValues == null)
 												descriptorValues = new HashMap<>();
-											descriptorValues.put(descriptor, descriptor.getValue());
+											if (!descriptorValues.containsKey(descriptor))
+												descriptorValues.put(descriptor, descriptor.getValue());
 										}
 									}
 								}
