@@ -30,7 +30,9 @@ android {
 
 dependencies {
     api project(':ble-ktx')
-    api 'androidx.lifecycle:lifecycle-livedata-core-ktx:2.3.1'
+
+    // https://developer.android.com/jetpack/androidx/releases/lifecycle
+    api 'androidx.lifecycle:lifecycle-livedata-ktx:2.3.1'
 }
 
 // === Maven Central configuration ===
