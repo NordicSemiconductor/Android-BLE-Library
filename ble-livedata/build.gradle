@@ -1,6 +1,5 @@
 plugins {
     id 'com.android.library'
-    id 'kotlin-android'
 }
 
 android {
@@ -23,16 +22,13 @@ android {
         targetCompatibility JavaVersion.VERSION_1_8
         sourceCompatibility JavaVersion.VERSION_1_8
     }
-    kotlinOptions {
-        jvmTarget = '1.8'
-    }
 }
 
 dependencies {
-    api project(':ble-ktx')
+    api project(':ble')
 
     // https://developer.android.com/jetpack/androidx/releases/lifecycle
-    api 'androidx.lifecycle:lifecycle-livedata-ktx:2.3.1'
+    api 'androidx.lifecycle:lifecycle-livedata:2.3.1'
 }
 
 // === Maven Central configuration ===
