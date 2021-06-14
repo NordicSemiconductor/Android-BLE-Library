@@ -3,7 +3,6 @@ package no.nordicsemi.android.ble.ktx
 import android.Manifest
 import android.bluetooth.BluetoothDevice
 import androidx.annotation.RequiresPermission
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.MutableStateFlow
 import no.nordicsemi.android.ble.BleManager
 import no.nordicsemi.android.ble.ktx.state.BondState
@@ -40,7 +39,6 @@ val BleManager.bondingState: BondState
 /**
  * Returns the connection state as hot state flow.
  */
-@ExperimentalCoroutinesApi
 fun BleManager.stateAsFlow() =
     MutableStateFlow(state)
         .apply { setConnectionObserver(observeAsFlow(this)) }
@@ -48,7 +46,6 @@ fun BleManager.stateAsFlow() =
 /**
  * Returns the bonding state as hot state flow.
  */
-@ExperimentalCoroutinesApi
 fun BleManager.bondingStateAsFlow() =
     MutableStateFlow(bondingState)
         .apply { setBondingObserver(observeAsFlow(this)) }
