@@ -1,6 +1,7 @@
 package no.nordicsemi.android.ble.ktx
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.channels.awaitClose
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.callbackFlow
 import no.nordicsemi.android.ble.ValueChangedCallback
@@ -12,10 +13,11 @@ import no.nordicsemi.android.ble.data.Data
  */
 @ExperimentalCoroutinesApi
 fun ValueChangedCallback.asFlow(): Flow<Data> = callbackFlow {
-    // TODO There is no way to close the Flow.
-    //      Flow could be closed when the device gets disconnected, teh callback is removed or
-    //      notifications / indications are stopped.
     with { _, data ->
         trySend(data)
+    }
+    awaitClose {
+        // There's no way to unregister the callback from here.
+        with { _, _ -> }
     }
 }
