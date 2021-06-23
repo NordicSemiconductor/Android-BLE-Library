@@ -37,6 +37,7 @@ import no.nordicsemi.android.ble.observer.ConnectionObserver;
 		ConnectionObserver.REASON_TERMINATE_PEER_USER,
 		ConnectionObserver.REASON_LINK_LOSS,
 		ConnectionObserver.REASON_NOT_SUPPORTED,
+		ConnectionObserver.REASON_CANCELLED,
 		ConnectionObserver.REASON_TIMEOUT,
 })
 public @interface DisconnectionReason {}

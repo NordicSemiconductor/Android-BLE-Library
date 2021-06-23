@@ -32,6 +32,7 @@ import androidx.annotation.Nullable;
 import java.util.Deque;
 import java.util.LinkedList;
 
+import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
@@ -93,6 +94,13 @@ public class RequestQueue extends Request {
 	@NonNull
 	public RequestQueue before(@NonNull final BeforeCallback callback) {
 		super.before(callback);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public RequestQueue then(@NonNull final AfterCallback callback) {
+		super.then(callback);
 		return this;
 	}
 

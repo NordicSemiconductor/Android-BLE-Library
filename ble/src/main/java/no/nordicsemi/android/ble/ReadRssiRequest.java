@@ -27,6 +27,7 @@ import android.os.Handler;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
+import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
@@ -78,6 +79,13 @@ public final class ReadRssiRequest extends SimpleValueRequest<RssiCallback> impl
 	@NonNull
 	public ReadRssiRequest before(@NonNull final BeforeCallback callback) {
 		super.before(callback);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public ReadRssiRequest then(@NonNull final AfterCallback callback) {
+		super.then(callback);
 		return this;
 	}
 

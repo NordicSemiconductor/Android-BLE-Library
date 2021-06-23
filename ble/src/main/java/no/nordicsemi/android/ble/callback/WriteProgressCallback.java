@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import no.nordicsemi.android.ble.data.DataSplitter;
 
+@FunctionalInterface
 public interface WriteProgressCallback {
 
 	/**

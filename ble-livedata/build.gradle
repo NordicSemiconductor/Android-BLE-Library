@@ -1,20 +1,20 @@
-apply plugin: 'com.android.library'
-apply plugin: 'kotlin-android'
-apply plugin: 'kotlin-android-extensions'
+plugins {
+    id 'com.android.library'
+}
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
 
     defaultConfig {
         minSdkVersion 18
-        targetSdkVersion 29
+        targetSdkVersion 30
         versionCode 30
     }
 
     buildTypes {
         release {
             minifyEnabled false
-            consumerProguardFiles 'ble-livedata-proguard-tules.pro'
+            consumerProguardFiles 'ble-livedata-proguard-rules.pro'
         }
     }
 
@@ -27,11 +27,18 @@ android {
 dependencies {
     api project(':ble')
 
-    api 'androidx.lifecycle:lifecycle-livedata-core:2.2.0'
+    // https://developer.android.com/jetpack/androidx/releases/lifecycle
+    api 'androidx.lifecycle:lifecycle-livedata:2.3.1'
 }
 
-tasks.withType(Javadoc).all {
-    enabled = false
+// === Maven Central configuration ===
+// The following file exists only when Android BLE Library project is opened, but not
+// when the module is loaded to a different project.
+if (rootProject.file('gradle/publish-module.gradle').exists()) {
+    ext {
+        POM_ARTIFACT_ID = 'ble-livedata'
+        POM_NAME = 'A LiveData extension for the Bluetooth Low Energy library for Android'
+        POM_PACKAGING = 'aar'
+    }
+    apply from: rootProject.file('gradle/publish-module.gradle')
 }
-
-apply from: rootProject.file('gradle/gradle-bintray-push.gradle')

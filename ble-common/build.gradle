@@ -1,11 +1,11 @@
 apply plugin: 'com.android.library'
 
 android {
-    compileSdkVersion 29
+    compileSdkVersion 30
 
     defaultConfig {
         minSdkVersion 18
-        targetSdkVersion 29
+        targetSdkVersion 30
         versionCode 30
     }
 
@@ -25,7 +25,17 @@ android {
 dependencies {
     api project(':ble')
 
-    testImplementation 'junit:junit:4.13'
+    testImplementation 'junit:junit:4.13.2'
 }
 
-apply from: rootProject.file('gradle/gradle-bintray-push.gradle')
+// === Maven Central configuration ===
+// The following file exists only when Android BLE Library project is opened, but not
+// when the module is loaded to a different project.
+if (rootProject.file('gradle/publish-module.gradle').exists()) {
+    ext {
+        POM_ARTIFACT_ID = 'ble-common'
+        POM_NAME = 'Bluetooth Low Energy library for Android'
+        POM_PACKAGING = 'aar'
+    }
+    apply from: rootProject.file('gradle/publish-module.gradle')
+}

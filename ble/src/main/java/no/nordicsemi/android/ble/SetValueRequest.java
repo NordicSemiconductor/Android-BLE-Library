@@ -7,6 +7,7 @@ import android.os.Handler;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
@@ -70,6 +71,13 @@ public final class SetValueRequest extends SimpleRequest {
 	@NonNull
 	public SetValueRequest before(@NonNull final BeforeCallback callback) {
 		super.before(callback);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public SetValueRequest then(@NonNull final AfterCallback callback) {
+		super.then(callback);
 		return this;
 	}
 

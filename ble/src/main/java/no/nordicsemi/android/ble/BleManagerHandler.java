@@ -1,5 +1,7 @@
 package no.nordicsemi.android.ble;
 
+import android.Manifest;
+import android.annotation.SuppressLint;
 import android.annotation.TargetApi;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
@@ -30,22 +32,28 @@ import java.util.UUID;
 import java.util.concurrent.LinkedBlockingDeque;
 
 import androidx.annotation.IntRange;
+import androidx.annotation.Keep;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.annotation.RequiresPermission;
 import no.nordicsemi.android.ble.annotation.ConnectionPriority;
 import no.nordicsemi.android.ble.annotation.ConnectionState;
 import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.annotation.PhyOption;
 import no.nordicsemi.android.ble.annotation.PhyValue;
-import no.nordicsemi.android.ble.callback.*;
+import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
+import no.nordicsemi.android.ble.callback.DataReceivedCallback;
+import no.nordicsemi.android.ble.callback.FailCallback;
+import no.nordicsemi.android.ble.callback.MtuCallback;
+import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.error.GattError;
 import no.nordicsemi.android.ble.observer.BondingObserver;
 import no.nordicsemi.android.ble.observer.ConnectionObserver;
 import no.nordicsemi.android.ble.utils.ParserUtils;
 
-@SuppressWarnings({"WeakerAccess", "DeprecatedIsStillUsed", "unused", "deprecation"})
+@SuppressWarnings({"WeakerAccess", "unused", "deprecation"})
 abstract class BleManagerHandler extends RequestHandler {
 	private final static String TAG = "BleManager";
 
@@ -73,7 +81,6 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	private final Deque<Request> taskQueue = new LinkedBlockingDeque<>();
 	private Deque<Request> initQueue;
-	private boolean initInProgress;
 
 	/**
 	 * A time after which receiving 133 error is considered a timeout, instead of a
@@ -341,8 +348,8 @@ abstract class BleManagerHandler extends RequestHandler {
 					// If the device started to pair just after the connection was
 					// established the services were not discovered.
 					if (!servicesDiscovered && !serviceDiscoveryRequested) {
-						serviceDiscoveryRequested = true;
 						post(() -> {
+							serviceDiscoveryRequested = true;
 							log(Log.VERBOSE, "Discovering services...");
 							log(Log.DEBUG, "gatt.discoverServices()");
 							bluetoothGatt.discoverServices();
@@ -435,6 +442,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			taskQueue.clear();
 			initQueue = null;
 			bluetoothDevice = null;
+			connected = false;
 		}
 	}
 
@@ -564,13 +572,22 @@ abstract class BleManagerHandler extends RequestHandler {
 		postCallback(c -> c.onDeviceConnecting(device));
 		postConnectionStateChange(o -> o.onDeviceConnecting(device));
 		connectionTime = SystemClock.elapsedRealtime();
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+		if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
+			// connectRequest will never be null here.
+			final int preferredPhy = connectRequest.getPreferredPhy();
+			log(Log.DEBUG, "gatt = device.connectGatt(autoConnect = false, TRANSPORT_LE, "
+					+ ParserUtils.phyMaskToString(preferredPhy) + ")");
+
+			bluetoothGatt = device.connectGatt(context, false, gattCallback,
+					BluetoothDevice.TRANSPORT_LE, preferredPhy, handler);
+		} else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) {
 			// connectRequest will never be null here.
 			final int preferredPhy = connectRequest.getPreferredPhy();
 			log(Log.DEBUG, "gatt = device.connectGatt(autoConnect = false, TRANSPORT_LE, "
 					+ ParserUtils.phyMaskToString(preferredPhy) + ")");
 			// A variant of connectGatt with Handled can't be used here.
 			// Check https://github.com/NordicSemiconductor/Android-BLE-Library/issues/54
+			// This bug specifically occurs in SDK 26 and is fixed in SDK 27
 			bluetoothGatt = device.connectGatt(context, false, gattCallback,
 					BluetoothDevice.TRANSPORT_LE, preferredPhy/*, handler*/);
 		} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
@@ -584,7 +601,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		return true;
 	}
 
-	private boolean internalDisconnect() {
+	private boolean internalDisconnect(final int reason) {
 		userDisconnected = true;
 		initialConnection = false;
 		ready = false;
@@ -610,7 +627,8 @@ abstract class BleManagerHandler extends RequestHandler {
 			log(Log.INFO, "Disconnected");
 			close();
 			postCallback(c -> c.onDeviceDisconnected(device));
-			postConnectionStateChange(o -> o.onDeviceDisconnected(device, ConnectionObserver.REASON_SUCCESS));
+			postConnectionStateChange(o -> o.onDeviceDisconnected(device, reason)
+			);
 		}
 		// request may be of type DISCONNECT or CONNECT (timeout).
 		// For the latter, it has already been notified with REASON_TIMEOUT.
@@ -625,6 +643,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		return true;
 	}
 
+	@RequiresPermission(Manifest.permission.BLUETOOTH_ADMIN)
 	private boolean internalCreateBond(final boolean ensure) {
 		final BluetoothDevice device = bluetoothDevice;
 		if (device == null)
@@ -682,6 +701,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		return result;
 	}
 
+	@RequiresPermission(Manifest.permission.BLUETOOTH_ADMIN)
 	private boolean createBond(@NonNull final BluetoothDevice device) {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
 			log(Log.DEBUG, "device.createBond()");
@@ -694,8 +714,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			try {
 				final Method createBond = device.getClass().getMethod("createBond");
 				log(Log.DEBUG, "device.createBond() (hidden)");
-				//noinspection ConstantConditions
-				return (Boolean) createBond.invoke(device);
+				return createBond.invoke(device) == Boolean.TRUE;
 			} catch (final Exception e) {
 				Log.w(TAG, "An exception occurred while creating bond", e);
 				return false;
@@ -703,6 +722,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		}
 	}
 
+	@RequiresPermission(Manifest.permission.BLUETOOTH_ADMIN)
 	private boolean internalRemoveBond() {
 		final BluetoothDevice device = bluetoothDevice;
 		if (device == null)
@@ -725,8 +745,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			//noinspection JavaReflectionMemberAccess
 			final Method removeBond = device.getClass().getMethod("removeBond");
 			log(Log.DEBUG, "device.removeBond() (hidden)");
-			//noinspection ConstantConditions
-			return (Boolean) removeBond.invoke(device);
+			return removeBond.invoke(device) == Boolean.TRUE;
 		} catch (final Exception e) {
 			Log.w(TAG, "An exception occurred while removing bond", e);
 		}
@@ -838,7 +857,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (cccd == null)
 			return false;
 		// If notifications/indications were enabled, send the notification/indication.
-		final byte[] value = descriptorValues.containsKey(cccd) ? descriptorValues.get(cccd) : cccd.getValue();
+		final byte[] value = descriptorValues != null && descriptorValues.containsKey(cccd) ? descriptorValues.get(cccd) : cccd.getValue();
 		if (value != null && value.length == 2 && value[0] != 0) {
 			log(Log.VERBOSE, "[Server] Sending " + (confirm ? "indication" : "notification") + " to " + serverCharacteristic.getUuid());
 			log(Log.DEBUG, "server.notifyCharacteristicChanged(device, " + serverCharacteristic.getUuid() + ", " + confirm + ")");
@@ -1184,8 +1203,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		 */
 		try {
 			final Method refresh = gatt.getClass().getMethod("refresh");
-			//noinspection ConstantConditions
-			return (Boolean) refresh.invoke(gatt);
+			return refresh.invoke(gatt) == Boolean.TRUE;
 		} catch (final Exception e) {
 			Log.w(TAG, "An exception occurred while refreshing device", e);
 			log(Log.WARN, "gatt.refresh() method not found");
@@ -1207,7 +1225,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	private void enqueueFirst(@NonNull final Request request) {
 		final RequestQueue rq = requestQueue;
 		if (rq == null) {
-			final Deque<Request> queue = initInProgress ? initQueue : taskQueue;
+			final Deque<Request> queue = initQueue != null ? initQueue : taskQueue;
 			queue.addFirst(request);
 		} else {
 			rq.addFirst(request);
@@ -1224,7 +1242,7 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	@Override
 	final void enqueue(@NonNull final Request request) {
-		final Deque<Request> queue = initInProgress ? initQueue : taskQueue;
+		final Deque<Request> queue = initQueue != null ? initQueue : taskQueue;
 		queue.add(request);
 		request.enqueued = true;
 		nextRequest(false);
@@ -1234,22 +1252,26 @@ abstract class BleManagerHandler extends RequestHandler {
 	final void cancelQueue() {
 		taskQueue.clear();
 		initQueue = null;
+		final BluetoothDevice device = this.bluetoothDevice;
+		if (device == null) {
+			return;
+		}
 		if (awaitingRequest != null) {
-			awaitingRequest.notifyFail(bluetoothDevice, FailCallback.REASON_CANCELLED);
+			awaitingRequest.notifyFail(device, FailCallback.REASON_CANCELLED);
 		}
 		if (request != null && awaitingRequest != request) {
-			request.notifyFail(bluetoothDevice, FailCallback.REASON_CANCELLED);
+			request.notifyFail(device, FailCallback.REASON_CANCELLED);
 			request = null;
 		}
 		awaitingRequest = null;
 		if (requestQueue != null) {
-			requestQueue.notifyFail(bluetoothDevice, FailCallback.REASON_CANCELLED);
+			requestQueue.notifyFail(device, FailCallback.REASON_CANCELLED);
 			requestQueue = null;
 		}
 		if (connectRequest != null) {
-			connectRequest.notifyFail(bluetoothDevice, FailCallback.REASON_CANCELLED);
+			connectRequest.notifyFail(device, FailCallback.REASON_CANCELLED);
 			connectRequest = null;
-			internalDisconnect();
+			internalDisconnect(ConnectionObserver.REASON_CANCELLED);
 		} else {
 			nextRequest(true);
 		}
@@ -1261,7 +1283,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		awaitingRequest = null;
 		if (request.type == Request.Type.CONNECT) {
 			connectRequest = null;
-			internalDisconnect();
+			internalDisconnect(ConnectionObserver.REASON_TIMEOUT);
 			// The method above will call mGattCallback.nextRequest(true) so we have to return here.
 			return;
 		}
@@ -1495,10 +1517,26 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	/**
 	 * This method should nullify all services and characteristics of the device.
+	 * <p>
 	 * It's called when the device is no longer connected, either due to user action
-	 * or a link loss.
+	 * or a link loss, or when the services have changed and new service discovery will be
+	 * performed.
+	 *
+	 * @deprecated Use {@link #onServicesInvalidated()} instead.
 	 */
-	protected abstract void onDeviceDisconnected();
+	@Deprecated
+	protected void onDeviceDisconnected() {
+	}
+
+	/**
+	 * This method should nullify all services and characteristics of the device.
+	 * <p>
+	 * It's called when the services were invalidated and can no longer be used. Most probably the
+	 * device has disconnected, Service Changed indication was received, or
+	 * {@link BleManager#refreshDeviceCache()} request was executed, which has invalidated cached
+	 * services.
+	 */
+	protected abstract void onServicesInvalidated();
 
 	private void notifyDeviceDisconnected(@NonNull final BluetoothDevice device, final int status) {
 		final boolean wasConnected = connected;
@@ -1506,7 +1544,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		servicesDiscovered = false;
 		serviceDiscoveryRequested = false;
 		deviceNotSupported = false;
-		initInProgress = false;
+		mtu = 23;
 		connectionState = BluetoothGatt.STATE_DISCONNECTED;
 		checkCondition();
 		if (!wasConnected) {
@@ -1527,11 +1565,17 @@ abstract class BleManagerHandler extends RequestHandler {
 		} else {
 			log(Log.WARN, "Connection lost");
 			postCallback(c -> c.onLinkLossOccurred(device));
-			postConnectionStateChange(o -> o.onDeviceDisconnected(device, ConnectionObserver.REASON_LINK_LOSS));
+			// When the device indicated disconnection, return the REASON_TERMINATE_PEER_USER.
+			// Otherwise, return REASON_LINK_LOSS.
+			// See: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/284
+			final int reason = status == ConnectionObserver.REASON_TERMINATE_PEER_USER ?
+					ConnectionObserver.REASON_TERMINATE_PEER_USER : ConnectionObserver.REASON_LINK_LOSS;
+			postConnectionStateChange(o -> o.onDeviceDisconnected(device, reason));
 			// We are not closing the connection here as the device should try to reconnect
 			// automatically.
 			// This may be only called when the shouldAutoConnect() method returned true.
 		}
+		onServicesInvalidated();
 		onDeviceDisconnected();
 	}
 
@@ -1730,7 +1774,7 @@ abstract class BleManagerHandler extends RequestHandler {
 						// automatically when connected. Wait with the discovery until bonding is
 						// complete. It will be initiated again in the bond state broadcast receiver
 						// on the top of this file.
-						if (connected &&
+						if (connected && !servicesDiscovered && !serviceDiscoveryRequested &&
 								gatt.getDevice().getBondState() != BluetoothDevice.BOND_BONDING) {
 							serviceDiscoveryRequested = true;
 							log(Log.VERBOSE, "Discovering services...");
@@ -1756,6 +1800,13 @@ abstract class BleManagerHandler extends RequestHandler {
 						if (delay > 0)
 							log(Log.DEBUG, "wait(" + delay + ")");
 						postDelayed(() -> internalConnect(gatt.getDevice(), connectRequest), delay);
+						return;
+					}
+
+					if (connectRequest != null && connectRequest.shouldAutoConnect() && initialConnection
+							&& gatt.getDevice().getBondState() == BluetoothDevice.BOND_BONDED) {
+						log(Log.DEBUG, "autoConnect = false called failed; retrying with autoConnect = true");
+						post(() -> internalConnect(gatt.getDevice(), connectRequest));
 						return;
 					}
 
@@ -1833,6 +1884,8 @@ abstract class BleManagerHandler extends RequestHandler {
 
 		@Override
 		public final void onServicesDiscovered(@NonNull final BluetoothGatt gatt, final int status) {
+			if (!serviceDiscoveryRequested)
+				return;
 			serviceDiscoveryRequested = false;
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, "Services discovered");
@@ -1873,13 +1926,13 @@ abstract class BleManagerHandler extends RequestHandler {
 
 					// Obtain the queue of initialization requests.
 					// First, let's call the deprecated initGatt(...).
-					initInProgress = true;
 					operationInProgress = true;
 					initQueue = initGatt(gatt);
 
 					final boolean deprecatedApiUsed = initQueue != null;
 					if (deprecatedApiUsed) {
 						for (final Request request : initQueue) {
+							request.setRequestHandler(BleManagerHandler.this);
 							request.enqueued = true;
 						}
 					}
@@ -1899,9 +1952,12 @@ abstract class BleManagerHandler extends RequestHandler {
 					if (Build.VERSION.SDK_INT < Build.VERSION_CODES.M
 							|| Build.VERSION.SDK_INT == Build.VERSION_CODES.O
 							|| Build.VERSION.SDK_INT == Build.VERSION_CODES.O_MR1
-							|| Build.VERSION.SDK_INT == Build.VERSION_CODES.P)
+							|| Build.VERSION.SDK_INT == Build.VERSION_CODES.P) {
 						enqueueFirst(Request.newEnableServiceChangedIndicationsRequest()
 								.setRequestHandler(BleManagerHandler.this));
+						// The above enqueueFirst sets this flag to false.
+						operationInProgress = true;
+					}
 
 					// Deprecated:
 					if (deprecatedApiUsed) {
@@ -1921,13 +1977,12 @@ abstract class BleManagerHandler extends RequestHandler {
 					// End
 
 					initialize();
-					initInProgress = false;
 					nextRequest(true);
 				} else {
 					log(Log.WARN, "Device is not supported");
 					deviceNotSupported = true;
 					postCallback(c -> c.onDeviceNotSupported(gatt.getDevice()));
-					internalDisconnect();
+					internalDisconnect(ConnectionObserver.REASON_NOT_SUPPORTED);
 				}
 			} else {
 				Log.e(TAG, "onServicesDiscovered error " + status);
@@ -1936,8 +1991,36 @@ abstract class BleManagerHandler extends RequestHandler {
 					connectRequest.notifyFail(gatt.getDevice(), FailCallback.REASON_REQUEST_FAILED);
 					connectRequest = null;
 				}
-				internalDisconnect();
+				internalDisconnect(ConnectionObserver.REASON_UNKNOWN);
 			}
+		}
+
+		// @Override
+		/**
+		 * Callback indicating service changed event is received.
+		 * <p>
+		 * Receiving this event means that the GATT database is out of sync with the remote device.
+		 * <p>
+		 * Requires API 31+.
+		 */
+		@Keep
+		public final void onServiceChanged(@NonNull final BluetoothGatt gatt) {
+			log(Log.INFO, "Service changed, invalidating services");
+
+			// Forbid enqueuing more operations.
+			operationInProgress = true;
+			// Invalidate all services and characteristics
+			onServicesInvalidated();
+			onDeviceDisconnected();
+			// Clear queues, services are no longer valid.
+			taskQueue.clear();
+			initQueue = null;
+			// And discover services again
+			serviceDiscoveryRequested = true;
+			servicesDiscovered = false;
+			log(Log.VERBOSE, "Discovering Services...");
+			log(Log.DEBUG, "gatt.discoverServices()");
+			bluetoothGatt.discoverServices();
 		}
 
 		@Override
@@ -2173,69 +2256,79 @@ abstract class BleManagerHandler extends RequestHandler {
 			final byte[] data = characteristic.getValue();
 
 			if (isServiceChangedCharacteristic(characteristic)) {
-				// TODO this should be tested. Should services be invalidated?
-				// Forbid enqueuing more operations.
-				operationInProgress = true;
-				// Clear queues, services are no longer valid.
-				taskQueue.clear();
-				initQueue = null;
-				log(Log.INFO, "Service Changed indication received");
-				log(Log.VERBOSE, "Discovering Services...");
-				log(Log.DEBUG, "gatt.discoverServices()");
-				gatt.discoverServices();
-			} else {
-				final BluetoothGattDescriptor cccd =
-						characteristic.getDescriptor(BleManager.CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID);
-				final boolean notifications = cccd == null || cccd.getValue() == null ||
-						cccd.getValue().length != 2 || cccd.getValue()[0] == 0x01;
+				// Android S added onServiceChanged() callback, which should be called in this
+				// situation. Again, this has not been tested.
+				if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.R) {
+					log(Log.INFO, "Service Changed indication received");
+					// For older APIs, trigger service discovery.
+					// TODO this should be tested. Should services be invalidated?
+					// Forbid enqueuing more operations.
+					operationInProgress = true;
+					// Invalidate all services and characteristics
+					onServicesInvalidated();
+					onDeviceDisconnected();
+					// Clear queues, services are no longer valid.
+					taskQueue.clear();
+					initQueue = null;
+					serviceDiscoveryRequested = true;
+					log(Log.VERBOSE, "Discovering Services...");
+					log(Log.DEBUG, "gatt.discoverServices()");
+					gatt.discoverServices();
+				}
+				return;
+			}
 
-				final String dataString = ParserUtils.parse(data);
-				if (notifications) {
-					log(Log.INFO, "Notification received from " +
-							characteristic.getUuid() + ", value: " + dataString);
-					onCharacteristicNotified(gatt, characteristic);
-				} else { // indications
-					log(Log.INFO, "Indication received from " +
-							characteristic.getUuid() + ", value: " + dataString);
-					onCharacteristicIndicated(gatt, characteristic);
-				}
-				if (batteryLevelNotificationCallback != null && isBatteryLevelCharacteristic(characteristic)) {
-					batteryLevelNotificationCallback.notifyValueChanged(gatt.getDevice(), data);
-				}
-				// Notify the notification registered listener, if set
-				final ValueChangedCallback request = valueChangedCallbacks.get(characteristic);
-				if (request != null && request.matches(data)) {
-					request.notifyValueChanged(gatt.getDevice(), data);
-				}
-				// If there is a value change request,
-				if (awaitingRequest instanceof WaitForValueChangedRequest
-						// registered for this characteristic
-						&& awaitingRequest.characteristic == characteristic
-						// and didn't have a trigger, or the trigger was started
-						// (not necessarily completed)
-						&& !awaitingRequest.isTriggerPending()) {
-					final WaitForValueChangedRequest valueChangedRequest = (WaitForValueChangedRequest) awaitingRequest;
-					if (valueChangedRequest.matches(data)) {
-						// notify that new data was received.
-						valueChangedRequest.notifyValueChanged(gatt.getDevice(), data);
+			final BluetoothGattDescriptor cccd =
+					characteristic.getDescriptor(BleManager.CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID);
+			final boolean notifications = cccd == null || cccd.getValue() == null ||
+					cccd.getValue().length != 2 || cccd.getValue()[0] == 0x01;
 
-						// If no more data are expected
-						if (!valueChangedRequest.hasMore()) {
-							// notify success,
-							valueChangedRequest.notifySuccess(gatt.getDevice());
-							// and proceed to the next request only if the trigger has completed.
-							// Otherwise, the next request will be started when the request's callback
-							// will be received.
-							awaitingRequest = null;
-							if (valueChangedRequest.isTriggerCompleteOrNull()) {
-								nextRequest(true);
-							}
+			final String dataString = ParserUtils.parse(data);
+			if (notifications) {
+				log(Log.INFO, "Notification received from " +
+						characteristic.getUuid() + ", value: " + dataString);
+				onCharacteristicNotified(gatt, characteristic);
+			} else { // indications
+				log(Log.INFO, "Indication received from " +
+						characteristic.getUuid() + ", value: " + dataString);
+				onCharacteristicIndicated(gatt, characteristic);
+			}
+			if (batteryLevelNotificationCallback != null && isBatteryLevelCharacteristic(characteristic)) {
+				batteryLevelNotificationCallback.notifyValueChanged(gatt.getDevice(), data);
+			}
+			// Notify the notification registered listener, if set
+			final ValueChangedCallback request = valueChangedCallbacks.get(characteristic);
+			if (request != null && request.matches(data)) {
+				request.notifyValueChanged(gatt.getDevice(), data);
+			}
+			// If there is a value change request,
+			if (awaitingRequest instanceof WaitForValueChangedRequest
+					// registered for this characteristic
+					&& awaitingRequest.characteristic == characteristic
+					// and didn't have a trigger, or the trigger was started
+					// (not necessarily completed)
+					&& !awaitingRequest.isTriggerPending()) {
+				final WaitForValueChangedRequest valueChangedRequest = (WaitForValueChangedRequest) awaitingRequest;
+				if (valueChangedRequest.matches(data)) {
+					// notify that new data was received.
+					valueChangedRequest.notifyValueChanged(gatt.getDevice(), data);
+
+					// If no more data are expected
+					if (!valueChangedRequest.hasMore()) {
+						// notify success,
+						valueChangedRequest.notifySuccess(gatt.getDevice());
+						// and proceed to the next request only if the trigger has completed.
+						// Otherwise, the next request will be started when the request's callback
+						// will be received.
+						awaitingRequest = null;
+						if (valueChangedRequest.isTriggerCompleteOrNull()) {
+							nextRequest(true);
 						}
 					}
 				}
-				if (checkCondition()) {
-					nextRequest(true);
-				}
+			}
+			if (checkCondition()) {
+				nextRequest(true);
 			}
 		}
 
@@ -2802,13 +2895,13 @@ abstract class BleManagerHandler extends RequestHandler {
 	 * Executes the next request. If the last element from the initialization queue has
 	 * been executed the {@link #onDeviceReady()} callback is called.
 	 */
-	@SuppressWarnings("ConstantConditions")
+	@SuppressLint("MissingPermission")
 	private synchronized void nextRequest(final boolean force) {
 		if (force && operationInProgress) {
 			operationInProgress = awaitingRequest != null;
 		}
 
-		if (operationInProgress || initInProgress) {
+		if (operationInProgress) {
 			return;
 		}
 		final BluetoothDevice bluetoothDevice = this.bluetoothDevice;
@@ -2819,6 +2912,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			// If Request set is present, try taking next request from it
 			if (requestQueue != null) {
 				if (requestQueue.hasMore()) {
+					//noinspection ConstantConditions
 					request = requestQueue.getNext().setRequestHandler(this);
 				} else {
 					// Set is completed
@@ -2834,6 +2928,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			// On older Android versions poll() may in some cases throw NoSuchElementException,
 			// as it's using removeFirst() internally.
 			// See: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/37
+			//noinspection ConstantConditions
 			request = null;
 		}
 
@@ -2924,6 +3019,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			// When the Connect Request is started, the bluetoothDevice is not set yet.
 			// It may also be a connect request to a different device, which is an error
 			// that is handled in internalConnect()
+			//noinspection ConstantConditions
 			final ConnectRequest cr = (ConnectRequest) request;
 			cr.notifyStarted(cr.getDevice());
 		} else {
@@ -2941,6 +3037,7 @@ abstract class BleManagerHandler extends RequestHandler {
 
 		switch (request.type) {
 			case CONNECT: {
+				//noinspection ConstantConditions
 				final ConnectRequest cr = (ConnectRequest) request;
 				connectRequest = cr;
 				this.request = null;
@@ -2948,7 +3045,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case DISCONNECT: {
-				result = internalDisconnect();
+				result = internalDisconnect(ConnectionObserver.REASON_SUCCESS);
 				break;
 			}
 			case ENSURE_BOND: {
@@ -2964,6 +3061,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case SET: {
+				//noinspection ConstantConditions
 				requestQueue = (RequestQueue) request;
 				nextRequest(true);
 				return;
@@ -2973,6 +3071,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case WRITE: {
+				//noinspection ConstantConditions
 				final WriteRequest wr = (WriteRequest) request;
 				final BluetoothGattCharacteristic characteristic = request.characteristic;
 				if (characteristic != null) {
@@ -2987,6 +3086,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case WRITE_DESCRIPTOR: {
+				//noinspection ConstantConditions
 				final WriteRequest wr = (WriteRequest) request;
 				final BluetoothGattDescriptor descriptor = request.descriptor;
 				if (descriptor != null) {
@@ -2997,6 +3097,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			}
 			case NOTIFY:
 			case INDICATE: {
+				//noinspection ConstantConditions
 				final WriteRequest wr = (WriteRequest) request;
 				final BluetoothGattCharacteristic characteristic = request.characteristic;
 				if (characteristic != null) {
@@ -3008,6 +3109,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case SET_VALUE: {
+				//noinspection ConstantConditions
 				final SetValueRequest svr = (SetValueRequest) request;
 				if (svr.characteristic != null) {
 					if (characteristicValues != null && characteristicValues.containsKey(svr.characteristic))
@@ -3021,6 +3123,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case SET_DESCRIPTOR_VALUE: {
+				//noinspection ConstantConditions
 				final SetValueRequest svr = (SetValueRequest) request;
 				if (svr.descriptor != null) {
 					if (descriptorValues != null && descriptorValues.containsKey(svr.descriptor))
@@ -3085,6 +3188,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case REQUEST_MTU: {
+				//noinspection ConstantConditions
 				final MtuRequest mr = (MtuRequest) request;
 				if (mtu != mr.getRequiredMtu()
 						&& Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -3101,6 +3205,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case REQUEST_CONNECTION_PRIORITY: {
+				//noinspection ConstantConditions
 				final ConnectionPriorityRequest cpr = (ConnectionPriorityRequest) request;
 				connectionPriorityOperationInProgress = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O;
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
@@ -3126,6 +3231,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case SET_PREFERRED_PHY: {
+				//noinspection ConstantConditions
 				final PhyRequest pr = (PhyRequest) request;
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 					result = internalSetPreferredPhy(pr.getPreferredTxPhy(),
@@ -3142,6 +3248,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case READ_PHY: {
+				//noinspection ConstantConditions
 				final PhyRequest pr = (PhyRequest) request;
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
 					result = internalReadPhy();
@@ -3187,8 +3294,11 @@ abstract class BleManagerHandler extends RequestHandler {
 						initQueue = null;
 						if (connected) {
 							// Invalidate all services and characteristics
+							onServicesInvalidated();
 							onDeviceDisconnected();
 							// And discover services again
+							serviceDiscoveryRequested = true;
+							servicesDiscovered = false;
 							log(Log.VERBOSE, "Discovering Services...");
 							log(Log.DEBUG, "gatt.discoverServices()");
 							bluetoothGatt.discoverServices();
@@ -3198,6 +3308,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case SLEEP: {
+				//noinspection ConstantConditions
 				final SleepRequest sr = (SleepRequest) request;
 				log(Log.DEBUG, "sleep(" + sr.getDelay() + ")");
 				postDelayed(() -> {
@@ -3215,7 +3326,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		// The result may be false if given characteristic or descriptor were not found
 		// on the device, or the feature is not supported on the Android.
 		// In that case, proceed with next operation and ignore the one that failed.
-		if (!result) {
+		if (!result && bluetoothDevice != null) {
 			request.notifyFail(bluetoothDevice,
 					connected ?
 							FailCallback.REASON_NULL_ATTRIBUTE :

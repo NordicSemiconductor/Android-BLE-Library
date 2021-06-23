@@ -21,6 +21,7 @@
  */
 package no.nordicsemi.android.ble;
 
+import android.Manifest;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
@@ -41,6 +42,7 @@ import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
+import androidx.annotation.RequiresPermission;
 import androidx.annotation.StringRes;
 import no.nordicsemi.android.ble.annotation.ConnectionPriority;
 import no.nordicsemi.android.ble.annotation.ConnectionState;
@@ -274,8 +276,7 @@ public abstract class BleManager implements ILogger {
 
 	/**
 	 * This method must return the GATT callback used by the manager.
-	 * This method must not create a new gatt callback each time it is being invoked, but rather
-	 * return a single object.
+	 *
 	 * The object must exist when this method is called, that is in the BleManager's constructor.
 	 * Therefore, it cannot return a local field in the extending manager, as this is created after
 	 * the constructor finishes.
@@ -502,7 +503,6 @@ public abstract class BleManager implements ILogger {
 	 * @param device a device to connect to.
 	 * @return The connect request.
 	 */
-	@SuppressWarnings("ConstantConditions")
 	@NonNull
 	public final ConnectRequest connect(@NonNull final BluetoothDevice device) {
 		if (device == null) {
@@ -540,7 +540,6 @@ public abstract class BleManager implements ILogger {
 	 * @deprecated Use {@link #connect(BluetoothDevice)} instead and set preferred PHY using
 	 * {@link ConnectRequest#usePreferredPhy(int)}.
 	 */
-	@SuppressWarnings("ConstantConditions")
 	@NonNull
 	@Deprecated
 	public final ConnectRequest connect(@NonNull final BluetoothDevice device, @PhyMask final int phy) {
@@ -591,6 +590,7 @@ public abstract class BleManager implements ILogger {
 	 */
 	@Deprecated
 	@NonNull
+	@RequiresPermission(Manifest.permission.BLUETOOTH_ADMIN)
 	protected Request createBond() {
 		return createBondInsecure();
 	}
@@ -618,13 +618,14 @@ public abstract class BleManager implements ILogger {
 	 * @see #ensureBond()
 	 */
 	@NonNull
+	@RequiresPermission(Manifest.permission.BLUETOOTH_ADMIN)
 	protected Request createBondInsecure() {
 		return Request.createBond().setRequestHandler(requestHandler);
 	}
 
 	/**
 	 * Returns a request to ensure the device is bonded and link is encrypted. On Android versions
-	 * 4.3-10 (and perhaps later as well) the {@link BluetoothDevice#getBondState()} returns true
+	 * 4.3-12 (and perhaps later as well) the {@link BluetoothDevice#getBondState()} returns true
 	 * even if the link is not encrypted, or the device is not connected at all, checking only
 	 * if the bond information is present on Android. Moreover, calling
 	 * {@link BluetoothDevice#createBond()} returns false if bond is already present on Android,
@@ -649,6 +650,7 @@ public abstract class BleManager implements ILogger {
 	 * @return The request.
 	 * @since 2.2.3
 	 */
+	@RequiresPermission(Manifest.permission.BLUETOOTH_ADMIN)
 	protected Request ensureBond() {
 		return Request.ensureBond().setRequestHandler(requestHandler);
 	}
@@ -667,6 +669,7 @@ public abstract class BleManager implements ILogger {
 	 * @return The request.
 	 */
 	@NonNull
+	@RequiresPermission(Manifest.permission.BLUETOOTH_ADMIN)
 	protected Request removeBond() {
 		return Request.removeBond().setRequestHandler(requestHandler);
 	}

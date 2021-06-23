@@ -1,7 +1,7 @@
-<manifest package="no.nordicsemi.android.ble"
-	xmlns:android="http://schemas.android.com/apk/res/android">
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+	package="no.nordicsemi.android.ble">
 
-	<uses-permission android:name="android.permission.BLUETOOTH"/>
-	<uses-permission android:name="android.permission.BLUETOOTH_ADMIN"/>
+	<uses-permission android:name="android.permission.BLUETOOTH" />
 
 </manifest>
