@@ -38,7 +38,7 @@ dependencies {
 // when the module is loaded to a different project.
 if (rootProject.file('gradle/publish-module.gradle').exists()) {
     ext {
-        POM_ARTIFACT_ID = 'ble-common'
+        POM_ARTIFACT_ID = 'ble-ktx'
         POM_NAME = 'Kotlin extension library for BLE Library for Android'
         POM_PACKAGING = 'aar'
     }
