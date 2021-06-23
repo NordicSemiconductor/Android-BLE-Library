@@ -1,6 +1,7 @@
 # Android BLE Library
 
-[ ![Download](https://api.bintray.com/packages/nordic/android/no.nordicsemi.android%3Able/images/download.svg) ](https://bintray.com/nordic/android/no.nordicsemi.android%3Able/_latestVersion)
+[ ![Download](https://maven-badges.herokuapp.com/maven-central/no.nordicsemi.android/ble/badge.svg?style=plastic) ](https://search.maven.org/artifact/no.nordicsemi.android/ble)
+
 
 An Android library that solves a lot of Android's Bluetooth Low Energy problems. 
 The [BleManager](https://github.com/NordicSemiconductor/Android-BLE-Library/blob/master/ble/src/main/java/no/nordicsemi/android/ble/BleManager.java)
@@ -33,6 +34,32 @@ For scanning, we recommend using
 [Android Scanner Compat Library](https://github.com/NordicSemiconductor/Android-Scanner-Compat-Library)
 which brings almost all recent features, introduced in Lollipop and later, to the older platforms. 
 
+### Version 2.3
+
+New features added in version 2.3:
+
+1. `:ble-ktx` module added with support for coroutines and Flow.
+    1. `.suspend()` methods added in `Request`s.
+    2. `asFlow()` method added to `ValueChangedCallback`.
+    3. Connection and bonding state available as Flow.
+    4. New helper methods to get a `BluetoothGattCharacteristic` with given required properties 
+       and instance id added to `BluetoothGattService`.
+2. `JsonMerger` class added, which should help with use cases when a device sends a JSON file in multiple
+    packets.
+3. `:ble-livedata` migrated to Java with some API changes, as sealed classes are no longer available.
+4. Support for new `onServicesChanged()` callback, added in API 31 (Android 12).
+5. Option to cancel pending Bluetooth LE connection using `ConnectRequest.cancelPendingConnection()`.
+
+When using coroutines use `.suspend()` method in `Request`, instead of `enqueue()` or `await()`.
+
+To register to notifications and indications (or incoming write requests for server) use 
+```kotlin
+setNotificationCallback(characteristic)
+   .merge(JsonMerger()) // Example of how to use JsonMerger, optional
+   .asFlow()
+```
+This is still experimental feature and any feedback is welcome.
+
 ### Version 2.2
 
 New features added in version 2.2:
@@ -64,19 +91,24 @@ The library may be found on Maven Central repository.
 Add it to your project by adding the following dependency:
 
 ```grovy
-implementation 'no.nordicsemi.android:ble:2.2.4'
+implementation 'no.nordicsemi.android:ble:2.3.0'
 ```
 The last version not migrated to AndroidX is 2.0.5.
 
+BLE library with Kotlin extension is available in:
+```grovy
+implementation 'no.nordicsemi.android:ble-ktx:2.3.0'
+``` 
+
 To import the BLE library with set of parsers for common Bluetooth SIG characteristics, use:
 ```grovy
-implementation 'no.nordicsemi.android:ble-common:2.2.4'
+implementation 'no.nordicsemi.android:ble-common:2.3.0'
 ```
 For more information, read [this](BLE-COMMON.md).
 
 An extension for easier integration with `LiveData` is available after adding:
 ```grovy
-implementation 'no.nordicsemi.android:ble-livedata:2.2.4'
+implementation 'no.nordicsemi.android:ble-livedata:2.3.0'
 ```
 This extension adds `ObservableBleManager` with `state` and `bondingState` properties, which 
 notify about connection and bond state using `androidx.lifecycle.LiveData`.
