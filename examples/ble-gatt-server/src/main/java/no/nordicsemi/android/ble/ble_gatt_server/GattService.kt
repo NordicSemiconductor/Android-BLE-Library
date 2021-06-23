@@ -26,16 +26,12 @@ import android.app.NotificationChannel
 import android.app.NotificationManager
 import android.app.Service
 import android.bluetooth.*
-import android.bluetooth.le.AdvertiseCallback
-import android.bluetooth.le.AdvertiseData
-import android.bluetooth.le.AdvertiseSettings
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
 import android.content.IntentFilter
 import android.os.Binder
 import android.os.IBinder
-import android.os.ParcelUuid
 import android.util.Log
 import androidx.core.app.NotificationCompat
 import no.nordicsemi.android.ble.BleManager
@@ -65,6 +61,9 @@ import java.util.*
  * </pre>
  */
 class GattService : Service() {
+    companion object {
+        private const val TAG = "gatt-service"
+    }
 
     private var serverManager: ServerManager? = null
 
@@ -125,6 +124,10 @@ class GattService : Service() {
         disableBleServices()
     }
 
+    override fun onBind(intent: Intent?): IBinder {
+        return DataPlane()
+    }
+
     private fun enableBleServices() {
         serverManager = ServerManager(this)
         serverManager!!.open()
@@ -140,9 +143,9 @@ class GattService : Service() {
     }
 
     private fun disableBleServices() {
-        if (bleAdvertiseCallback != null) {
+        bleAdvertiseCallback?.let {
             val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-            bluetoothManager.adapter.bluetoothLeAdvertiser?.stopAdvertising(bleAdvertiseCallback!!)
+            bluetoothManager.adapter.bluetoothLeAdvertiser?.stopAdvertising(it)
             bleAdvertiseCallback = null
         }
 
@@ -150,45 +153,54 @@ class GattService : Service() {
         serverManager = null
     }
 
-    override fun onBind(intent: Intent?): IBinder? {
-        return DataPlane()
-    }
-
     /**
      * Functionality available to clients
      */
-    inner class DataPlane : Binder() {
-        /**
-         * Change the value of the GATT characteristic that we're publishing
-         */
-        fun setMyCharacteristicValue(value: String) {
+    private inner class DataPlane : Binder(), DeviceAPI {
+
+        override fun setMyCharacteristicValue(value: String) {
             serverManager?.setMyCharacteristicValue(value)
         }
-    }
 
-    companion object {
-        private const val TAG = "gatt-service"
     }
 
     /*
      * Manages the entire GATT service, declaring the services and characteristics on offer
      */
-    private class ServerManager(val context: Context) : BleServerManager(context), ServerObserver {
+    private class ServerManager(val context: Context) : BleServerManager(context), ServerObserver, DeviceAPI {
 
-        private val myGattCharacteristic = sharedCharacteristic(MyServiceProfile.MY_CHARACTERISTIC_UUID,
-                BluetoothGattCharacteristic.PROPERTY_READ // properties
-                        or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
-                BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED_MITM,  // permissions
-                descriptor(CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID,
-                        BluetoothGattDescriptor.PERMISSION_READ_ENCRYPTED_MITM or BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED_MITM, byteArrayOf(0, 0)),
-                description("A characteristic to be read", false) // descriptors
+        companion object {
+            private val CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
+        }
+
+        private val myGattCharacteristic = sharedCharacteristic(
+            // UUID:
+            MyServiceProfile.MY_CHARACTERISTIC_UUID,
+            // Properties:
+            BluetoothGattCharacteristic.PROPERTY_READ
+                   or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
+            // Permissions:
+            BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED_MITM,
+            // Descriptors:
+            // cccd() - this could have been used called, had no encryption been used.
+            // Instead, let's define CCCD with custom permissions:
+            descriptor(CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID,
+                BluetoothGattDescriptor.PERMISSION_READ_ENCRYPTED_MITM
+                        or BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED_MITM, byteArrayOf(0, 0)),
+            description("A characteristic to be read", false) // descriptors
         )
-        private val myGattService = service(MyServiceProfile.MY_SERVICE_UUID, myGattCharacteristic)
+        private val myGattService = service(
+            // UUID:
+            MyServiceProfile.MY_SERVICE_UUID,
+            // Characteristics (just one in this case):
+            myGattCharacteristic
+        )
+
         private val myGattServices = Collections.singletonList(myGattService)
 
         private val serverConnections = mutableMapOf<String, ServerConnection>()
 
-        fun setMyCharacteristicValue(value: String) {
+        override fun setMyCharacteristicValue(value: String) {
             val bytes = value.toByteArray(StandardCharsets.UTF_8)
             myGattCharacteristic.value = bytes
             serverConnections.values.forEach { serverConnection ->
@@ -215,20 +227,20 @@ class GattService : Service() {
         override fun onDeviceConnectedToServer(device: BluetoothDevice) {
             log(Log.DEBUG, "Device connected ${device.address}")
 
-            val serverConnection = ServerConnection()
-            serverConnection.useServer(this@ServerManager)
-            serverConnection.connect(device).enqueue()
-
-            serverConnections[device.address] = serverConnection
+            // A new device connected to the phone. Connect back to it, so it could be used
+            // both as server and client. Even if client mode will not be used, currently this is
+            // required for the server-only use.
+            serverConnections[device.address] = ServerConnection().apply {
+                useServer(this@ServerManager)
+                connect(device).enqueue()
+            }
         }
 
         override fun onDeviceDisconnectedFromServer(device: BluetoothDevice) {
             log(Log.DEBUG, "Device disconnected ${device.address}")
-            val serverConnection = serverConnections[device.address]
-            if (serverConnection != null) {
-                serverConnection.close()
-                serverConnections.remove(device.address)
-            }
+
+            // The device has disconnected. Forget it and close.
+            serverConnections.remove(device.address)?.close()
         }
 
         /*
@@ -239,19 +251,19 @@ class GattService : Service() {
             private var gattCallback: GattCallback? = null
 
             fun sendNotificationForMyGattCharacteristic(value: ByteArray) {
-                gattCallback?.sendNotificationForMyGattCharacteristic(value)
+                sendNotification(myGattCharacteristic, value).enqueue()
+            }
+
+            override fun log(priority: Int, message: String) {
+                this@ServerManager.log(priority, message)
             }
 
             override fun getGattCallback(): BleManagerGattCallback {
-                gattCallback = GattCallback(myGattCharacteristic)
+                gattCallback = GattCallback()
                 return gattCallback!!
             }
 
-            private inner class GattCallback(val myGattCharacteristic: BluetoothGattCharacteristic) : BleManagerGattCallback() {
-
-                fun sendNotificationForMyGattCharacteristic(value: ByteArray) {
-                    sendNotification(myGattCharacteristic, value).enqueue()
-                }
+            private inner class GattCallback() : BleManagerGattCallback() {
 
                 // There are no services that we need from the connecting device, but
                 // if there were, we could specify them here.
@@ -259,42 +271,10 @@ class GattService : Service() {
                     return true
                 }
 
-                override fun onDeviceDisconnected() {
+                override fun onServicesInvalidated() {
+                    // This is the place to nullify characteristics obtained above.
                 }
             }
-        }
-
-        companion object {
-            private val CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb")
-        }
-    }
-
-    object BleAdvertiser {
-        class Callback : AdvertiseCallback() {
-            override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-                Log.i(TAG, "LE Advertise Started.")
-            }
-
-            override fun onStartFailure(errorCode: Int) {
-                Log.w(TAG, "LE Advertise Failed: $errorCode")
-            }
-        }
-
-        fun settings(): AdvertiseSettings {
-            return AdvertiseSettings.Builder()
-                    .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_BALANCED)
-                    .setConnectable(true)
-                    .setTimeout(0)
-                    .setTxPowerLevel(AdvertiseSettings.ADVERTISE_TX_POWER_LOW)
-                    .build()
-        }
-
-        fun advertiseData(): AdvertiseData {
-            return AdvertiseData.Builder()
-                    .setIncludeDeviceName(false) // Including it will blow the length
-                    .setIncludeTxPowerLevel(false)
-                    .addServiceUuid(ParcelUuid(MyServiceProfile.MY_SERVICE_UUID))
-                    .build()
         }
     }
 

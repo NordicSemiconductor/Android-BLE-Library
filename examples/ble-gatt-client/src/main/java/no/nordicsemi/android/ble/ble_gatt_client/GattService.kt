@@ -111,10 +111,7 @@ class GattService : Service() {
                     BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
                         val device =
                                 intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-                        Log.d(
-                                TAG,
-                                "Bond state changed for device ${device?.address}: ${device?.bondState}"
-                        )
+                        Log.d(TAG, "Bond state changed for device ${device?.address}: ${device?.bondState}")
                         when (device?.bondState) {
                             BluetoothDevice.BOND_BONDED -> addDevice(device)
                             BluetoothDevice.BOND_NONE -> removeDevice(device)
@@ -171,10 +168,7 @@ class GattService : Service() {
             Log.i(TAG, "Enabling BLE services")
             bluetoothManager.adapter.bondedDevices.forEach { device -> addDevice(device) }
         } else {
-            Log.w(
-                    TAG,
-                    "Cannot enable BLE services as either there is no Bluetooth adapter or it is disabled"
-            )
+            Log.w(TAG, "Cannot enable BLE services as either there is no Bluetooth adapter or it is disabled")
         }
     }
 
@@ -210,8 +204,7 @@ class GattService : Service() {
     }
 
     private inner class ClientManager : BleManager(this@GattService) {
-        override fun getGattCallback(): BleManagerGattCallback =
-                GattCallback()
+        override fun getGattCallback(): BleManagerGattCallback = GattCallback()
 
         override fun log(priority: Int, message: String) {
             if (BuildConfig.DEBUG || priority == Log.ERROR) {
@@ -229,7 +222,7 @@ class GattService : Service() {
                         service?.getCharacteristic(MyServiceProfile.MY_CHARACTERISTIC_UUID)
                 val myCharacteristicProperties = myCharacteristic?.properties ?: 0
                 return (myCharacteristicProperties and BluetoothGattCharacteristic.PROPERTY_READ != 0) &&
-                        (myCharacteristicProperties and BluetoothGattCharacteristic.PROPERTY_NOTIFY != 0)
+                       (myCharacteristicProperties and BluetoothGattCharacteristic.PROPERTY_NOTIFY != 0)
             }
 
             override fun initialize() {
@@ -255,7 +248,8 @@ class GattService : Service() {
                         .enqueue()
             }
 
-            override fun onDeviceDisconnected() {
+            override fun onServicesInvalidated() {
+                myCharacteristic = null
             }
         }
     }

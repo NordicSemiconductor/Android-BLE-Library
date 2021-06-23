@@ -25,12 +25,12 @@ package no.nordicsemi.android.ble.ble_gatt_server
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.os.IBinder
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.EditText
+import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
 
@@ -82,23 +82,14 @@ class MainActivity : AppCompatActivity() {
     }
 
     private class GattServiceConn : ServiceConnection {
-        var binding: GattService.DataPlane? = null
+        var binding: DeviceAPI? = null
 
         override fun onServiceDisconnected(name: ComponentName?) {
-            if (BuildConfig.DEBUG && GattService::class.java.name != name?.className)
-                error("Connected to unknown service")
-            else
-                binding = null
+            binding = null
         }
 
         override fun onServiceConnected(name: ComponentName?, service: IBinder?) {
-            if (BuildConfig.DEBUG && GattService::class.java.name != name?.className)
-                error("Connected to unknown service")
-            else
-                when (service) {
-                    is GattService.DataPlane -> binding = service
-                    else -> if (BuildConfig.DEBUG) error("Unexpected binding")
-                }
+            binding = service as? DeviceAPI
         }
     }
 }
