@@ -20,5 +20,4 @@ jobs:
           rm -f ./README.md
           VERSION=$VERSION ./moustache/mo ./moustache/README.mo > ./README.md
           git add .
-          git commit -m "Update readme to version=$VERSION"
-          git push
+          git diff-index --quiet HEAD || git commit -m "Update readme to version=$VERSION" && git push
