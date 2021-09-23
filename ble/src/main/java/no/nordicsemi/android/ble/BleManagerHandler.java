@@ -808,7 +808,8 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (gatt == null || characteristic == null || !connected)
 			return false;
 
-		final BluetoothGattDescriptor descriptor = getCccd(characteristic, BluetoothGattCharacteristic.PROPERTY_NOTIFY);
+		final BluetoothGattDescriptor descriptor = getCccd(characteristic,
+				BluetoothGattCharacteristic.PROPERTY_NOTIFY | BluetoothGattCharacteristic.PROPERTY_INDICATE);
 		if (descriptor != null) {
 			log(Log.DEBUG, "gatt.setCharacteristicNotification(" + characteristic.getUuid() + ", false)");
 			gatt.setCharacteristicNotification(characteristic, false);
