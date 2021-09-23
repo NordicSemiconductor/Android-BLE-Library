@@ -18,4 +18,4 @@ jobs:
         run: |
           echo "${{ secrets.GPG_FILE }}" > sec.gpg.asc
           gpg -d --passphrase "${{ secrets.GPG_FILE_PSWD }}" --batch sec.gpg.asc > sec.gpg
-          fastlane deployNexus
+          bundle exec fastlane deployNexus
