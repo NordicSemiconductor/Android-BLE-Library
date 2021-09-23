@@ -12,7 +12,7 @@ import no.nordicsemi.android.ble.livedata.state.ConnectionState;
 import no.nordicsemi.android.ble.observer.BondingObserver;
 import no.nordicsemi.android.ble.observer.ConnectionObserver;
 
-abstract class ObservableBleManager extends BleManager {
+public abstract class ObservableBleManager extends BleManager {
 	public final LiveData<ConnectionState> state;
 	public final LiveData<BondState> bondingState;
 

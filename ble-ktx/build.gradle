@@ -9,7 +9,6 @@ android {
     defaultConfig {
         minSdkVersion 18
         targetSdkVersion 30
-        versionCode 1
     }
 
     buildTypes {

@@ -49,6 +49,7 @@ import no.nordicsemi.android.ble.annotation.ConnectionState;
 import no.nordicsemi.android.ble.annotation.PairingVariant;
 import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.annotation.PhyOption;
+import no.nordicsemi.android.ble.annotation.WriteType;
 import no.nordicsemi.android.ble.observer.BondingObserver;
 import no.nordicsemi.android.ble.observer.ConnectionObserver;
 import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
@@ -1274,6 +1275,83 @@ public abstract class BleManager implements ILogger {
 	}
 
 	/**
+	 * Writes the given data to the characteristic.
+	 * <p>
+	 * Use {@link WriteRequest#split() split()} or
+	 * {@link WriteRequest#split(DataSplitter) split(DataSplitter)} on the returned
+	 * {@link WriteRequest} if data should be automatically split into multiple packets.
+	 * If the characteristic is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
+	 * callback will be called.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param characteristic the characteristic to write to.
+	 * @param data           data to be written to the characteristic.
+	 * @param writeType      the write type which is to be used.
+	 * @return The request.
+	 */
+	@NonNull
+	protected WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic,
+											   @Nullable final Data data,
+											   @WriteType final int writeType) {
+		return Request.newWriteRequest(characteristic, data != null ? data.getValue() : null, writeType)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Writes the given data to the characteristic.
+	 * <p>
+	 * Use {@link WriteRequest#split() split()} or
+	 * {@link WriteRequest#split(DataSplitter) split(ValueSplitter)} on the returned
+	 * {@link WriteRequest} if data should be automatically split into multiple packets.
+	 * If the characteristic is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
+	 * callback will be called.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param characteristic the characteristic to write to.
+	 * @param data           data to be written to the characteristic.
+	 * @param writeType      the write type which is to be used.
+	 * @return The request.
+	 */
+	@NonNull
+	protected WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic,
+											   @Nullable final byte[] data,
+											   @WriteType final int writeType) {
+		return Request.newWriteRequest(characteristic, data, writeType)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Writes at most length bytes from offset at given data to the characteristic.
+	 * <p>
+	 * Use {@link WriteRequest#split() split()} or
+	 * {@link WriteRequest#split(DataSplitter) split(ValueSplitter)} on the returned
+	 * {@link WriteRequest} if data should be automatically split into multiple packets.
+	 * If the characteristic is null, the {@link Request#fail(FailCallback) fail(FailCallback)}
+	 * callback will be called.
+	 * <p>
+	 * The returned request must be either enqueued using {@link Request#enqueue()} for
+	 * asynchronous use, or awaited using await() in synchronous execution.
+	 *
+	 * @param characteristic the characteristic to write to.
+	 * @param data           data to be written to the characteristic.
+	 * @param offset         index of the first byte to be sent.
+	 * @param length         number of bytes to be sent.
+	 * @param writeType      the write type which is to be used.
+	 * @return The request.
+	 */
+	@NonNull
+	protected WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic,
+											   @Nullable final byte[] data, final int offset, final int length,
+											   @WriteType final int writeType) {
+		return Request.newWriteRequest(characteristic, data, offset, length, writeType)
+				.setRequestHandler(requestHandler);
+	}
+
+	/**
 	 * Writes the given data to the characteristic. The write type is taken from the characteristic.
 	 * <p>
 	 * Use {@link WriteRequest#split() split()} or
@@ -1288,7 +1366,9 @@ public abstract class BleManager implements ILogger {
 	 * @param characteristic the characteristic to write to.
 	 * @param data           data to be written to the characteristic.
 	 * @return The request.
+	 * @deprecated Use {@link #writeCharacteristic(BluetoothGattCharacteristic, Data, int)} instead.
 	 */
+	@Deprecated
 	@NonNull
 	protected WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic,
 											   @Nullable final Data data) {
@@ -1311,7 +1391,9 @@ public abstract class BleManager implements ILogger {
 	 * @param characteristic the characteristic to write to.
 	 * @param data           data to be written to the characteristic.
 	 * @return The request.
+	 * @deprecated Use {@link #writeCharacteristic(BluetoothGattCharacteristic, byte[], int)} instead.
 	 */
+	@Deprecated
 	@NonNull
 	protected WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic,
 											   @Nullable final byte[] data) {
@@ -1337,7 +1419,9 @@ public abstract class BleManager implements ILogger {
 	 * @param offset         index of the first byte to be sent.
 	 * @param length         number of bytes to be sent.
 	 * @return The request.
+	 * @deprecated Use {@link #writeCharacteristic(BluetoothGattCharacteristic, byte[], int, int, int)} instead.
 	 */
+	@Deprecated
 	@NonNull
 	protected WriteRequest writeCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic,
 											   @Nullable final byte[] data, final int offset, final int length) {
