@@ -1,0 +1,51 @@
+name: Deploy to Nexus
+on:
+  push:
+    tags:
+      - '*'
+  workflow_dispatch:
+jobs:
+  generateReadme:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: master
+          fetch-depth: 0
+      - shell: bash
+        env:
+          CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
+        run: |
+          git config user.email $CONTACT_EMAIL
+          git config user.name "Github Action"
+          VERSION=`git describe --tags --abbrev=0`
+          VERSION=`./moustache/split.sh $VERSION`
+          rm -f ./README.md
+          VERSION=$VERSION ./moustache/mo ./moustache/README.mo > ./README.md
+          git add .
+          git commit -m "Update readme to version=$VERSION"
+          git push
+  deployAarsToNexus:
+    needs: generateReadme
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          ref: master
+          fetch-depth: 0
+      - shell: bash
+        env:
+          KEYSTORE_ALIAS: ${{ secrets.KEYSTORE_ALIAS }}
+          KEYSTORE_KEY_PSWD: ${{ secrets.KEYSTORE_KEY_PSWD }}
+          KEYSTORE_PSWD: ${{ secrets.KEYSTORE_PSWD }}
+          GPG_SIGNING_KEY: ${{ secrets.GPG_SIGNING_KEY }}
+          GPG_PASSWORD: ${{ secrets.GPG_PASSWORD }}
+          OSSR_USERNAME: ${{ secrets.OSSR_USERNAME }}
+          OSSR_PASSWORD: ${{ secrets.OSSR_PASSWORD }}
+          SONATYPE_STATING_PROFILE_ID: ${{ secrets.SONATYPE_STATING_PROFILE_ID }}
+        run: |
+          echo "${{ secrets.KEYSTORE_FILE }}" > keystore.asc
+          gpg -d --passphrase "${{ secrets.KEYSTORE_FILE_PSWD }}" --batch keystore.asc > keystore
+          echo "${{ secrets.GPG_FILE }}" > sec.gpg.asc
+          gpg -d --passphrase "${{ secrets.GPG_FILE_PSWD }}" --batch sec.gpg.asc > sec.gpg
+          bundle exec fastlane deployNexus

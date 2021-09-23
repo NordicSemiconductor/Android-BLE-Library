@@ -1,8 +1,9 @@
 apply plugin: 'maven-publish'
 apply plugin: 'signing'
+apply from: rootProject.file("gradle/git-tag-version.gradle")
 
 group = GROUP
-version = VERSION_NAME
+version = getVersionNameFromTags()
 
 task androidSourcesJar(type: Jar) {
     archiveClassifier.set('sources')
@@ -24,7 +25,7 @@ afterEvaluate {
 
                 groupId = GROUP
                 artifactId = POM_ARTIFACT_ID
-                version = VERSION_NAME
+                version = getVersionNameFromTags()
 
                 pom {
                     name = POM_NAME
@@ -58,9 +59,9 @@ afterEvaluate {
     }
 }
 
-ext["signing.keyId"] = rootProject.ext["signing.keyId"]
-ext["signing.password"] = rootProject.ext["signing.password"]
-ext["signing.secretKeyRingFile"] = rootProject.ext["signing.secretKeyRingFile"]
+ext["signing.keyId"] = System.env.GPG_SIGNING_KEY
+ext["signing.password"] = System.env.GPG_PASSWORD
+ext["signing.secretKeyRingFile"] = "../sec.gpg"
 
 signing {
     sign publishing.publications

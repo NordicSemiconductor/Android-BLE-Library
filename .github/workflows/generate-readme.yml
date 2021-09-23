@@ -1,0 +1,24 @@
+name: Generate README.md
+on:
+  workflow_dispatch:
+jobs:
+  restorePassword:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+        with:
+          fetch-depth: 0
+      - shell: bash
+        env:
+          CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
+        run: |
+          git config user.email $CONTACT_EMAIL
+          git config user.name "Github Action"
+          git describe --tags
+          VERSION=`git describe --tags --abbrev=0`
+          VERSION=`./moustache/split.sh $VERSION`
+          rm -f ./README.md
+          VERSION=$VERSION ./moustache/mo ./moustache/README.mo > ./README.md
+          git add .
+          git commit -m "Update readme to version=$VERSION"
+          git push

@@ -13,9 +13,9 @@ nexusPublishing {
 
     repositories {
         sonatype {
-            stagingProfileId = sonatypeStagingProfileId
-            username = ossrhUsername
-            password = ossrhPassword
+            stagingProfileId = System.env.SONATYPE_STATING_PROFILE_ID
+            username = System.env.OSSR_USERNAME
+            password = System.env.OSSR_PASSWORD
         }
     }
 
