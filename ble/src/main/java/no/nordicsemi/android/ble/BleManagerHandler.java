@@ -2355,7 +2355,14 @@ abstract class BleManagerHandler extends RequestHandler {
 				onError(gatt.getDevice(), ERROR_MTU_REQUEST, status);
 			}
 			checkCondition();
-			nextRequest(true);
+			// If the device was already connected using another client (BluetoothGatt object),
+			// which had requested MTU change, just after connection this new MTU may be reported
+			// to this client. This happens even before service discovery, effectively reporting
+			// the device ready (as init queue is still null at this time).
+			// This check should help.
+			if (servicesDiscovered) {
+				nextRequest(true);
+			}
 		}
 
 		/**
