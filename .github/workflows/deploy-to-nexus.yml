@@ -1,36 +1,12 @@
-name: Generate README.md and Deploy to Nexus
+name: Deploy to Nexus
 on:
-  push:
-    tags:
-      - '*'
   workflow_dispatch:
 jobs:
-  generateReadme:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v2
-        with:
-          ref: master
-          fetch-depth: 0
-      - shell: bash
-        # The script gets VERSION from the latest tag and replaces {{VERSION}} with it in
-        # moustache/README.mo. Then, it commits the change using GitHub Action user.
-        run: |
-          git config user.email mag@nordicsemi.no
-          git config user.name "Github Action"
-          VERSION=`git describe --tags --abbrev=0`
-          VERSION=`./moustache/split.sh $VERSION`
-          rm -f ./README.md
-          VERSION=$VERSION ./moustache/mo ./moustache/README.mo > ./README.md
-          git add .
-          git diff-index --quiet HEAD || git commit -m "Update readme to version=$VERSION" && git push
   deployAarsToNexus:
-    needs: generateReadme
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: master
           fetch-depth: 0
       - shell: bash
         env:

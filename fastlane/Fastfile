@@ -17,15 +17,9 @@ default_platform(:android)
 
 platform :android do
 
-  desc "Runs all the tests"
-  lane :test do
-    gradle(task: "test")
-  end
-
   desc "Deploy libraries to Nexus."
   lane :deployNexus do
-    gradle(task: "clean assembleRelease")
-    gradle(task: "publishReleasePublicationToSonatypeRepository")
+    gradle(task: "publishToSonatype closeAndReleaseSonatypeStagingRepository")
   end
 
 end

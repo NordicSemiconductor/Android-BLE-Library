@@ -9,12 +9,11 @@ jobs:
         with:
           fetch-depth: 0
       - shell: bash
-        env:
-          CONTACT_EMAIL: ${{ secrets.CONTACT_EMAIL }}
+        # The script gets VERSION from the latest tag and replaces {{VERSION}} with it in
+        # moustache/README.mo. Then, it commits the change using GitHub Action user.
         run: |
-          git config user.email $CONTACT_EMAIL
+          git config user.email mag@nordicsemi.no
           git config user.name "Github Action"
-          git describe --tags
           VERSION=`git describe --tags --abbrev=0`
           VERSION=`./moustache/split.sh $VERSION`
           rm -f ./README.md
