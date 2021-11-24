@@ -25,6 +25,7 @@ package no.nordicsemi.android.ble.callback;
 import android.bluetooth.BluetoothDevice;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 @FunctionalInterface
 public interface FailCallback {
@@ -49,5 +50,5 @@ public interface FailCallback {
 	 *               {@link #REASON_VALIDATION}, {@link #REASON_CANCELLED}
 	 *               or {@link #REASON_REQUEST_FAILED} (for other reason).
 	 */
-	void onRequestFailed(@NonNull final BluetoothDevice device, final int status);
+	void onRequestFailed(@Nullable final BluetoothDevice device, final int status);
 }

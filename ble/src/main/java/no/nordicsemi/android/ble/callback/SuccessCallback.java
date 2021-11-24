@@ -25,6 +25,7 @@ package no.nordicsemi.android.ble.callback;
 import android.bluetooth.BluetoothDevice;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 
 @FunctionalInterface
 public interface SuccessCallback {
@@ -34,5 +35,5 @@ public interface SuccessCallback {
 	 *
 	 * @param device the target device.
 	 */
-	void onRequestCompleted(@NonNull final BluetoothDevice device);
+	void onRequestCompleted(@Nullable final BluetoothDevice device);
 }
