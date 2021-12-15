@@ -2,7 +2,7 @@ name: Generate README.md
 on:
   workflow_dispatch:
 jobs:
-  restorePassword:
+  generateReadme:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v2
