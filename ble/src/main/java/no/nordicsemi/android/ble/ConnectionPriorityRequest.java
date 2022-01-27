@@ -49,7 +49,9 @@ public final class ConnectionPriorityRequest extends SimpleValueRequest<Connecti
 	 * Bluetooth SIG. This is the default value if no connection parameter update
 	 * is requested.
 	 * <p>
-	 * Interval: 30 - 50 ms, latency: 0, supervision timeout: 20 sec.
+	 * Interval: 30 - 50 ms, latency: 0, supervision timeout: 5 sec (Android 8+) or 20 sec (before).
+	 *
+	 * @see <a href="https://android.googlesource.com/platform/packages/modules/Bluetooth/+/673c5903c4a920510c371af26e5870857a584ead%5E!">commit 673c5903c4a920510c371af26e5870857a584ead</a>
 	 */
 	public static final int CONNECTION_PRIORITY_BALANCED = 0;
 
@@ -61,14 +63,19 @@ public final class ConnectionPriorityRequest extends SimpleValueRequest<Connecti
 	 * to reduce energy use.
 	 * <p>
 	 * Interval: 11.25 - 15 ms (Android 6+) or 7.5 - 10 ms (Android 4.3 - 5.1),
-	 * latency: 0, supervision timeout: 20 sec.
+	 * latency: 0, supervision timeout: 5 sec (Android 8+) or 20 sec (before).
+	 *
+	 * @see <a href="https://android.googlesource.com/platform/packages/modules/Bluetooth/+/4bc7c7e877c9d18f2781229c553b6144f9fd7236%5E%21/">commit 4bc7c7e877c9d18f2781229c553b6144f9fd7236</a>
+	 * @see <a href="https://android.googlesource.com/platform/packages/modules/Bluetooth/+/673c5903c4a920510c371af26e5870857a584ead%5E!">commit 673c5903c4a920510c371af26e5870857a584ead</a>
 	 */
 	public static final int CONNECTION_PRIORITY_HIGH = 1;
 
 	/**
 	 * Connection parameter update - Request low power, reduced data rate connection parameters.
 	 * <p>
-	 * Interval: 100 - 125 ms, latency: 2, supervision timeout: 20 sec.
+	 * Interval: 100 - 125 ms, latency: 2, supervision timeout: 5 sec (Android 8+) or 20 sec (before).
+	 *
+	 * @see <a href="https://android.googlesource.com/platform/packages/modules/Bluetooth/+/673c5903c4a920510c371af26e5870857a584ead%5E!">commit 673c5903c4a920510c371af26e5870857a584ead</a>
 	 */
 	public static final int CONNECTION_PRIORITY_LOW_POWER = 2;
 
