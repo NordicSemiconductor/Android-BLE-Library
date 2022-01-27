@@ -266,7 +266,7 @@ public abstract class BleManager implements ILogger {
 	 * @param key     pairing passkey, if supported by variant. -1 otherwise
 	 */
 	protected void onPairingRequestReceived(@NonNull final BluetoothDevice device,
-											@PairingVariant final int variant
+											@PairingVariant final int variant,
 											final int key) {
 		// The API below is available for Android 4.4 or newer.
 
