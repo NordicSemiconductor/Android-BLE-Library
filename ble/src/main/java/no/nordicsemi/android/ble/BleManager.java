@@ -138,10 +138,11 @@ public abstract class BleManager implements ILogger {
 
 			// String values are used as the constants are not available for Android 4.3.
 			final int variant = intent.getIntExtra("android.bluetooth.device.extra.PAIRING_VARIANT"/*BluetoothDevice.EXTRA_PAIRING_VARIANT*/, 0);
+			final int key = intent.getIntExtra("android.bluetooth.device.extra.PAIRING_KEY"/*BluetoothDevice.PAIRING_KEY*/, -1);
 			log(Log.DEBUG, "[Broadcast] Action received: android.bluetooth.device.action.PAIRING_REQUEST"/*BluetoothDevice.ACTION_PAIRING_REQUEST*/ +
-					", pairing variant: " + ParserUtils.pairingVariantToString(variant) + " (" + variant + ")");
+					", pairing variant: " + ParserUtils.pairingVariantToString(variant) + " (" + variant + "); key: "+key);
 
-			onPairingRequestReceived(device, variant);
+			onPairingRequestReceived(device, variant, key);
 		}
 	};
 
@@ -262,9 +263,11 @@ public abstract class BleManager implements ILogger {
 	 *
 	 * @param device  the device.
 	 * @param variant pairing variant.
+	 * @param key     pairing passkey, if supported by variant. -1 otherwise
 	 */
 	protected void onPairingRequestReceived(@NonNull final BluetoothDevice device,
-											@PairingVariant final int variant) {
+											@PairingVariant final int variant
+											final int key) {
 		// The API below is available for Android 4.4 or newer.
 
 		// An app may set the PIN here or set pairing confirmation (depending on the variant) using:
