@@ -39,6 +39,7 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.RequiresPermission;
 import no.nordicsemi.android.ble.annotation.ConnectionPriority;
 import no.nordicsemi.android.ble.annotation.ConnectionState;
+import no.nordicsemi.android.ble.annotation.LogPriority;
 import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.annotation.PhyOption;
 import no.nordicsemi.android.ble.annotation.PhyValue;
@@ -3426,11 +3427,12 @@ abstract class BleManagerHandler extends RequestHandler {
 //		return cep != null && cep.getValue() != null && cep.getValue().length >= 2 && (cep.getValue()[0] & 0x01) != 0;
 //	}
 
+	@FunctionalInterface
 	private interface Loggable {
 		String log();
 	}
 
-	private void log(final int priority, @NonNull final Loggable message) {
+	private void log(@LogPriority final int priority, @NonNull final Loggable message) {
 		if (priority >= manager.getMinLogPriority()) {
 			manager.log(priority, message.log());
 		}
