@@ -24,9 +24,17 @@ package no.nordicsemi.android.ble.utils;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.StringRes;
+import no.nordicsemi.android.ble.annotation.LogPriority;
 
 @SuppressWarnings("unused")
 public interface ILogger {
+
+	/**
+	 * Returns the minimum log priority that should be logged.
+	 * @return Minimum log priority.
+	 * @since 2.4.0
+	 */
+	@LogPriority int getMinLogPriority();
 
 	/**
 	 * Logs the given message with given log priority into the all managed devices' log session.
@@ -34,7 +42,7 @@ public interface ILogger {
 	 * @param priority the log priority.
 	 * @param message  the message to be logged.
 	 */
-	void log(final int priority, @NonNull final String message);
+	void log(final @LogPriority int priority, @NonNull final String message);
 
 	/**
 	 * Logs the given message with given log priority into the all managed devices' log session.
@@ -43,5 +51,5 @@ public interface ILogger {
 	 * @param messageRes string resource id.
 	 * @param params     additional (optional) parameters used to fill the message.
 	 */
-	void log(final int priority, @StringRes final int messageRes, @Nullable final Object... params);
+	void log(final @LogPriority int priority, @StringRes final int messageRes, @Nullable final Object... params);
 }

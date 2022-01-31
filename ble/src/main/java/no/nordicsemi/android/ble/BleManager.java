@@ -46,6 +46,7 @@ import androidx.annotation.RequiresPermission;
 import androidx.annotation.StringRes;
 import no.nordicsemi.android.ble.annotation.ConnectionPriority;
 import no.nordicsemi.android.ble.annotation.ConnectionState;
+import no.nordicsemi.android.ble.annotation.LogPriority;
 import no.nordicsemi.android.ble.annotation.PairingVariant;
 import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.annotation.PhyOption;
@@ -372,7 +373,18 @@ public abstract class BleManager implements ILogger {
 	}
 
 	@Override
-	public void log(final int priority, @NonNull final String message) {
+	@LogPriority
+	public int getMinLogPriority() {
+		// By default, the library will log entries on INFO and higher priorities.
+		// Consider changing to false in production to increase speed and decrease memory allocations.
+
+		// Note: Before version 2.4.0 all logs were logged by default, so this changes previous behavior.
+		//       To restore it, return Log.VERBOSE here.
+		return Log.INFO;
+	}
+
+	@Override
+	public void log(@LogPriority final int priority, @NonNull final String message) {
 		// Override to log events. Simple log can use Logcat:
 		//
 		// Log.println(priority, TAG, message);
@@ -390,7 +402,7 @@ public abstract class BleManager implements ILogger {
 	}
 
 	@Override
-	public void log(final int priority, @StringRes final int messageRes,
+	public void log(@LogPriority final int priority, @StringRes final int messageRes,
 					@Nullable final Object... params) {
 		final String message = context.getString(messageRes, params);
 		log(priority, message);
