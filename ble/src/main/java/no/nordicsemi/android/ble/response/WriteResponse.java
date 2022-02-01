@@ -41,6 +41,10 @@ public class WriteResponse implements DataSentCallback, Parcelable {
 	private BluetoothDevice device;
 	private Data data;
 
+	public WriteResponse() {
+		// empty
+	}
+
 	@Override
 	public void onDataSent(@NonNull final BluetoothDevice device, @NonNull final Data data) {
 		this.device = device;
