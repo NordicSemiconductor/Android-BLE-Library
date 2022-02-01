@@ -692,7 +692,7 @@ public abstract class Request {
 	 * After the operation is complete a proper callback will be invoked.
 	 * <p>
 	 * If the read should be triggered by another operation (for example writing an
-	 * op code), set it with {@link WaitForValueChangedRequest#trigger(Operation)}.
+	 * op code), set it with {@link WaitForReadRequest#trigger(Operation)}.
 	 *
 	 * @param characteristic characteristic that should be read by the remote device.
 	 * @return The new request.
@@ -709,7 +709,7 @@ public abstract class Request {
 	 * After the operation is complete a proper callback will be invoked.
 	 * <p>
 	 * If the read should be triggered by another operation (for example writing an
-	 * op code), set it with {@link WaitForValueChangedRequest#trigger(Operation)}.
+	 * op code), set it with {@link WaitForReadRequest#trigger(Operation)}.
 	 *
 	 * @param characteristic characteristic that should be read by the remote device.
 	 * @param value          value to be sent. The array is copied into another buffer so it's
@@ -730,7 +730,7 @@ public abstract class Request {
 	 * After the operation is complete a proper callback will be invoked.
 	 * <p>
 	 * If the read should be triggered by another operation (for example writing an
-	 * op code), set it with {@link WaitForValueChangedRequest#trigger(Operation)}.
+	 * op code), set it with {@link WaitForReadRequest#trigger(Operation)}.
 	 *
 	 * @param characteristic characteristic that should be read by the remote device.
 	 * @param value          value to be sent. The array is copied into another buffer so it's
@@ -753,7 +753,7 @@ public abstract class Request {
 	 * After the operation is complete a proper callback will be invoked.
 	 * <p>
 	 * If the read should be triggered by another operation (for example writing an
-	 * op code), set it with {@link WaitForValueChangedRequest#trigger(Operation)}.
+	 * op code), set it with {@link WaitForReadRequest#trigger(Operation)}.
 	 *
 	 * @param descriptor descriptor that should be read by the remote device.
 	 * @return The new request.
@@ -770,7 +770,7 @@ public abstract class Request {
 	 * After the operation is complete a proper callback will be invoked.
 	 * <p>
 	 * If the read should be triggered by another operation (for example writing an
-	 * op code), set it with {@link WaitForValueChangedRequest#trigger(Operation)}.
+	 * op code), set it with {@link WaitForReadRequest#trigger(Operation)}.
 	 *
 	 * @param descriptor descriptor that should be read by the remote device.
 	 * @param value      value to be sent. The array is copied into another buffer so it's
@@ -791,7 +791,7 @@ public abstract class Request {
 	 * After the operation is complete a proper callback will be invoked.
 	 * <p>
 	 * If the read should be triggered by another operation (for example writing an
-	 * op code), set it with {@link WaitForValueChangedRequest#trigger(Operation)}.
+	 * op code), set it with {@link WaitForReadRequest#trigger(Operation)}.
 	 *
 	 * @param descriptor descriptor that should be read by the remote device.
 	 * @param value      value to be sent. The array is copied into another buffer so it's
