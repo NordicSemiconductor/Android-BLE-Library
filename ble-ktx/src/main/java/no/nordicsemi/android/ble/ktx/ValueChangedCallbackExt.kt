@@ -14,7 +14,7 @@ import no.nordicsemi.android.ble.response.ReadResponse
  *
  * Usage:
  *
- *     val hrmMeasurementsData = enableNotifications(hrmCharacteristic).asFlow()
+ *     val hrmMeasurementsData = setNotificationCallback(hrmCharacteristic).asFlow()  // Flow<Data>
  * @return The flow.
  */
 @ExperimentalCoroutinesApi
@@ -33,7 +33,9 @@ fun ValueChangedCallback.asFlow(): Flow<Data> = callbackFlow {
  *
  * Usage:
  *
- *     val hrmMeasurementsData: Flow<HeartRateMeasurementResponse> = enableNotifications(hrmCharacteristic).asResponseFlow()
+ *     val hrmMeasurementsData: Flow<HeartRateMeasurementResponse> =
+ *         setNotificationCallback(hrmCharacteristic)
+ *             .asResponseFlow()
  * @return The flow.
  */
 @ExperimentalCoroutinesApi
@@ -53,7 +55,9 @@ inline fun <reified T: ReadResponse> ValueChangedCallback.asResponseFlow(): Flow
  *
  * Usage:
  *
- *     val hrmMeasurementsData: Flow<HeartRateMeasurementResponse> = enableNotifications(hrmCharacteristic).asValidResponseFlow()
+ *     val hrmMeasurementsData: Flow<HeartRateMeasurementResponse> =
+ *         setNotificationCallback(hrmCharacteristic)
+ *             .asValidResponseFlow()
  * @return The flow.
  */
 @ExperimentalCoroutinesApi
