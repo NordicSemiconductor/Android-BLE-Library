@@ -91,7 +91,7 @@ public abstract class ContinuousGlucoseMeasurementDataCallback extends ProfileRe
 
 			final boolean crcPresent = size == dataSize + 2;
 			if (crcPresent) {
-				final int expectedCrc = data.getIntValue(Data.FORMAT_UINT16, offset + dataSize);
+				final int expectedCrc = data.getIntValue(Data.FORMAT_UINT16_LE, offset + dataSize);
 				final int actualCrc = CRC16.MCRF4XX(data.getValue(), offset, dataSize);
 				if (expectedCrc != actualCrc) {
 					onContinuousGlucoseMeasurementReceivedWithCrcError(device, data);
@@ -105,7 +105,7 @@ public abstract class ContinuousGlucoseMeasurementDataCallback extends ProfileRe
 			offset += 2;
 
 			// Time offset (in minutes since Session Start)
-			final int timeOffset = data.getIntValue(Data.FORMAT_UINT16, offset);
+			final int timeOffset = data.getIntValue(Data.FORMAT_UINT16_LE, offset);
 			offset += 2;
 
 			// Sensor Status Annunciation

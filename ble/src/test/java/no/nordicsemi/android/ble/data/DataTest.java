@@ -186,7 +186,7 @@ public class DataTest {
 	@Test
 	public void setValue_UINT16() {
 		final MutableData data = new MutableData(new byte[2]);
-		data.setValue(26576, Data.FORMAT_UINT16, 0);
+		data.setValue(26576, Data.FORMAT_UINT16_LE, 0);
 		assertArrayEquals(new byte[] { (byte) 0xD0, 0x67 } , data.getValue());
 	}
 
@@ -200,7 +200,7 @@ public class DataTest {
 	@Test
 	public void getValue_UINT16() {
 		final Data data = new Data(new byte[] { (byte) 0xD0, 0x67 });
-		final int value = data.getIntValue(Data.FORMAT_UINT16, 0);
+		final int value = data.getIntValue(Data.FORMAT_UINT16_LE, 0);
 		assertEquals(26576, value);
 	}
 
@@ -214,7 +214,7 @@ public class DataTest {
 	@Test
 	public void setValue_SINT16() {
 		final MutableData data = new MutableData(new byte[2]);
-		data.setValue(-6192, Data.FORMAT_SINT16, 0);
+		data.setValue(-6192, Data.FORMAT_SINT16_LE, 0);
 		assertArrayEquals(new byte[] { (byte) 0xD0, (byte) 0xE7 } , data.getValue());
 	}
 
@@ -228,7 +228,7 @@ public class DataTest {
 	@Test
 	public void getValue_SINT16() {
 		final Data data = new Data(new byte[] { (byte) 0xD0, (byte) 0xE7 });
-		final int value = data.getIntValue(Data.FORMAT_SINT16, 0);
+		final int value = data.getIntValue(Data.FORMAT_SINT16_LE, 0);
 		assertEquals(-6192, value);
 	}
 
@@ -242,7 +242,7 @@ public class DataTest {
 	@Test
 	public void setValue_UINT24() {
 		final MutableData data = new MutableData(new byte[3]);
-		data.setValue(0x010203, Data.FORMAT_UINT24, 0);
+		data.setValue(0x010203, Data.FORMAT_UINT24_LE, 0);
 		assertArrayEquals(new byte[] { 0x03, 0x02, 0x01 } , data.getValue());
 	}
 
@@ -256,7 +256,7 @@ public class DataTest {
 	@Test
 	public void getValue_UINT24() {
 		final Data data = new Data(new byte[] { 0x03, 0x02, 0x01 });
-		final int value = data.getIntValue(Data.FORMAT_UINT24, 0);
+		final int value = data.getIntValue(Data.FORMAT_UINT24_LE, 0);
 		assertEquals(0x010203, value);
 	}
 
@@ -270,7 +270,7 @@ public class DataTest {
 	@Test
 	public void setValue_SINT24() {
 		final MutableData data = new MutableData(new byte[3]);
-		data.setValue(0xfefdfd, Data.FORMAT_UINT24, 0);
+		data.setValue(0xfefdfd, Data.FORMAT_UINT24_LE, 0);
 		assertArrayEquals(new byte[] { (byte) 0xFD, (byte) 0xFD, (byte) 0xFE } , data.getValue());
 	}
 
@@ -284,7 +284,7 @@ public class DataTest {
 	@Test
 	public void getValue_SINT24() {
 		final MutableData data = new MutableData(new byte[] { (byte) 0xFD, (byte) 0xFD, (byte) 0xFE });
-		final int value = data.getIntValue(Data.FORMAT_UINT24, 0);
+		final int value = data.getIntValue(Data.FORMAT_UINT24_LE, 0);
 		assertEquals(0xfefdfd, value);
 	}
 
@@ -298,7 +298,7 @@ public class DataTest {
 	@Test
 	public void setValue_UINT32() {
 		final MutableData data = new MutableData(new byte[4]);
-		data.setValue(0x01020304, Data.FORMAT_UINT32, 0);
+		data.setValue(0x01020304, Data.FORMAT_UINT32_LE, 0);
 		assertArrayEquals(new byte[] { 0x04, 0x03, 0x02, 0x01 } , data.getValue());
 	}
 
@@ -312,7 +312,7 @@ public class DataTest {
 	@Test
 	public void getValue_UINT32() {
 		final Data data = new Data(new byte[] { 0x04, 0x03, 0x02, 0x01 });
-		final int value = data.getIntValue(Data.FORMAT_UINT32, 0);
+		final int value = data.getIntValue(Data.FORMAT_UINT32_LE, 0);
 		assertEquals(0x01020304, value);
 	}
 
@@ -326,7 +326,7 @@ public class DataTest {
 	@Test
 	public void setValue_SINT32() {
 		final MutableData data = new MutableData(new byte[4]);
-		data.setValue(0xfefdfd00, Data.FORMAT_UINT32, 0);
+		data.setValue(0xfefdfd00, Data.FORMAT_UINT32_LE, 0);
 		assertArrayEquals(new byte[] { (byte) 0x00, (byte) 0xFD, (byte) 0xFD, (byte) 0xFE } , data.getValue());
 	}
 
@@ -340,7 +340,7 @@ public class DataTest {
 	@Test
 	public void getValue_SINT32() {
 		final Data data = new Data(new byte[] { (byte) 0x00, (byte) 0xFD, (byte) 0xFD, (byte) 0xFE });
-		final int value = data.getIntValue(Data.FORMAT_UINT32, 0);
+		final int value = data.getIntValue(Data.FORMAT_UINT32_LE, 0);
 		assertEquals(0xfefdfd00, value);
 	}
 
@@ -354,7 +354,7 @@ public class DataTest {
 	@Test
 	public void setValue_UINT32_big() {
 		final MutableData data = new MutableData(new byte[4]);
-		data.setValue(0xF0000001L, Data.FORMAT_UINT32, 0);
+		data.setValue(0xF0000001L, Data.FORMAT_UINT32_LE, 0);
 		assertArrayEquals(new byte[] { 0x01, 0x00, 0x00, (byte) 0xF0 } , data.getValue());
 	}
 
@@ -368,7 +368,7 @@ public class DataTest {
 	@Test
 	public void getValue_UINT32_big() {
 		final Data data = new Data(new byte[] { 0x01, 0x00, 0x00, (byte) 0xF0 });
-		final long value = data.getLongValue(Data.FORMAT_UINT32, 0);
+		final long value = data.getLongValue(Data.FORMAT_UINT32_LE, 0);
 		assertEquals(0xF0000001L, value);
 	}
 

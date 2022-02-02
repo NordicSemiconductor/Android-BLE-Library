@@ -208,10 +208,10 @@ public class CGMSpecificOpsControlPointDataCallbackTest {
 		final MutableData data = new MutableData(new byte[11]);
 		data.setValue(6, Data.FORMAT_UINT8, 0);
 		data.setValue(1, 2, Data.FORMAT_SFLOAT, 1);
-		data.setValue(10, Data.FORMAT_UINT16, 3);
+		data.setValue(10, Data.FORMAT_UINT16_LE, 3);
 		data.setValue(0x32, Data.FORMAT_UINT8, 5);
-		data.setValue(20, Data.FORMAT_UINT16, 6);
-		data.setValue(1, Data.FORMAT_UINT16, 8);
+		data.setValue(20, Data.FORMAT_UINT16_LE, 6);
+		data.setValue(1, Data.FORMAT_UINT16_LE, 8);
 		data.setValue(0b100, Data.FORMAT_UINT8, 10);
 
 		callback.onDataReceived(null, data);
@@ -224,12 +224,12 @@ public class CGMSpecificOpsControlPointDataCallbackTest {
 		final MutableData data = new MutableData(new byte[13]);
 		data.setValue(6, Data.FORMAT_UINT8, 0);
 		data.setValue(1, 2, Data.FORMAT_SFLOAT, 1);
-		data.setValue(10, Data.FORMAT_UINT16, 3);
+		data.setValue(10, Data.FORMAT_UINT16_LE, 3);
 		data.setValue(0x32, Data.FORMAT_UINT8, 5);
-		data.setValue(20, Data.FORMAT_UINT16, 6);
-		data.setValue(1, Data.FORMAT_UINT16, 8);
+		data.setValue(20, Data.FORMAT_UINT16_LE, 6);
+		data.setValue(1, Data.FORMAT_UINT16_LE, 8);
 		data.setValue(0b100, Data.FORMAT_UINT8, 10);
-		data.setValue(0xB2BF, Data.FORMAT_UINT16, 11);
+		data.setValue(0xB2BF, Data.FORMAT_UINT16_LE, 11);
 
 		callback.onDataReceived(null, data);
 		assertTrue(valueReceived);

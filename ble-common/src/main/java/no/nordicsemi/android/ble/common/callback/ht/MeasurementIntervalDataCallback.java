@@ -57,7 +57,7 @@ public abstract class MeasurementIntervalDataCallback extends ProfileReadRespons
 			return;
 		}
 
-		final int interval = data.getIntValue(Data.FORMAT_UINT16, 0);
+		final int interval = data.getIntValue(Data.FORMAT_UINT16_LE, 0);
 		onMeasurementIntervalReceived(device, interval);
 	}
 }

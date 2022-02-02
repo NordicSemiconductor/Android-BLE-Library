@@ -67,6 +67,6 @@ public class DataStreamTest {
 		final DataStream stream = new DataStream();
 		stream.write(new byte[] { 0, 1, 2, 3, 4, 5, 6});
 		final Data data = stream.toData();
-		assertEquals(0x100, data.getIntValue(Data.FORMAT_UINT16, 0).intValue());
+		assertEquals(0x100, data.getIntValue(Data.FORMAT_UINT16_LE, 0).intValue());
 	}
 }

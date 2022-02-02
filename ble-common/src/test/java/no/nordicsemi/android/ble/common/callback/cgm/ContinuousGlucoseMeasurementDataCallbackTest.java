@@ -67,7 +67,7 @@ public class ContinuousGlucoseMeasurementDataCallbackTest {
 
 			@Override
 			public void onContinuousGlucoseMeasurementReceivedWithCrcError(@NonNull final BluetoothDevice device, @NonNull final Data data) {
-				final int expectedCrc = data.getIntValue(Data.FORMAT_UINT16, 13);
+				final int expectedCrc = data.getIntValue(Data.FORMAT_UINT16_LE, 13);
 				final int actualCrc = CRC16.MCRF4XX(data.getValue(), 0, 13);
 				assertEquals("CRC error on valid data", expectedCrc, actualCrc);
 			}
@@ -85,7 +85,7 @@ public class ContinuousGlucoseMeasurementDataCallbackTest {
 		// Glucose Concentration
 		assertTrue(data.setValue(1234, -2, Data.FORMAT_SFLOAT, 2));
 		// Time offset
-		assertTrue(data.setValue(5, Data.FORMAT_UINT16, 4));
+		assertTrue(data.setValue(5, Data.FORMAT_UINT16_LE, 4));
 		// Status
 		assertTrue(data.setByte(0x02, 6)); // Warning status: Low battery
 		assertTrue(data.setByte(0x14, 7)); // Cal/Temp status: Sensor Temperature too high / Calibration recommended
@@ -95,7 +95,7 @@ public class ContinuousGlucoseMeasurementDataCallbackTest {
 		// Quality
 		assertTrue(data.setValue(997, -1, Data.FORMAT_SFLOAT, 11));
 		// E2E CRC
-		assertTrue(data.setValue(0x3F8E, Data.FORMAT_UINT16, 13));
+		assertTrue(data.setValue(0x3F8E, Data.FORMAT_UINT16_LE, 13));
 
 		callback.onDataReceived(null, data);
 	}
@@ -133,7 +133,7 @@ public class ContinuousGlucoseMeasurementDataCallbackTest {
 		// Glucose Concentration
 		assertTrue(data.setValue(12, 1, Data.FORMAT_SFLOAT, 2));
 		// Time offset
-		assertTrue(data.setValue(6, Data.FORMAT_UINT16, 4));
+		assertTrue(data.setValue(6, Data.FORMAT_UINT16_LE, 4));
 
 		callback.onDataReceived(null, data);
 	}
@@ -173,7 +173,7 @@ public class ContinuousGlucoseMeasurementDataCallbackTest {
 		// Glucose Concentration
 		assertTrue(data.setValue(12, 1, Data.FORMAT_SFLOAT, 2));
 		// Time offset
-		assertTrue(data.setValue(5, Data.FORMAT_UINT16, 4));
+		assertTrue(data.setValue(5, Data.FORMAT_UINT16_LE, 4));
 
 		// Size
 		assertTrue(data.setValue(6, Data.FORMAT_UINT8, 6));
@@ -182,7 +182,7 @@ public class ContinuousGlucoseMeasurementDataCallbackTest {
 		// Glucose Concentration
 		assertTrue(data.setValue(12, 1, Data.FORMAT_SFLOAT, 8));
 		// Time offset
-		assertTrue(data.setValue(6, Data.FORMAT_UINT16, 10));
+		assertTrue(data.setValue(6, Data.FORMAT_UINT16_LE, 10));
 
 		callback.onDataReceived(null, data);
 	}
@@ -216,9 +216,9 @@ public class ContinuousGlucoseMeasurementDataCallbackTest {
 		// Glucose Concentration
 		assertTrue(data.setValue(12, 1, Data.FORMAT_SFLOAT, 2));
 		// Time offset
-		assertTrue(data.setValue(6, Data.FORMAT_UINT16, 4));
+		assertTrue(data.setValue(6, Data.FORMAT_UINT16_LE, 4));
 		// E2E CRC
-		assertTrue(data.setValue(0x6F58, Data.FORMAT_UINT16, 6));
+		assertTrue(data.setValue(0x6F58, Data.FORMAT_UINT16_LE, 6));
 
 		callback.onDataReceived(null, data);
 	}
@@ -251,7 +251,7 @@ public class ContinuousGlucoseMeasurementDataCallbackTest {
 		// Glucose Concentration
 		assertTrue(data.setValue(12, 1, Data.FORMAT_SFLOAT, 2));
 		// Time offset
-		assertFalse(data.setValue(6, Data.FORMAT_UINT16, 4));
+		assertFalse(data.setValue(6, Data.FORMAT_UINT16_LE, 4));
 
 		callback.onDataReceived(null, data);
 	}
@@ -284,7 +284,7 @@ public class ContinuousGlucoseMeasurementDataCallbackTest {
 		// Glucose Concentration
 		assertTrue(data.setValue(12, 1, Data.FORMAT_SFLOAT, 2));
 		// Time offset
-		assertTrue(data.setValue(6, Data.FORMAT_UINT16, 4));
+		assertTrue(data.setValue(6, Data.FORMAT_UINT16_LE, 4));
 		// Trend
 		assertFalse(data.setValue(2, -1, Data.FORMAT_SFLOAT, 9));
 

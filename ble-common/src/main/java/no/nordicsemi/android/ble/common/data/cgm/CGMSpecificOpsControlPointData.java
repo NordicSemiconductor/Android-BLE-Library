@@ -96,21 +96,21 @@ public final class CGMSpecificOpsControlPointData implements CGMTypes {
 		final MutableData data = new MutableData(new byte[11 + (secure ? 2 : 0)]);
 		data.setByte(OP_CODE_SET_CALIBRATION_VALUE, 0);
 		data.setValue(glucoseConcentrationOfCalibration, Data.FORMAT_SFLOAT, 1);
-		data.setValue(calibrationTime, Data.FORMAT_UINT16, 3);
+		data.setValue(calibrationTime, Data.FORMAT_UINT16_LE, 3);
 		final int typeAndSampleLocation = ((sampleLocation & 0xF) << 8) | (sampleType & 0xF);
 		data.setValue(typeAndSampleLocation, Data.FORMAT_UINT8, 5);
-		data.setValue(nextCalibrationTime, Data.FORMAT_UINT16, 6);
-		data.setValue(0, Data.FORMAT_UINT16, 8); // ignored: calibration data record number
+		data.setValue(nextCalibrationTime, Data.FORMAT_UINT16_LE, 6);
+		data.setValue(0, Data.FORMAT_UINT16_LE, 8); // ignored: calibration data record number
 		data.setValue(0, Data.FORMAT_UINT8, 10); // ignored: calibration status
 		return appendCrc(data, secure);
 	}
 
 	public static Data getCalibrationValue(@IntRange(from = 0) final int calibrationDataRecordNumber, final boolean secure) {
-		return create(OP_CODE_GET_CALIBRATION_VALUE, calibrationDataRecordNumber, Data.FORMAT_UINT16, secure);
+		return create(OP_CODE_GET_CALIBRATION_VALUE, calibrationDataRecordNumber, Data.FORMAT_UINT16_LE, secure);
 	}
 
 	public static Data getLastCalibrationValue(final boolean secure) {
-		return create(OP_CODE_GET_CALIBRATION_VALUE, 0xFFFF, Data.FORMAT_UINT16, secure);
+		return create(OP_CODE_GET_CALIBRATION_VALUE, 0xFFFF, Data.FORMAT_UINT16_LE, secure);
 	}
 
 	public static Data setPatientHighAlertLevel(@FloatRange(from = 0) final float level,
@@ -192,7 +192,7 @@ public final class CGMSpecificOpsControlPointData implements CGMTypes {
 		if (secure) {
 			final int length = data.size() - 2;
 			final int crc = CRC16.MCRF4XX(data.getValue(), 0, length);
-			data.setValue(crc, Data.FORMAT_UINT16, length);
+			data.setValue(crc, Data.FORMAT_UINT16_LE, length);
 		}
 		return data;
 	}

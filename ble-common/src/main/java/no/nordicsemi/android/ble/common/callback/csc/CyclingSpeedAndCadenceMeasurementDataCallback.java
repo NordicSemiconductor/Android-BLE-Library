@@ -79,10 +79,10 @@ public abstract class CyclingSpeedAndCadenceMeasurementDataCallback extends Prof
 		}
 
 		if (wheelRevPresent) {
-			final long wheelRevolutions = data.getIntValue(Data.FORMAT_UINT32, offset) & 0xFFFFFFFFL;
+			final long wheelRevolutions = data.getIntValue(Data.FORMAT_UINT32_LE, offset) & 0xFFFFFFFFL;
 			offset += 4;
 
-			final int lastWheelEventTime = data.getIntValue(Data.FORMAT_UINT16, offset); // 1/1024 s
+			final int lastWheelEventTime = data.getIntValue(Data.FORMAT_UINT16_LE, offset); // 1/1024 s
 			offset += 2;
 
 			if (mInitialWheelRevolutions < 0)
@@ -93,10 +93,10 @@ public abstract class CyclingSpeedAndCadenceMeasurementDataCallback extends Prof
 		}
 
 		if (crankRevPreset) {
-			final int crankRevolutions = data.getIntValue(Data.FORMAT_UINT16, offset);
+			final int crankRevolutions = data.getIntValue(Data.FORMAT_UINT16_LE, offset);
 			offset += 2;
 
-			final int lastCrankEventTime = data.getIntValue(Data.FORMAT_UINT16, offset);
+			final int lastCrankEventTime = data.getIntValue(Data.FORMAT_UINT16_LE, offset);
 			// offset += 2;
 
 			// Notify listener about the new measurement

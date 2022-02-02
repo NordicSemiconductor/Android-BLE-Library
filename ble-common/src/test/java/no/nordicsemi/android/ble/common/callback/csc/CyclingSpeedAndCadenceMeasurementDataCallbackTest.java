@@ -66,8 +66,8 @@ public class CyclingSpeedAndCadenceMeasurementDataCallbackTest {
 		// Flags
 		assertTrue(data.setByte(0x01, 0));
 		// Wheel revolutions
-		assertTrue(data.setValue(12345, Data.FORMAT_UINT32, 1));
-		assertTrue(data.setValue(1000, Data.FORMAT_UINT16, 5));
+		assertTrue(data.setValue(12345, Data.FORMAT_UINT32_LE, 1));
+		assertTrue(data.setValue(1000, Data.FORMAT_UINT16_LE, 5));
 
 		callback.onDataReceived(null, data);
 	}
@@ -100,8 +100,8 @@ public class CyclingSpeedAndCadenceMeasurementDataCallbackTest {
 		// Flags
 		assertTrue(data.setByte(0x02, 0));
 		// Crank revolutions
-		assertTrue(data.setValue(345, Data.FORMAT_UINT16, 1));
-		assertTrue(data.setValue(2000, Data.FORMAT_UINT16, 3));
+		assertTrue(data.setValue(345, Data.FORMAT_UINT16_LE, 1));
+		assertTrue(data.setValue(2000, Data.FORMAT_UINT16_LE, 3));
 
 		callback.onDataReceived(null, data);
 	}
@@ -140,11 +140,11 @@ public class CyclingSpeedAndCadenceMeasurementDataCallbackTest {
 		// Flags
 		assertTrue(data.setByte(0x03, 0));
 		// Wheel revolutions
-		assertTrue(data.setValue(12345, Data.FORMAT_UINT32, 1));
-		assertTrue(data.setValue(1000, Data.FORMAT_UINT16, 5));
+		assertTrue(data.setValue(12345, Data.FORMAT_UINT32_LE, 1));
+		assertTrue(data.setValue(1000, Data.FORMAT_UINT16_LE, 5));
 		// Crank revolutions
-		assertTrue(data.setValue(345, Data.FORMAT_UINT16, 7));
-		assertTrue(data.setValue(2000, Data.FORMAT_UINT16, 9));
+		assertTrue(data.setValue(345, Data.FORMAT_UINT16_LE, 7));
+		assertTrue(data.setValue(2000, Data.FORMAT_UINT16_LE, 9));
 
 		callback.onDataReceived(null, data);
 	}
@@ -173,14 +173,14 @@ public class CyclingSpeedAndCadenceMeasurementDataCallbackTest {
 		// Flags
 		assertTrue(data.setByte(0x01, 0));
 		// Wheel revolutions
-		assertTrue(data.setValue(10, Data.FORMAT_UINT32, 1));
-		assertTrue(data.setValue(0, Data.FORMAT_UINT16, 5));
+		assertTrue(data.setValue(10, Data.FORMAT_UINT32_LE, 1));
+		assertTrue(data.setValue(0, Data.FORMAT_UINT16_LE, 5));
 
 		callback.onDataReceived(null, data);
 
 		// Update wheel revolutions
-		assertTrue(data.setValue(20, Data.FORMAT_UINT32, 1));
-		assertTrue(data.setValue(1024, Data.FORMAT_UINT16, 5)); // 1 second
+		assertTrue(data.setValue(20, Data.FORMAT_UINT32_LE, 1));
+		assertTrue(data.setValue(1024, Data.FORMAT_UINT16_LE, 5)); // 1 second
 		callback.onDataReceived(null, data);
 	}
 
@@ -207,14 +207,14 @@ public class CyclingSpeedAndCadenceMeasurementDataCallbackTest {
 		// Flags
 		assertTrue(data.setByte(0x02, 0));
 		// Crank revolutions
-		assertTrue(data.setValue(10, Data.FORMAT_UINT16, 1));
-		assertTrue(data.setValue(0, Data.FORMAT_UINT16, 3));
+		assertTrue(data.setValue(10, Data.FORMAT_UINT16_LE, 1));
+		assertTrue(data.setValue(0, Data.FORMAT_UINT16_LE, 3));
 
 		callback.onDataReceived(null, data);
 
 		// Update crank revolutions
-		assertTrue(data.setValue(11, Data.FORMAT_UINT16, 1));
-		assertTrue(data.setValue(1024, Data.FORMAT_UINT16, 3)); // 1 second
+		assertTrue(data.setValue(11, Data.FORMAT_UINT16_LE, 1));
+		assertTrue(data.setValue(1024, Data.FORMAT_UINT16_LE, 3)); // 1 second
 		callback.onDataReceived(null, data);
 	}
 
@@ -243,20 +243,20 @@ public class CyclingSpeedAndCadenceMeasurementDataCallbackTest {
 		// Flags
 		assertTrue(data.setByte(0x03, 0));
 		// Wheel revolutions
-		assertTrue(data.setValue(20, Data.FORMAT_UINT32, 1));
-		assertTrue(data.setValue(0, Data.FORMAT_UINT16, 5));
+		assertTrue(data.setValue(20, Data.FORMAT_UINT32_LE, 1));
+		assertTrue(data.setValue(0, Data.FORMAT_UINT16_LE, 5));
 		// Crank revolutions
-		assertTrue(data.setValue(10, Data.FORMAT_UINT16, 7));
-		assertTrue(data.setValue(0, Data.FORMAT_UINT16, 9));
+		assertTrue(data.setValue(10, Data.FORMAT_UINT16_LE, 7));
+		assertTrue(data.setValue(0, Data.FORMAT_UINT16_LE, 9));
 
 		callback.onDataReceived(null, data);
 
 		// Update wheel revolutions
-		assertTrue(data.setValue(30, Data.FORMAT_UINT32, 1));
-		assertTrue(data.setValue(1024, Data.FORMAT_UINT16, 5)); // 1 second
+		assertTrue(data.setValue(30, Data.FORMAT_UINT32_LE, 1));
+		assertTrue(data.setValue(1024, Data.FORMAT_UINT16_LE, 5)); // 1 second
 		// Update crank revolutions
-		assertTrue(data.setValue(11, Data.FORMAT_UINT16, 7));
-		assertTrue(data.setValue(1024, Data.FORMAT_UINT16, 9)); // 1 second
+		assertTrue(data.setValue(11, Data.FORMAT_UINT16_LE, 7));
+		assertTrue(data.setValue(1024, Data.FORMAT_UINT16_LE, 9)); // 1 second
 		callback.onDataReceived(null, data);
 	}
 
@@ -282,11 +282,11 @@ public class CyclingSpeedAndCadenceMeasurementDataCallbackTest {
 		// Flags
 		assertTrue(data.setByte(0x03, 0));
 		// Wheel revolutions
-		assertTrue(data.setValue(20, Data.FORMAT_UINT32, 1));
-		assertTrue(data.setValue(0, Data.FORMAT_UINT16, 5));
+		assertTrue(data.setValue(20, Data.FORMAT_UINT32_LE, 1));
+		assertTrue(data.setValue(0, Data.FORMAT_UINT16_LE, 5));
 		// Crank revolutions
-		assertTrue(data.setValue(10, Data.FORMAT_UINT16, 7));
-		assertFalse(data.setValue(0, Data.FORMAT_UINT16, 9));
+		assertTrue(data.setValue(10, Data.FORMAT_UINT16_LE, 7));
+		assertFalse(data.setValue(0, Data.FORMAT_UINT16_LE, 9));
 
 		callback.onDataReceived(null, data);
 	}

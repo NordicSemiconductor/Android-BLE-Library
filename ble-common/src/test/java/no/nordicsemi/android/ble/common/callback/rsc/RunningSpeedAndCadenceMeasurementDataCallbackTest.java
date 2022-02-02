@@ -66,10 +66,10 @@ public class RunningSpeedAndCadenceMeasurementDataCallbackTest {
 
 		final MutableData data = new MutableData(new byte[10]);
 		data.setByte(0x7, 0);
-		data.setValue(3 * 256, Data.FORMAT_UINT16, 1);
+		data.setValue(3 * 256, Data.FORMAT_UINT16_LE, 1);
 		data.setValue(18, Data.FORMAT_UINT8, 3);
-		data.setValue(86, Data.FORMAT_UINT16, 4);
-		data.setValue(0xF0000001L, Data.FORMAT_UINT32, 6);
+		data.setValue(86, Data.FORMAT_UINT16_LE, 4);
+		data.setValue(0xF0000001L, Data.FORMAT_UINT32_LE, 6);
 		called = false;
 		response.onDataReceived(null, data);
 		assertTrue(response.isValid());
@@ -97,10 +97,10 @@ public class RunningSpeedAndCadenceMeasurementDataCallbackTest {
 
 		final MutableData data = new MutableData(new byte[9]); // too short
 		data.setByte(0x7, 0);
-		data.setValue(3 * 256, Data.FORMAT_UINT16, 1);
+		data.setValue(3 * 256, Data.FORMAT_UINT16_LE, 1);
 		data.setValue(18, Data.FORMAT_UINT8, 3);
-		data.setValue(86, Data.FORMAT_UINT16, 4);
-		data.setValue(0, Data.FORMAT_UINT24, 6);
+		data.setValue(86, Data.FORMAT_UINT16_LE, 4);
+		data.setValue(0, Data.FORMAT_UINT24_LE, 6);
 		called = false;
 		invalidData = false;
 		response.onDataReceived(null, data);

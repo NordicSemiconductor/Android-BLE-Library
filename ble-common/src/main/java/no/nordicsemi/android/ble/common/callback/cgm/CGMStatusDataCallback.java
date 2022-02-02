@@ -60,7 +60,7 @@ public abstract class CGMStatusDataCallback extends ProfileReadResponse implemen
 			return;
 		}
 
-		final int timeOffset = data.getIntValue(Data.FORMAT_UINT16, 0);
+		final int timeOffset = data.getIntValue(Data.FORMAT_UINT16_LE, 0);
 		final int warningStatus = data.getIntValue(Data.FORMAT_UINT8, 2);
 		final int calibrationTempStatus = data.getIntValue(Data.FORMAT_UINT8, 3);
 		final int sensorStatus = data.getIntValue(Data.FORMAT_UINT8, 4);
@@ -68,7 +68,7 @@ public abstract class CGMStatusDataCallback extends ProfileReadResponse implemen
 		final boolean crcPresent = data.size() == 7;
 		if (crcPresent) {
 			final int actualCrc = CRC16.MCRF4XX(data.getValue(), 0, 5);
-			final int expectedCrc = data.getIntValue(Data.FORMAT_UINT16, 5);
+			final int expectedCrc = data.getIntValue(Data.FORMAT_UINT16_LE, 5);
 			if (actualCrc != expectedCrc) {
 				onContinuousGlucoseMonitorStatusReceivedWithCrcError(device, data);
 				return;

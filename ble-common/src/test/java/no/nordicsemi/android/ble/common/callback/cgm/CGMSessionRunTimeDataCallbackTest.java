@@ -59,8 +59,8 @@ public class CGMSessionRunTimeDataCallbackTest {
 			}
 		};
 		final MutableData data = new MutableData(new byte[4]);
-		assertTrue(data.setValue(2, Data.FORMAT_UINT16, 0));
-		assertTrue(data.setValue(0xC308, Data.FORMAT_UINT16, 2));
+		assertTrue(data.setValue(2, Data.FORMAT_UINT16_LE, 0));
+		assertTrue(data.setValue(0xC308, Data.FORMAT_UINT16_LE, 2));
 		called = false;
 		callback.onDataReceived(null, data);
 		assertTrue(called);
@@ -113,8 +113,8 @@ public class CGMSessionRunTimeDataCallbackTest {
 			}
 		};
 		final MutableData data = new MutableData(new byte[4]);
-		assertTrue(data.setValue(2, Data.FORMAT_UINT16, 0));
-		assertTrue(data.setValue(0xC309, Data.FORMAT_UINT16, 2));
+		assertTrue(data.setValue(2, Data.FORMAT_UINT16_LE, 0));
+		assertTrue(data.setValue(0xC309, Data.FORMAT_UINT16_LE, 2));
 		called = false;
 		callback.onDataReceived(null, data);
 		assertTrue(called);
@@ -139,7 +139,7 @@ public class CGMSessionRunTimeDataCallbackTest {
 			}
 		};
 		final MutableData data = new MutableData(new byte[3]);
-		assertTrue(data.setValue(2, Data.FORMAT_UINT16, 0));
+		assertTrue(data.setValue(2, Data.FORMAT_UINT16_LE, 0));
 		assertTrue(data.setValue(1, Data.FORMAT_UINT8, 2));
 		called = false;
 		callback.onDataReceived(null, data);

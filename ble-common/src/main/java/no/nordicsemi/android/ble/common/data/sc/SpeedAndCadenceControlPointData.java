@@ -44,7 +44,7 @@ public final class SpeedAndCadenceControlPointData implements SensorLocationType
 	public static Data setCumulativeValue(final long value) {
 		final MutableData data = new MutableData(new byte[5]);
 		data.setByte(SC_OP_CODE_SET_CUMULATIVE_VALUE, 0);
-		data.setValue(value, Data.FORMAT_UINT32, 1);
+		data.setValue(value, Data.FORMAT_UINT32_LE, 1);
 		return data;
 	}
 

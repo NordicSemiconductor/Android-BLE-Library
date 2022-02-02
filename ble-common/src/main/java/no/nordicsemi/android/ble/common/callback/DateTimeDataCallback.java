@@ -81,7 +81,7 @@ public abstract class DateTimeDataCallback extends ProfileReadResponse implement
 			return null;
 
 		final Calendar calendar = Calendar.getInstance();
-		final int year = data.getIntValue(Data.FORMAT_UINT16, offset);
+		final int year = data.getIntValue(Data.FORMAT_UINT16_LE, offset);
 		final int month = data.getIntValue(Data.FORMAT_UINT8, offset + 2);
 		final int day = data.getIntValue(Data.FORMAT_UINT8, offset + 3);
 		if (year > 0)
