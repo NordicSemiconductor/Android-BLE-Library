@@ -38,6 +38,10 @@ public class RssiResult implements RssiCallback, Parcelable {
 	@IntRange(from = -128, to = 20)
 	private int rssi;
 
+	public RssiResult() {
+		// empty
+	}
+
 	@Override
 	public void onRssiRead(@NonNull final BluetoothDevice device,
 						   @IntRange(from = -128, to = 20) final int rssi) {

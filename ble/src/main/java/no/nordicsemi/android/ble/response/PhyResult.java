@@ -41,6 +41,10 @@ public class PhyResult implements PhyCallback, Parcelable {
 	@PhyValue
 	private int rxPhy;
 
+	public PhyResult() {
+		// empty
+	}
+
 	@Override
 	public void onPhyChanged(@NonNull final BluetoothDevice device,
 							 @PhyValue final int txPhy, @PhyValue final int rxPhy) {

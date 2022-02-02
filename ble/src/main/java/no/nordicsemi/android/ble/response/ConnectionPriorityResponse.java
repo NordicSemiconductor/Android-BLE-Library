@@ -49,6 +49,10 @@ public class ConnectionPriorityResponse implements ConnectionPriorityCallback, P
 	@IntRange(from = 10, to = 3200)
 	private int supervisionTimeout;
 
+	public ConnectionPriorityResponse() {
+		// empty
+	}
+
 	@Override
 	public void onConnectionUpdated(@NonNull final BluetoothDevice device,
 									@IntRange(from = 6, to = 3200) final int interval,

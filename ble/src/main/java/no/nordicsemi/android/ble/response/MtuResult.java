@@ -38,6 +38,10 @@ public class MtuResult implements MtuCallback, Parcelable {
 	@IntRange(from = 23, to = 517)
 	private int mtu;
 
+	public MtuResult() {
+		// empty
+	}
+
 	@Override
 	public void onMtuChanged(@NonNull final BluetoothDevice device,
 							 @IntRange(from = 23, to = 517) final int mtu) {

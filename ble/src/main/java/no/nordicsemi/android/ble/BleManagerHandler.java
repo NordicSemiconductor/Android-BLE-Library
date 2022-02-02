@@ -647,8 +647,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			log(Log.INFO, () -> "Disconnected");
 			close();
 			postCallback(c -> c.onDeviceDisconnected(device));
-			postConnectionStateChange(o -> o.onDeviceDisconnected(device, reason)
-			);
+			postConnectionStateChange(o -> o.onDeviceDisconnected(device, reason));
 		}
 		// request may be of type DISCONNECT or CONNECT (timeout).
 		// For the latter, it has already been notified with REASON_TIMEOUT.

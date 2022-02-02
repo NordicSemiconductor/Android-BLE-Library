@@ -39,15 +39,13 @@ val BleManager.bondingState: BondState
 /**
  * Returns the connection state as hot state flow.
  */
-fun BleManager.stateAsFlow() =
-    MutableStateFlow(state)
+fun BleManager.stateAsFlow() = MutableStateFlow(state)
         .apply { setConnectionObserver(observeAsFlow(this)) }
 
 /**
  * Returns the bonding state as hot state flow.
  */
-fun BleManager.bondingStateAsFlow() =
-    MutableStateFlow(bondingState)
+fun BleManager.bondingStateAsFlow() = MutableStateFlow(bondingState)
         .apply { setBondingObserver(observeAsFlow(this)) }
 
 // ------------------------------------ Implementation ------------------------------------
