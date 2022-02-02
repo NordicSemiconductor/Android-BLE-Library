@@ -489,7 +489,9 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (connected || !bluetoothEnabled) {
 			final BluetoothDevice currentDevice = bluetoothDevice;
 			if (bluetoothEnabled && currentDevice != null && currentDevice.equals(device)) {
-				this.connectRequest.notifySuccess(device);
+				if (this.connectRequest != null) {
+					this.connectRequest.notifySuccess(device);
+				}
 			} else {
 				// We can't return false here, as the request would be notified with
 				// bluetoothDevice instance instead, and that may be null or a wrong device.
