@@ -317,9 +317,22 @@ abstract class BleManagerHandler extends RequestHandler {
 						postCallback(c -> c.onBondingFailed(device));
 						postBondingStateChange(o -> o.onBondingFailed(device));
 						log(Log.WARN, () -> "Bonding failed");
-						if (request != null) { // CREATE_BOND request
+						if (request != null && request.type == Request.Type.CREATE_BOND) {
 							request.notifyFail(device, FailCallback.REASON_REQUEST_FAILED);
 							request = null;
+						}
+						// If the device started to pair just after the connection was
+						// established the services were not discovered. We may try to discover services
+						// despite the fail bonding process.
+						// See: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/335
+						if (!servicesDiscovered && !serviceDiscoveryRequested) {
+							post(() -> {
+								serviceDiscoveryRequested = true;
+								log(Log.VERBOSE, () -> "Discovering services...");
+								log(Log.DEBUG, () -> "gatt.discoverServices()");
+								bluetoothGatt.discoverServices();
+							});
+							return;
 						}
 					} else if (previousBondState == BluetoothDevice.BOND_BONDED) {
 						if (request != null && request.type == Request.Type.REMOVE_BOND) {
