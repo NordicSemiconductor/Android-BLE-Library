@@ -289,10 +289,10 @@ public class Data implements Parcelable {
 				);
 			case FORMAT_UINT24_BE:
 				return unsignedBytesToInt(
-						(byte) 0,
 						mValue[offset + 2],
 						mValue[offset + 1],
-						mValue[offset]
+						mValue[offset],
+						(byte) 0
 				);
 
 			case FORMAT_UINT32_LE:
