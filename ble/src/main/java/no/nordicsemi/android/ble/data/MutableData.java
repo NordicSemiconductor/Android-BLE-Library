@@ -123,31 +123,58 @@ public class MutableData extends Data {
 				mValue[offset] = (byte) (value & 0xFF);
 				break;
 
-			case FORMAT_SINT16:
+			case FORMAT_SINT16_LE:
 				value = intToSignedBits(value, 16);
 				// Fall-through intended
-			case FORMAT_UINT16:
+			case FORMAT_UINT16_LE:
 				mValue[offset++] = (byte) (value & 0xFF);
 				mValue[offset] = (byte) ((value >> 8) & 0xFF);
 				break;
 
-			case FORMAT_SINT24:
+			case FORMAT_SINT16_BE:
+				value = intToSignedBits(value, 16);
+				// Fall-through intended
+			case FORMAT_UINT16_BE:
+				mValue[offset++] = (byte) ((value >> 8) & 0xFF);
+				mValue[offset] = (byte) (value & 0xFF);
+				break;
+
+			case FORMAT_SINT24_LE:
 				value = intToSignedBits(value, 24);
 				// Fall-through intended
-			case FORMAT_UINT24:
+			case FORMAT_UINT24_LE:
 				mValue[offset++] = (byte) (value & 0xFF);
 				mValue[offset++] = (byte) ((value >> 8) & 0xFF);
 				mValue[offset] = (byte) ((value >> 16) & 0xFF);
 				break;
 
-			case FORMAT_SINT32:
+			case FORMAT_SINT24_BE:
+				value = intToSignedBits(value, 24);
+				// Fall-through intended
+			case FORMAT_UINT24_BE:
+				mValue[offset++] = (byte) ((value >> 16) & 0xFF);
+				mValue[offset++] = (byte) ((value >> 8) & 0xFF);
+				mValue[offset] = (byte) (value & 0xFF);
+				break;
+
+			case FORMAT_SINT32_LE:
 				value = intToSignedBits(value, 32);
 				// Fall-through intended
-			case FORMAT_UINT32:
+			case FORMAT_UINT32_LE:
 				mValue[offset++] = (byte) (value & 0xFF);
 				mValue[offset++] = (byte) ((value >> 8) & 0xFF);
 				mValue[offset++] = (byte) ((value >> 16) & 0xFF);
 				mValue[offset] = (byte) ((value >> 24) & 0xFF);
+				break;
+
+			case FORMAT_SINT32_BE:
+				value = intToSignedBits(value, 32);
+				// Fall-through intended
+			case FORMAT_UINT32_BE:
+				mValue[offset++] = (byte) ((value >> 24) & 0xFF);
+				mValue[offset++] = (byte) ((value >> 16) & 0xFF);
+				mValue[offset++] = (byte) ((value >> 8) & 0xFF);
+				mValue[offset] = (byte) (value & 0xFF);
 				break;
 
 			default:
@@ -212,14 +239,24 @@ public class MutableData extends Data {
 		if (len > mValue.length) return false;
 
 		switch (formatType) {
-			case FORMAT_SINT32:
+			case FORMAT_SINT32_LE:
 				value = longToSignedBits(value, 32);
 				// Fall-through intended
-			case FORMAT_UINT32:
+			case FORMAT_UINT32_LE:
 				mValue[offset++] = (byte) (value & 0xFF);
 				mValue[offset++] = (byte) ((value >> 8) & 0xFF);
 				mValue[offset++] = (byte) ((value >> 16) & 0xFF);
 				mValue[offset] = (byte) ((value >> 24) & 0xFF);
+				break;
+
+			case FORMAT_SINT32_BE:
+				value = longToSignedBits(value, 32);
+				// Fall-through intended
+			case FORMAT_UINT32_BE:
+				mValue[offset++] = (byte) ((value >> 24) & 0xFF);
+				mValue[offset++] = (byte) ((value >> 16) & 0xFF);
+				mValue[offset++] = (byte) ((value >> 8) & 0xFF);
+				mValue[offset] = (byte) (value & 0xFF);
 				break;
 
 			default:
