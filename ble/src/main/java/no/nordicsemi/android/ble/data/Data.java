@@ -40,13 +40,19 @@ public class Data implements Parcelable {
 	@Retention(RetentionPolicy.SOURCE)
 	@IntDef(value = {
 			FORMAT_UINT8,
-			FORMAT_UINT16,
-			FORMAT_UINT24,
-			FORMAT_UINT32,
+			FORMAT_UINT16_LE,
+			FORMAT_UINT16_BE,
+			FORMAT_UINT24_LE,
+			FORMAT_UINT24_BE,
+			FORMAT_UINT32_LE,
+			FORMAT_UINT32_BE,
 			FORMAT_SINT8,
-			FORMAT_SINT16,
-			FORMAT_SINT24,
-			FORMAT_SINT32,
+			FORMAT_SINT16_LE,
+			FORMAT_SINT16_BE,
+			FORMAT_SINT24_LE,
+			FORMAT_SINT24_BE,
+			FORMAT_SINT32_LE,
+			FORMAT_SINT32_BE,
 			FORMAT_FLOAT,
 			FORMAT_SFLOAT
 	})
@@ -55,20 +61,28 @@ public class Data implements Parcelable {
 	@Retention(RetentionPolicy.SOURCE)
 	@IntDef(value = {
 			FORMAT_UINT8,
-			FORMAT_UINT16,
-			FORMAT_UINT24,
-			FORMAT_UINT32,
+			FORMAT_UINT16_LE,
+			FORMAT_UINT16_BE,
+			FORMAT_UINT24_LE,
+			FORMAT_UINT24_BE,
+			FORMAT_UINT32_LE,
+			FORMAT_UINT32_BE,
 			FORMAT_SINT8,
-			FORMAT_SINT16,
-			FORMAT_SINT24,
-			FORMAT_SINT32
+			FORMAT_SINT16_LE,
+			FORMAT_SINT16_BE,
+			FORMAT_SINT24_LE,
+			FORMAT_SINT24_BE,
+			FORMAT_SINT32_LE,
+			FORMAT_SINT32_BE,
 	})
 	public @interface IntFormat {}
 
 	@Retention(RetentionPolicy.SOURCE)
 	@IntDef(value = {
-			FORMAT_UINT32,
-			FORMAT_SINT32
+			FORMAT_UINT32_LE,
+			FORMAT_UINT32_BE,
+			FORMAT_SINT32_LE,
+			FORMAT_SINT32_BE,
 	})
 	public @interface LongFormat {}
 
@@ -79,7 +93,7 @@ public class Data implements Parcelable {
 	})
 	public @interface FloatFormat {}
 
-	private static char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
+	private final static char[] HEX_ARRAY = "0123456789ABCDEF".toCharArray();
 
 	/**
 	 * Data value format type uint8
@@ -90,16 +104,22 @@ public class Data implements Parcelable {
 	 * Data value format type uint16
 	 */
 	public final static int FORMAT_UINT16 = 0x12;
+	public final static int FORMAT_UINT16_LE = 0x12;
+	public final static int FORMAT_UINT16_BE = 0x112;
 
 	/**
 	 * Data value format type uint24
 	 */
 	public final static int FORMAT_UINT24 = 0x13;
+	public final static int FORMAT_UINT24_LE = 0x13;
+	public final static int FORMAT_UINT24_BE = 0x113;
 
 	/**
 	 * Data value format type uint32
 	 */
 	public final static int FORMAT_UINT32 = 0x14;
+	public final static int FORMAT_UINT32_LE = 0x14;
+	public final static int FORMAT_UINT32_BE = 0x114;
 
 	/**
 	 * Data value format type sint8
@@ -110,16 +130,22 @@ public class Data implements Parcelable {
 	 * Data value format type sint16
 	 */
 	public final static int FORMAT_SINT16 = 0x22;
+	public final static int FORMAT_SINT16_LE = 0x22;
+	public final static int FORMAT_SINT16_BE = 0x122;
 
 	/**
 	 * Data value format type sint24
 	 */
 	public final static int FORMAT_SINT24 = 0x23;
+	public final static int FORMAT_SINT24_LE = 0x23;
+	public final static int FORMAT_SINT24_BE = 0x123;
 
 	/**
 	 * Data value format type sint32
 	 */
 	public final static int FORMAT_SINT32 = 0x24;
+	public final static int FORMAT_SINT32_LE = 0x24;
+	public final static int FORMAT_SINT32_BE = 0x124;
 
 	/**
 	 * Data value format type sfloat (16-bit float, IEEE-11073)
@@ -249,31 +275,80 @@ public class Data implements Parcelable {
 			case FORMAT_UINT8:
 				return unsignedByteToInt(mValue[offset]);
 
-			case FORMAT_UINT16:
+			case FORMAT_UINT16_LE:
 				return unsignedBytesToInt(mValue[offset], mValue[offset + 1]);
+			case FORMAT_UINT16_BE:
+				return unsignedBytesToInt(mValue[offset + 1], mValue[offset]);
 
-			case FORMAT_UINT24:
-				return unsignedBytesToInt(mValue[offset], mValue[offset + 1],
-						mValue[offset + 2], (byte) 0);
+			case FORMAT_UINT24_LE:
+				return unsignedBytesToInt(
+						mValue[offset],
+						mValue[offset + 1],
+						mValue[offset + 2],
+						(byte) 0
+				);
+			case FORMAT_UINT24_BE:
+				return unsignedBytesToInt(
+						(byte) 0,
+						mValue[offset + 2],
+						mValue[offset + 1],
+						mValue[offset]
+				);
 
-			case FORMAT_UINT32:
-				return unsignedBytesToInt(mValue[offset], mValue[offset + 1],
-						mValue[offset + 2], mValue[offset + 3]);
+			case FORMAT_UINT32_LE:
+				return unsignedBytesToInt(
+						mValue[offset],
+						mValue[offset + 1],
+						mValue[offset + 2],
+						mValue[offset + 3]
+				);
+			case FORMAT_UINT32_BE:
+				return unsignedBytesToInt(
+						mValue[offset + 3],
+						mValue[offset + 2],
+						mValue[offset + 1],
+						mValue[offset]
+				);
 
 			case FORMAT_SINT8:
 				return unsignedToSigned(unsignedByteToInt(mValue[offset]), 8);
 
-			case FORMAT_SINT16:
+			case FORMAT_SINT16_LE:
 				return unsignedToSigned(unsignedBytesToInt(mValue[offset],
 						mValue[offset + 1]), 16);
+			case FORMAT_SINT16_BE:
+				return unsignedToSigned(unsignedBytesToInt(mValue[offset + 1],
+						mValue[offset]), 16);
 
-			case FORMAT_SINT24:
-				return unsignedToSigned(unsignedBytesToInt(mValue[offset],
-						mValue[offset + 1], mValue[offset + 2], (byte) 0), 24);
+			case FORMAT_SINT24_LE:
+				return unsignedToSigned(unsignedBytesToInt(
+						mValue[offset],
+						mValue[offset + 1],
+						mValue[offset + 2],
+						(byte) 0
+				), 24);
+			case FORMAT_SINT24_BE:
+				return unsignedToSigned(unsignedBytesToInt(
+						(byte) 0,
+						mValue[offset + 2],
+						mValue[offset + 1],
+						mValue[offset]
+				), 24);
 
-			case FORMAT_SINT32:
-				return unsignedToSigned(unsignedBytesToInt(mValue[offset],
-						mValue[offset + 1], mValue[offset + 2], mValue[offset + 3]), 32);
+			case FORMAT_SINT32_LE:
+				return unsignedToSigned(unsignedBytesToInt(
+						mValue[offset],
+						mValue[offset + 1],
+						mValue[offset + 2],
+						mValue[offset + 3]
+				), 32);
+			case FORMAT_SINT32_BE:
+				return unsignedToSigned(unsignedBytesToInt(
+						mValue[offset + 3],
+						mValue[offset + 2],
+						mValue[offset + 1],
+						mValue[offset]
+				), 32);
 		}
 
 		return null;
@@ -298,13 +373,35 @@ public class Data implements Parcelable {
 		if ((offset + getTypeLen(formatType)) > size()) return null;
 
 		switch (formatType) {
-			case FORMAT_SINT32:
-				return unsignedToSigned(unsignedBytesToLong(mValue[offset],
-						mValue[offset + 1], mValue[offset + 2], mValue[offset + 3]), 32);
+			case FORMAT_UINT32_LE:
+				return unsignedBytesToLong(
+						mValue[offset],
+						mValue[offset + 1],
+						mValue[offset + 2],
+						mValue[offset + 3]
+				);
+			case FORMAT_UINT32_BE:
+				return unsignedBytesToLong(
+						mValue[offset + 3],
+						mValue[offset + 2],
+						mValue[offset + 1],
+						mValue[offset]
+				);
 
-			case FORMAT_UINT32:
-				return unsignedBytesToLong(mValue[offset], mValue[offset + 1],
-						mValue[offset + 2], mValue[offset + 3]);
+			case FORMAT_SINT32_LE:
+				return unsignedToSigned(unsignedBytesToLong(
+						mValue[offset],
+						mValue[offset + 1],
+						mValue[offset + 2],
+						mValue[offset + 3]
+				), 32);
+			case FORMAT_SINT32_BE:
+				return unsignedToSigned(unsignedBytesToLong(
+						mValue[offset + 3],
+						mValue[offset + 2],
+						mValue[offset + 1],
+						mValue[offset]
+				), 32);
 		}
 
 		return null;
