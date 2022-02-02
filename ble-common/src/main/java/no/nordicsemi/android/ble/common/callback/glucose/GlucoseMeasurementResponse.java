@@ -71,6 +71,10 @@ public final class GlucoseMeasurementResponse extends GlucoseMeasurementDataCall
 	private GlucoseStatus status;
 	private boolean contextInformationFollows;
 
+	public GlucoseMeasurementResponse() {
+		// empty
+	}
+
 	@Override
 	public void onGlucoseMeasurementReceived(@NonNull final BluetoothDevice device,
 											 final int sequenceNumber,
