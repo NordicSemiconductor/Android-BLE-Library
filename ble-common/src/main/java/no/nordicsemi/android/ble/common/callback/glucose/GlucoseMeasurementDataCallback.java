@@ -76,7 +76,7 @@ public abstract class GlucoseMeasurementDataCallback extends ProfileReadResponse
 		}
 
 		// Required fields
-		final int sequenceNumber = data.getIntValue(Data.FORMAT_UINT16, offset);
+		final int sequenceNumber = data.getIntValue(Data.FORMAT_UINT16_LE, offset);
 		offset += 2;
 		final Calendar baseTime = DateTimeDataCallback.readDateTime(data, 3);
 		offset += 7;
@@ -88,7 +88,7 @@ public abstract class GlucoseMeasurementDataCallback extends ProfileReadResponse
 
 		// Optional fields
 		if (timeOffsetPresent) {
-			final int timeOffset = data.getIntValue(Data.FORMAT_SINT16, offset);
+			final int timeOffset = data.getIntValue(Data.FORMAT_SINT16_LE, offset);
 			offset += 2;
 
 			baseTime.add(Calendar.MINUTE, timeOffset);
@@ -110,7 +110,7 @@ public abstract class GlucoseMeasurementDataCallback extends ProfileReadResponse
 
 		GlucoseStatus status = null;
 		if (sensorStatusAnnunciationPresent) {
-			final int value = data.getIntValue(Data.FORMAT_UINT16, offset);
+			final int value = data.getIntValue(Data.FORMAT_UINT16_LE, offset);
 			// offset += 2;
 
 			status = new GlucoseStatus(value);

@@ -22,6 +22,7 @@
 
 package no.nordicsemi.android.ble.data;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.os.Parcel;
@@ -37,20 +38,29 @@ import androidx.annotation.Nullable;
 
 @SuppressWarnings({"WeakerAccess", "unused", "UnusedReturnValue"})
 public class Data implements Parcelable {
+
+	@SuppressWarnings("deprecation")
+	@SuppressLint("UniqueConstants")
 	@Retention(RetentionPolicy.SOURCE)
 	@IntDef(value = {
 			FORMAT_UINT8,
+			FORMAT_UINT16,
 			FORMAT_UINT16_LE,
 			FORMAT_UINT16_BE,
+			FORMAT_UINT24,
 			FORMAT_UINT24_LE,
 			FORMAT_UINT24_BE,
+			FORMAT_UINT32,
 			FORMAT_UINT32_LE,
 			FORMAT_UINT32_BE,
 			FORMAT_SINT8,
+			FORMAT_SINT16,
 			FORMAT_SINT16_LE,
 			FORMAT_SINT16_BE,
+			FORMAT_SINT24,
 			FORMAT_SINT24_LE,
 			FORMAT_SINT24_BE,
+			FORMAT_SINT32,
 			FORMAT_SINT32_LE,
 			FORMAT_SINT32_BE,
 			FORMAT_FLOAT,
@@ -58,29 +68,41 @@ public class Data implements Parcelable {
 	})
 	public @interface ValueFormat {}
 
+	@SuppressWarnings("deprecation")
+	@SuppressLint("UniqueConstants")
 	@Retention(RetentionPolicy.SOURCE)
 	@IntDef(value = {
 			FORMAT_UINT8,
+			FORMAT_UINT16,
 			FORMAT_UINT16_LE,
 			FORMAT_UINT16_BE,
+			FORMAT_UINT24,
 			FORMAT_UINT24_LE,
 			FORMAT_UINT24_BE,
+			FORMAT_UINT32,
 			FORMAT_UINT32_LE,
 			FORMAT_UINT32_BE,
 			FORMAT_SINT8,
+			FORMAT_SINT16,
 			FORMAT_SINT16_LE,
 			FORMAT_SINT16_BE,
+			FORMAT_SINT24,
 			FORMAT_SINT24_LE,
 			FORMAT_SINT24_BE,
+			FORMAT_SINT32,
 			FORMAT_SINT32_LE,
 			FORMAT_SINT32_BE,
 	})
 	public @interface IntFormat {}
 
+	@SuppressWarnings("deprecation")
+	@SuppressLint("UniqueConstants")
 	@Retention(RetentionPolicy.SOURCE)
 	@IntDef(value = {
+			FORMAT_UINT32,
 			FORMAT_UINT32_LE,
 			FORMAT_UINT32_BE,
+			FORMAT_SINT32,
 			FORMAT_SINT32_LE,
 			FORMAT_SINT32_BE,
 	})
@@ -103,6 +125,8 @@ public class Data implements Parcelable {
 	/**
 	 * Data value format type uint16
 	 */
+	@SuppressWarnings("DeprecatedIsStillUsed")
+	@Deprecated
 	public final static int FORMAT_UINT16 = 0x12;
 	public final static int FORMAT_UINT16_LE = 0x12;
 	public final static int FORMAT_UINT16_BE = 0x112;
@@ -110,6 +134,8 @@ public class Data implements Parcelable {
 	/**
 	 * Data value format type uint24
 	 */
+	@SuppressWarnings("DeprecatedIsStillUsed")
+	@Deprecated
 	public final static int FORMAT_UINT24 = 0x13;
 	public final static int FORMAT_UINT24_LE = 0x13;
 	public final static int FORMAT_UINT24_BE = 0x113;
@@ -117,6 +143,8 @@ public class Data implements Parcelable {
 	/**
 	 * Data value format type uint32
 	 */
+	@SuppressWarnings("DeprecatedIsStillUsed")
+	@Deprecated
 	public final static int FORMAT_UINT32 = 0x14;
 	public final static int FORMAT_UINT32_LE = 0x14;
 	public final static int FORMAT_UINT32_BE = 0x114;
@@ -129,6 +157,8 @@ public class Data implements Parcelable {
 	/**
 	 * Data value format type sint16
 	 */
+	@SuppressWarnings("DeprecatedIsStillUsed")
+	@Deprecated
 	public final static int FORMAT_SINT16 = 0x22;
 	public final static int FORMAT_SINT16_LE = 0x22;
 	public final static int FORMAT_SINT16_BE = 0x122;
@@ -136,6 +166,8 @@ public class Data implements Parcelable {
 	/**
 	 * Data value format type sint24
 	 */
+	@SuppressWarnings("DeprecatedIsStillUsed")
+	@Deprecated
 	public final static int FORMAT_SINT24 = 0x23;
 	public final static int FORMAT_SINT24_LE = 0x23;
 	public final static int FORMAT_SINT24_BE = 0x123;
@@ -143,6 +175,8 @@ public class Data implements Parcelable {
 	/**
 	 * Data value format type sint32
 	 */
+	@SuppressWarnings("DeprecatedIsStillUsed")
+	@Deprecated
 	public final static int FORMAT_SINT32 = 0x24;
 	public final static int FORMAT_SINT32_LE = 0x24;
 	public final static int FORMAT_SINT32_BE = 0x124;
@@ -258,7 +292,7 @@ public class Data implements Parcelable {
 	 * <p>
 	 * <p>The formatType parameter determines how the value
 	 * is to be interpreted. For example, setting formatType to
-	 * {@link #FORMAT_UINT16} specifies that the first two bytes of the
+	 * {@link #FORMAT_UINT16_LE} specifies that the first two bytes of the
 	 * value at the given offset are interpreted to generate the
 	 * return value.
 	 *
@@ -356,10 +390,10 @@ public class Data implements Parcelable {
 
 	/**
 	 * Returns a long value from the byte array.
-	 * <p>Only {@link #FORMAT_UINT32} and {@link #FORMAT_SINT32} are supported.
+	 * <p>Only {@link #FORMAT_UINT32_LE} and {@link #FORMAT_SINT32_LE} are supported.
 	 * <p>The formatType parameter determines how the value
 	 * is to be interpreted. For example, setting formatType to
-	 * {@link #FORMAT_UINT32} specifies that the first four bytes of the
+	 * {@link #FORMAT_UINT32_LE} specifies that the first four bytes of the
 	 * value at the given offset are interpreted to generate the
 	 * return value.
 	 *
@@ -533,9 +567,10 @@ public class Data implements Parcelable {
 	 * Convert an unsigned long value to a two's-complement encoded
 	 * signed value.
 	 */
+	@SuppressWarnings("SameParameterValue")
 	private static long unsignedToSigned(long unsigned, final int size) {
-		if ((unsigned & (1 << size - 1)) != 0) {
-			unsigned = -1 * ((1 << size - 1) - (unsigned & ((1 << size - 1) - 1)));
+		if ((unsigned & (1L << size - 1)) != 0) {
+			unsigned = -1 * ((1L << size - 1) - (unsigned & ((1L << size - 1) - 1)));
 		}
 		return unsigned;
 	}

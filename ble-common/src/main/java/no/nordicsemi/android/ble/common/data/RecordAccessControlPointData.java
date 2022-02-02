@@ -97,18 +97,18 @@ public final class RecordAccessControlPointData {
 
 	public static Data reportStoredRecordsLessThenOrEqualTo(@IntRange(from = 0) final int sequenceNumber) {
 		return create(OP_CODE_REPORT_STORED_RECORDS, OPERATOR_LESS_THEN_OR_EQUAL,
-				FilterType.SEQUENCE_NUMBER, Data.FORMAT_UINT16, sequenceNumber);
+				FilterType.SEQUENCE_NUMBER, Data.FORMAT_UINT16_LE, sequenceNumber);
 	}
 
 	public static Data reportStoredRecordsGreaterThenOrEqualTo(@IntRange(from = 0) final int sequenceNumber) {
 		return create(OP_CODE_REPORT_STORED_RECORDS, OPERATOR_GREATER_THEN_OR_EQUAL,
-				FilterType.SEQUENCE_NUMBER, Data.FORMAT_UINT16, sequenceNumber);
+				FilterType.SEQUENCE_NUMBER, Data.FORMAT_UINT16_LE, sequenceNumber);
 	}
 
 	public static Data reportStoredRecordsFromRange(@IntRange(from = 0) final int startSequenceNumber,
 													@IntRange(from = 0) final int endSequenceNumber) {
 		return create(OP_CODE_REPORT_STORED_RECORDS, OPERATOR_WITHING_RANGE,
-				FilterType.SEQUENCE_NUMBER, Data.FORMAT_UINT16,
+				FilterType.SEQUENCE_NUMBER, Data.FORMAT_UINT16_LE,
 				startSequenceNumber, endSequenceNumber);
 	}
 
@@ -147,18 +147,18 @@ public final class RecordAccessControlPointData {
 
 	public static Data deleteStoredRecordsLessThenOrEqualTo(@IntRange(from = 0) final int sequenceNumber) {
 		return create(OP_CODE_DELETE_STORED_RECORDS, OPERATOR_LESS_THEN_OR_EQUAL,
-				FilterType.SEQUENCE_NUMBER, Data.FORMAT_UINT16, sequenceNumber);
+				FilterType.SEQUENCE_NUMBER, Data.FORMAT_UINT16_LE, sequenceNumber);
 	}
 
 	public static Data deleteStoredRecordsGreaterThenOrEqualTo(@IntRange(from = 0) final int sequenceNumber) {
 		return create(OP_CODE_DELETE_STORED_RECORDS, OPERATOR_GREATER_THEN_OR_EQUAL,
-				FilterType.SEQUENCE_NUMBER, Data.FORMAT_UINT16, sequenceNumber);
+				FilterType.SEQUENCE_NUMBER, Data.FORMAT_UINT16_LE, sequenceNumber);
 	}
 
 	public static Data deleteStoredRecordsFromRange(@IntRange(from = 0) final int startSequenceNumber,
 													@IntRange(from = 0) final int endSequenceNumber) {
 		return create(OP_CODE_DELETE_STORED_RECORDS, OPERATOR_WITHING_RANGE,
-				FilterType.SEQUENCE_NUMBER, Data.FORMAT_UINT16,
+				FilterType.SEQUENCE_NUMBER, Data.FORMAT_UINT16_LE,
 				startSequenceNumber, endSequenceNumber);
 	}
 
@@ -189,18 +189,18 @@ public final class RecordAccessControlPointData {
 
 	public static Data reportNumberOfStoredRecordsLessThenOrEqualTo(@IntRange(from = 0) final int sequenceNumber) {
 		return create(OP_CODE_REPORT_NUMBER_OF_RECORDS, OPERATOR_LESS_THEN_OR_EQUAL,
-				FilterType.SEQUENCE_NUMBER, Data.FORMAT_UINT16, sequenceNumber);
+				FilterType.SEQUENCE_NUMBER, Data.FORMAT_UINT16_LE, sequenceNumber);
 	}
 
 	public static Data reportNumberOfStoredRecordsGreaterThenOrEqualTo(@IntRange(from = 0) final int sequenceNumber) {
 		return create(OP_CODE_REPORT_NUMBER_OF_RECORDS, OPERATOR_GREATER_THEN_OR_EQUAL,
-				FilterType.SEQUENCE_NUMBER, Data.FORMAT_UINT16, sequenceNumber);
+				FilterType.SEQUENCE_NUMBER, Data.FORMAT_UINT16_LE, sequenceNumber);
 	}
 
 	public static Data reportNumberOfStoredRecordsFromRange(@IntRange(from = 0) final int startSequenceNumber,
 															@IntRange(from = 0) final int endSequenceNumber) {
 		return create(OP_CODE_REPORT_NUMBER_OF_RECORDS, OPERATOR_WITHING_RANGE,
-				FilterType.SEQUENCE_NUMBER, Data.FORMAT_UINT16,
+				FilterType.SEQUENCE_NUMBER, Data.FORMAT_UINT16_LE,
 				startSequenceNumber, endSequenceNumber);
 	}
 

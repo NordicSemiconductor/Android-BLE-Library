@@ -61,9 +61,9 @@ public abstract class CGMFeatureDataCallback extends ProfileReadResponse impleme
 			return;
 		}
 
-		final int featuresValue = data.getIntValue(Data.FORMAT_UINT24, 0);
+		final int featuresValue = data.getIntValue(Data.FORMAT_UINT24_LE, 0);
 		final int typeAndSampleLocation = data.getIntValue(Data.FORMAT_UINT8, 3);
-		final int expectedCrc = data.getIntValue(Data.FORMAT_UINT16, 4);
+		final int expectedCrc = data.getIntValue(Data.FORMAT_UINT16_LE, 4);
 
 		final CGMFeatures features = new CGMFeatures(featuresValue);
 		if (features.e2eCrcSupported) {

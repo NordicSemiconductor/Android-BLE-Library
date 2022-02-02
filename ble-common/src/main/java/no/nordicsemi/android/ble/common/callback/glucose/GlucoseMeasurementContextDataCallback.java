@@ -76,7 +76,7 @@ public abstract class GlucoseMeasurementContextDataCallback extends ProfileReadR
 			return;
 		}
 
-		final int sequenceNumber = data.getIntValue(Data.FORMAT_UINT16, offset);
+		final int sequenceNumber = data.getIntValue(Data.FORMAT_UINT16_LE, offset);
 		offset += 2;
 
 		// Optional fields
@@ -113,7 +113,7 @@ public abstract class GlucoseMeasurementContextDataCallback extends ProfileReadR
 		Integer exerciseDuration = null;
 		Integer exerciseIntensity = null;
 		if (exercisePresent) {
-			exerciseDuration = data.getIntValue(Data.FORMAT_UINT16, offset); // in seconds
+			exerciseDuration = data.getIntValue(Data.FORMAT_UINT16_LE, offset); // in seconds
 			exerciseIntensity = data.getIntValue(Data.FORMAT_UINT8, offset + 2); // in percentage
 			offset += 3;
 		}

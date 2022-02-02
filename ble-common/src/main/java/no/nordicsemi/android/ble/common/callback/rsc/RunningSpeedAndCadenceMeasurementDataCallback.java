@@ -65,7 +65,7 @@ public abstract class RunningSpeedAndCadenceMeasurementDataCallback extends Prof
 		final boolean statusRunning = (flags & 0x04) != 0;
 		offset += 1;
 
-		final float speed = data.getIntValue(Data.FORMAT_UINT16, offset) / 256.f; // [m/s]
+		final float speed = data.getIntValue(Data.FORMAT_UINT16_LE, offset) / 256.f; // [m/s]
 		offset += 2;
 		final int cadence = data.getIntValue(Data.FORMAT_UINT8, offset);
 		offset += 1;
@@ -79,13 +79,13 @@ public abstract class RunningSpeedAndCadenceMeasurementDataCallback extends Prof
 
 		Integer strideLength = null;
 		if (instantaneousStrideLengthPresent) {
-			strideLength = data.getIntValue(Data.FORMAT_UINT16, offset);
+			strideLength = data.getIntValue(Data.FORMAT_UINT16_LE, offset);
 			offset += 2;
 		}
 
 		Long totalDistance = null;
 		if (totalDistancePresent) {
-			totalDistance = data.getLongValue(Data.FORMAT_UINT32, offset);
+			totalDistance = data.getLongValue(Data.FORMAT_UINT32_LE, offset);
 			// offset += 4;
 		}
 

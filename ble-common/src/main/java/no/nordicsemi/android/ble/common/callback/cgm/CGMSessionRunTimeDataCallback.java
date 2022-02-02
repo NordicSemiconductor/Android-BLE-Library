@@ -60,12 +60,12 @@ public abstract class CGMSessionRunTimeDataCallback extends ProfileReadResponse 
 			return;
 		}
 
-		final int sessionRunTime = data.getIntValue(Data.FORMAT_UINT16, 0);
+		final int sessionRunTime = data.getIntValue(Data.FORMAT_UINT16_LE, 0);
 
 		final boolean crcPresent = data.size() == 4;
 		if (crcPresent) {
 			final int actualCrc = CRC16.MCRF4XX(data.getValue(), 0, 2);
-			final int expectedCrc = data.getIntValue(Data.FORMAT_UINT16, 2);
+			final int expectedCrc = data.getIntValue(Data.FORMAT_UINT16_LE, 2);
 			if (actualCrc != expectedCrc) {
 				onContinuousGlucoseMonitorSessionRunTimeReceivedWithCrcError(device, data);
 				return;

@@ -83,10 +83,10 @@ public abstract class RecordAccessControlPointDataCallback extends ProfileReadRe
 						numberOfRecords = data.getIntValue(Data.FORMAT_UINT8, 2);
 						break;
 					case 2:
-						numberOfRecords = data.getIntValue(Data.FORMAT_UINT16, 2);
+						numberOfRecords = data.getIntValue(Data.FORMAT_UINT16_LE, 2);
 						break;
 					case 4:
-						numberOfRecords = data.getIntValue(Data.FORMAT_UINT32, 2);
+						numberOfRecords = data.getIntValue(Data.FORMAT_UINT32_LE, 2);
 						break;
 					default:
 						// Other field sizes are not supported

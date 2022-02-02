@@ -101,13 +101,13 @@ public class GlucoseMeasurementContextDataCallbackTest {
 	public void onGlucoseMeasurementContextReceived_full() {
 		final MutableData data = new MutableData(new byte[17]);
 		data.setValue(0xFF, Data.FORMAT_UINT8, 0); // Flags
-		data.setValue(0, Data.FORMAT_UINT16, 1); // Sequence number
+		data.setValue(0, Data.FORMAT_UINT16_LE, 1); // Sequence number
 		data.setValue(0xb3, Data.FORMAT_UINT8, 3); // Extended flags - ignored
 		data.setValue(GlucoseMeasurementContextCallback.Carbohydrate.DINNER.value, Data.FORMAT_UINT8, 4); // Carbohydrate
 		data.setValue(100.0f, Data.FORMAT_SFLOAT, 5); // Carbohydrate Amount
 		data.setValue(GlucoseMeasurementContextCallback.Meal.CASUAL.value, Data.FORMAT_UINT8, 7); // Meal
 		data.setValue(0x12, Data.FORMAT_UINT8, 8); // Tester and Health (health care practitioner, minor issues)
-		data.setValue(60, Data.FORMAT_UINT16, 9); // 1 minute of exercise
+		data.setValue(60, Data.FORMAT_UINT16_LE, 9); // 1 minute of exercise
 		data.setValue(50, Data.FORMAT_UINT8, 11); // 50%
 		data.setValue(4, Data.FORMAT_UINT8, 12); // Long acting insulin
 		data.setValue(123.45f, Data.FORMAT_SFLOAT, 13); // 123.45 ml
@@ -121,7 +121,7 @@ public class GlucoseMeasurementContextDataCallbackTest {
 	public void onGlucoseMeasurementContextReceived_empty() {
 		final MutableData data = new MutableData(new byte[17]);
 		data.setValue(0x00, Data.FORMAT_UINT8, 0); // Flags
-		data.setValue(1, Data.FORMAT_UINT16, 1);
+		data.setValue(1, Data.FORMAT_UINT16_LE, 1);
 		callback.onDataReceived(null, data);
 		assertTrue(success);
 		assertEquals(1, number);
@@ -131,13 +131,13 @@ public class GlucoseMeasurementContextDataCallbackTest {
 	public void onInvalidDataReceived() {
 		final MutableData data = new MutableData(new byte[5]);
 		data.setValue(0xFF, Data.FORMAT_UINT8, 0); // Flags
-		data.setValue(0, Data.FORMAT_UINT16, 1); // Sequence number
+		data.setValue(0, Data.FORMAT_UINT16_LE, 1); // Sequence number
 		data.setValue(0xb3, Data.FORMAT_UINT8, 3); // Extended flags - ignored
 		data.setValue(3, Data.FORMAT_UINT8, 4); // Carbohydrate: dinner
 		data.setValue(100.0f, Data.FORMAT_SFLOAT, 5); // Carbohydrate Amount
 		data.setValue(4, Data.FORMAT_UINT8, 7); // Meal: casual
 		data.setValue(0x12, Data.FORMAT_UINT8, 8); // Tester and Health (health care practitioner, minor issues)
-		data.setValue(60, Data.FORMAT_UINT16, 9); // 1 minute of exercise
+		data.setValue(60, Data.FORMAT_UINT16_LE, 9); // 1 minute of exercise
 		data.setValue(50, Data.FORMAT_UINT8, 11); // 50%
 		data.setValue(4, Data.FORMAT_UINT8, 12); // Long acting insulin
 		data.setValue(123.45f, Data.FORMAT_SFLOAT, 13); // 123.45 ml

@@ -228,7 +228,7 @@ public class MutableData extends Data {
 	 * Set the locally stored value of this data.
 	 * <p>See {@link #setValue(byte[])} for details.
 	 *
-	 * @param value      New value for this data. This allows to send {@link #FORMAT_UINT32}.
+	 * @param value      New value for this data. This allows to send {@link #FORMAT_UINT32_LE}.
 	 * @param formatType Integer format type used to transform the value parameter
 	 * @param offset     Offset at which the value should be placed
 	 * @return true if the locally stored value has been set

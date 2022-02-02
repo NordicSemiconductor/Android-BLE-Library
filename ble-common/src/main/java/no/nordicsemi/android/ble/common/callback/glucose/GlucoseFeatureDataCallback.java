@@ -57,7 +57,7 @@ public abstract class GlucoseFeatureDataCallback extends ProfileReadResponse imp
 			return;
 		}
 
-		final int value = data.getIntValue(Data.FORMAT_UINT16, 0);
+		final int value = data.getIntValue(Data.FORMAT_UINT16_LE, 0);
 		final GlucoseFeatures features = new GlucoseFeatures(value);
 		onGlucoseFeaturesReceived(device, features);
 	}

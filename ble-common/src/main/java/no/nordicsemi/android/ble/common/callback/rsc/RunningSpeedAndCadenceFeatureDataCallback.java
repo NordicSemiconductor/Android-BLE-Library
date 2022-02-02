@@ -57,7 +57,7 @@ public abstract class RunningSpeedAndCadenceFeatureDataCallback extends ProfileR
 			return;
 		}
 
-		final int value = data.getIntValue(Data.FORMAT_UINT16, 0);
+		final int value = data.getIntValue(Data.FORMAT_UINT16_LE, 0);
 		final RSCFeatures features = new RSCFeatures(value);
 		onRunningSpeedAndCadenceFeaturesReceived(device, features);
 	}

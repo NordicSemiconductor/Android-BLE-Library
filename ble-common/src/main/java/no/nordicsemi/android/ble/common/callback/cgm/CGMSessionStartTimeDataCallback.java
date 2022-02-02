@@ -71,7 +71,7 @@ public abstract class CGMSessionStartTimeDataCallback extends ProfileReadRespons
 		final boolean crcPresent = data.size() == 11;
 		if (crcPresent) {
 			final int actualCrc = CRC16.MCRF4XX(data.getValue(), 0, 9);
-			final int expectedCrc = data.getIntValue(Data.FORMAT_UINT16, 9);
+			final int expectedCrc = data.getIntValue(Data.FORMAT_UINT16_LE, 9);
 			if (actualCrc != expectedCrc) {
 				onContinuousGlucoseMonitorSessionStartTimeReceivedWithCrcError(device, data);
 				return;

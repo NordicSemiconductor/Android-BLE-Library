@@ -112,7 +112,7 @@ public abstract class CGMSpecificOpsControlPointDataCallback extends ProfileRead
 		// Verify CRC if present
 		final boolean crcPresent = data.size() == 1 + expectedOperandSize + 2; // opCode + expected operand + CRC
 		if (crcPresent) {
-			final int expectedCrc = data.getIntValue(Data.FORMAT_UINT16, 1 + expectedOperandSize);
+			final int expectedCrc = data.getIntValue(Data.FORMAT_UINT16_LE, 1 + expectedOperandSize);
 			final int actualCrc   = CRC16.MCRF4XX(data.getValue(), 0, 1 + expectedOperandSize);
 			if (expectedCrc != actualCrc) {
 				onCGMSpecificOpsResponseReceivedWithCrcError(device, data);
@@ -127,13 +127,13 @@ public abstract class CGMSpecificOpsControlPointDataCallback extends ProfileRead
 				return;
 			case OP_CODE_CALIBRATION_VALUE_RESPONSE:
 				final float glucoseConcentrationOfCalibration = data.getFloatValue(Data.FORMAT_SFLOAT, 1);
-				final int calibrationTime = data.getIntValue(Data.FORMAT_UINT16, 3);
+				final int calibrationTime = data.getIntValue(Data.FORMAT_UINT16_LE, 3);
 				final int calibrationTypeAndSampleLocation = data.getIntValue(Data.FORMAT_UINT8, 5);
 				@SuppressLint("WrongConstant")
 				final int calibrationType = calibrationTypeAndSampleLocation & 0x0F;
 				final int calibrationSampleLocation = calibrationTypeAndSampleLocation >> 4;
-				final int nextCalibrationTime = data.getIntValue(Data.FORMAT_UINT16, 6);
-				final int calibrationDataRecordNumber = data.getIntValue(Data.FORMAT_UINT16, 8);
+				final int nextCalibrationTime = data.getIntValue(Data.FORMAT_UINT16_LE, 6);
+				final int calibrationDataRecordNumber = data.getIntValue(Data.FORMAT_UINT16_LE, 8);
 				final int calibrationStatus = data.getIntValue(Data.FORMAT_UINT8, 10);
 				onContinuousGlucoseCalibrationValueReceived(device, glucoseConcentrationOfCalibration,
 						calibrationTime, nextCalibrationTime, calibrationType, calibrationSampleLocation,

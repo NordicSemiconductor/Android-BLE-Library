@@ -89,7 +89,7 @@ public class IntermediateCuffPressureDataCallbackTest {
 		// Cuff pressure in mmHg
 		data.setValue(4, 0, Data.FORMAT_SFLOAT, 1);
 		// Date and Time
-		data.setValue(0, Data.FORMAT_UINT16, 7);
+		data.setValue(0, Data.FORMAT_UINT16_LE, 7);
 		data.setValue(4, Data.FORMAT_UINT8, 9);
 		data.setValue(17, Data.FORMAT_UINT8, 10);
 		data.setValue(20, Data.FORMAT_UINT8, 11);
@@ -100,7 +100,7 @@ public class IntermediateCuffPressureDataCallbackTest {
 		// User ID
 		data.setValue(1, Data.FORMAT_UINT8, 16);
 		// Measurement status
-		data.setValue(0b100111, Data.FORMAT_UINT16, 17);
+		data.setValue(0b100111, Data.FORMAT_UINT16_LE, 17);
 
 		assertArrayEquals(
 				new byte[] { 0x1E, (byte) 0x04, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x04, 0x11, 0x14, 0x29, 0x3B, 0x3C, 0x00, 0x01, 0x27, 0x00 },
@@ -147,7 +147,7 @@ public class IntermediateCuffPressureDataCallbackTest {
 		// Pulse rate
 		data.setValue(60, 0, Data.FORMAT_SFLOAT, 7);
 		// Measurement status
-		data.setValue(0b010010, Data.FORMAT_UINT16, 9);
+		data.setValue(0b010010, Data.FORMAT_UINT16_LE, 9);
 
 		assertArrayEquals(
 				new byte[] { 0x15, 0x6F, (byte) 0xF0, 0x00, 0x00, 0x00, 0x00, 0x3C, 0x0, 0x12, 0x0 },

@@ -64,7 +64,7 @@ public abstract class HeartRateMeasurementDataCallback extends ProfileReadRespon
 		// Read flags
 		int offset = 0;
 		final int flags = data.getIntValue(Data.FORMAT_UINT8, offset);
-		final int hearRateType = (flags & 0x01) == 0 ? Data.FORMAT_UINT8 : Data.FORMAT_UINT16;
+		final int hearRateType = (flags & 0x01) == 0 ? Data.FORMAT_UINT8 : Data.FORMAT_UINT16_LE;
 		final int sensorContactStatus = (flags & 0x06) >> 1;
 		final boolean sensorContactSupported = sensorContactStatus == 2 || sensorContactStatus == 3;
 		final boolean sensorContactDetected = sensorContactStatus == 3;
@@ -88,7 +88,7 @@ public abstract class HeartRateMeasurementDataCallback extends ProfileReadRespon
 
 		Integer energyExpanded = null;
 		if (energyExpandedPresent) {
-			energyExpanded = data.getIntValue(Data.FORMAT_UINT16, offset);
+			energyExpanded = data.getIntValue(Data.FORMAT_UINT16_LE, offset);
 			offset += 2;
 		}
 
@@ -97,7 +97,7 @@ public abstract class HeartRateMeasurementDataCallback extends ProfileReadRespon
 			final int count = (data.size() - offset) / 2;
 			final List<Integer> intervals = new ArrayList<>(count);
 			for (int i = 0; i < count; ++i) {
-				intervals.add(data.getIntValue(Data.FORMAT_UINT16, offset));
+				intervals.add(data.getIntValue(Data.FORMAT_UINT16_LE, offset));
 				offset += 2;
 			}
 			rrIntervals = Collections.unmodifiableList(intervals);

@@ -106,7 +106,7 @@ public abstract class IntermediateCuffPressureDataCallback extends ProfileReadRe
 		// Read measurement status if present
 		BPMStatus status = null;
 		if (measurementStatusPresent) {
-			final int measurementStatus = data.getIntValue(Data.FORMAT_UINT16, offset);
+			final int measurementStatus = data.getIntValue(Data.FORMAT_UINT16_LE, offset);
 			// offset += 2;
 			status = new BPMStatus(measurementStatus);
 		}

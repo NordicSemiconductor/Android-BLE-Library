@@ -82,9 +82,9 @@ public class CGMStatusDataCallbackTest {
 			}
 		};
 		final MutableData data = new MutableData(new byte[7]);
-		data.setValue(5, Data.FORMAT_UINT16, 0);
-		data.setValue(0xff3f3f, Data.FORMAT_UINT24, 2); // all flags set
-		data.setValue(0xE0A7, Data.FORMAT_UINT16, 5);
+		data.setValue(5, Data.FORMAT_UINT16_LE, 0);
+		data.setValue(0xff3f3f, Data.FORMAT_UINT24_LE, 2); // all flags set
+		data.setValue(0xE0A7, Data.FORMAT_UINT16_LE, 5);
 		callback.onDataReceived(null, data);
 	}
 
@@ -130,8 +130,8 @@ public class CGMStatusDataCallbackTest {
 			}
 		};
 		final MutableData data = new MutableData(new byte[5]);
-		data.setValue(6, Data.FORMAT_UINT16, 0);
-		data.setValue(0x010101, Data.FORMAT_UINT24, 2);
+		data.setValue(6, Data.FORMAT_UINT16_LE, 0);
+		data.setValue(0x010101, Data.FORMAT_UINT24_LE, 2);
 		callback.onDataReceived(null, data);
 	}
 
@@ -155,9 +155,9 @@ public class CGMStatusDataCallbackTest {
 			}
 		};
 		final MutableData data = new MutableData(new byte[7]);
-		data.setValue(6, Data.FORMAT_UINT16, 0);
-		data.setValue(0x010101, Data.FORMAT_UINT24, 2);
-		data.setValue(0xE0A7, Data.FORMAT_UINT16, 5);
+		data.setValue(6, Data.FORMAT_UINT16_LE, 0);
+		data.setValue(0x010101, Data.FORMAT_UINT24_LE, 2);
+		data.setValue(0xE0A7, Data.FORMAT_UINT16_LE, 5);
 		called = false;
 		callback.onDataReceived(null, data);
 		assertTrue(called);
@@ -183,8 +183,8 @@ public class CGMStatusDataCallbackTest {
 			}
 		};
 		final MutableData data = new MutableData(new byte[6]);
-		data.setValue(6, Data.FORMAT_UINT16, 0);
-		data.setValue(0x010101, Data.FORMAT_UINT24, 2);
+		data.setValue(6, Data.FORMAT_UINT16_LE, 0);
+		data.setValue(0x010101, Data.FORMAT_UINT24_LE, 2);
 		data.setValue(1, Data.FORMAT_UINT8, 5);
 		called = false;
 		callback.onDataReceived(null, data);
