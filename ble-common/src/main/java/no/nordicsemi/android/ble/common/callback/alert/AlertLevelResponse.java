@@ -28,6 +28,7 @@ import no.nordicsemi.android.ble.exception.RequestFailedException;
  * </pre>
  * </p>
  */
+@SuppressWarnings("unused")
 public final class AlertLevelResponse extends AlertLevelDataCallback implements Parcelable {
 	private int level;
 
