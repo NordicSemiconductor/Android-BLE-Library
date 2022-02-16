@@ -35,7 +35,9 @@ suspend fun Request.suspend() = suspendCancellable()
 )
 suspend fun WriteRequest.suspend(): Data {
 	var result: Data? = null
-	with { _, data -> result = data }.suspendCancellable()
+	this
+		.with { _, data -> result = data }
+		.suspendCancellable()
 	return result!!
 }
 
@@ -63,9 +65,12 @@ suspend fun WriteRequest.suspend(): Data {
 )
 suspend inline fun <reified T: WriteResponse> WriteRequest.suspendForResponse(): T {
 	var device: BluetoothDevice? = null
-	then { d -> device = d }.suspend().let {
-		return T::class.java.newInstance().apply { onDataSent(device!!, it) }
-	}
+	return this
+		.before { d -> device = d }
+		.suspend()
+		.let {
+			T::class.java.newInstance().apply { onDataSent(device!!, it) }
+		}
 }
 
 /**
@@ -80,7 +85,9 @@ suspend inline fun <reified T: WriteResponse> WriteRequest.suspendForResponse():
 )
 suspend fun ReadRequest.suspend(): Data {
 	var result: Data? = null
-	with { _, data -> result = data }.suspendCancellable()
+	this
+		.with { _, data -> result = data }
+		.suspendCancellable()
 	return result!!
 }
 
@@ -103,9 +110,12 @@ suspend fun ReadRequest.suspend(): Data {
 )
 suspend inline fun <reified T: ReadResponse> ReadRequest.suspendForResponse(): T {
 	var device: BluetoothDevice? = null
-	then { d -> device = d }.suspend().let {
-		return T::class.java.newInstance().apply { onDataReceived(device!!, it) }
-	}
+	return this
+		.before { d -> device = d }
+		.suspend()
+		.let {
+			T::class.java.newInstance().apply { onDataReceived(device!!, it) }
+		}
 }
 
 /**
@@ -144,7 +154,9 @@ suspend inline fun <reified T: ProfileReadResponse> ReadRequest.suspendForValidR
 )
 suspend fun ReadRssiRequest.suspend(): Int {
 	var result: Int? = null
-	with { _, rssi -> result = rssi }.suspendCancellable()
+	this
+		.with { _, rssi -> result = rssi }
+		.suspendCancellable()
 	return result!!
 }
 
@@ -160,7 +172,9 @@ suspend fun ReadRssiRequest.suspend(): Int {
 )
 suspend fun MtuRequest.suspend(): Int {
 	var result: Int? = null
-	with { _, mtu -> result = mtu }.suspendCancellable()
+	this
+		.with { _, mtu -> result = mtu }
+		.suspendCancellable()
 	return result!!
 }
 
@@ -176,7 +190,9 @@ suspend fun MtuRequest.suspend(): Int {
 )
 suspend fun PhyRequest.suspend(): Pair<Int, Int> {
 	var result: Pair<Int, Int>? = null
-	with { _, txPhy, rxPhy -> result = txPhy to rxPhy }.suspendCancellable()
+	this
+		.with { _, txPhy, rxPhy -> result = txPhy to rxPhy }
+		.suspendCancellable()
 	return result!!
 }
 
@@ -190,18 +206,23 @@ suspend fun PhyRequest.suspend(): Pair<Int, Int> {
 	RequestFailedException::class,
 	InvalidRequestException::class
 )
-suspend fun WaitForValueChangedRequest.suspend(): Data  = suspendCancellableCoroutine { continuation ->	this
-	.with { _, data -> continuation.resume(data) }
-	.invalid { continuation.resumeWithException(InvalidRequestException(this)) }
-	.fail { _, status ->
-		val exception = when (status) {
-			FailCallback.REASON_BLUETOOTH_DISABLED -> BluetoothDisabledException()
-			FailCallback.REASON_DEVICE_DISCONNECTED -> DeviceDisconnectedException()
-			else -> RequestFailedException(this, status)
+suspend fun WaitForValueChangedRequest.suspend(): Data  = suspendCancellableCoroutine { continuation ->
+	var data: Data? = null
+	this
+		// DON'T USE .before callback here, it's used to get BluetoothDevice instance above.
+		.with { _, d -> data = d }
+		.invalid { continuation.resumeWithException(InvalidRequestException(this)) }
+		.fail { _, status ->
+			val exception = when (status) {
+				FailCallback.REASON_BLUETOOTH_DISABLED -> BluetoothDisabledException()
+				FailCallback.REASON_DEVICE_DISCONNECTED -> DeviceDisconnectedException()
+				else -> RequestFailedException(this, status)
+			}
+			continuation.resumeWithException(exception)
 		}
-		continuation.resumeWithException(exception)
-	}
-	.enqueue()
+		.done { continuation.resume(data!!) }
+		// .then is called after both .done and .fail
+		.enqueue()
 }
 
 /**
@@ -222,9 +243,12 @@ suspend fun WaitForValueChangedRequest.suspend(): Data  = suspendCancellableCoro
 )
 suspend inline fun <reified T: ReadResponse> WaitForValueChangedRequest.suspendForResponse(): T {
 	var device: BluetoothDevice? = null
-	then { d -> device = d }.suspend().let {
-		return T::class.java.newInstance().apply { onDataReceived(device!!, it) }
-	}
+	return this
+		.before { d -> device = d }
+		.suspend()
+		.let {
+			T::class.java.newInstance().apply { onDataReceived(device!!, it) }
+		}
 }
 
 /**
@@ -260,18 +284,23 @@ suspend inline fun <reified T: ProfileReadResponse> WaitForValueChangedRequest.s
 	RequestFailedException::class,
 	InvalidRequestException::class
 )
-suspend fun WaitForReadRequest.suspend(): Data  = suspendCancellableCoroutine { continuation ->	this
-	.with { _, data -> continuation.resume(data) }
-	.invalid { continuation.resumeWithException(InvalidRequestException(this)) }
-	.fail { _, status ->
-		val exception = when (status) {
-			FailCallback.REASON_BLUETOOTH_DISABLED -> BluetoothDisabledException()
-			FailCallback.REASON_DEVICE_DISCONNECTED -> DeviceDisconnectedException()
-			else -> RequestFailedException(this, status)
+suspend fun WaitForReadRequest.suspend(): Data  = suspendCancellableCoroutine { continuation ->
+	var data: Data?	= null
+	this
+		// DON'T USE .before callback here, it's used to get BluetoothDevice instance above.
+		.with { _, d -> data = d }
+		.invalid { continuation.resumeWithException(InvalidRequestException(this)) }
+		.fail { _, status ->
+			val exception = when (status) {
+				FailCallback.REASON_BLUETOOTH_DISABLED -> BluetoothDisabledException()
+				FailCallback.REASON_DEVICE_DISCONNECTED -> DeviceDisconnectedException()
+				else -> RequestFailedException(this, status)
+			}
+			continuation.resumeWithException(exception)
 		}
-		continuation.resumeWithException(exception)
-	}
-	.enqueue()
+		.done { continuation.resume(data!!) }
+		// .then is called after both .done and .fail
+		.enqueue()
 }
 
 /**
@@ -294,21 +323,27 @@ suspend fun WaitForReadRequest.suspend(): Data  = suspendCancellableCoroutine { 
 )
 suspend inline fun <reified T: WriteResponse> WaitForReadRequest.suspendForResponse(): T {
 	var device: BluetoothDevice? = null
-	then { d -> device = d }.suspend().let {
-		return T::class.java.newInstance().apply { onDataSent(device!!, it) }
-	}
+	return this
+		.before { d -> device = d }
+		.suspend()
+		.let {
+			T::class.java.newInstance().apply { onDataSent(device!!, it) }
+		}
 }
 
-private suspend fun Request.suspendCancellable(): Unit = suspendCancellableCoroutine { continuation -> this
-	.done { continuation.resume(Unit) }
-	.invalid { continuation.resumeWithException(InvalidRequestException(this)) }
-	.fail { _, status ->
-		val exception = when (status) {
-			FailCallback.REASON_BLUETOOTH_DISABLED -> BluetoothDisabledException()
-			FailCallback.REASON_DEVICE_DISCONNECTED -> DeviceDisconnectedException()
-			else -> RequestFailedException(this, status)
+private suspend fun Request.suspendCancellable(): Unit = suspendCancellableCoroutine { continuation ->
+	this
+		// DON'T USE .before callback here, it's used to get BluetoothDevice instance above.
+		.invalid { continuation.resumeWithException(InvalidRequestException(this)) }
+		.fail { _, status ->
+			val exception = when (status) {
+				FailCallback.REASON_BLUETOOTH_DISABLED -> BluetoothDisabledException()
+				FailCallback.REASON_DEVICE_DISCONNECTED -> DeviceDisconnectedException()
+				else -> RequestFailedException(this, status)
+			}
+			continuation.resumeWithException(exception)
 		}
-		continuation.resumeWithException(exception)
-	}
-	.enqueue()
+		.done { continuation.resume(Unit) }
+		// .then is called after both .done and .fail
+		.enqueue()
 }
