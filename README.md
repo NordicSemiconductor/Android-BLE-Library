@@ -91,24 +91,24 @@ The library may be found on Maven Central repository.
 Add it to your project by adding the following dependency:
 
 ```grovy
-implementation 'no.nordicsemi.android:ble:2.4.0-beta01'
+implementation 'no.nordicsemi.android:ble:2.4.0.beta02'
 ```
 The last version not migrated to AndroidX is 2.0.5.
 
 BLE library with Kotlin extension is available in:
 ```grovy
-implementation 'no.nordicsemi.android:ble-ktx:2.4.0-beta01'
+implementation 'no.nordicsemi.android:ble-ktx:2.4.0.beta02'
 ``` 
 
 To import the BLE library with set of parsers for common Bluetooth SIG characteristics, use:
 ```grovy
-implementation 'no.nordicsemi.android:ble-common:2.4.0-beta01'
+implementation 'no.nordicsemi.android:ble-common:2.4.0.beta02'
 ```
 For more information, read [this](BLE-COMMON.md).
 
 An extension for easier integration with `LiveData` is available after adding:
 ```grovy
-implementation 'no.nordicsemi.android:ble-livedata:2.4.0-beta01'
+implementation 'no.nordicsemi.android:ble-livedata:2.4.0.beta02'
 ```
 This extension adds `ObservableBleManager` with `state` and `bondingState` properties, which 
 notify about connection and bond state using `androidx.lifecycle.LiveData`.
