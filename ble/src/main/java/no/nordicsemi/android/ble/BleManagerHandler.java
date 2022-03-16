@@ -335,6 +335,9 @@ abstract class BleManagerHandler extends RequestHandler {
 							return;
 						}
 					} else if (previousBondState == BluetoothDevice.BOND_BONDED) {
+						// Removing the bond will cause disconnection.
+						userDisconnected = true;
+
 						if (request != null && request.type == Request.Type.REMOVE_BOND) {
 							// The device has already disconnected by now.
 							log(Log.INFO, () -> "Bond information removed");
@@ -345,7 +348,15 @@ abstract class BleManagerHandler extends RequestHandler {
 						// or in Android Settings), the BluetoothGatt object should be closed, so
 						// the library won't reconnect to the device automatically.
 						// See: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/157
-						close();
+						if (!isConnected())
+							close();
+
+						// Due to https://github.com/NordicSemiconductor/Android-BLE-Library/issues/363,
+						// the call to close() here has been placed behind an if statement.
+						// Instead, the 'userDisconnected' flag is set to true (here and in
+						// 'internalRemoveBond()'.
+						// When the device gets disconnected, close() method will be called from
+						// 'notifyDeviceDisconnected(...)'.
 					}
 					break;
 				case BluetoothDevice.BOND_BONDING:
@@ -764,6 +775,8 @@ abstract class BleManagerHandler extends RequestHandler {
 			//noinspection JavaReflectionMemberAccess
 			final Method removeBond = device.getClass().getMethod("removeBond");
 			log(Log.DEBUG, () -> "device.removeBond() (hidden)");
+			// Removing a call will initiate disconnection.
+			userDisconnected = true;
 			return removeBond.invoke(device) == Boolean.TRUE;
 		} catch (final Exception e) {
 			Log.w(TAG, "An exception occurred while removing bond", e);
@@ -1577,12 +1590,17 @@ abstract class BleManagerHandler extends RequestHandler {
 			// ConnectRequest was already notified
 		} else if (userDisconnected) {
 			log(Log.INFO, () -> "Disconnected");
-			close();
+			// If Remove Bond was called, the broadcast may be called AFTER the device has disconnected.
+			// In that case, we can't call close() here, as that would unregister the broadcast
+			// receiver. Instead, close() will be called from the receiver.
+			if (request == null || request.type != Request.Type.REMOVE_BOND)
+				close();
 			postCallback(c -> c.onDeviceDisconnected(device));
 			postConnectionStateChange(o -> o.onDeviceDisconnected(device, status));
 			final Request request = this.request;
 			if (request != null && request.type == Request.Type.DISCONNECT) {
 				request.notifySuccess(device);
+				this.request = null;
 			}
 		} else {
 			log(Log.WARN, () -> "Connection lost");
