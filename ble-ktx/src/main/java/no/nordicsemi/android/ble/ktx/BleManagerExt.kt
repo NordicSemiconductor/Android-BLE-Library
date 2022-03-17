@@ -2,11 +2,12 @@
 
 package no.nordicsemi.android.ble.ktx
 
-import android.Manifest
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
-import androidx.annotation.RequiresPermission
+import kotlinx.coroutines.InternalCoroutinesApi
+import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
 import no.nordicsemi.android.ble.BleManager
 import no.nordicsemi.android.ble.ktx.state.BondState
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
@@ -45,11 +46,12 @@ val BleManager.bondingState: BondState
  * If a different connection observer was set using [BleManager.setConnectionObserver], this
  * method will throw [IllegalStateException].
  */
-fun BleManager.stateAsFlow() = when (connectionObserver) {
-    null -> ConnectionObserverFlow(MutableStateFlow(state))
-        .apply { connectionObserver = this }
-    is ConnectionObserverFlow -> connectionObserver
-    else -> throw IllegalStateException("Observer already set")
+fun BleManager.stateAsFlow(): StateFlow<ConnectionState> = with(connectionObserver) {
+    when (this) {
+        null -> ConnectionObserverFlow(state).apply { connectionObserver = this }.flow
+        is ConnectionObserverFlow -> flow
+        else -> throw IllegalStateException("Observer already set")
+    }
 }
 
 /**
@@ -58,16 +60,18 @@ fun BleManager.stateAsFlow() = when (connectionObserver) {
  * If a different bond state observer was set using [BleManager.setBondingObserver], this
  * method will throw [IllegalStateException].
  */
-fun BleManager.bondingStateAsFlow() = when (bondingObserver) {
-    null -> BondStateObserverFlow(MutableStateFlow(bondingState))
-        .apply { bondingObserver = this }
-    is BondStateObserverFlow -> bondingObserver
-    else -> throw IllegalStateException("Observer already set")
+fun BleManager.bondingStateAsFlow(): StateFlow<BondState> = with(bondingObserver) {
+    when (this) {
+        null -> BondStateObserverFlow(bondingState).apply { bondingObserver = this }.flow
+        is BondStateObserverFlow -> flow
+        else -> throw IllegalStateException("Observer already set")
+    }
 }
 
 // ------------------------------------ Implementation ------------------------------------
 
-private class ConnectionObserverFlow(val flow: MutableStateFlow<ConnectionState>): ConnectionObserver {
+private class ConnectionObserverFlow(value: ConnectionState): ConnectionObserver {
+    val flow: MutableStateFlow<ConnectionState> = MutableStateFlow(value)
 
     override fun onDeviceConnecting(device: BluetoothDevice) {
         flow.tryEmit(ConnectionState.Connecting)
@@ -94,7 +98,8 @@ private class ConnectionObserverFlow(val flow: MutableStateFlow<ConnectionState>
     }
 }
 
-private class BondStateObserverFlow(val flow: MutableStateFlow<BondState>): BondingObserver {
+private class BondStateObserverFlow(value: BondState): BondingObserver {
+    val flow: MutableStateFlow<BondState> = MutableStateFlow(value)
 
     override fun onBondingRequired(device: BluetoothDevice) {
         flow.tryEmit(BondState.Bonding)
@@ -107,5 +112,4 @@ private class BondStateObserverFlow(val flow: MutableStateFlow<BondState>): Bond
     override fun onBondingFailed(device: BluetoothDevice) {
         flow.tryEmit(BondState.Bonding)
     }
-
 }
