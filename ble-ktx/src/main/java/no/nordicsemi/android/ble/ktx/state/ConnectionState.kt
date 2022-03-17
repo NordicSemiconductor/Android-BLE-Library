@@ -73,7 +73,7 @@ sealed class ConnectionState {
     companion object {
 
         internal fun of(manager: BleManager) = when(manager.connectionState) {
-            BluetoothProfile.STATE_CONNECTING -> Disconnecting
+            BluetoothProfile.STATE_CONNECTING -> Connecting
             BluetoothProfile.STATE_CONNECTED -> if (manager.isReady) Ready else Initializing
             BluetoothProfile.STATE_DISCONNECTING -> Disconnecting
             else -> Disconnected(Reason.UNKNOWN)
