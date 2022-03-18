@@ -43,6 +43,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RequiresPermission;
+import androidx.annotation.RestrictTo;
 import androidx.annotation.StringRes;
 import no.nordicsemi.android.ble.annotation.ConnectionPriority;
 import no.nordicsemi.android.ble.annotation.ConnectionState;
@@ -227,6 +228,15 @@ public abstract class BleManager implements ILogger {
 	}
 
 	/**
+	 * Returns the current connection observer object.
+	 */
+	@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+	@Nullable
+	public final ConnectionObserver getConnectionObserver() {
+		return this.connectionObserver;
+	}
+
+	/**
 	 * Sets the observer, that will receive events related to bonding.
 	 * This callback will be called using the handler given in {@link BleManager#BleManager(Context, Handler)}.
 	 *
@@ -235,6 +245,15 @@ public abstract class BleManager implements ILogger {
 	 */
 	public final void setBondingObserver(@Nullable final BondingObserver callback) {
 		this.bondingObserver = callback;
+	}
+
+	/**
+	 * Returns the current bonding state observer object.
+	 */
+	@RestrictTo(RestrictTo.Scope.LIBRARY_GROUP)
+	@Nullable
+	public final BondingObserver getBondingObserver() {
+		return this.bondingObserver;
 	}
 
 	/**
