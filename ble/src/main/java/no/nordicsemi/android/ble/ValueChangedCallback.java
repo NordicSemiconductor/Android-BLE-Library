@@ -147,7 +147,10 @@ public class ValueChangedCallback {
 		valueCallback = null;
 		dataMerger = null;
 		progressCallback = null;
+		filter = null;
+		packetFilter = null;
 		buffer = null;
+		count = 0;
 		return this;
 	}
 
