@@ -313,7 +313,7 @@ public final class ReadRequest extends SimpleValueRequest<DataReceivedCallback> 
 	}
 
 	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
-	boolean isComplete() {
-		return complete;
+	boolean hasMore() {
+		return !complete;
 	}
 }
