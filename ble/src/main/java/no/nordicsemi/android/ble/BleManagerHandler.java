@@ -1768,8 +1768,8 @@ abstract class BleManagerHandler extends RequestHandler {
 	private final BluetoothGattCallback gattCallback = new BluetoothGattCallback() {
 
 		@Override
-		public final void onConnectionStateChange(@NonNull final BluetoothGatt gatt,
-												  final int status, final int newState) {
+		public void onConnectionStateChange(@NonNull final BluetoothGatt gatt,
+											final int status, final int newState) {
 			log(Log.DEBUG, () ->
 					"[Callback] Connection state changed with status: " + status +
 					" and new state: " + newState + " (" + ParserUtils.stateToString(newState) + ")");
@@ -1925,7 +1925,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		}
 
 		@Override
-		public final void onServicesDiscovered(@NonNull final BluetoothGatt gatt, final int status) {
+		public void onServicesDiscovered(@NonNull final BluetoothGatt gatt, final int status) {
 			if (!serviceDiscoveryRequested)
 				return;
 			serviceDiscoveryRequested = false;
@@ -2046,7 +2046,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		 * Requires API 31+.
 		 */
 		@Keep
-		public final void onServiceChanged(@NonNull final BluetoothGatt gatt) {
+		public void onServiceChanged(@NonNull final BluetoothGatt gatt) {
 			log(Log.INFO, () -> "Service changed, invalidating services");
 
 			// Forbid enqueuing more operations.
@@ -2083,7 +2083,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					if (matches) {
 						rr.notifyValueChanged(gatt.getDevice(), data);
 					}
-					if (!matches || rr.hasMore()) {
+					if (!matches || !rr.isComplete()) {
 						enqueueFirst(rr);
 					} else {
 						rr.notifySuccess(gatt.getDevice());
@@ -2163,8 +2163,8 @@ abstract class BleManagerHandler extends RequestHandler {
 		}
 
 		@Override
-		public final void onReliableWriteCompleted(@NonNull final BluetoothGatt gatt,
-												   final int status) {
+		public void onReliableWriteCompleted(@NonNull final BluetoothGatt gatt,
+											 final int status) {
 			final boolean execute = request.type == Request.Type.EXECUTE_RELIABLE_WRITE;
 			reliableWriteInProgress = false;
 			if (status == BluetoothGatt.GATT_SUCCESS) {
@@ -2197,7 +2197,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				if (request instanceof ReadRequest) {
 					final ReadRequest request = (ReadRequest) BleManagerHandler.this.request;
 					request.notifyValueChanged(gatt.getDevice(), data);
-					if (request.hasMore()) {
+					if (!request.isComplete()) {
 						enqueueFirst(request);
 					} else {
 						request.notifySuccess(gatt.getDevice());
@@ -2357,7 +2357,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					valueChangedRequest.notifyValueChanged(gatt.getDevice(), data);
 
 					// If no more data are expected
-					if (!valueChangedRequest.hasMore()) {
+					if (valueChangedRequest.isComplete()) {
 						// notify success,
 						valueChangedRequest.notifySuccess(gatt.getDevice());
 						// and proceed to the next request only if the trigger has completed.
@@ -2377,9 +2377,9 @@ abstract class BleManagerHandler extends RequestHandler {
 
 		@RequiresApi(api = Build.VERSION_CODES.LOLLIPOP)
 		@Override
-		public final void onMtuChanged(@NonNull final BluetoothGatt gatt,
-									   @IntRange(from = 23, to = 517) final int mtu,
-									   final int status) {
+		public void onMtuChanged(@NonNull final BluetoothGatt gatt,
+								 @IntRange(from = 23, to = 517) final int mtu,
+								 final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, () -> "MTU changed to: " + mtu);
 				BleManagerHandler.this.mtu = mtu;
@@ -2422,11 +2422,11 @@ abstract class BleManagerHandler extends RequestHandler {
 		 */
 		@RequiresApi(api = Build.VERSION_CODES.O)
 		// @Override
-		public final void onConnectionUpdated(@NonNull final BluetoothGatt gatt,
-											  @IntRange(from = 6, to = 3200) final int interval,
-											  @IntRange(from = 0, to = 499) final int latency,
-											  @IntRange(from = 10, to = 3200) final int timeout,
-											  final int status) {
+		public void onConnectionUpdated(@NonNull final BluetoothGatt gatt,
+										@IntRange(from = 6, to = 3200) final int interval,
+										@IntRange(from = 0, to = 499) final int latency,
+										@IntRange(from = 10, to = 3200) final int timeout,
+										final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, () ->
 						"Connection parameters updated " +
@@ -2477,9 +2477,9 @@ abstract class BleManagerHandler extends RequestHandler {
 
 		@RequiresApi(api = Build.VERSION_CODES.O)
 		@Override
-		public final void onPhyUpdate(@NonNull final BluetoothGatt gatt,
-									  @PhyValue final int txPhy, @PhyValue final int rxPhy,
-									  final int status) {
+		public void onPhyUpdate(@NonNull final BluetoothGatt gatt,
+								@PhyValue final int txPhy, @PhyValue final int rxPhy,
+								final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, () ->
 						"PHY updated (TX: " + ParserUtils.phyToString(txPhy) +
@@ -2505,9 +2505,9 @@ abstract class BleManagerHandler extends RequestHandler {
 
 		@RequiresApi(api = Build.VERSION_CODES.O)
 		@Override
-		public final void onPhyRead(@NonNull final BluetoothGatt gatt,
-									@PhyValue final int txPhy, @PhyValue final int rxPhy,
-									final int status) {
+		public void onPhyRead(@NonNull final BluetoothGatt gatt,
+							  @PhyValue final int txPhy, @PhyValue final int rxPhy,
+							  final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, () ->
 						"PHY read (TX: " + ParserUtils.phyToString(txPhy) +
@@ -2529,9 +2529,9 @@ abstract class BleManagerHandler extends RequestHandler {
 		}
 
 		@Override
-		public final void onReadRemoteRssi(@NonNull final BluetoothGatt gatt,
-										   @IntRange(from = -128, to = 20) final int rssi,
-										   final int status) {
+		public void onReadRemoteRssi(@NonNull final BluetoothGatt gatt,
+									 @IntRange(from = -128, to = 20) final int rssi,
+									 final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, () -> "Remote RSSI received: " + rssi + " dBm");
 				if (request instanceof ReadRssiRequest) {
@@ -2871,7 +2871,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				waitForWrite.notifyValueChanged(device, value);
 
 				// If no more data are expected
-				if (!waitForWrite.hasMore()) {
+				if (waitForWrite.isComplete()) {
 					// notify success,
 					waitForWrite.notifySuccess(device);
 					// and proceed to the next request only if the trigger has completed.
@@ -2913,7 +2913,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				waitForWrite.notifyValueChanged(device, value);
 
 				// If no more data are expected
-				if (!waitForWrite.hasMore()) {
+				if (waitForWrite.isComplete()) {
 					// notify success,
 					waitForWrite.notifySuccess(device);
 					// and proceed to the next request only if the trigger has completed.

@@ -33,6 +33,7 @@ import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.data.DataFilter;
 import no.nordicsemi.android.ble.data.DataMerger;
 import no.nordicsemi.android.ble.data.DataStream;
+import no.nordicsemi.android.ble.data.PacketFilter;
 
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ValueChangedCallback {
@@ -41,6 +42,7 @@ public class ValueChangedCallback {
 	private DataMerger dataMerger;
 	private DataStream buffer;
 	private DataFilter filter;
+	private PacketFilter packetFilter;
 	private CallbackHandler handler;
 	private int count = 0;
 
@@ -84,6 +86,9 @@ public class ValueChangedCallback {
 
 	/**
 	 * Sets a filter which allows to skip some incoming data.
+	 * <p>
+	 * This filter filters each received packet before they are given to the data merger.
+	 * To filter the complete packet after merging, use {@link #filterPacket(PacketFilter)} instead.
 	 *
 	 * @param filter the data filter.
 	 * @return The request.
@@ -91,6 +96,23 @@ public class ValueChangedCallback {
 	@NonNull
 	public ValueChangedCallback filter(@NonNull final DataFilter filter) {
 		this.filter = filter;
+		return this;
+	}
+
+	/**
+	 * Sets a packet filter which allows to ignore the complete packet.
+	 * <p>
+	 * This filter differs from the {@link #filter(DataFilter)}, as it checks the complete
+	 * packet, after it has been merged. If there is not merger set, this does the same as
+	 * the data filter.
+	 *
+	 * @param filter the packet filter.
+	 * @since 2.4.0
+	 * @return The request.
+	 */
+	@NonNull
+	public ValueChangedCallback filterPacket(@NonNull final PacketFilter filter) {
+		this.packetFilter = filter;
 		return this;
 	}
 
@@ -125,7 +147,10 @@ public class ValueChangedCallback {
 		valueCallback = null;
 		dataMerger = null;
 		progressCallback = null;
+		filter = null;
+		packetFilter = null;
 		buffer = null;
+		count = 0;
 		return this;
 	}
 
@@ -142,7 +167,7 @@ public class ValueChangedCallback {
 			return;
 		}
 
-		if (dataMerger == null) {
+		if (dataMerger == null && (packetFilter == null || packetFilter.filter(value))) {
 			final Data data = new Data(value);
 			handler.post(() -> valueCallback.onDataReceived(device, data));
 		} else {
@@ -153,8 +178,11 @@ public class ValueChangedCallback {
 			if (buffer == null)
 				buffer = new DataStream();
 			if (dataMerger.merge(buffer, value, count++)) {
-				final Data data = buffer.toData();
-				handler.post(() -> valueCallback.onDataReceived(device, data));
+				final byte[] merged = buffer.toByteArray();
+				if (packetFilter == null || packetFilter.filter(merged)) {
+					final Data data = new Data(merged);
+					handler.post(() -> valueCallback.onDataReceived(device, data));
+				}
 				buffer = null;
 				count = 0;
 			} // else

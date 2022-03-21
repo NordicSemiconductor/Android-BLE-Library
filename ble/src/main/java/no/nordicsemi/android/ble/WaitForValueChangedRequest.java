@@ -42,6 +42,7 @@ import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.data.DataFilter;
 import no.nordicsemi.android.ble.data.DataMerger;
 import no.nordicsemi.android.ble.data.DataStream;
+import no.nordicsemi.android.ble.data.PacketFilter;
 import no.nordicsemi.android.ble.exception.BluetoothDisabledException;
 import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
 import no.nordicsemi.android.ble.exception.InvalidDataException;
@@ -54,9 +55,11 @@ public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceiv
 	private DataMerger dataMerger;
 	private DataStream buffer;
 	private DataFilter filter;
+	private PacketFilter packetFilter;
 	private boolean deviceDisconnected;
 	private boolean bluetoothDisabled;
 	private int count = 0;
+	private boolean complete = false;
 
 	WaitForValueChangedRequest(@NonNull final Type type,
 							   @Nullable final BluetoothGattCharacteristic characteristic) {
@@ -139,6 +142,9 @@ public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceiv
 
 	/**
 	 * Sets a filter which allows to skip some incoming data.
+	 * <p>
+	 * This filter filters each received packet before they are given to the data merger.
+	 * To filter the complete packet after merging, use {@link #filterPacket(PacketFilter)} instead.
 	 *
 	 * @param filter the data filter.
 	 * @return The request.
@@ -146,6 +152,23 @@ public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceiv
 	@NonNull
 	public WaitForValueChangedRequest filter(@NonNull final DataFilter filter) {
 		this.filter = filter;
+		return this;
+	}
+
+	/**
+	 * Sets a packet filter which allows to ignore the complete packet.
+	 * <p>
+	 * This filter differs from the {@link #filter(DataFilter)}, as it checks the complete
+	 * packet, after it has been merged. If there is not merger set, this does the same as
+	 * the data filter.
+	 *
+	 * @param filter the packet filter.
+	 * @since 2.4.0
+	 * @return The request.
+	 */
+	@NonNull
+	public WaitForValueChangedRequest filterPacket(@NonNull final PacketFilter filter) {
+		this.packetFilter = filter;
 		return this;
 	}
 
@@ -326,10 +349,13 @@ public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceiv
 
 		// With no value callback there is no need for any merging
 		if (valueCallback == null) {
+			if (packetFilter == null || packetFilter.filter(value))
+				complete = true;
 			return;
 		}
 
-		if (dataMerger == null) {
+		if (dataMerger == null && (packetFilter == null || packetFilter.filter(value))) {
+			complete = true;
 			final Data data = new Data(value);
 			handler.post(() -> valueCallback.onDataReceived(device, data));
 		} else {
@@ -341,8 +367,12 @@ public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceiv
 			if (buffer == null)
 				buffer = new DataStream();
 			if (dataMerger.merge(buffer, value, count++)) {
-				final Data data = buffer.toData();
-				handler.post(() -> valueCallback.onDataReceived(device, data));
+				final byte[] merged = buffer.toByteArray();
+				if (packetFilter == null || packetFilter.filter(merged)) {
+					complete = true;
+					final Data data = new Data(merged);
+					handler.post(() -> valueCallback.onDataReceived(device, data));
+				}
 				buffer = null;
 				count = 0;
 			} // else
@@ -350,8 +380,7 @@ public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceiv
 		}
 	}
 
-	@SuppressWarnings("BooleanMethodIsAlwaysInverted")
-	boolean hasMore() {
-		return count > 0;
+	boolean isComplete() {
+		return complete;
 	}
 }
