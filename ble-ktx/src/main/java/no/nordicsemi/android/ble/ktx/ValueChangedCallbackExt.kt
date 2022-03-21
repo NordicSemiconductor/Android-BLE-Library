@@ -21,6 +21,8 @@ import no.nordicsemi.android.ble.response.ReadResponse
  */
 @ExperimentalCoroutinesApi
 fun ValueChangedCallback.asFlow(): Flow<Data> = callbackFlow {
+    // Make sure the callbacks are called without unnecessary delay.
+    setHandler(null)
     with { _, data ->
         trySend(data)
     }
@@ -42,6 +44,8 @@ fun ValueChangedCallback.asFlow(): Flow<Data> = callbackFlow {
  */
 @ExperimentalCoroutinesApi
 inline fun <reified T: ReadResponse> ValueChangedCallback.asResponseFlow(): Flow<T> = callbackFlow {
+    // Make sure the callbacks are called without unnecessary delay.
+    setHandler(null)
     with { device, data ->
         trySend(T::class.java.newInstance().apply { onDataReceived(device, data) })
     }
@@ -64,6 +68,8 @@ inline fun <reified T: ReadResponse> ValueChangedCallback.asResponseFlow(): Flow
  */
 @ExperimentalCoroutinesApi
 inline fun <reified T: ProfileReadResponse> ValueChangedCallback.asValidResponseFlow(): Flow<T> = callbackFlow {
+    // Make sure the callbacks are called without unnecessary delay.
+    setHandler(null)
     with { device, data ->
         T::class.java.newInstance()
             .apply { onDataReceived(device, data) }

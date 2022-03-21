@@ -289,6 +289,8 @@ suspend inline fun <reified T: ProfileReadResponse> WaitForValueChangedRequest.s
 suspend fun WaitForReadRequest.suspend(): Data  = suspendCancellableCoroutine { continuation ->
 	var data: Data?	= null
 	this
+		// Make sure the callbacks are called without unnecessary delay.
+		.setHandler(null)
 		// DON'T USE .before callback here, it's used to get BluetoothDevice instance above.
 		.with { _, d -> data = d }
 		.invalid { continuation.resumeWithException(InvalidRequestException(this)) }
@@ -335,6 +337,8 @@ suspend inline fun <reified T: WriteResponse> WaitForReadRequest.suspendForRespo
 
 private suspend fun Request.suspendCancellable(): Unit = suspendCancellableCoroutine { continuation ->
 	this
+		// Make sure the callbacks are called without unnecessary delay.
+		.setHandler(null)
 		// DON'T USE .before callback here, it's used to get BluetoothDevice instance above.
 		.invalid { continuation.resumeWithException(InvalidRequestException(this)) }
 		.fail { _, status ->
