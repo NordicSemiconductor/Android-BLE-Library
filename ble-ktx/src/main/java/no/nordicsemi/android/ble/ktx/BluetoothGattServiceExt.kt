@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package no.nordicsemi.android.ble.ktx
 
 import android.bluetooth.BluetoothGattCharacteristic
