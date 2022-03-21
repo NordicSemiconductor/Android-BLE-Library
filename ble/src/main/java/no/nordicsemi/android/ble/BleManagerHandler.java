@@ -2357,7 +2357,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					valueChangedRequest.notifyValueChanged(gatt.getDevice(), data);
 
 					// If no more data are expected
-					if (!valueChangedRequest.hasMore()) {
+					if (valueChangedRequest.isComplete()) {
 						// notify success,
 						valueChangedRequest.notifySuccess(gatt.getDevice());
 						// and proceed to the next request only if the trigger has completed.
@@ -2871,7 +2871,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				waitForWrite.notifyValueChanged(device, value);
 
 				// If no more data are expected
-				if (!waitForWrite.hasMore()) {
+				if (waitForWrite.isComplete()) {
 					// notify success,
 					waitForWrite.notifySuccess(device);
 					// and proceed to the next request only if the trigger has completed.
@@ -2913,7 +2913,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				waitForWrite.notifyValueChanged(device, value);
 
 				// If no more data are expected
-				if (!waitForWrite.hasMore()) {
+				if (waitForWrite.isComplete()) {
 					// notify success,
 					waitForWrite.notifySuccess(device);
 					// and proceed to the next request only if the trigger has completed.
