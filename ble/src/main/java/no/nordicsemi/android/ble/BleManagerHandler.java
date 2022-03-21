@@ -2083,7 +2083,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					if (matches) {
 						rr.notifyValueChanged(gatt.getDevice(), data);
 					}
-					if (!matches || rr.hasMore()) {
+					if (!matches || !rr.isComplete()) {
 						enqueueFirst(rr);
 					} else {
 						rr.notifySuccess(gatt.getDevice());
@@ -2197,7 +2197,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				if (request instanceof ReadRequest) {
 					final ReadRequest request = (ReadRequest) BleManagerHandler.this.request;
 					request.notifyValueChanged(gatt.getDevice(), data);
-					if (request.hasMore()) {
+					if (!request.isComplete()) {
 						enqueueFirst(request);
 					} else {
 						request.notifySuccess(gatt.getDevice());
