@@ -13,7 +13,10 @@ import no.nordicsemi.android.ble.data.DefaultMtuSplitter
 /**
  * The upload or download progress indication.
  *
- * @property index The 0-based index of the packet. The packet will be app
+ * @property index The 0-based index of the packet. Only the packets that passed the filter
+ *                 will be reported. As the number of expected packets is not know, it is up to the
+ *                 application to calculate the real progress based on the index and data length.
+ * @property data  The latest received packet as it was sent by the remote device.
  */
 data class ProgressIndication(val index: Int, val data: ByteArray?) {
     override fun equals(other: Any?): Boolean {
