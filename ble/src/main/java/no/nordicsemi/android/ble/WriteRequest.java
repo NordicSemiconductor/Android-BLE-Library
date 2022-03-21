@@ -27,6 +27,7 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.os.Handler;
+import android.util.Log;
 
 import java.util.Arrays;
 
@@ -269,14 +270,24 @@ public final class WriteRequest extends SimpleValueRequest<DataSentCallback> imp
 	 */
 	boolean notifyPacketSent(@NonNull final BluetoothDevice device, @Nullable final byte[] data) {
 		handler.post(() -> {
-			if (progressCallback != null)
-				progressCallback.onPacketSent(device, data, count);
+			if (progressCallback != null) {
+				try {
+					progressCallback.onPacketSent(device, data, count);
+				} catch (final Throwable t) {
+					Log.e(TAG, "Exception in Progress callback", t);
+				}
+			}
 		});
 		count++;
 		if (complete) {
 			handler.post(() -> {
-				if (valueCallback != null)
-					valueCallback.onDataSent(device, new Data(WriteRequest.this.data));
+				if (valueCallback != null) {
+					try {
+						valueCallback.onDataSent(device, new Data(WriteRequest.this.data));
+					} catch (final Throwable t) {
+						Log.e(TAG, "Exception in Value callback", t);
+					}
+				}
 			});
 		}
 		return Arrays.equals(data, currentChunk);

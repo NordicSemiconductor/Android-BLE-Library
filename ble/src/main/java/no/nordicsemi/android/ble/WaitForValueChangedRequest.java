@@ -26,6 +26,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.os.Handler;
+import android.util.Log;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
@@ -357,12 +358,23 @@ public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceiv
 		if (dataMerger == null && (packetFilter == null || packetFilter.filter(value))) {
 			complete = true;
 			final Data data = new Data(value);
-			handler.post(() -> valueCallback.onDataReceived(device, data));
+			handler.post(() -> {
+				try {
+					valueCallback.onDataReceived(device, data);
+				} catch (final Throwable t) {
+					Log.e(TAG, "Exception in Value callback", t);
+				}
+			});
 		} else {
 			final int c = count;
 			handler.post(() -> {
-				if (progressCallback != null)
-					progressCallback.onPacketReceived(device, value, c);
+				if (progressCallback != null) {
+					try {
+						progressCallback.onPacketReceived(device, value, c);
+					} catch (final Throwable t) {
+						Log.e(TAG, "Exception in Progress callback", t);
+					}
+				}
 			});
 			if (buffer == null)
 				buffer = new DataStream();
@@ -371,7 +383,13 @@ public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceiv
 				if (packetFilter == null || packetFilter.filter(merged)) {
 					complete = true;
 					final Data data = new Data(merged);
-					handler.post(() -> valueCallback.onDataReceived(device, data));
+					handler.post(() -> {
+						try {
+							valueCallback.onDataReceived(device, data);
+						} catch (final Throwable t) {
+							Log.e(TAG, "Exception in Value callback", t);
+						}
+					});
 				}
 				buffer = null;
 				count = 0;

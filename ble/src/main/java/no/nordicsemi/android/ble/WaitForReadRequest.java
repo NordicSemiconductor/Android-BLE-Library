@@ -4,6 +4,7 @@ import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.os.Handler;
+import android.util.Log;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
@@ -234,8 +235,13 @@ public final class WaitForReadRequest extends AwaitingRequest<DataSentCallback> 
 	 */
 	void notifyPacketRead(@NonNull final BluetoothDevice device, @Nullable final byte[] data) {
 		handler.post(() -> {
-			if (progressCallback != null)
-				progressCallback.onPacketSent(device, data, count);
+			if (progressCallback != null) {
+				try {
+					progressCallback.onPacketSent(device, data, count);
+				} catch (final Throwable t) {
+					Log.e(TAG, "Exception in Progress callback", t);
+				}
+			}
 		});
 		count++;
 	}
@@ -243,8 +249,13 @@ public final class WaitForReadRequest extends AwaitingRequest<DataSentCallback> 
 	@Override
 	boolean notifySuccess(@NonNull final BluetoothDevice device) {
 		handler.post(() -> {
-			if (valueCallback != null)
-				valueCallback.onDataSent(device, new Data(data));
+			if (valueCallback != null) {
+				try {
+					valueCallback.onDataSent(device, new Data(data));
+				} catch (final Throwable t) {
+					Log.e(TAG, "Exception in Value callback", t);
+				}
+			}
 		});
 		return super.notifySuccess(device);
 	}

@@ -24,6 +24,7 @@ package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
 import android.os.Handler;
+import android.util.Log;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
@@ -106,8 +107,13 @@ public final class MtuRequest extends SimpleValueRequest<MtuCallback> implements
 	void notifyMtuChanged(@NonNull final BluetoothDevice device,
 						  @IntRange(from = 23, to = 517) final int mtu) {
 		handler.post(() -> {
-			if (valueCallback != null)
-				valueCallback.onMtuChanged(device, mtu);
+			if (valueCallback != null) {
+				try {
+					valueCallback.onMtuChanged(device, mtu);
+				} catch (final Throwable t) {
+					Log.e(TAG, "Exception in Value callback", t);
+				}
+			}
 		});
 	}
 

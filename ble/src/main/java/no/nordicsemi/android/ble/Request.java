@@ -30,6 +30,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.os.ConditionVariable;
 import android.os.Handler;
 import android.os.Looper;
+import android.util.Log;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
@@ -54,6 +55,7 @@ import no.nordicsemi.android.ble.data.Data;
  */
 @SuppressWarnings({"unused", "WeakerAccess", "deprecation", "DeprecatedIsStillUsed"})
 public abstract class Request {
+	protected static final String TAG = Request.class.getSimpleName();
 
 	enum Type {
 		SET,
@@ -1214,8 +1216,13 @@ public abstract class Request {
 			if (internalBeforeCallback != null)
 				internalBeforeCallback.onRequestStarted(device);
 			handler.post(() -> {
-				if (beforeCallback != null)
-					beforeCallback.onRequestStarted(device);
+				if (beforeCallback != null) {
+					try {
+						beforeCallback.onRequestStarted(device);
+					} catch (final Throwable t) {
+						Log.e(TAG, "Exception in Before callback", t);
+					}
+				}
 			});
 		}
 	}
@@ -1227,10 +1234,20 @@ public abstract class Request {
 			if (internalSuccessCallback != null)
 				internalSuccessCallback.onRequestCompleted(device);
 			handler.post(() -> {
-				if (successCallback != null)
-					successCallback.onRequestCompleted(device);
-				if (afterCallback != null)
-					afterCallback.onRequestFinished(device);
+				if (successCallback != null) {
+					try {
+						successCallback.onRequestCompleted(device);
+					} catch (final Throwable t) {
+						Log.e(TAG, "Exception in Success callback", t);
+					}
+				}
+				if (afterCallback != null) {
+					try {
+						afterCallback.onRequestFinished(device);
+					} catch (final Throwable t) {
+						Log.e(TAG, "Exception in After callback", t);
+					}
+				}
 			});
 			return true;
 		}
@@ -1244,10 +1261,20 @@ public abstract class Request {
 			if (internalFailCallback != null)
 				internalFailCallback.onRequestFailed(device, status);
 			handler.post(() -> {
-				if (failCallback != null)
-					failCallback.onRequestFailed(device, status);
-				if (afterCallback != null)
-					afterCallback.onRequestFinished(device);
+				if (failCallback != null) {
+					try {
+						failCallback.onRequestFailed(device, status);
+					} catch (final Throwable t) {
+						Log.e(TAG, "Exception in Fail callback", t);
+					}
+				}
+				if (afterCallback != null) {
+					try {
+						afterCallback.onRequestFinished(device);
+					} catch (final Throwable t) {
+						Log.e(TAG, "Exception in After callback", t);
+					}
+				}
 			});
 		}
 	}
@@ -1257,8 +1284,13 @@ public abstract class Request {
 			finished = true;
 
 			handler.post(() -> {
-				if (invalidRequestCallback != null)
-					invalidRequestCallback.onInvalidRequest();
+				if (invalidRequestCallback != null) {
+					try {
+						invalidRequestCallback.onInvalidRequest();
+					} catch (final Throwable t) {
+						Log.e(TAG, "Exception in Invalid Request callback", t);
+					}
+				}
 			});
 		}
 	}

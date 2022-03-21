@@ -27,6 +27,7 @@ import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
 import android.bluetooth.BluetoothGattDescriptor;
 import android.os.Handler;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
@@ -222,7 +223,7 @@ public final class ReadRequest extends SimpleValueRequest<DataReceivedCallback> 
 	}
 
 	/**
-	 * Same as {@link #await(Object)}, but if the response class extends
+	 * Same as {@link #await(DataReceivedCallback)}, but if the response class extends
 	 * {@link ProfileReadResponse} and the received response is not valid
 	 * ({@link ProfileReadResponse#isValid()} returns false), this method will
 	 * throw an exception.
@@ -272,11 +273,22 @@ public final class ReadRequest extends SimpleValueRequest<DataReceivedCallback> 
 		if (dataMerger == null) {
 			complete = true;
 			final Data data = new Data(value);
-			handler.post(() -> valueCallback.onDataReceived(device, data));
+			handler.post(() -> {
+				try {
+					valueCallback.onDataReceived(device, data);
+				} catch (final Throwable t) {
+					Log.e(TAG, "Exception in Value callback", t);
+				}
+			});
 		} else {
 			handler.post(() -> {
-				if (progressCallback != null)
-					progressCallback.onPacketReceived(device, value, count);
+				if (progressCallback != null) {
+					try {
+						progressCallback.onPacketReceived(device, value, count);
+					} catch (final Throwable t) {
+						Log.e(TAG, "Exception in Progress callback", t);
+					}
+				}
 			});
 			if (buffer == null)
 				buffer = new DataStream();
@@ -285,7 +297,13 @@ public final class ReadRequest extends SimpleValueRequest<DataReceivedCallback> 
 				if (packetFilter == null || packetFilter.filter(merged)) {
 					complete = true;
 					final Data data = new Data(merged);
-					handler.post(() -> valueCallback.onDataReceived(device, data));
+					handler.post(() -> {
+						try {
+							valueCallback.onDataReceived(device, data);
+						} catch (final Throwable t) {
+							Log.e(TAG, "Exception in Value callback", t);
+						}
+					});
 				}
 				buffer = null;
 				count = 0;
