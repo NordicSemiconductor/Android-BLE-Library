@@ -41,7 +41,7 @@ public final class SetValueRequest extends SimpleRequest {
 
 	@NonNull
 	@Override
-	public SetValueRequest setHandler(@NonNull final Handler handler) {
+	public SetValueRequest setHandler(@Nullable final Handler handler) {
 		super.setHandler(handler);
 		return this;
 	}

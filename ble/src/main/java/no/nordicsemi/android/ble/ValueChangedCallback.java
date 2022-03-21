@@ -51,21 +51,24 @@ public class ValueChangedCallback {
 	}
 
 	@NonNull
-	public ValueChangedCallback setHandler(@NonNull final Handler handler) {
+	public ValueChangedCallback setHandler(@Nullable final Handler handler) {
 		this.handler = new CallbackHandler() {
 			@Override
 			public void post(@NonNull final Runnable r) {
-				handler.post(r);
+				if (handler != null)
+					handler.post(r);
+				else
+					r.run();
 			}
 
 			@Override
 			public void postDelayed(@NonNull final Runnable r, final long delayMillis) {
-				handler.postDelayed(r, delayMillis);
+				// not used
 			}
 
 			@Override
 			public void removeCallbacks(@NonNull final Runnable r) {
-				handler.removeCallbacks(r);
+				// not used
 			}
 		};
 		return this;

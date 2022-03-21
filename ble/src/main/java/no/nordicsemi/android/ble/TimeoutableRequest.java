@@ -41,7 +41,7 @@ public abstract class TimeoutableRequest extends Request {
 
 	@NonNull
 	@Override
-	public TimeoutableRequest setHandler(@NonNull final Handler handler) {
+	public TimeoutableRequest setHandler(@Nullable final Handler handler) {
 		super.setHandler(handler);
 		return this;
 	}

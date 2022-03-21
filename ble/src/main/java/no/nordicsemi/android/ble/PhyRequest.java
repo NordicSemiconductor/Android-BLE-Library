@@ -26,6 +26,7 @@ import android.bluetooth.BluetoothDevice;
 import android.os.Handler;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.annotation.PhyOption;
 import no.nordicsemi.android.ble.annotation.PhyValue;
@@ -106,7 +107,7 @@ public final class PhyRequest extends SimpleValueRequest<PhyCallback> implements
 
 	@NonNull
 	@Override
-	public PhyRequest setHandler(@NonNull final Handler handler) {
+	public PhyRequest setHandler(@Nullable final Handler handler) {
 		super.setHandler(handler);
 		return this;
 	}

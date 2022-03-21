@@ -80,7 +80,7 @@ public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceiv
 
 	@NonNull
 	@Override
-	public WaitForValueChangedRequest setHandler(@NonNull final Handler handler) {
+	public WaitForValueChangedRequest setHandler(@Nullable final Handler handler) {
 		super.setHandler(handler);
 		return this;
 	}

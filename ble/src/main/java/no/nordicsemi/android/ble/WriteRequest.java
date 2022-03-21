@@ -105,7 +105,7 @@ public final class WriteRequest extends SimpleValueRequest<DataSentCallback> imp
 
 	@NonNull
 	@Override
-	public WriteRequest setHandler(@NonNull final Handler handler) {
+	public WriteRequest setHandler(@Nullable final Handler handler) {
 		super.setHandler(handler);
 		return this;
 	}

@@ -74,7 +74,7 @@ public final class WaitForReadRequest extends AwaitingRequest<DataSentCallback> 
 
 	@NonNull
 	@Override
-	public WaitForReadRequest setHandler(@NonNull final Handler handler) {
+	public WaitForReadRequest setHandler(@Nullable final Handler handler) {
 		super.setHandler(handler);
 		return this;
 	}

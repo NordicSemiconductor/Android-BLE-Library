@@ -26,6 +26,7 @@ import android.os.Handler;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
@@ -49,7 +50,7 @@ public final class SleepRequest extends SimpleRequest implements Operation {
 
 	@NonNull
 	@Override
-	public SleepRequest setHandler(@NonNull final Handler handler) {
+	public SleepRequest setHandler(@Nullable final Handler handler) {
 		super.setHandler(handler);
 		return this;
 	}

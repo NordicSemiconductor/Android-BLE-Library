@@ -80,7 +80,7 @@ public final class ReadRequest extends SimpleValueRequest<DataReceivedCallback> 
 
 	@NonNull
 	@Override
-	public ReadRequest setHandler(@NonNull final Handler handler) {
+	public ReadRequest setHandler(@Nullable final Handler handler) {
 		super.setHandler(handler);
 		return this;
 	}

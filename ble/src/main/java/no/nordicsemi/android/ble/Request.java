@@ -139,8 +139,8 @@ public abstract class Request {
 
 	/**
 	 * Sets the {@link BleManager} instance.
-	 *  @param requestHandler the requestHandler in which the request will be executed.
 	 *
+	 *  @param requestHandler the requestHandler in which the request will be executed.
 	 */
 	@NonNull
 	Request setRequestHandler(@NonNull final RequestHandler requestHandler) {
@@ -155,25 +155,31 @@ public abstract class Request {
 	 * Sets the handler that will be used to invoke callbacks. By default, the handler set in
 	 * {@link BleManager} will be used.
 	 *
+	 * If set to null, the callbacks will be invoked immediately on the BLE looper.
+	 *
 	 * @param handler The handler to invoke callbacks for this request.
 	 * @return The request.
+	 * @apiNote Since version 2.4.0 this method accepts null as parameter.
 	 */
 	@NonNull
-	public Request setHandler(@NonNull final Handler handler) {
+	public Request setHandler(@Nullable final Handler handler) {
 		this.handler = new CallbackHandler() {
 			@Override
 			public void post(@NonNull final Runnable r) {
-				handler.post(r);
+				if (handler != null) handler.post(r);
+				else r.run();
 			}
 
 			@Override
 			public void postDelayed(@NonNull final Runnable r, final long delayMillis) {
-				handler.postDelayed(r, delayMillis);
+				if (handler != null) handler.postDelayed(r, delayMillis);
+				else requestHandler.postDelayed(r, delayMillis);
 			}
 
 			@Override
 			public void removeCallbacks(@NonNull final Runnable r) {
-				handler.removeCallbacks(r);
+				if (handler != null) handler.removeCallbacks(r);
+				else requestHandler.removeCallbacks(r);
 			}
 		};
 		return this;
