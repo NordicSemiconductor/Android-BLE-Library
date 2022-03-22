@@ -13,6 +13,7 @@ import no.nordicsemi.android.ble.data.DefaultMtuSplitter
 /**
  * The upload or download progress indication.
  *
+ * @since 2.4.0
  * @property index The 0-based index of the packet. Only the packets that passed the filter
  *                 will be reported. As the number of expected packets is not know, it is up to the
  *                 application to calculate the real progress based on the index and data length.
@@ -48,6 +49,7 @@ data class ProgressIndication(val index: Int, val data: ByteArray?) {
  * The returned flow will be notified each time a new packet is received.
  *
  * @return The flow with progress indications.
+ * @since 2.4.0
  */
 fun ReadRequest.mergeWithProgressFlow(merger: DataMerger): Flow<ProgressIndication> {
     // Make sure the callbacks are called without unnecessary delay.
@@ -75,6 +77,7 @@ fun ReadRequest.mergeWithProgressFlow(merger: DataMerger): Flow<ProgressIndicati
  * The returned flow will be notified each time a new packet is received.
  *
  * @return The flow with progress indications.
+ * @since 2.4.0
  */
 fun WaitForValueChangedRequest.mergeWithProgressFlow(merger: DataMerger): Flow<ProgressIndication> {
     // Make sure the callbacks are called without unnecessary delay.
@@ -102,6 +105,7 @@ fun WaitForValueChangedRequest.mergeWithProgressFlow(merger: DataMerger): Flow<P
  * The returned flow will be notified each time a new packet is received.
  *
  * @return The flow with progress indications.
+ * @since 2.4.0
  */
 fun ValueChangedCallback.mergeWithProgressFlow(merger: DataMerger): Flow<ProgressIndication> {
     // Make sure the callbacks are called without unnecessary delay.
@@ -129,6 +133,7 @@ fun ValueChangedCallback.mergeWithProgressFlow(merger: DataMerger): Flow<Progres
  * The returned flow will be notified each time a new packet is sent.
  *
  * @return The flow with progress indications.
+ * @since 2.4.0
  */
 fun WriteRequest.splitWithProgressFlow(): Flow<ProgressIndication> = splitWithProgressFlow(DefaultMtuSplitter())
 
@@ -140,6 +145,7 @@ fun WriteRequest.splitWithProgressFlow(): Flow<ProgressIndication> = splitWithPr
  * The returned flow will be notified each time a new packet is sent.
  *
  * @return The flow with progress indications.
+ * @since 2.4.0
  */
 fun WriteRequest.splitWithProgressFlow(splitter: DataSplitter): Flow<ProgressIndication> {
     // Make sure the callbacks are called without unnecessary delay.
@@ -167,6 +173,7 @@ fun WriteRequest.splitWithProgressFlow(splitter: DataSplitter): Flow<ProgressInd
  * The returned flow will be notified each time a new packet is sent.
  *
  * @return The flow with progress indications.
+ * @since 2.4.0
  */
 fun WaitForReadRequest.splitWithProgressFlow(): Flow<ProgressIndication> = splitWithProgressFlow(DefaultMtuSplitter())
 
@@ -178,6 +185,7 @@ fun WaitForReadRequest.splitWithProgressFlow(): Flow<ProgressIndication> = split
  * The returned flow will be notified each time a new packet is sent.
  *
  * @return The flow with progress indications.
+ * @since 2.4.0
  */
 fun WaitForReadRequest.splitWithProgressFlow(splitter: DataSplitter): Flow<ProgressIndication> {
     // Make sure the callbacks are called without unnecessary delay.

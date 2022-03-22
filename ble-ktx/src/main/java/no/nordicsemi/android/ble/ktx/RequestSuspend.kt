@@ -16,6 +16,7 @@ import kotlin.coroutines.resumeWithException
 
 /**
  * Suspends the coroutine until the request is completed.
+ * @since 2.3.0
  */
 @Throws(
 	BluetoothDisabledException::class,
@@ -28,6 +29,7 @@ suspend fun Request.suspend() = suspendCancellable()
 /**
  * Suspends the coroutine until the data have been written.
  * @return The data written.
+ * @since 2.3.0
  */
 @Throws(
 	BluetoothDisabledException::class,
@@ -58,6 +60,7 @@ suspend fun WriteRequest.suspend(): Data {
  *         ).suspendForResponse()
  *
  * @return The data written parsed to required type.
+ * @since 2.4.0
  */
 @Throws(
 	BluetoothDisabledException::class,
@@ -78,6 +81,7 @@ suspend inline fun <reified T: WriteResponse> WriteRequest.suspendForResponse():
 /**
  * Suspends the coroutine until the data have been read.
  * @return The data read.
+ * @since 2.3.0
  */
 @Throws(
 	BluetoothDisabledException::class,
@@ -103,6 +107,7 @@ suspend fun ReadRequest.suspend(): Data {
  *         .suspendForResponse()
  *
  * @return The data read parsed to required type.
+ * @since 2.4.0
  */
 @Throws(
 	BluetoothDisabledException::class,
@@ -131,6 +136,7 @@ suspend inline fun <reified T: ReadResponse> ReadRequest.suspendForResponse(): T
  *         .suspendForValidResponse()
  *
  * @return The data read parsed to required type.
+ * @since 2.4.0
  */
 @Throws(
 	BluetoothDisabledException::class,
@@ -147,6 +153,7 @@ suspend inline fun <reified T: ProfileReadResponse> ReadRequest.suspendForValidR
 /**
  * Suspends the coroutine until the RSSI value is received.
  * @return The current RSSI value.
+ * @since 2.3.0
  */
 @Throws(
 	BluetoothDisabledException::class,
@@ -165,6 +172,7 @@ suspend fun ReadRssiRequest.suspend(): Int {
 /**
  * Suspends the coroutine until the MTU value is received.
  * @return The current MTU value.
+ * @since 2.3.0
  */
 @Throws(
 	BluetoothDisabledException::class,
@@ -183,6 +191,7 @@ suspend fun MtuRequest.suspend(): Int {
 /**
  * Suspends the coroutine until the TX and RX PHY values are received.
  * @return A pair of TX and RX PHYs.
+ * @since 2.3.0
  */
 @Throws(
 	BluetoothDisabledException::class,
@@ -201,6 +210,7 @@ suspend fun PhyRequest.suspend(): Pair<Int, Int> {
 /**
  * Suspends the coroutine until the value of the attribute has changed.
  * @return The new value of the attribute.
+ * @since 2.3.0
  */
 @Throws(
 	BluetoothDisabledException::class,
@@ -236,6 +246,7 @@ suspend fun WaitForValueChangedRequest.suspend(): Data  = suspendCancellableCoro
  *         .suspendForResponse()
  *
  * @return The new value of the attribute.
+ * @since 2.4.0
  */
 @Throws(
 	BluetoothDisabledException::class,
@@ -263,6 +274,7 @@ suspend inline fun <reified T: ReadResponse> WaitForValueChangedRequest.suspendF
  *         .suspendForValidResponse()
  *
  * @return The new value of the attribute.
+ * @since 2.4.0
  */
 @Throws(
 	BluetoothDisabledException::class,
@@ -279,6 +291,7 @@ suspend inline fun <reified T: ProfileReadResponse> WaitForValueChangedRequest.s
 /**
  * Suspends the coroutine until the value of the attribute has changed.
  * @return The new value of the attribute.
+ * @since 2.3.0
  */
 @Throws(
 	BluetoothDisabledException::class,
@@ -318,6 +331,7 @@ suspend fun WaitForReadRequest.suspend(): Data  = suspendCancellableCoroutine { 
  *         .suspendForResponse()
  *
  * @return The new value of the attribute.
+ * @since 2.4.0
  */
 @Throws(
 	BluetoothDisabledException::class,
