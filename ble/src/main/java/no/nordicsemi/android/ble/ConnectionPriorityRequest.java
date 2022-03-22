@@ -28,6 +28,7 @@ import android.os.Handler;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import no.nordicsemi.android.ble.annotation.ConnectionPriority;
 import no.nordicsemi.android.ble.callback.AfterCallback;
@@ -97,7 +98,7 @@ public final class ConnectionPriorityRequest extends SimpleValueRequest<Connecti
 
 	@NonNull
 	@Override
-	public ConnectionPriorityRequest setHandler(@NonNull final Handler handler) {
+	public ConnectionPriorityRequest setHandler(@Nullable final Handler handler) {
 		super.setHandler(handler);
 		return this;
 	}

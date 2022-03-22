@@ -24,9 +24,11 @@ package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
 import android.os.Handler;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+import no.nordicsemi.android.ble.callback.ClosedCallback;
 import no.nordicsemi.android.ble.callback.DataReceivedCallback;
 import no.nordicsemi.android.ble.callback.ReadProgressCallback;
 import no.nordicsemi.android.ble.data.Data;
@@ -37,6 +39,9 @@ import no.nordicsemi.android.ble.data.PacketFilter;
 
 @SuppressWarnings({"unused", "UnusedReturnValue"})
 public class ValueChangedCallback {
+	private static final String TAG = ValueChangedCallback.class.getSimpleName();
+
+	private ClosedCallback closedCallback;
 	private ReadProgressCallback progressCallback;
 	private DataReceivedCallback valueCallback;
 	private DataMerger dataMerger;
@@ -51,21 +56,24 @@ public class ValueChangedCallback {
 	}
 
 	@NonNull
-	public ValueChangedCallback setHandler(@NonNull final Handler handler) {
+	public ValueChangedCallback setHandler(@Nullable final Handler handler) {
 		this.handler = new CallbackHandler() {
 			@Override
 			public void post(@NonNull final Runnable r) {
-				handler.post(r);
+				if (handler != null)
+					handler.post(r);
+				else
+					r.run();
 			}
 
 			@Override
 			public void postDelayed(@NonNull final Runnable r, final long delayMillis) {
-				handler.postDelayed(r, delayMillis);
+				// not used
 			}
 
 			@Override
 			public void removeCallbacks(@NonNull final Runnable r) {
-				handler.removeCallbacks(r);
+				// not used
 			}
 		};
 		return this;
@@ -143,14 +151,16 @@ public class ValueChangedCallback {
 		return this;
 	}
 
-	ValueChangedCallback free() {
-		valueCallback = null;
-		dataMerger = null;
-		progressCallback = null;
-		filter = null;
-		packetFilter = null;
-		buffer = null;
-		count = 0;
+	/**
+	 * Sets a callback that will be executed when the device services were invalidated (i.e. on
+	 * disconnection) or the callback has been unregistered and it can release resources.
+	 *
+	 * @param callback the callback.
+	 * @return The request.
+	 */
+	@NonNull
+	public ValueChangedCallback then(@NonNull final ClosedCallback callback) {
+		this.closedCallback = callback;
 		return this;
 	}
 
@@ -169,11 +179,22 @@ public class ValueChangedCallback {
 
 		if (dataMerger == null && (packetFilter == null || packetFilter.filter(value))) {
 			final Data data = new Data(value);
-			handler.post(() -> valueCallback.onDataReceived(device, data));
+			handler.post(() -> {
+				try {
+					valueCallback.onDataReceived(device, data);
+				} catch (final Throwable t) {
+					Log.e(TAG, "Exception in Value callback", t);
+				}
+			});
 		} else {
 			handler.post(() -> {
-				if (progressCallback != null)
-					progressCallback.onPacketReceived(device, value, count);
+				if (progressCallback != null) {
+					try {
+						progressCallback.onPacketReceived(device, value, count);
+					} catch (final Throwable t) {
+						Log.e(TAG, "Exception in Progress callback", t);
+					}
+				}
 			});
 			if (buffer == null)
 				buffer = new DataStream();
@@ -181,12 +202,40 @@ public class ValueChangedCallback {
 				final byte[] merged = buffer.toByteArray();
 				if (packetFilter == null || packetFilter.filter(merged)) {
 					final Data data = new Data(merged);
-					handler.post(() -> valueCallback.onDataReceived(device, data));
+					handler.post(() -> {
+						try {
+							valueCallback.onDataReceived(device, data);
+						} catch (final Throwable t) {
+							Log.e(TAG, "Exception in Value callback", t);
+						}
+					});
 				}
 				buffer = null;
 				count = 0;
 			} // else
 			// wait for more packets to be merged
 		}
+	}
+
+	void notifyClosed() {
+		if (closedCallback != null) {
+			try {
+				closedCallback.onClosed();
+			} catch (final Throwable t) {
+				Log.e(TAG, "Exception in Closed callback", t);
+			}
+		}
+		free();
+	}
+
+	private void free() {
+		closedCallback = null;
+		valueCallback = null;
+		dataMerger = null;
+		progressCallback = null;
+		filter = null;
+		packetFilter = null;
+		buffer = null;
+		count = 0;
 	}
 }

@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package no.nordicsemi.android.ble.ktx
 
 import android.bluetooth.BluetoothGattCharacteristic
@@ -14,6 +16,7 @@ import java.util.UUID
  * manually.
  *
  * @return GATT characteristic object or null if no characteristic was found.
+ * @since 2.3.0
  */
 fun BluetoothGattService.getCharacteristic(
     uuid: UUID,

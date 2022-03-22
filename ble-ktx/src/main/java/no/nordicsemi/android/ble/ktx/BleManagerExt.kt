@@ -45,6 +45,7 @@ val BleManager.bondingState: BondState
  * Multiple calls for this method return the same object.
  * If a different connection observer was set using [BleManager.setConnectionObserver], this
  * method will throw [IllegalStateException].
+ * @since 2.3.0
  */
 fun BleManager.stateAsFlow(): StateFlow<ConnectionState> = with(connectionObserver) {
     when (this) {
@@ -59,6 +60,7 @@ fun BleManager.stateAsFlow(): StateFlow<ConnectionState> = with(connectionObserv
  * Multiple calls for this method return the same object.
  * If a different bond state observer was set using [BleManager.setBondingObserver], this
  * method will throw [IllegalStateException].
+ * @since 2.3.0
  */
 fun BleManager.bondingStateAsFlow(): StateFlow<BondState> = with(bondingObserver) {
     when (this) {

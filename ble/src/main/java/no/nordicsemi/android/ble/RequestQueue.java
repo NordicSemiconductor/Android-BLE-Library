@@ -64,7 +64,7 @@ public class RequestQueue extends Request {
 
 	@NonNull
 	@Override
-	public RequestQueue setHandler(@NonNull final Handler handler) {
+	public RequestQueue setHandler(@Nullable final Handler handler) {
 		super.setHandler(handler);
 		return this;
 	}

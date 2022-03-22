@@ -31,6 +31,7 @@ import android.os.Handler;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
@@ -74,7 +75,7 @@ public class ConnectRequest extends TimeoutableRequest {
 
 	@NonNull
 	@Override
-	public ConnectRequest setHandler(@NonNull final Handler handler) {
+	public ConnectRequest setHandler(@Nullable final Handler handler) {
 		super.setHandler(handler);
 		return this;
 	}

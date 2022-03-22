@@ -24,9 +24,11 @@ package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
 import android.os.Handler;
+import android.util.Log;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
@@ -49,7 +51,7 @@ public final class ReadRssiRequest extends SimpleValueRequest<RssiCallback> impl
 
 	@NonNull
 	@Override
-	public ReadRssiRequest setHandler(@NonNull final Handler handler) {
+	public ReadRssiRequest setHandler(@Nullable final Handler handler) {
 		super.setHandler(handler);
 		return this;
 	}
@@ -99,8 +101,13 @@ public final class ReadRssiRequest extends SimpleValueRequest<RssiCallback> impl
 	void notifyRssiRead(@NonNull final BluetoothDevice device,
 						@IntRange(from = -128, to = 20) final int rssi) {
 		handler.post(() -> {
-			if (valueCallback != null)
-				valueCallback.onRssiRead(device, rssi);
+			if (valueCallback != null) {
+				try {
+					valueCallback.onRssiRead(device, rssi);
+				} catch (final Throwable t) {
+					Log.e(TAG, "Exception in Value callback", t);
+				}
+			}
 		});
 	}
 }

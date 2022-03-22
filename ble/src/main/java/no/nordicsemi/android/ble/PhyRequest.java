@@ -24,8 +24,10 @@ package no.nordicsemi.android.ble;
 
 import android.bluetooth.BluetoothDevice;
 import android.os.Handler;
+import android.util.Log;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.annotation.PhyOption;
 import no.nordicsemi.android.ble.annotation.PhyValue;
@@ -106,7 +108,7 @@ public final class PhyRequest extends SimpleValueRequest<PhyCallback> implements
 
 	@NonNull
 	@Override
-	public PhyRequest setHandler(@NonNull final Handler handler) {
+	public PhyRequest setHandler(@Nullable final Handler handler) {
 		super.setHandler(handler);
 		return this;
 	}
@@ -156,15 +158,24 @@ public final class PhyRequest extends SimpleValueRequest<PhyCallback> implements
 	void notifyPhyChanged(@NonNull final BluetoothDevice device,
 						  @PhyValue final int txPhy, @PhyValue final int rxPhy) {
 		handler.post(() -> {
-			if (valueCallback != null)
-				valueCallback.onPhyChanged(device, txPhy, rxPhy);
+			if (valueCallback != null) {
+				try {
+					valueCallback.onPhyChanged(device, txPhy, rxPhy);
+				} catch (final Throwable t) {
+					Log.e(TAG, "Exception in Value callback", t);
+				}
+			}
 		});
 	}
 
 	void notifyLegacyPhy(@NonNull final BluetoothDevice device) {
 		handler.post(() -> {
 			if (valueCallback != null)
-				valueCallback.onPhyChanged(device, PhyCallback.PHY_LE_1M, PhyCallback.PHY_LE_1M);
+				try {
+					valueCallback.onPhyChanged(device, PhyCallback.PHY_LE_1M, PhyCallback.PHY_LE_1M);
+				} catch (final Throwable t) {
+					Log.e(TAG, "Exception in Value callback", t);
+				}
 		});
 	}
 

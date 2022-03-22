@@ -44,7 +44,7 @@ public final class ConditionalWaitRequest<T> extends AwaitingRequest<T> implemen
 
 	@NonNull
 	@Override
-	public ConditionalWaitRequest<T> setHandler(@NonNull final Handler handler) {
+	public ConditionalWaitRequest<T> setHandler(@Nullable final Handler handler) {
 		super.setHandler(handler);
 		return this;
 	}

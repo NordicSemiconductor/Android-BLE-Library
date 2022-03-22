@@ -25,6 +25,7 @@ package no.nordicsemi.android.ble;
 import android.os.Handler;
 
 import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
 import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
@@ -46,7 +47,7 @@ public final class ReliableWriteRequest extends RequestQueue {
 
 	@NonNull
 	@Override
-	public ReliableWriteRequest setHandler(@NonNull final Handler handler) {
+	public ReliableWriteRequest setHandler(@Nullable final Handler handler) {
 		super.setHandler(handler);
 		return this;
 	}

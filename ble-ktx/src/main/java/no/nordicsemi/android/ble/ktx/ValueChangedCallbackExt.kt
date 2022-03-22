@@ -1,3 +1,5 @@
+@file:Suppress("unused")
+
 package no.nordicsemi.android.ble.ktx
 
 import kotlinx.coroutines.ExperimentalCoroutinesApi
@@ -16,9 +18,12 @@ import no.nordicsemi.android.ble.response.ReadResponse
  *
  *     val hrmMeasurementsData = setNotificationCallback(hrmCharacteristic).asFlow()  // Flow<Data>
  * @return The flow.
+ * @since 2.3.0
  */
 @ExperimentalCoroutinesApi
 fun ValueChangedCallback.asFlow(): Flow<Data> = callbackFlow {
+    // Make sure the callbacks are called without unnecessary delay.
+    setHandler(null)
     with { _, data ->
         trySend(data)
     }
@@ -37,9 +42,12 @@ fun ValueChangedCallback.asFlow(): Flow<Data> = callbackFlow {
  *         setNotificationCallback(hrmCharacteristic)
  *             .asResponseFlow()
  * @return The flow.
+ * @since 2.4.0
  */
 @ExperimentalCoroutinesApi
 inline fun <reified T: ReadResponse> ValueChangedCallback.asResponseFlow(): Flow<T> = callbackFlow {
+    // Make sure the callbacks are called without unnecessary delay.
+    setHandler(null)
     with { device, data ->
         trySend(T::class.java.newInstance().apply { onDataReceived(device, data) })
     }
@@ -59,9 +67,12 @@ inline fun <reified T: ReadResponse> ValueChangedCallback.asResponseFlow(): Flow
  *         setNotificationCallback(hrmCharacteristic)
  *             .asValidResponseFlow()
  * @return The flow.
+ * @since 2.4.0
  */
 @ExperimentalCoroutinesApi
 inline fun <reified T: ProfileReadResponse> ValueChangedCallback.asValidResponseFlow(): Flow<T> = callbackFlow {
+    // Make sure the callbacks are called without unnecessary delay.
+    setHandler(null)
     with { device, data ->
         T::class.java.newInstance()
             .apply { onDataReceived(device, data) }
