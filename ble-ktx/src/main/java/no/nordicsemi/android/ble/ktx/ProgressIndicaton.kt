@@ -49,12 +49,22 @@ data class ProgressIndication(val index: Int, val data: ByteArray?) {
  *
  * @return The flow with progress indications.
  */
-fun ReadRequest.mergeWithProgressFlow(merger: DataMerger): Flow<ProgressIndication> = callbackFlow {
+fun ReadRequest.mergeWithProgressFlow(merger: DataMerger): Flow<ProgressIndication> {
     // Make sure the callbacks are called without unnecessary delay.
     setHandler(null)
-    merge(merger)  { _, data, index -> trySend(ProgressIndication(index, data)) }
-    awaitClose {
-        merge(merger) // remove the progress listener, but keep the merger
+    // Create a temporary callback that will be used to emit progress.
+    var callback: ((ProgressIndication) -> Unit)? = null
+    // Set the merger, which will invoke the temporary callback on progress.
+    // The merger must be called here, not in the callbackFlow.
+    merge(merger)  { _, data, index ->
+        // The temporary callback will be set in the callbackFlow below.
+        callback?.invoke(ProgressIndication(index, data))
+    }
+    // Return the callback flow. It will be closed when the request is complete or has failed.
+    return callbackFlow {
+        callback = { trySend(it) }
+        then { close() }
+        awaitClose { callback = null }
     }
 }
 
@@ -66,12 +76,22 @@ fun ReadRequest.mergeWithProgressFlow(merger: DataMerger): Flow<ProgressIndicati
  *
  * @return The flow with progress indications.
  */
-fun WaitForValueChangedRequest.mergeWithProgressFlow(merger: DataMerger): Flow<ProgressIndication> = callbackFlow {
+fun WaitForValueChangedRequest.mergeWithProgressFlow(merger: DataMerger): Flow<ProgressIndication> {
     // Make sure the callbacks are called without unnecessary delay.
     setHandler(null)
-    merge(merger)  { _, data, index -> trySend(ProgressIndication(index, data)) }
-    awaitClose {
-        merge(merger) // remove the progress listener, but keep the merger
+    // Create a temporary callback that will be used to emit progress.
+    var callback: ((ProgressIndication) -> Unit)? = null
+    // Set the merger, which will invoke the temporary callback on progress.
+    // The merger must be called here, not in the callbackFlow.
+    merge(merger)  { _, data, index ->
+        // The temporary callback will be set in the callbackFlow below.
+        callback?.invoke(ProgressIndication(index, data))
+    }
+    // Return the callback flow. It will be closed when the request is complete or has failed.
+    return callbackFlow {
+        callback = { trySend(it) }
+        then { close() }
+        awaitClose { callback = null }
     }
 }
 
@@ -83,12 +103,22 @@ fun WaitForValueChangedRequest.mergeWithProgressFlow(merger: DataMerger): Flow<P
  *
  * @return The flow with progress indications.
  */
-fun ValueChangedCallback.mergeWithProgressFlow(merger: DataMerger): Flow<ProgressIndication> = callbackFlow {
+fun ValueChangedCallback.mergeWithProgressFlow(merger: DataMerger): Flow<ProgressIndication> {
     // Make sure the callbacks are called without unnecessary delay.
     setHandler(null)
-    merge(merger)  { _, data, index -> trySend(ProgressIndication(index, data)) }
-    awaitClose {
-        merge(merger) // remove the progress listener, but keep the merger
+    // Create a temporary callback that will be used to emit progress.
+    var callback: ((ProgressIndication) -> Unit)? = null
+    // Set the merger, which will invoke the temporary callback on progress.
+    // The merger must be called here, not in the callbackFlow.
+    merge(merger)  { _, data, index ->
+        // The temporary callback will be set in the callbackFlow below.
+        callback?.invoke(ProgressIndication(index, data))
+    }
+    // Return the callback flow. It will be closed when the request is complete or has failed.
+    return callbackFlow {
+        callback = { trySend(it) }
+        then { close() }
+        awaitClose { callback = null }
     }
 }
 
@@ -111,12 +141,22 @@ fun WriteRequest.splitWithProgressFlow(): Flow<ProgressIndication> = splitWithPr
  *
  * @return The flow with progress indications.
  */
-fun WriteRequest.splitWithProgressFlow(splitter: DataSplitter): Flow<ProgressIndication> = callbackFlow {
+fun WriteRequest.splitWithProgressFlow(splitter: DataSplitter): Flow<ProgressIndication> {
     // Make sure the callbacks are called without unnecessary delay.
     setHandler(null)
-    split(splitter)  { _, data, index -> trySend(ProgressIndication(index, data)) }
-    awaitClose {
-        split(splitter) // remove the progress listener, but keep the merger
+    // Create a temporary callback that will be used to emit progress.
+    var callback: ((ProgressIndication) -> Unit)? = null
+    // Set the splitter, which will invoke the temporary callback on progress.
+    // The splitter must be called here, not in the callbackFlow.
+    split(splitter) { _, data, index ->
+        // The temporary callback will be set in the callbackFlow below.
+        callback?.invoke(ProgressIndication(index, data))
+    }
+    // Return the callback flow. It will be closed when the request is complete or has failed.
+    return callbackFlow {
+        callback = { trySend(it) }
+        then { close() }
+        awaitClose { callback = null }
     }
 }
 
@@ -139,11 +179,21 @@ fun WaitForReadRequest.splitWithProgressFlow(): Flow<ProgressIndication> = split
  *
  * @return The flow with progress indications.
  */
-fun WaitForReadRequest.splitWithProgressFlow(splitter: DataSplitter): Flow<ProgressIndication> = callbackFlow {
+fun WaitForReadRequest.splitWithProgressFlow(splitter: DataSplitter): Flow<ProgressIndication> {
     // Make sure the callbacks are called without unnecessary delay.
     setHandler(null)
-    split(splitter)  { _, data, index -> trySend(ProgressIndication(index, data)) }
-    awaitClose {
-        split(splitter) // remove the progress listener, but keep the merger
+    // Set the splitter, which will invoke the temporary callback on progress.
+    // The splitter must be called here, not in the callbackFlow.
+    var callback: ((ProgressIndication) -> Unit)? = null
+    // Set the splitter, which invokes the temporary callback.
+    split(splitter) { _, data, index ->
+        // The temporary callback will be set in the callbackFlow below.
+        callback?.invoke(ProgressIndication(index, data))
+    }
+    // Return the callback flow. It will be closed when the request is complete or has failed.
+    return callbackFlow {
+        callback = { trySend(it) }
+        then { close() }
+        awaitClose { callback = null }
     }
 }

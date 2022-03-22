@@ -49,6 +49,7 @@ import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.MtuCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.data.Data;
+import no.nordicsemi.android.ble.data.PacketFilter;
 import no.nordicsemi.android.ble.error.GattError;
 import no.nordicsemi.android.ble.observer.BondingObserver;
 import no.nordicsemi.android.ble.observer.ConnectionObserver;
@@ -461,7 +462,6 @@ abstract class BleManagerHandler extends RequestHandler {
 			}
 			reliableWriteInProgress = false;
 			initialConnection = false;
-			valueChangedCallbacks.clear();
 			// close() is called in notifyDeviceDisconnected, which may enqueue new requests.
 			// Setting this flag to false would allow to enqueue a new request before the
 			// current one ends processing. The following line should not be uncommented.
@@ -1178,8 +1178,11 @@ abstract class BleManagerHandler extends RequestHandler {
 			if (attribute != null) {
 				valueChangedCallbacks.put(attribute, callback);
 			}
+		} else if (bluetoothDevice != null) {
+			callback.notifyClosed();
 		}
-		return callback.free();
+		// TODO If attribute is null, the notifyDone(device) will never be called.
+		return callback;
 	}
 
 	/**
@@ -1188,7 +1191,10 @@ abstract class BleManagerHandler extends RequestHandler {
 	 * @param attribute attribute to unbind the callback from.
 	 */
 	void removeValueChangedCallback(@Nullable final Object attribute) {
-		valueChangedCallbacks.remove(attribute);
+		final ValueChangedCallback callback = valueChangedCallbacks.remove(attribute);
+		if (callback != null) {
+			callback.notifyClosed();
+		}
 	}
 
 	@Deprecated
@@ -1615,6 +1621,10 @@ abstract class BleManagerHandler extends RequestHandler {
 			// automatically.
 			// This may be only called when the shouldAutoConnect() method returned true.
 		}
+		for (final ValueChangedCallback callback : valueChangedCallbacks.values()) {
+			callback.notifyClosed();
+		}
+		valueChangedCallbacks.clear();
 		onServicesInvalidated();
 		onDeviceDisconnected();
 	}
