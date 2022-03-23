@@ -210,7 +210,7 @@ public class ConnectRequest extends TimeoutableRequest {
 	}
 
 	/**
-	 * Sets the preferred PHY used for connection. Th value should be a bitmask composed of
+	 * Sets the preferred PHY used for connection. The value should be a bitmask composed of
 	 * {@link PhyRequest#PHY_LE_1M_MASK}, {@link PhyRequest#PHY_LE_2M_MASK} or
 	 * {@link PhyRequest#PHY_LE_CODED_MASK}.
 	 * <p>
