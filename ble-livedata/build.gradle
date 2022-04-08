@@ -3,6 +3,8 @@ plugins {
 }
 
 android {
+    namespace 'no.nordicsemi.android.ble.livedata'
+
     compileSdkVersion 30
 
     defaultConfig {

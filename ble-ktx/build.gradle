@@ -4,6 +4,8 @@ plugins {
 }
 
 android {
+    namespace 'no.nordicsemi.android.ble.ktx'
+
     compileSdkVersion 30
 
     defaultConfig {
