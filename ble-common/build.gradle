@@ -1,6 +1,8 @@
 apply plugin: 'com.android.library'
 
 android {
+    namespace 'no.nordicsemi.android.ble.common'
+
     compileSdkVersion 30
 
     defaultConfig {

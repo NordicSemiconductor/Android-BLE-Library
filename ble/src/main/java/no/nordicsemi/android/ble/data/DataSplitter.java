@@ -42,5 +42,6 @@ public interface DataSplitter {
 	 */
 	@Nullable
 	byte[] chunk(@NonNull final byte[] message,
-				 @IntRange(from = 0) final int index, @IntRange(from = 20) final int maxLength);
+				 @IntRange(from = 0) final int index,
+				 @IntRange(from = 20) final int maxLength);
 }

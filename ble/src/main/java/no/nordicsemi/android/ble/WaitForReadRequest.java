@@ -198,10 +198,11 @@ public final class WaitForReadRequest extends AwaitingRequest<DataSentCallback> 
 	 * @param mtu the current MTU.
 	 * @return The next bytes to be sent.
 	 */
+	@NonNull
 	byte[] getData(@IntRange(from = 23, to = 517) final int mtu) {
 		if (dataSplitter == null || data == null) {
 			complete = true;
-			return data;
+			return data != null ? data : new byte[] {};
 		}
 
 		// Read [procedure requires 3 bytes for handler and op code.
@@ -220,7 +221,7 @@ public final class WaitForReadRequest extends AwaitingRequest<DataSentCallback> 
 		if (nextChunk == null) {
 			complete = true;
 		}
-		return chunk;
+		return chunk != null ? chunk : new byte[] {};
 	}
 
 	/**
