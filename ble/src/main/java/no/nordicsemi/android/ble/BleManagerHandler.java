@@ -49,7 +49,6 @@ import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.MtuCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.data.Data;
-import no.nordicsemi.android.ble.data.PacketFilter;
 import no.nordicsemi.android.ble.error.GattError;
 import no.nordicsemi.android.ble.observer.BondingObserver;
 import no.nordicsemi.android.ble.observer.ConnectionObserver;
