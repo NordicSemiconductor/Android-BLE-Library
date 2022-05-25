@@ -54,6 +54,7 @@ import no.nordicsemi.android.ble.observer.BondingObserver;
 import no.nordicsemi.android.ble.observer.ConnectionObserver;
 import no.nordicsemi.android.ble.utils.ParserUtils;
 
+@SuppressLint("MissingPermission")
 @SuppressWarnings({"WeakerAccess", "unused", "deprecation", "DeprecatedIsStillUsed"})
 abstract class BleManagerHandler extends RequestHandler {
 	private final static String TAG = "BleManager";
