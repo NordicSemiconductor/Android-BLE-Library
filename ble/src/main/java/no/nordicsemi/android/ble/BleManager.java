@@ -53,6 +53,7 @@ import no.nordicsemi.android.ble.annotation.PairingVariant;
 import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.annotation.PhyOption;
 import no.nordicsemi.android.ble.annotation.WriteType;
+import no.nordicsemi.android.ble.callback.ConnectionParametersUpdatedCallback;
 import no.nordicsemi.android.ble.observer.BondingObserver;
 import no.nordicsemi.android.ble.observer.ConnectionObserver;
 import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
@@ -1882,6 +1883,16 @@ public abstract class BleManager implements ILogger {
 			@ConnectionPriority final int priority) {
 		return Request.newConnectionPriorityRequest(priority)
 				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Sets connection priority listener.
+	 *
+	 * @param callback the callback, that will receive all connection parameters updates.
+	 */
+	@RequiresApi(api = Build.VERSION_CODES.O)
+	protected void setConnectionParametersListener(@Nullable final ConnectionParametersUpdatedCallback callback) {
+		requestHandler.setConnectionParametersListener(callback);
 	}
 
 	/**

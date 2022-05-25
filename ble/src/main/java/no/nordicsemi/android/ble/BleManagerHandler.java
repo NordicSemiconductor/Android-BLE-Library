@@ -43,7 +43,7 @@ import no.nordicsemi.android.ble.annotation.LogPriority;
 import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.annotation.PhyOption;
 import no.nordicsemi.android.ble.annotation.PhyValue;
-import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
+import no.nordicsemi.android.ble.callback.ConnectionParametersUpdatedCallback;
 import no.nordicsemi.android.ble.callback.DataReceivedCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.MtuCallback;
@@ -168,6 +168,10 @@ abstract class BleManagerHandler extends RequestHandler {
 	 */
 	private int mtu = 23;
 	/**
+	 * Current connection parameters. Those values are only available starting from Android Oreo.
+	 */
+	private int interval, latency, timeout;
+	/**
 	 * Last received battery value or -1 if value wasn't received.
 	 *
 	 * @deprecated Battery value should be kept in the profile manager instead. See BatteryManager
@@ -208,6 +212,11 @@ abstract class BleManagerHandler extends RequestHandler {
 	 */
 	@NonNull
 	private final HashMap<Object, ValueChangedCallback> valueChangedCallbacks = new HashMap<>();
+	/**
+	 * Connection priority callback, available from Android Oreo.
+	 */
+	@Nullable
+	private ConnectionParametersUpdatedCallback connectionParametersUpdatedCallback;
 	/**
 	 * A special handler for Battery Level notifications.
 	 */
@@ -1197,6 +1206,20 @@ abstract class BleManagerHandler extends RequestHandler {
 		}
 	}
 
+	/**
+	 * Sets the connection priority callback.
+	 * @param callback the callback
+	 */
+	@RequiresApi(api = Build.VERSION_CODES.O)
+	void setConnectionParametersListener(@Nullable final ConnectionParametersUpdatedCallback callback) {
+		this.connectionParametersUpdatedCallback = callback;
+
+		// Notify the listener immediately.
+		if (callback != null && bluetoothDevice != null && interval > 0) {
+			callback.onConnectionUpdated(bluetoothDevice, interval, latency, timeout);
+		}
+	}
+
 	@Deprecated
 	DataReceivedCallback getBatteryLevelCallback() {
 		return (device, data) -> {
@@ -1586,6 +1609,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		serviceDiscoveryRequested = false;
 		deviceNotSupported = false;
 		mtu = 23;
+		interval = latency = timeout = 0;
 		connectionState = BluetoothGatt.STATE_DISCONNECTED;
 		checkCondition();
 		if (!wasConnected) {
@@ -2444,8 +2468,15 @@ abstract class BleManagerHandler extends RequestHandler {
 						"Connection parameters updated " +
 						"(interval: " + (interval * 1.25) + "ms," +
 						" latency: " + latency + ", timeout: " + (timeout * 10) + "ms)");
+				BleManagerHandler.this.interval = interval;
+				BleManagerHandler.this.latency = latency;
+				BleManagerHandler.this.timeout = timeout;
+				// Notify the listener, if set.
 				BleManagerHandler.this.onConnectionUpdated(gatt, interval, latency, timeout);
-
+				final ConnectionParametersUpdatedCallback cpuc = connectionParametersUpdatedCallback;
+				if (cpuc != null) {
+					cpuc.onConnectionUpdated(gatt.getDevice(), interval, latency, timeout);
+				}
 				// This callback may be called af any time, also when some other request is executed
 				if (request instanceof ConnectionPriorityRequest) {
 					((ConnectionPriorityRequest) request)
