@@ -6,11 +6,11 @@ plugins {
 android {
     namespace 'no.nordicsemi.android.ble.ktx'
 
-    compileSdkVersion 30
+    compileSdkVersion 32
 
     defaultConfig {
         minSdkVersion 18
-        targetSdkVersion 30
+        targetSdkVersion 32
     }
 
     buildTypes {
@@ -31,7 +31,7 @@ android {
 
 dependencies {
     api project(':ble')
-    api 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0-RC2'
+    api 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.0'
 }
 
 // === Maven Central configuration ===
