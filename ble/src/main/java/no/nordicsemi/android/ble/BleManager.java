@@ -22,6 +22,7 @@
 package no.nordicsemi.android.ble;
 
 import android.Manifest;
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCallback;
@@ -97,6 +98,7 @@ import no.nordicsemi.android.ble.utils.ParserUtils;
  * The BleManager should be overridden in your app and all the 'high level' callbacks should
  * be called from there.
  */
+@SuppressLint("MissingPermission")
 @SuppressWarnings({"WeakerAccess", "unused", "DeprecatedIsStillUsed", "deprecation"})
 public abstract class BleManager implements ILogger {
 	final static UUID CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID = UUID.fromString("00002902-0000-1000-8000-00805f9b34fb");
