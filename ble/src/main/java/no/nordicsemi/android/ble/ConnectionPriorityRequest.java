@@ -33,6 +33,7 @@ import androidx.annotation.RequiresApi;
 import no.nordicsemi.android.ble.annotation.ConnectionPriority;
 import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
+import no.nordicsemi.android.ble.callback.ConnectionParametersUpdatedCallback;
 import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
@@ -42,7 +43,7 @@ import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
 import no.nordicsemi.android.ble.exception.InvalidRequestException;
 import no.nordicsemi.android.ble.exception.RequestFailedException;
 
-public final class ConnectionPriorityRequest extends SimpleValueRequest<ConnectionPriorityCallback>
+public final class ConnectionPriorityRequest extends SimpleValueRequest<ConnectionParametersUpdatedCallback>
 		implements Operation {
 
 	/**
@@ -138,10 +139,28 @@ public final class ConnectionPriorityRequest extends SimpleValueRequest<Connecti
 		return this;
 	}
 
+	/**
+	 * Sets the value callback. When the request is invoked synchronously, this callback will
+	 * be ignored and the received value will be returned by the <code>await(...)</code> method;
+	 *
+	 * @param callback the callback.
+	 * @return The request.
+	 * @deprecated Use {@link #with(ConnectionParametersUpdatedCallback)} instead.
+	 */
+	@SuppressWarnings("deprecation")
+	@RequiresApi(value = Build.VERSION_CODES.O)
+	@NonNull
+	@Deprecated
+	public ConnectionPriorityRequest with(@NonNull final ConnectionPriorityCallback callback) {
+		// The BluetoothGattCallback#onConnectionUpdated callback was introduced in Android Oreo.
+		super.with(callback);
+		return this;
+	}
+
 	@RequiresApi(value = Build.VERSION_CODES.O)
 	@Override
 	@NonNull
-	public ConnectionPriorityRequest with(@NonNull final ConnectionPriorityCallback callback) {
+	public ConnectionPriorityRequest with(@NonNull final ConnectionParametersUpdatedCallback callback) {
 		// The BluetoothGattCallback#onConnectionUpdated callback was introduced in Android Oreo.
 		super.with(callback);
 		return this;
@@ -150,7 +169,7 @@ public final class ConnectionPriorityRequest extends SimpleValueRequest<Connecti
 	@RequiresApi(value = Build.VERSION_CODES.O)
 	@NonNull
 	@Override
-	public <E extends ConnectionPriorityCallback> E await(@NonNull final Class<E> responseClass)
+	public <E extends ConnectionParametersUpdatedCallback> E await(@NonNull final Class<E> responseClass)
 			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
 			InvalidRequestException {
 		// The BluetoothGattCallback#onConnectionUpdated callback was introduced in Android Oreo.
@@ -160,7 +179,7 @@ public final class ConnectionPriorityRequest extends SimpleValueRequest<Connecti
 	@RequiresApi(value = Build.VERSION_CODES.O)
 	@NonNull
 	@Override
-	public <E extends ConnectionPriorityCallback> E await(@NonNull final E response)
+	public <E extends ConnectionParametersUpdatedCallback> E await(@NonNull final E response)
 			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
 			InvalidRequestException {
 		// The BluetoothGattCallback#onConnectionUpdated callback was introduced in Android Oreo.

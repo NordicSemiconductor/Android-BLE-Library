@@ -29,15 +29,15 @@ import android.os.Parcelable;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
-import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
+import no.nordicsemi.android.ble.callback.ConnectionParametersUpdatedCallback;
 
 /**
  * The synchronous response type for connection priority requests.
  *
- * @see ConnectionPriorityCallback
+ * @see ConnectionParametersUpdatedCallback
  */
 @SuppressWarnings({"unused", "WeakerAccess"})
-public class ConnectionPriorityResponse implements ConnectionPriorityCallback, Parcelable {
+public class ConnectionPriorityResponse implements ConnectionParametersUpdatedCallback, Parcelable {
 	private BluetoothDevice device;
 
 	@IntRange(from = 6, to = 3200)

@@ -22,6 +22,11 @@
 
 package no.nordicsemi.android.ble.callback;
 
+import android.bluetooth.BluetoothDevice;
+
+import androidx.annotation.IntRange;
+import androidx.annotation.NonNull;
+
 /**
  * The connection parameters for a Bluetooth LE connection is a set of parameters that determine
  * when and how the Central and a Peripheral in a link transmits data.
@@ -40,11 +45,23 @@ package no.nordicsemi.android.ble.callback;
  * explicit calling of this method, the application was not aware of it.
  * Android Oreo added a hidden callback to {@link android.bluetooth.BluetoothGattCallback}
  * notifying about connection parameters change. Those values will be reported with this callback.
- *
- * @deprecated Use {@link ConnectionParametersUpdatedCallback} instead.
  */
-@Deprecated
 @FunctionalInterface
-public interface ConnectionPriorityCallback extends ConnectionParametersUpdatedCallback {
-	// No extra methods.
+public interface ConnectionParametersUpdatedCallback {
+
+	/**
+	 * Callback indicating the connection parameters were updated. Works on Android 8.0 Oreo or newer.
+	 *
+	 * @param device   the target device.
+	 * @param interval Connection interval used on this connection, 1.25ms unit. Valid range is from
+	 *                 6 (7.5ms) to 3200 (4000ms).
+	 * @param latency  Slave latency for the connection in number of connection events. Valid range
+	 *                 is from 0 to 499.
+	 * @param timeout  Supervision timeout for this connection, in 10ms unit. Valid range is from 10
+	 *                 (100 ms = 0.1s) to 3200 (32s).
+	 */
+	void onConnectionUpdated(@NonNull final BluetoothDevice device,
+							 @IntRange(from = 6, to = 3200) final int interval,
+							 @IntRange(from = 0, to = 499) final int latency,
+							 @IntRange(from = 10, to = 3200) final int timeout);
 }
