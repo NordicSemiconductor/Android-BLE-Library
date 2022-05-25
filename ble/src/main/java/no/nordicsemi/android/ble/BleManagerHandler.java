@@ -1625,6 +1625,8 @@ abstract class BleManagerHandler extends RequestHandler {
 			callback.notifyClosed();
 		}
 		valueChangedCallbacks.clear();
+		batteryLevelNotificationCallback = null;
+		batteryValue = -1;
 		onServicesInvalidated();
 		onDeviceDisconnected();
 	}
