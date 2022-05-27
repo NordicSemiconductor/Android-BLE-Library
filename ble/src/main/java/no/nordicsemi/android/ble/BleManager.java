@@ -1888,7 +1888,12 @@ public abstract class BleManager implements ILogger {
 	/**
 	 * Sets connection priority listener.
 	 *
+	 * This method is only available from Android Oreo, which has added hidden
+	 * <a href="https://cs.android.com/android/_/android/platform/packages/modules/Bluetooth/+/b651de2c347368d04dd313f61f719c2f5ae1b92e">onConnectionUpdated</a>
+	 * callback to {@link BluetoothGattCallback}.
+	 *
 	 * @param callback the callback, that will receive all connection parameters updates.
+	 * @since 2.5.0
 	 */
 	@RequiresApi(api = Build.VERSION_CODES.O)
 	protected void setConnectionParametersListener(@Nullable final ConnectionParametersUpdatedCallback callback) {
