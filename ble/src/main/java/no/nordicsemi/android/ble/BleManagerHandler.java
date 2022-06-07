@@ -2458,6 +2458,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		 */
 		@RequiresApi(api = Build.VERSION_CODES.O)
 		// @Override
+		@Keep
 		public void onConnectionUpdated(@NonNull final BluetoothGatt gatt,
 										@IntRange(from = 6, to = 3200) final int interval,
 										@IntRange(from = 0, to = 499) final int latency,
