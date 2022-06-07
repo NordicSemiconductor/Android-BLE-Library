@@ -337,10 +337,13 @@ abstract class BleManagerHandler extends RequestHandler {
 						// See: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/335
 						if (!servicesDiscovered && !serviceDiscoveryRequested) {
 							post(() -> {
-								serviceDiscoveryRequested = true;
-								log(Log.VERBOSE, () -> "Discovering services...");
-								log(Log.DEBUG, () -> "gatt.discoverServices()");
-								bluetoothGatt.discoverServices();
+								final BluetoothGatt bluetoothGatt = BleManagerHandler.this.bluetoothGatt;
+								if (!servicesDiscovered && !serviceDiscoveryRequested && bluetoothGatt != null) {
+									serviceDiscoveryRequested = true;
+									log(Log.VERBOSE, () -> "Discovering services...");
+									log(Log.DEBUG, () -> "gatt.discoverServices()");
+									bluetoothGatt.discoverServices();
+								}
 							});
 							return;
 						}
@@ -386,10 +389,13 @@ abstract class BleManagerHandler extends RequestHandler {
 					// established the services were not discovered.
 					if (!servicesDiscovered && !serviceDiscoveryRequested) {
 						post(() -> {
-							serviceDiscoveryRequested = true;
-							log(Log.VERBOSE, () -> "Discovering services...");
-							log(Log.DEBUG, () -> "gatt.discoverServices()");
-							bluetoothGatt.discoverServices();
+							final BluetoothGatt bluetoothGatt = BleManagerHandler.this.bluetoothGatt;
+							if (!servicesDiscovered && !serviceDiscoveryRequested && bluetoothGatt != null) {
+								serviceDiscoveryRequested = true;
+								log(Log.VERBOSE, () -> "Discovering services...");
+								log(Log.DEBUG, () -> "gatt.discoverServices()");
+								bluetoothGatt.discoverServices();
+							}
 						});
 						return;
 					}
@@ -2098,7 +2104,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			servicesDiscovered = false;
 			log(Log.VERBOSE, () -> "Discovering Services...");
 			log(Log.DEBUG, () -> "gatt.discoverServices()");
-			bluetoothGatt.discoverServices();
+			gatt.discoverServices();
 		}
 
 		@Override
@@ -3402,7 +3408,8 @@ abstract class BleManagerHandler extends RequestHandler {
 						}
 						taskQueue.clear();
 						initQueue = null;
-						if (connected) {
+						final BluetoothGatt bluetoothGatt = this.bluetoothGatt;
+						if (connected && bluetoothGatt != null) {
 							// Invalidate all services and characteristics
 							onServicesInvalidated();
 							onDeviceDisconnected();
