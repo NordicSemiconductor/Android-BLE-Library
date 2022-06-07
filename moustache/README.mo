@@ -165,7 +165,13 @@ The `BleManager` must be extended with your implementation where you define the 
 
 ```java
 class MyBleManager extends BleManager {
+	private static final String TAG = "MyBleManager";
+
 	private BluetoothGattCharacteristic fluxCapacitorControlPoint;
+
+	public MyBleManager(@NonNull final Context context) {
+		super(context);
+	}
 
 	@Override
 	public int getMinLogPriority() {
@@ -176,7 +182,7 @@ class MyBleManager extends BleManager {
 	@Override
 	public void log(int priority, @NonNull String message) {
 		// Log from here.
-		Log.println(priority, message);
+		Log.println(priority, TAG, message);
 	}
 
  	@NonNull
