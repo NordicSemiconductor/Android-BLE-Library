@@ -10,24 +10,24 @@ The library may be found on Maven Central repository.
 Add it to your project by adding the following dependency:
 
 ```groovy
-implementation 'no.nordicsemi.android:ble:2.5.0'
+implementation 'no.nordicsemi.android:ble:2.5.1'
 ```
 The last version not migrated to AndroidX is 2.0.5.
 
 BLE library with Kotlin extension is available in:
 ```groovy
-implementation 'no.nordicsemi.android:ble-ktx:2.5.0'
+implementation 'no.nordicsemi.android:ble-ktx:2.5.1'
 ```
 
 To import the BLE library with set of parsers for common Bluetooth SIG characteristics, use:
 ```groovy
-implementation 'no.nordicsemi.android:ble-common:2.5.0'
+implementation 'no.nordicsemi.android:ble-common:2.5.1'
 ```
 For more information, read [this](BLE-COMMON.md).
 
 An extension for easier integration with `LiveData` is available after adding:
 ```groovy
-implementation 'no.nordicsemi.android:ble-livedata:2.5.0'
+implementation 'no.nordicsemi.android:ble-livedata:2.5.1'
 ```
 This extension adds `ObservableBleManager` with `state` and `bondingState` properties, which
 notify about connection and bond state using `androidx.lifecycle.LiveData`.
@@ -165,7 +165,13 @@ The `BleManager` must be extended with your implementation where you define the 
 
 ```java
 class MyBleManager extends BleManager {
+	private static final String TAG = "MyBleManager";
+
 	private BluetoothGattCharacteristic fluxCapacitorControlPoint;
+
+	public MyBleManager(@NonNull final Context context) {
+		super(context);
+	}
 
 	@Override
 	public int getMinLogPriority() {
@@ -176,7 +182,7 @@ class MyBleManager extends BleManager {
 	@Override
 	public void log(int priority, @NonNull String message) {
 		// Log from here.
-		Log.println(priority, message);
+		Log.println(priority, TAG, message);
 	}
 
  	@NonNull
