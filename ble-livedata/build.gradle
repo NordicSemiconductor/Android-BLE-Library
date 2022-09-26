@@ -5,11 +5,11 @@ plugins {
 android {
     namespace 'no.nordicsemi.android.ble.livedata'
 
-    compileSdkVersion 32
+    compileSdkVersion 33
 
     defaultConfig {
         minSdkVersion 18
-        targetSdkVersion 32
+        targetSdkVersion 33
     }
 
     buildTypes {
@@ -18,18 +18,13 @@ android {
             consumerProguardFiles 'ble-livedata-proguard-rules.pro'
         }
     }
-
-    compileOptions {
-        targetCompatibility JavaVersion.VERSION_1_8
-        sourceCompatibility JavaVersion.VERSION_1_8
-    }
 }
 
 dependencies {
     api project(':ble')
 
     // https://developer.android.com/jetpack/androidx/releases/lifecycle
-    api 'androidx.lifecycle:lifecycle-livedata:2.4.1'
+    api 'androidx.lifecycle:lifecycle-livedata:2.5.1'
 }
 
 // === Maven Central configuration ===

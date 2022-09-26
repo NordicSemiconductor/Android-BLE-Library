@@ -5,11 +5,11 @@ plugins {
 android {
     namespace 'no.nordicsemi.android.ble.common'
 
-    compileSdkVersion 32
+    compileSdkVersion 33
 
     defaultConfig {
         minSdkVersion 18
-        targetSdkVersion 32
+        targetSdkVersion 33
     }
 
     buildTypes {
@@ -17,11 +17,6 @@ android {
             minifyEnabled false
             consumerProguardFiles 'ble-common-proguard-rules.pro'
         }
-    }
-
-    compileOptions {
-        targetCompatibility JavaVersion.VERSION_1_8
-        sourceCompatibility JavaVersion.VERSION_1_8
     }
 }
 

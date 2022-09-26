@@ -1,3 +1,5 @@
+rootProject.name = "BLE Library"
+
 include ':ble'
 include ':ble-ktx'
 include ':ble-common'
