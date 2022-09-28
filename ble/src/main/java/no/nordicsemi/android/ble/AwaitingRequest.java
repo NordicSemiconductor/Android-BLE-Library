@@ -6,6 +6,9 @@ import android.bluetooth.BluetoothGattDescriptor;
 
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import java.util.concurrent.CancellationException;
+
 import no.nordicsemi.android.ble.exception.BluetoothDisabledException;
 import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
 import no.nordicsemi.android.ble.exception.InvalidRequestException;
@@ -63,7 +66,7 @@ public abstract class AwaitingRequest<T> extends TimeoutableValueRequest<T> {
 	@Override
 	public <E extends T> E await(@NonNull final E response)
 			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
-			InvalidRequestException, InterruptedException {
+			InvalidRequestException, InterruptedException, CancellationException {
 		assertNotMainThread();
 
 		try {

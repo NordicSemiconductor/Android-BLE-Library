@@ -22,7 +22,6 @@
 
 package no.nordicsemi.android.ble;
 
-import android.bluetooth.BluetoothGatt;
 import android.os.Handler;
 
 import androidx.annotation.IntRange;
@@ -37,13 +36,16 @@ import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
-import no.nordicsemi.android.ble.exception.BluetoothDisabledException;
-import no.nordicsemi.android.ble.exception.DeviceDisconnectedException;
-import no.nordicsemi.android.ble.exception.InvalidRequestException;
-import no.nordicsemi.android.ble.exception.RequestFailedException;
 
+/**
+ * A base class for a request queue.
+ * <p>
+ * Operations added to the queue are executed in FIFO order.
+ * Cancellation of the queue will cancel the current request
+ * and return {@link FailCallback#REASON_CANCELLED}.
+ */
 @SuppressWarnings("WeakerAccess")
-public class RequestQueue extends Request {
+public class RequestQueue extends TimeoutableRequest {
 	/**
 	 * A list of operations that will be executed together.
 	 */
@@ -104,6 +106,13 @@ public class RequestQueue extends Request {
 		return this;
 	}
 
+	@NonNull
+	@Override
+	public RequestQueue timeout(@IntRange(from = 0) final long timeout) {
+		super.timeout(timeout);
+		return this;
+	}
+
 	/**
 	 * Enqueues a new operation. All operations will be executed sequentially in order they were
 	 * added.
@@ -161,69 +170,14 @@ public class RequestQueue extends Request {
 
 	/**
 	 * Cancels all the enqueued operations that were not executed yet.
-	 * The one currently executed will be finished.
+	 * The one currently executed will be cancelled, if it is {@link TimeoutableRequest}.
 	 * <p>
 	 * It is safe to call this method in {@link Request#done(SuccessCallback)} or
 	 * {@link Request#fail(FailCallback)} callback;
 	 */
-	public void cancelQueue() {
-		requests.clear();
-	}
-
-	/**
-	 * Synchronously waits until all enqueued requests are done. The queue will fail if any of
-	 * the enqueued requests fails. All following requests will be ignored.
-	 * <p>
-	 * Callbacks set using {@link #before(BeforeCallback)}, {@link #done(SuccessCallback)} and
-	 * {@link #fail(FailCallback)} will be ignored.
-	 * <p>
-	 * This method may not be called from the main (UI) thread.
-	 *
-	 * @throws RequestFailedException      thrown when the BLE request finished with status other
-	 *                                     than {@link BluetoothGatt#GATT_SUCCESS}.
-	 * @throws IllegalStateException       thrown when you try to call this method from the main
-	 *                                     (UI) thread.
-	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
-	 *                                     was completed.
-	 * @throws BluetoothDisabledException  thrown when the Bluetooth adapter has been disabled.
-	 * @throws InvalidRequestException     thrown when the request was called before the device was
-	 *                                     connected at least once (unknown device).
-	 * @throws InterruptedException        thrown when one of the request has failed with a timeout.
-	 */
-	public final void await() throws RequestFailedException, DeviceDisconnectedException,
-			BluetoothDisabledException, InvalidRequestException, InterruptedException {
-		assertNotMainThread();
-
-		final BeforeCallback bc = beforeCallback;
-		final SuccessCallback sc = successCallback;
-		final FailCallback fc = failCallback;
-		try {
-			syncLock.close();
-			final RequestCallback callback = new RequestCallback();
-			beforeCallback = null;
-			done(callback).fail(callback).invalid(callback).enqueue();
-
-			syncLock.block();
-			if (!callback.isSuccess()) {
-				if (callback.status == FailCallback.REASON_DEVICE_DISCONNECTED) {
-					throw new DeviceDisconnectedException();
-				}
-				if (callback.status == FailCallback.REASON_BLUETOOTH_DISABLED) {
-					throw new BluetoothDisabledException();
-				}
-				if (callback.status == FailCallback.REASON_TIMEOUT) {
-					throw new InterruptedException();
-				}
-				if (callback.status == RequestCallback.REASON_REQUEST_INVALID) {
-					throw new InvalidRequestException(this);
-				}
-				throw new RequestFailedException(this, callback.status);
-			}
-		} finally {
-			beforeCallback = bc;
-			successCallback = sc;
-			failCallback = fc;
-		}
+	public void cancel() {
+		cancelQueue();
+		super.cancel();
 	}
 
 	/**
@@ -249,5 +203,12 @@ public class RequestQueue extends Request {
 	 */
 	boolean hasMore() {
 		return !finished && !requests.isEmpty();
+	}
+
+	/**
+	 * Clears the queue.
+	 */
+	void cancelQueue() {
+		requests.clear();
 	}
 }

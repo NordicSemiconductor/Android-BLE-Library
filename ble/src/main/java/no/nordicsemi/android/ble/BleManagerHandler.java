@@ -22,6 +22,13 @@ import android.os.SystemClock;
 import android.util.Log;
 import android.util.Pair;
 
+import androidx.annotation.IntRange;
+import androidx.annotation.Keep;
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.RequiresPermission;
+
 import java.lang.reflect.Method;
 import java.security.InvalidParameterException;
 import java.util.Deque;
@@ -31,12 +38,6 @@ import java.util.Map;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingDeque;
 
-import androidx.annotation.IntRange;
-import androidx.annotation.Keep;
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.annotation.RequiresPermission;
 import no.nordicsemi.android.ble.annotation.ConnectionPriority;
 import no.nordicsemi.android.ble.annotation.ConnectionState;
 import no.nordicsemi.android.ble.annotation.LogPriority;
@@ -1312,9 +1313,11 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	@Override
 	final void enqueue(@NonNull final Request request) {
-		final Deque<Request> queue = initQueue != null ? initQueue : taskQueue;
-		queue.add(request);
-		request.enqueued = true;
+		if (!request.enqueued) {
+			final Deque<Request> queue = initQueue != null ? initQueue : taskQueue;
+			queue.add(request);
+			request.enqueued = true;
+		}
 		nextRequest(false);
 	}
 
@@ -1322,19 +1325,29 @@ abstract class BleManagerHandler extends RequestHandler {
 	final void cancelQueue() {
 		taskQueue.clear();
 		initQueue = null;
+		cancelCurrent();
+	}
+
+	@Override
+	final void cancelCurrent() {
 		final BluetoothDevice device = this.bluetoothDevice;
 		if (device == null) {
 			return;
 		}
-		if (awaitingRequest != null) {
-			awaitingRequest.notifyFail(device, FailCallback.REASON_CANCELLED);
-		}
-		if (request != null && awaitingRequest != request) {
+		if (request instanceof TimeoutableRequest) {
 			request.notifyFail(device, FailCallback.REASON_CANCELLED);
 			request = null;
 		}
-		awaitingRequest = null;
-		if (requestQueue != null) {
+		if (awaitingRequest != null) {
+			awaitingRequest.notifyFail(device, FailCallback.REASON_CANCELLED);
+			awaitingRequest = null;
+		}
+		if (requestQueue instanceof ReliableWriteRequest) {
+			// Cancelling a Reliable Write request requires sending Abort command.
+			// Instead of notifying failure, we will remove all enqueued tasks and
+			// let the nextRequest to sent Abort command.
+			requestQueue.cancelQueue();
+		} else if (requestQueue != null) {
 			requestQueue.notifyFail(device, FailCallback.REASON_CANCELLED);
 			requestQueue = null;
 		}
@@ -1343,25 +1356,35 @@ abstract class BleManagerHandler extends RequestHandler {
 			connectRequest = null;
 			internalDisconnect(ConnectionObserver.REASON_CANCELLED);
 		} else {
-			nextRequest(true);
+			nextRequest(request == null);
 		}
 	}
 
 	@Override
-	final void onRequestTimeout(@NonNull final TimeoutableRequest request) {
-		this.request = null;
-		awaitingRequest = null;
-		if (request.type == Request.Type.CONNECT) {
+	final void onRequestTimeout(@NonNull final BluetoothDevice device, @NonNull final TimeoutableRequest tr) {
+		if (tr instanceof SleepRequest) {
+			tr.notifySuccess(device);
+		}
+		if (request instanceof TimeoutableRequest) {
+			request.notifyFail(device, FailCallback.REASON_TIMEOUT);
+			request = null;
+		}
+		if (awaitingRequest != null) {
+			awaitingRequest.notifyFail(device, FailCallback.REASON_TIMEOUT);
+			awaitingRequest = null;
+		}
+		tr.notifyFail(device, FailCallback.REASON_TIMEOUT);
+		if (tr.type == Request.Type.CONNECT) {
 			connectRequest = null;
 			internalDisconnect(ConnectionObserver.REASON_TIMEOUT);
 			// The method above will call mGattCallback.nextRequest(true) so we have to return here.
 			return;
 		}
-		if (request.type == Request.Type.DISCONNECT) {
+		if (tr.type == Request.Type.DISCONNECT) {
 			close();
 			return;
 		}
-		nextRequest(true);
+		nextRequest(request == null);
 	}
 
 	@Override
@@ -3031,7 +3054,13 @@ abstract class BleManagerHandler extends RequestHandler {
 					//noinspection ConstantConditions
 					request = requestQueue.getNext().setRequestHandler(this);
 				} else {
-					// Set is completed
+					if (requestQueue instanceof ReliableWriteRequest) {
+						final ReliableWriteRequest rwr = (ReliableWriteRequest) requestQueue;
+						if (rwr.isCancelled()) {
+							requestQueue.notifyFail(bluetoothDevice, FailCallback.REASON_CANCELLED);
+						}
+					}
+					// Set is completed. This is a NOOP if the request has failed.
 					requestQueue.notifySuccess(bluetoothDevice);
 					requestQueue = null;
 				}
@@ -3077,6 +3106,12 @@ abstract class BleManagerHandler extends RequestHandler {
 				onManagerReady();
 				return;
 			}
+		}
+
+		// If the request has already been cancelled, proceed to the next one.
+		if (request.finished) {
+			nextRequest(false);
+			return;
 		}
 
 		boolean result = false;
@@ -3427,12 +3462,10 @@ abstract class BleManagerHandler extends RequestHandler {
 			case SLEEP: {
 				//noinspection ConstantConditions
 				final SleepRequest sr = (SleepRequest) request;
-				log(Log.DEBUG, () -> "sleep(" + sr.getDelay() + ")");
-				postDelayed(() -> {
-					sr.notifySuccess(bluetoothDevice);
-					nextRequest(true);
-				}, sr.getDelay());
+				log(Log.DEBUG, () -> "sleep(" + sr.timeout + ")");
 				result = true;
+				// The Sleep request will timeout after the given time,
+				// and onRequestTimeout will be called.
 				break;
 			}
 			case WAIT_FOR_NOTIFICATION:

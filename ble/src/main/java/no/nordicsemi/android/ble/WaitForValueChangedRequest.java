@@ -31,6 +31,9 @@ import android.util.Log;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import java.util.concurrent.CancellationException;
+
 import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.DataReceivedCallback;
@@ -212,6 +215,7 @@ public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceiv
 	 *                                     the main (UI) thread.
 	 * @throws InterruptedException        thrown when the timeout occurred before the
 	 *                                     characteristic value has changed.
+	 * @throws CancellationException       thrown when the request has been cancelled.
 	 * @throws RequestFailedException      thrown when the trigger request has failed.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
@@ -227,7 +231,8 @@ public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceiv
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final E response)
 			throws RequestFailedException, InvalidDataException, DeviceDisconnectedException,
-			BluetoothDisabledException, InvalidRequestException, InterruptedException {
+			BluetoothDisabledException, InvalidRequestException, InterruptedException,
+			CancellationException{
 		final E result = await(response);
 		if (result != null && !result.isValid()) {
 			throw new InvalidDataException(result);
@@ -248,6 +253,7 @@ public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceiv
 	 *                                     the main (UI) thread.
 	 * @throws InterruptedException        thrown when the timeout occurred before the
 	 *                                     characteristic value has changed.
+	 * @throws CancellationException       thrown when the request has been cancelled.
 	 * @throws IllegalArgumentException    thrown when the response class could not be instantiated.
 	 * @throws RequestFailedException      thrown when the trigger request has failed.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
@@ -264,7 +270,8 @@ public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceiv
 	@NonNull
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass)
 			throws RequestFailedException, InvalidDataException, DeviceDisconnectedException,
-			BluetoothDisabledException, InvalidRequestException, InterruptedException {
+			BluetoothDisabledException, InvalidRequestException, InterruptedException,
+			CancellationException {
 		final E response = await(responseClass);
 		if (response != null && !response.isValid()) {
 			throw new InvalidDataException(response);
@@ -285,6 +292,7 @@ public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceiv
 	 *                                     the main (UI) thread.
 	 * @throws InterruptedException        thrown when the timeout occurred before the
 	 *                                     characteristic value has changed.
+	 * @throws CancellationException       thrown when the request has been cancelled.
 	 * @throws IllegalArgumentException    thrown when the response class could not be instantiated.
 	 * @throws RequestFailedException      thrown when the trigger request has failed.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
@@ -303,7 +311,8 @@ public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceiv
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final Class<E> responseClass,
 														@IntRange(from = 0) final long timeout)
 			throws InterruptedException, InvalidDataException, RequestFailedException,
-			DeviceDisconnectedException, BluetoothDisabledException, InvalidRequestException {
+			DeviceDisconnectedException, BluetoothDisabledException, InvalidRequestException,
+			CancellationException {
 		return timeout(timeout).awaitValid(responseClass);
 	}
 
@@ -319,6 +328,7 @@ public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceiv
 	 *                                     the main (UI) thread.
 	 * @throws InterruptedException        thrown when the timeout occurred before the
 	 *                                     characteristic value has changed.
+	 * @throws CancellationException       thrown when the request has been cancelled.
 	 * @throws RequestFailedException      thrown when the trigger request has failed.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the
 	 *                                     notification or indication was received.
@@ -336,7 +346,8 @@ public final class WaitForValueChangedRequest extends AwaitingRequest<DataReceiv
 	public <E extends ProfileReadResponse> E awaitValid(@NonNull final E response,
 														@IntRange(from = 0) final long timeout)
 			throws InterruptedException, InvalidDataException, DeviceDisconnectedException,
-			RequestFailedException, BluetoothDisabledException, InvalidRequestException {
+			RequestFailedException, BluetoothDisabledException, InvalidRequestException,
+			CancellationException{
 		return timeout(timeout).awaitValid(response);
 	}
 

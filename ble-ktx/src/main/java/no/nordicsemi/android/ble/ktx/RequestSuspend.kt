@@ -3,6 +3,7 @@
 package no.nordicsemi.android.ble.ktx
 
 import android.bluetooth.BluetoothDevice
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import no.nordicsemi.android.ble.*
 import no.nordicsemi.android.ble.callback.FailCallback
@@ -350,6 +351,12 @@ suspend inline fun <reified T: WriteResponse> WaitForReadRequest.suspendForRespo
 }
 
 private suspend fun Request.suspendCancellable(): Unit = suspendCancellableCoroutine { continuation ->
+	if (this is TimeoutableRequest) {
+		continuation.invokeOnCancellation { cancel() }
+	}
+	// Note, that other requests are not cancellable.
+	// All BLE calls has to wait for the result, so there is no way to cancel them.
+
 	this
 		// Make sure the callbacks are called without unnecessary delay.
 		.setHandler(null)
@@ -357,6 +364,7 @@ private suspend fun Request.suspendCancellable(): Unit = suspendCancellableCorou
 		.invalid { continuation.resumeWithException(InvalidRequestException(this)) }
 		.fail { _, status ->
 			val exception = when (status) {
+				FailCallback.REASON_CANCELLED -> CancellationException()
 				FailCallback.REASON_BLUETOOTH_DISABLED -> BluetoothDisabledException()
 				FailCallback.REASON_DEVICE_DISCONNECTED -> DeviceDisconnectedException()
 				else -> RequestFailedException(this, status)
