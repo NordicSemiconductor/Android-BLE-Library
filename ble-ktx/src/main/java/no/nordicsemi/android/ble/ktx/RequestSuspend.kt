@@ -3,7 +3,6 @@
 package no.nordicsemi.android.ble.ktx
 
 import android.bluetooth.BluetoothDevice
-import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.suspendCancellableCoroutine
 import no.nordicsemi.android.ble.*
 import no.nordicsemi.android.ble.callback.FailCallback
@@ -364,7 +363,7 @@ private suspend fun Request.suspendCancellable(): Unit = suspendCancellableCorou
 		.invalid { continuation.resumeWithException(InvalidRequestException(this)) }
 		.fail { _, status ->
 			val exception = when (status) {
-				FailCallback.REASON_CANCELLED -> CancellationException()
+				FailCallback.REASON_CANCELLED -> return@fail
 				FailCallback.REASON_BLUETOOTH_DISABLED -> BluetoothDisabledException()
 				FailCallback.REASON_DEVICE_DISCONNECTED -> DeviceDisconnectedException()
 				else -> RequestFailedException(this, status)
