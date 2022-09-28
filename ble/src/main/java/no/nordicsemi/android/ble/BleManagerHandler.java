@@ -1326,10 +1326,16 @@ abstract class BleManagerHandler extends RequestHandler {
 		taskQueue.clear();
 		initQueue = null;
 
-		cancelCurrent();
+		final BluetoothDevice device = bluetoothDevice;
+		if (device == null)
+			return;
 
-		if (connectRequest != null && bluetoothDevice != null) {
-			connectRequest.notifyFail(bluetoothDevice, FailCallback.REASON_CANCELLED);
+		if (operationInProgress) {
+			cancelCurrent();
+		}
+
+		if (connectRequest != null) {
+			connectRequest.notifyFail(device, FailCallback.REASON_CANCELLED);
 			connectRequest = null;
 			internalDisconnect(ConnectionObserver.REASON_CANCELLED);
 		}
@@ -1343,7 +1349,6 @@ abstract class BleManagerHandler extends RequestHandler {
 		}
 		if (request instanceof TimeoutableRequest) {
 			request.notifyFail(device, FailCallback.REASON_CANCELLED);
-			request = null;
 		}
 		if (awaitingRequest != null) {
 			awaitingRequest.notifyFail(device, FailCallback.REASON_CANCELLED);
@@ -1358,7 +1363,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			requestQueue.notifyFail(device, FailCallback.REASON_CANCELLED);
 			requestQueue = null;
 		}
-		nextRequest(request == null);
+		nextRequest(request == null || request.finished);
 	}
 
 	@Override
@@ -1368,7 +1373,6 @@ abstract class BleManagerHandler extends RequestHandler {
 		}
 		if (request instanceof TimeoutableRequest) {
 			request.notifyFail(device, FailCallback.REASON_TIMEOUT);
-			request = null;
 		}
 		if (awaitingRequest != null) {
 			awaitingRequest.notifyFail(device, FailCallback.REASON_TIMEOUT);
@@ -1385,7 +1389,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			close();
 			return;
 		}
-		nextRequest(request == null);
+		nextRequest(request == null || request.finished);
 	}
 
 	@Override
