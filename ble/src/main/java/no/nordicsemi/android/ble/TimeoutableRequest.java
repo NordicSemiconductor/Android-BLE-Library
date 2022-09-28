@@ -150,6 +150,12 @@ public abstract class TimeoutableRequest extends Request {
 			BluetoothDisabledException, InvalidRequestException, InterruptedException {
 		assertNotMainThread();
 
+		if (cancelled) {
+			throw new CancellationException();
+		}
+		if (finished || enqueued) {
+			throw new IllegalStateException();
+		}
 		final SuccessCallback sc = successCallback;
 		final FailCallback fc = failCallback;
 		try {

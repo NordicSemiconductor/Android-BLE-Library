@@ -83,6 +83,9 @@ public class SimpleRequest extends Request {
 		final SuccessCallback sc = successCallback;
 		final FailCallback fc = failCallback;
 		try {
+			if (finished || enqueued) {
+				throw new IllegalStateException();
+			}
 			syncLock.close();
 			final RequestCallback callback = new RequestCallback();
 			beforeCallback = null;
