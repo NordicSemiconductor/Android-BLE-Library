@@ -1343,10 +1343,11 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	@Override
 	final void cancelCurrent() {
-		final BluetoothDevice device = this.bluetoothDevice;
-		if (device == null) {
+		final BluetoothDevice device = bluetoothDevice;
+		if (device == null)
 			return;
-		}
+
+		log(Log.WARN, () -> "Request cancelled");
 		if (request instanceof TimeoutableRequest) {
 			request.notifyFail(device, FailCallback.REASON_CANCELLED);
 		}
@@ -1370,6 +1371,8 @@ abstract class BleManagerHandler extends RequestHandler {
 	final void onRequestTimeout(@NonNull final BluetoothDevice device, @NonNull final TimeoutableRequest tr) {
 		if (tr instanceof SleepRequest) {
 			tr.notifySuccess(device);
+		} else {
+			log(Log.WARN, () -> "Request timed out");
 		}
 		if (request instanceof TimeoutableRequest) {
 			request.notifyFail(device, FailCallback.REASON_TIMEOUT);
@@ -2428,6 +2431,7 @@ abstract class BleManagerHandler extends RequestHandler {
 
 					// If no more data are expected
 					if (valueChangedRequest.isComplete()) {
+						log(Log.INFO, () -> "Wait for value changed complete");
 						// notify success,
 						valueChangedRequest.notifySuccess(gatt.getDevice());
 						// and proceed to the next request only if the trigger has completed.
@@ -2680,6 +2684,7 @@ abstract class BleManagerHandler extends RequestHandler {
 
 			// If the request is complete, start next one.
 			if (!waitForReadRequest.hasMore() && (data == null || data.length < mtu - 1)) {
+				log(Log.INFO, () -> "Wait for read complete");
 				waitForReadRequest.notifySuccess(device);
 				awaitingRequest = null;
 				nextRequest(true);
@@ -3027,6 +3032,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (awaitingRequest instanceof ConditionalWaitRequest) {
 			final ConditionalWaitRequest<?> cwr = (ConditionalWaitRequest<?>) awaitingRequest;
 			if (cwr.isFulfilled()) {
+				log(Log.INFO, () -> "Condition fulfilled");
 				cwr.notifySuccess(bluetoothDevice);
 				awaitingRequest = null;
 				return true;
@@ -3151,12 +3157,20 @@ abstract class BleManagerHandler extends RequestHandler {
 			if (result) {
 				if (r instanceof ConditionalWaitRequest) {
 					final ConditionalWaitRequest<?> cwr = (ConditionalWaitRequest<?>) r;
+					log(Log.VERBOSE, () -> "Waiting for fulfillment of condition...");
 					if (cwr.isFulfilled()) {
 						cwr.notifyStarted(bluetoothDevice);
+						log(Log.INFO, () -> "Condition fulfilled");
 						cwr.notifySuccess(bluetoothDevice);
 						nextRequest(true);
 						return;
 					}
+				}
+				if (r instanceof WaitForReadRequest) {
+					log(Log.VERBOSE, () -> "Waiting for read request...");
+				}
+				if (r instanceof WaitForValueChangedRequest) {
+					log(Log.VERBOSE, () -> "Waiting for value change...");
 				}
 				awaitingRequest = r;
 
