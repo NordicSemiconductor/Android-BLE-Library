@@ -1325,7 +1325,14 @@ abstract class BleManagerHandler extends RequestHandler {
 	final void cancelQueue() {
 		taskQueue.clear();
 		initQueue = null;
+
 		cancelCurrent();
+
+		if (connectRequest != null && bluetoothDevice != null) {
+			connectRequest.notifyFail(bluetoothDevice, FailCallback.REASON_CANCELLED);
+			connectRequest = null;
+			internalDisconnect(ConnectionObserver.REASON_CANCELLED);
+		}
 	}
 
 	@Override
@@ -1351,13 +1358,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			requestQueue.notifyFail(device, FailCallback.REASON_CANCELLED);
 			requestQueue = null;
 		}
-		if (connectRequest != null) {
-			connectRequest.notifyFail(device, FailCallback.REASON_CANCELLED);
-			connectRequest = null;
-			internalDisconnect(ConnectionObserver.REASON_CANCELLED);
-		} else {
-			nextRequest(request == null);
-		}
+		nextRequest(request == null);
 	}
 
 	@Override
