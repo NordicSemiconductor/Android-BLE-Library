@@ -4,8 +4,6 @@ package no.nordicsemi.android.ble.ktx
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
-import kotlinx.coroutines.InternalCoroutinesApi
-import kotlinx.coroutines.flow.FlowCollector
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import no.nordicsemi.android.ble.BleManager

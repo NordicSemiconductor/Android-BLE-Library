@@ -13,6 +13,7 @@ import no.nordicsemi.android.ble.response.ReadResponse
 import no.nordicsemi.android.ble.response.WriteResponse
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
+import kotlin.coroutines.suspendCoroutine
 
 /**
  * Suspends the coroutine until the request is completed.
@@ -24,7 +25,19 @@ import kotlin.coroutines.resumeWithException
 	RequestFailedException::class,
 	InvalidRequestException::class
 )
-suspend fun Request.suspend() = suspendCancellable()
+suspend fun SimpleRequest.suspend() = suspendNonCancellable()
+
+/**
+ * Suspends the coroutine until the request is completed.
+ * @since 2.3.0
+ */
+@Throws(
+	BluetoothDisabledException::class,
+	DeviceDisconnectedException::class,
+	RequestFailedException::class,
+	InvalidRequestException::class
+)
+suspend fun TimeoutableRequest.suspend() = suspendCancellable()
 
 /**
  * Suspends the coroutine until the data have been written.
@@ -41,7 +54,7 @@ suspend fun WriteRequest.suspend(): Data {
 	var result: Data? = null
 	this
 		.with { _, data -> result = data }
-		.suspendCancellable()
+		.suspendNonCancellable()
 	return result!!
 }
 
@@ -93,7 +106,7 @@ suspend fun ReadRequest.suspend(): Data {
 	var result: Data? = null
 	this
 		.with { _, data -> result = data }
-		.suspendCancellable()
+		.suspendNonCancellable()
 	return result!!
 }
 
@@ -165,7 +178,7 @@ suspend fun ReadRssiRequest.suspend(): Int {
 	var result: Int? = null
 	this
 		.with { _, rssi -> result = rssi }
-		.suspendCancellable()
+		.suspendNonCancellable()
 	return result!!
 }
 
@@ -184,7 +197,7 @@ suspend fun MtuRequest.suspend(): Int {
 	var result: Int? = null
 	this
 		.with { _, mtu -> result = mtu }
-		.suspendCancellable()
+		.suspendNonCancellable()
 	return result!!
 }
 
@@ -203,7 +216,7 @@ suspend fun PhyRequest.suspend(): Pair<Int, Int> {
 	var result: Pair<Int, Int>? = null
 	this
 		.with { _, txPhy, rxPhy -> result = txPhy to rxPhy }
-		.suspendCancellable()
+		.suspendNonCancellable()
 	return result!!
 }
 
@@ -219,6 +232,7 @@ suspend fun PhyRequest.suspend(): Pair<Int, Int> {
 	InvalidRequestException::class
 )
 suspend fun WaitForValueChangedRequest.suspend(): Data  = suspendCancellableCoroutine { continuation ->
+	continuation.invokeOnCancellation { cancel() }
 	var data: Data? = null
 	this
 		// DON'T USE .before callback here, it's used to get BluetoothDevice instance above.
@@ -226,6 +240,7 @@ suspend fun WaitForValueChangedRequest.suspend(): Data  = suspendCancellableCoro
 		.invalid { continuation.resumeWithException(InvalidRequestException(this)) }
 		.fail { _, status ->
 			val exception = when (status) {
+				FailCallback.REASON_CANCELLED -> return@fail
 				FailCallback.REASON_BLUETOOTH_DISABLED -> BluetoothDisabledException()
 				FailCallback.REASON_DEVICE_DISCONNECTED -> DeviceDisconnectedException()
 				else -> RequestFailedException(this, status)
@@ -300,6 +315,7 @@ suspend inline fun <reified T: ProfileReadResponse> WaitForValueChangedRequest.s
 	InvalidRequestException::class
 )
 suspend fun WaitForReadRequest.suspend(): Data  = suspendCancellableCoroutine { continuation ->
+	continuation.invokeOnCancellation { cancel() }
 	var data: Data?	= null
 	this
 		// Make sure the callbacks are called without unnecessary delay.
@@ -309,6 +325,7 @@ suspend fun WaitForReadRequest.suspend(): Data  = suspendCancellableCoroutine { 
 		.invalid { continuation.resumeWithException(InvalidRequestException(this)) }
 		.fail { _, status ->
 			val exception = when (status) {
+				FailCallback.REASON_CANCELLED -> return@fail
 				FailCallback.REASON_BLUETOOTH_DISABLED -> BluetoothDisabledException()
 				FailCallback.REASON_DEVICE_DISCONNECTED -> DeviceDisconnectedException()
 				else -> RequestFailedException(this, status)
@@ -349,7 +366,7 @@ suspend inline fun <reified T: WriteResponse> WaitForReadRequest.suspendForRespo
 		}
 }
 
-private suspend fun Request.suspendCancellable(): Unit = suspendCancellableCoroutine { continuation ->
+private suspend fun SimpleRequest.suspendNonCancellable() = suspendCoroutine { continuation ->
 	this
 		// Make sure the callbacks are called without unnecessary delay.
 		.setHandler(null)
@@ -357,6 +374,27 @@ private suspend fun Request.suspendCancellable(): Unit = suspendCancellableCorou
 		.invalid { continuation.resumeWithException(InvalidRequestException(this)) }
 		.fail { _, status ->
 			val exception = when (status) {
+				FailCallback.REASON_BLUETOOTH_DISABLED -> BluetoothDisabledException()
+				FailCallback.REASON_DEVICE_DISCONNECTED -> DeviceDisconnectedException()
+				else -> RequestFailedException(this, status)
+			}
+			continuation.resumeWithException(exception)
+		}
+		.done { continuation.resume(Unit) }
+		// .then is called after both .done and .fail
+		.enqueue()
+}
+
+private suspend fun TimeoutableRequest.suspendCancellable() = suspendCancellableCoroutine { continuation ->
+	continuation.invokeOnCancellation { cancel() }
+	this
+		// Make sure the callbacks are called without unnecessary delay.
+		.setHandler(null)
+		// DON'T USE .before callback here, it's used to get BluetoothDevice instance above.
+		.invalid { continuation.resumeWithException(InvalidRequestException(this)) }
+		.fail { _, status ->
+			val exception = when (status) {
+				FailCallback.REASON_CANCELLED -> return@fail
 				FailCallback.REASON_BLUETOOTH_DISABLED -> BluetoothDisabledException()
 				FailCallback.REASON_DEVICE_DISCONNECTED -> DeviceDisconnectedException()
 				else -> RequestFailedException(this, status)

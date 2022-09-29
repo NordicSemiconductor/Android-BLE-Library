@@ -1,5 +1,7 @@
 package no.nordicsemi.android.ble;
 
+import android.bluetooth.BluetoothDevice;
+
 import androidx.annotation.NonNull;
 
 abstract class RequestHandler implements CallbackHandler {
@@ -20,9 +22,17 @@ abstract class RequestHandler implements CallbackHandler {
 	abstract void cancelQueue();
 
 	/**
+	 * Cancels current {@link TimeoutableRequest}.
+	 */
+	abstract void cancelCurrent();
+
+	/**
 	 * Method called when the request timed out.
 	 *
 	 * @param request the request that timed out.
 	 */
-	abstract void onRequestTimeout(@NonNull final TimeoutableRequest request);
+	abstract void onRequestTimeout(
+			@NonNull final BluetoothDevice device,
+			@NonNull final TimeoutableRequest request
+	);
 }

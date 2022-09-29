@@ -27,18 +27,18 @@ import android.os.Handler;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
-public final class SleepRequest extends SimpleRequest implements Operation {
-	private final long delay;
+public final class SleepRequest extends TimeoutableRequest implements Operation {
 
 	SleepRequest(@NonNull final Type type, @IntRange(from = 0) final long delay) {
 		super(type);
-		this.delay = delay;
+		this.timeout = delay;
 	}
 
     @NonNull
@@ -90,7 +90,10 @@ public final class SleepRequest extends SimpleRequest implements Operation {
 		return this;
 	}
 
-	long getDelay() {
-		return delay;
+	@NonNull
+	@Override
+	public SleepRequest timeout(@IntRange(from = 0) final long timeout) {
+		super.timeout(timeout);
+		return this;
 	}
 }

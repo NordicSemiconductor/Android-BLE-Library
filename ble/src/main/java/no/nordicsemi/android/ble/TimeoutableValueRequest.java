@@ -28,6 +28,9 @@ import android.bluetooth.BluetoothGattDescriptor;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import java.util.concurrent.CancellationException;
+
 import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.exception.BluetoothDisabledException;
@@ -95,6 +98,7 @@ public abstract class TimeoutableValueRequest<T> extends TimeoutableRequest {
 	 *                                     than {@link android.bluetooth.BluetoothGatt#GATT_SUCCESS}.
 	 * @throws InterruptedException        thrown if the timeout occurred before the request has
 	 *                                     finished.
+	 * @throws CancellationException       thrown when the request has been cancelled.
 	 * @throws IllegalStateException       thrown when you try to call this method from the main
 	 *                                     (UI) thread, or when the trigger was already enqueued.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
@@ -106,7 +110,7 @@ public abstract class TimeoutableValueRequest<T> extends TimeoutableRequest {
 	@NonNull
 	public <E extends T> E await(@NonNull final E response)
 			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
-			InvalidRequestException, InterruptedException {
+			InvalidRequestException, InterruptedException, CancellationException {
 		assertNotMainThread();
 
 		final T vc = valueCallback;
@@ -133,6 +137,7 @@ public abstract class TimeoutableValueRequest<T> extends TimeoutableRequest {
 	 *                                     than {@link android.bluetooth.BluetoothGatt#GATT_SUCCESS}.
 	 * @throws InterruptedException        thrown if the timeout occurred before the request has
 	 *                                     finished.
+	 * @throws CancellationException       thrown when the request has been cancelled.
 	 * @throws IllegalStateException       thrown when you try to call this method from the main
 	 *                                     (UI) thread.
 	 * @throws IllegalArgumentException    thrown when the response class could not be instantiated.
@@ -146,7 +151,7 @@ public abstract class TimeoutableValueRequest<T> extends TimeoutableRequest {
 	@NonNull
 	public <E extends T> E await(@NonNull final Class<E> responseClass)
 			throws RequestFailedException, DeviceDisconnectedException, BluetoothDisabledException,
-			InvalidRequestException, InterruptedException {
+			InvalidRequestException, InterruptedException, CancellationException {
 		assertNotMainThread();
 
 		try {
@@ -182,6 +187,7 @@ public abstract class TimeoutableValueRequest<T> extends TimeoutableRequest {
 	 *                                     than {@link android.bluetooth.BluetoothGatt#GATT_SUCCESS}.
 	 * @throws InterruptedException        thrown if the timeout occurred before the request has
 	 *                                     finished.
+	 * @throws CancellationException       thrown when the request has been cancelled.
 	 * @throws IllegalStateException       thrown when you try to call this method from the main
 	 *                                     (UI) thread.
 	 * @throws IllegalArgumentException    thrown when the response class could not be instantiated.
@@ -197,7 +203,7 @@ public abstract class TimeoutableValueRequest<T> extends TimeoutableRequest {
 	public <E extends T> E await(@NonNull final Class<E> responseClass,
 								 @IntRange(from = 0) final long timeout)
 			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
-			BluetoothDisabledException, InvalidRequestException {
+			BluetoothDisabledException, InvalidRequestException, CancellationException {
 		return timeout(timeout).await(responseClass);
 	}
 
@@ -218,6 +224,7 @@ public abstract class TimeoutableValueRequest<T> extends TimeoutableRequest {
 	 *                                     than {@link android.bluetooth.BluetoothGatt#GATT_SUCCESS}.
 	 * @throws InterruptedException        thrown if the timeout occurred before the request has
 	 *                                     finished.
+	 * @throws CancellationException       thrown when the request has been cancelled.
 	 * @throws IllegalStateException       thrown when you try to call this method from the main
 	 *                                     (UI) thread.
 	 * @throws DeviceDisconnectedException thrown when the device disconnected before the request
@@ -232,7 +239,7 @@ public abstract class TimeoutableValueRequest<T> extends TimeoutableRequest {
 	public <E extends T> E await(@NonNull final E response,
 								 @IntRange(from = 0) final long timeout)
 			throws RequestFailedException, InterruptedException, DeviceDisconnectedException,
-			BluetoothDisabledException, InvalidRequestException {
+			BluetoothDisabledException, InvalidRequestException, CancellationException {
 		return timeout(timeout).await(response);
 	}
 }

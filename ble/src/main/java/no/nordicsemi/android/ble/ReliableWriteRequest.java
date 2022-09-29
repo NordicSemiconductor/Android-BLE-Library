@@ -22,8 +22,10 @@
 
 package no.nordicsemi.android.ble;
 
+import android.bluetooth.BluetoothGatt;
 import android.os.Handler;
 
+import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import no.nordicsemi.android.ble.callback.AfterCallback;
@@ -32,11 +34,22 @@ import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.InvalidRequestCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 
+/**
+ * This queue performs the operations using Reliable Write, also known as Queued Write, procedure.
+ * Before the first operation is executed, the Reliable Write procedure is started. Then, all
+ * operations are executed one by one.
+ *
+ * Cancellation will cause the Reliable Write procedure to be aborted and all operations shall be
+ * discarded on the device side.
+ *
+ * @see BluetoothGatt#beginReliableWrite()
+ * @see BluetoothGatt#executeReliableWrite()
+ * @see BluetoothGatt#abortReliableWrite()
+ */
 @SuppressWarnings("unused")
 public final class ReliableWriteRequest extends RequestQueue {
 	private boolean initialized;
 	private boolean closed;
-	private boolean cancelled;
 
 	@NonNull
 	@Override
@@ -89,6 +102,13 @@ public final class ReliableWriteRequest extends RequestQueue {
 
 	@NonNull
 	@Override
+	public ReliableWriteRequest timeout(@IntRange(from = 0) final long timeout) {
+		super.timeout(timeout);
+		return this;
+	}
+
+	@NonNull
+	@Override
 	public ReliableWriteRequest add(@NonNull final Operation operation) {
 		super.add(operation);
 		// Make sure the write request uses splitting, as Long Write is not supported
@@ -99,17 +119,11 @@ public final class ReliableWriteRequest extends RequestQueue {
 		return this;
 	}
 
-	@Override
-	public void cancelQueue() {
-		cancelled = true;
-		super.cancelQueue();
-	}
-
 	/**
-	 * Alias for {@link #cancelQueue()}.
+	 * Alias for {@link #cancel()}.
 	 */
 	public void abort() {
-		cancelQueue();
+		cancel();
 	}
 
 	@Override
@@ -148,5 +162,11 @@ public final class ReliableWriteRequest extends RequestQueue {
 		if (!initialized)
 			return super.hasMore();
 		return !closed;
+	}
+
+	@Override
+	void cancelQueue() {
+		cancelled = true;
+		super.cancelQueue();
 	}
 }
