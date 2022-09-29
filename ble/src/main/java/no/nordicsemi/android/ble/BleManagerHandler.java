@@ -2236,8 +2236,13 @@ abstract class BleManagerHandler extends RequestHandler {
 		public void onCharacteristicRead(final BluetoothGatt gatt,
 										 final BluetoothGattCharacteristic characteristic,
 										 final int status) {
-			final byte[] data = characteristic.getValue();
+			onCharacteristicRead(gatt, characteristic, characteristic.getValue(), status);
+		}
 
+		@Override
+		public void onCharacteristicRead(@NonNull final BluetoothGatt gatt,
+										 @NonNull final BluetoothGattCharacteristic characteristic,
+										 @NonNull byte[] data, int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, () ->
 						"Read Response received from " + characteristic.getUuid() +
@@ -2461,11 +2466,18 @@ abstract class BleManagerHandler extends RequestHandler {
 			nextRequest(true);
 		}
 
+
 		@Override
 		public void onCharacteristicChanged(final BluetoothGatt gatt,
 											final BluetoothGattCharacteristic characteristic) {
-			final byte[] data = characteristic.getValue();
+			onCharacteristicChanged(gatt, characteristic, characteristic.getValue());
+		}
 
+		@Override
+		public void onCharacteristicChanged(
+				@NonNull final BluetoothGatt gatt,
+				@NonNull final BluetoothGattCharacteristic characteristic,
+				@NonNull final byte[] data) {
 			if (isServiceChangedCharacteristic(characteristic)) {
 				// Android S added onServiceChanged() callback, which should be called in this
 				// situation. Again, this has not been tested.
