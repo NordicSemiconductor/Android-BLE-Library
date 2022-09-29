@@ -10,7 +10,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: master
+          ref: main
           fetch-depth: 0
       - shell: bash
         # The script gets VERSION from the latest tag and replaces {{VERSION}} with it in
@@ -30,7 +30,7 @@ jobs:
     steps:
       - uses: actions/checkout@v2
         with:
-          ref: master
+          ref: main
           fetch-depth: 0
       - shell: bash
         env:
