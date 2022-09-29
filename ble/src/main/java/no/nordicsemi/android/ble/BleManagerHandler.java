@@ -3501,8 +3501,24 @@ abstract class BleManagerHandler extends RequestHandler {
 				//noinspection ConstantConditions
 				final PhyRequest pr = (PhyRequest) request;
 				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
-					result = internalSetPreferredPhy(pr.getPreferredTxPhy(),
-							pr.getPreferredRxPhy(), pr.getPreferredPhyOptions());
+					result = internalSetPreferredPhy(
+							pr.getPreferredTxPhy(),
+							pr.getPreferredRxPhy(),
+							pr.getPreferredPhyOptions()
+					);
+					if (Build.VERSION.SDK_INT == Build.VERSION_CODES.TIRAMISU) {
+						// There seems to be a bug on Android 13, where there is no callback
+						// for setPreferredPhy(...). onPhyUpdate(...) should be called, but it is not.
+						// See: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/414
+						// However, the operation seems to complete successfully.
+						// As a workaround, let's read the PHYs and notify the user.
+						handler.postDelayed(() -> {
+							if (!pr.finished) {
+								log(Log.WARN, () -> "Callback not received in 1000 ms");
+								internalReadPhy();
+							}
+						}, 1000);
+					}
 				} else {
 					result = connected;
 					if (result) {
