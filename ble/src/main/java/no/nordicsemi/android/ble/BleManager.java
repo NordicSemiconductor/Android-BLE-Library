@@ -543,9 +543,6 @@ public abstract class BleManager implements ILogger {
 	 */
 	@NonNull
 	public final ConnectRequest connect(@NonNull final BluetoothDevice device) {
-		if (device == null) {
-			throw new NullPointerException("Bluetooth device not specified");
-		}
 		return Request.connect(device)
 				.useAutoConnect(shouldAutoConnect())
 				.setRequestHandler(requestHandler);
@@ -581,9 +578,6 @@ public abstract class BleManager implements ILogger {
 	@NonNull
 	@Deprecated
 	public final ConnectRequest connect(@NonNull final BluetoothDevice device, @PhyMask final int phy) {
-		if (device == null) {
-			throw new NullPointerException("Bluetooth device not specified");
-		}
 		return Request.connect(device)
 				.usePreferredPhy(phy)
 				.useAutoConnect(shouldAutoConnect())
