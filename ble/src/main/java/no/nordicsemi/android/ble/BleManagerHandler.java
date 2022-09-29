@@ -12,6 +12,7 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.bluetooth.BluetoothGattServer;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothProfile;
+import android.bluetooth.BluetoothStatusCodes;
 import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
@@ -44,6 +45,7 @@ import no.nordicsemi.android.ble.annotation.LogPriority;
 import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.annotation.PhyOption;
 import no.nordicsemi.android.ble.annotation.PhyValue;
+import no.nordicsemi.android.ble.annotation.WriteType;
 import no.nordicsemi.android.ble.callback.ConnectionParametersUpdatedCallback;
 import no.nordicsemi.android.ble.callback.DataReceivedCallback;
 import no.nordicsemi.android.ble.callback.FailCallback;
@@ -842,11 +844,21 @@ abstract class BleManagerHandler extends RequestHandler {
 			log(Log.DEBUG, () -> "gatt.setCharacteristicNotification(" + characteristic.getUuid() + ", true)");
 			gatt.setCharacteristicNotification(characteristic, true);
 
-			descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
 			log(Log.VERBOSE, () -> "Enabling notifications for " + characteristic.getUuid());
-			log(Log.DEBUG, () ->
-					"gatt.writeDescriptor(" + BleManager.CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID + ", value=0x01-00)");
-			return internalWriteDescriptorWorkaround(descriptor);
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+				log(Log.DEBUG, () ->
+						"gatt.writeDescriptor(00002902-0000-1000-8000-00805f9b34fb, value=0x01-00)");
+				return gatt.writeDescriptor(descriptor, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) == BluetoothStatusCodes.SUCCESS;
+			} else {
+				log(Log.DEBUG, () -> "descriptor.setValue(0x01-00)");
+				descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+				log(Log.DEBUG, () -> "gatt.writeDescriptor(00002902-0000-1000-8000-00805f9b34fb)");
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+					return gatt.writeDescriptor(descriptor);
+				} else {
+					return internalWriteDescriptorWorkaround(descriptor);
+				}
+			}
 		}
 		return false;
 	}
@@ -862,11 +874,21 @@ abstract class BleManagerHandler extends RequestHandler {
 			log(Log.DEBUG, () -> "gatt.setCharacteristicNotification(" + characteristic.getUuid() + ", false)");
 			gatt.setCharacteristicNotification(characteristic, false);
 
-			descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
 			log(Log.VERBOSE, () -> "Disabling notifications and indications for " + characteristic.getUuid());
-			log(Log.DEBUG, () ->
-					"gatt.writeDescriptor(" + BleManager.CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID + ", value=0x00-00)");
-			return internalWriteDescriptorWorkaround(descriptor);
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+				log(Log.DEBUG, () ->
+						"gatt.writeDescriptor(00002902-0000-1000-8000-00805f9b34fb, value=0x00-00)");
+				return gatt.writeDescriptor(descriptor, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) == BluetoothStatusCodes.SUCCESS;
+			} else {
+				log(Log.DEBUG, () -> "descriptor.setValue(0x00-00)");
+				descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+				log(Log.DEBUG, () -> "gatt.writeDescriptor(00002902-0000-1000-8000-00805f9b34fb)");
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+					return gatt.writeDescriptor(descriptor);
+				} else {
+					return internalWriteDescriptorWorkaround(descriptor);
+				}
+			}
 		}
 		return false;
 	}
@@ -881,11 +903,21 @@ abstract class BleManagerHandler extends RequestHandler {
 			log(Log.DEBUG, () -> "gatt.setCharacteristicNotification(" + characteristic.getUuid() + ", true)");
 			gatt.setCharacteristicNotification(characteristic, true);
 
-			descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
 			log(Log.VERBOSE, () -> "Enabling indications for " + characteristic.getUuid());
-			log(Log.DEBUG, () ->
-					"gatt.writeDescriptor(" + BleManager.CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID + ", value=0x02-00)");
-			return internalWriteDescriptorWorkaround(descriptor);
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+				log(Log.DEBUG, () ->
+						"gatt.writeDescriptor(00002902-0000-1000-8000-00805f9b34fb, value=0x02-00)");
+				return gatt.writeDescriptor(descriptor, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE) == BluetoothStatusCodes.SUCCESS;
+			} else {
+				log(Log.DEBUG, () -> "descriptor.setValue(0x02-00)");
+				descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+				log(Log.DEBUG, () -> "gatt.writeDescriptor(00002902-0000-1000-8000-00805f9b34fb)");
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+					return gatt.writeDescriptor(descriptor);
+				} else {
+					return internalWriteDescriptorWorkaround(descriptor);
+				}
+			}
 		}
 		return false;
 	}
@@ -896,7 +928,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	}
 
 	private boolean internalSendNotification(@Nullable final BluetoothGattCharacteristic serverCharacteristic,
-											 final boolean confirm) {
+											 final boolean confirm, @Nullable final byte[] data) {
 		if (serverManager == null || serverManager.getServer() == null || serverCharacteristic == null)
 			return false;
 		final int requiredProperty = confirm ? BluetoothGattCharacteristic.PROPERTY_INDICATE : BluetoothGattCharacteristic.PROPERTY_NOTIFY;
@@ -909,13 +941,25 @@ abstract class BleManagerHandler extends RequestHandler {
 		final byte[] value = descriptorValues != null && descriptorValues.containsKey(cccd) ? descriptorValues.get(cccd) : cccd.getValue();
 		if (value != null && value.length == 2 && value[0] != 0) {
 			log(Log.VERBOSE, () -> "[Server] Sending " + (confirm ? "indication" : "notification") + " to " + serverCharacteristic.getUuid());
-			log(Log.DEBUG, () -> "server.notifyCharacteristicChanged(device, " + serverCharacteristic.getUuid() + ", " + confirm + ")");
-			final boolean result = serverManager.getServer().notifyCharacteristicChanged(bluetoothDevice, serverCharacteristic, confirm);
-			if (result && Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-				post(() -> {
-					notifyNotificationSent(bluetoothDevice);
-					nextRequest(true);
-				});
+			boolean result;
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+				log(Log.DEBUG, () -> "[Server] gattServer.notifyCharacteristicChanged(" + serverCharacteristic.getUuid() +
+						", confirm=" + confirm +
+						", value=" + ParserUtils.parseDebug(data) + ")");
+				return serverManager.getServer().notifyCharacteristicChanged(bluetoothDevice, serverCharacteristic, confirm, data) == BluetoothStatusCodes.SUCCESS;
+			} else {
+				log(Log.DEBUG, () -> "[Server] characteristic.setValue(" + ParserUtils.parseDebug(data) + ")");
+				serverCharacteristic.setValue(data);
+				log(Log.DEBUG, () -> "[Server] gattServer.notifyCharacteristicChanged(" + serverCharacteristic.getUuid() + ", confirm=" + confirm + ")");
+				result = serverManager.getServer().notifyCharacteristicChanged(bluetoothDevice, serverCharacteristic, confirm);
+
+				// The onNotificationSent callback is not called before Android Lollipop.
+				if (result && Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
+					post(() -> {
+						notifyNotificationSent(bluetoothDevice);
+						nextRequest(true);
+					});
+				}
 			}
 			return result;
 		}
@@ -962,7 +1006,11 @@ abstract class BleManagerHandler extends RequestHandler {
 		return gatt.readCharacteristic(characteristic);
 	}
 
-	private boolean internalWriteCharacteristic(@Nullable final BluetoothGattCharacteristic characteristic) {
+	private boolean internalWriteCharacteristic(
+			@Nullable final BluetoothGattCharacteristic characteristic,
+			@Nullable final byte[] data,
+			@WriteType final int writeType
+	) {
 		final BluetoothGatt gatt = bluetoothGatt;
 		if (gatt == null || characteristic == null || !connected)
 			return false;
@@ -973,11 +1021,25 @@ abstract class BleManagerHandler extends RequestHandler {
 				BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)) == 0)
 			return false;
 
-		log(Log.VERBOSE, () ->
-				"Writing characteristic " + characteristic.getUuid() +
-				" (" + ParserUtils.writeTypeToString(characteristic.getWriteType()) + ")");
-		log(Log.DEBUG, () -> "gatt.writeCharacteristic(" + characteristic.getUuid() + ")");
-		return gatt.writeCharacteristic(characteristic);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+			log(Log.VERBOSE, () ->
+					"Writing characteristic " + characteristic.getUuid() +
+							" (" + ParserUtils.writeTypeToString(writeType) + ")");
+			log(Log.DEBUG, () -> "gatt.writeCharacteristic(" + characteristic.getUuid() +
+					", value=" + ParserUtils.parseDebug(data) +
+					", " + ParserUtils.writeTypeToString(writeType) + ")");
+			return gatt.writeCharacteristic(characteristic, data, writeType) == BluetoothStatusCodes.SUCCESS;
+		} else {
+			log(Log.VERBOSE, () ->
+					"Writing characteristic " + characteristic.getUuid() +
+							" (" + ParserUtils.writeTypeToString(writeType) + ")");
+			log(Log.DEBUG, () -> "characteristic.setValue(" + ParserUtils.parseDebug(data) + ")");
+			characteristic.setValue(data);
+			log(Log.DEBUG, () -> "characteristic.setWriteType(" + ParserUtils.writeTypeToString(writeType) + ")");
+			characteristic.setWriteType(writeType);
+			log(Log.DEBUG, () -> "gatt.writeCharacteristic(" + characteristic.getUuid() + ")");
+			return gatt.writeCharacteristic(characteristic);
+		}
 	}
 
 	private boolean internalReadDescriptor(@Nullable final BluetoothGattDescriptor descriptor) {
@@ -990,14 +1052,29 @@ abstract class BleManagerHandler extends RequestHandler {
 		return gatt.readDescriptor(descriptor);
 	}
 
-	private boolean internalWriteDescriptor(@Nullable final BluetoothGattDescriptor descriptor) {
+	private boolean internalWriteDescriptor(
+			@Nullable final BluetoothGattDescriptor descriptor,
+			@Nullable final byte[] data
+	) {
 		final BluetoothGatt gatt = bluetoothGatt;
 		if (gatt == null || descriptor == null || !connected)
 			return false;
 
 		log(Log.VERBOSE, () -> "Writing descriptor " + descriptor.getUuid());
-		log(Log.DEBUG, () -> "gatt.writeDescriptor(" + descriptor.getUuid() + ")");
-		return internalWriteDescriptorWorkaround(descriptor);
+		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+			log(Log.DEBUG, () -> "gatt.writeDescriptor(" + descriptor.getUuid() +
+					", value=" + ParserUtils.parseDebug(data) + ")");
+			return gatt.writeDescriptor(descriptor, data) == BluetoothStatusCodes.SUCCESS;
+		} else {
+			log(Log.DEBUG, () -> "descriptor.setValue(" + descriptor.getUuid() + ")");
+			descriptor.setValue(data);
+			log(Log.DEBUG, () -> "gatt.writeDescriptor(" + descriptor.getUuid() + ")");
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+				return internalWriteDescriptorWorkaround(descriptor);
+			} else {
+				return gatt.writeDescriptor(descriptor);
+			}
+		}
 	}
 
 	/**
@@ -1119,25 +1196,42 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (gatt == null || !connected)
 			return false;
 
-		String text, priorityText;
-		switch (priority) {
-			case ConnectionPriorityRequest.CONNECTION_PRIORITY_HIGH:
-				text = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M ?
-						"HIGH (11.25–15ms, 0, 20s)" : "HIGH (7.5–10ms, 0, 20s)";
-				priorityText = "HIGH";
-				break;
-			case ConnectionPriorityRequest.CONNECTION_PRIORITY_LOW_POWER:
-				text = "LOW POWER (100–125ms, 2, 20s)";
-				priorityText = "LOW POWER";
-				break;
-			default:
-			case ConnectionPriorityRequest.CONNECTION_PRIORITY_BALANCED:
-				text = "BALANCED (30–50ms, 0, 20s)";
-				priorityText = "BALANCED";
-				break;
-		}
-		log(Log.VERBOSE, () -> "Requesting connection priority: " + text + "...");
-		log(Log.DEBUG, () -> "gatt.requestConnectionPriority(" + priorityText + ")");
+		// 5 seconds in Android Oreo and newer, 20 seconds in older versions.
+		final int supervisionTimeout = Build.VERSION.SDK_INT >= Build.VERSION_CODES.O ? 5 : 20;
+		log(Log.VERBOSE, () -> {
+			String text;
+			switch (priority) {
+				case ConnectionPriorityRequest.CONNECTION_PRIORITY_HIGH:
+					text = Build.VERSION.SDK_INT >= Build.VERSION_CODES.M
+							? "HIGH (11.25–15ms, 0, " + supervisionTimeout + "s)"
+							: "HIGH (7.5–10ms, 0, " + supervisionTimeout + "s)";
+					break;
+				case ConnectionPriorityRequest.CONNECTION_PRIORITY_LOW_POWER:
+					text = "LOW POWER (100–125ms, 2, " + supervisionTimeout + "s)";
+					break;
+				default:
+				case ConnectionPriorityRequest.CONNECTION_PRIORITY_BALANCED:
+					text = "BALANCED (30–50ms, 0, " + supervisionTimeout + "s)";
+					break;
+			}
+			return "Requesting connection priority: " + text + "...";
+		});
+		log(Log.DEBUG, () -> {
+			String text;
+			switch (priority) {
+				case ConnectionPriorityRequest.CONNECTION_PRIORITY_HIGH:
+					text = "HIGH";
+					break;
+				case ConnectionPriorityRequest.CONNECTION_PRIORITY_LOW_POWER:
+					text = "LOW POWER";
+					break;
+				default:
+				case ConnectionPriorityRequest.CONNECTION_PRIORITY_BALANCED:
+					text = "BALANCED";
+					break;
+			}
+			return "gatt.requestConnectionPriority(" + text + ")";
+		});
 		return gatt.requestConnectionPriority(priority);
 	}
 
@@ -3243,12 +3337,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			case WRITE: {
 				//noinspection ConstantConditions
 				final WriteRequest wr = (WriteRequest) request;
-				final BluetoothGattCharacteristic characteristic = request.characteristic;
-				if (characteristic != null) {
-					characteristic.setValue(wr.getData(mtu));
-					characteristic.setWriteType(wr.getWriteType());
-				}
-				result = internalWriteCharacteristic(characteristic);
+				result = internalWriteCharacteristic(wr.characteristic, wr.getData(mtu), wr.getWriteType());
 				break;
 			}
 			case READ_DESCRIPTOR: {
@@ -3258,24 +3347,20 @@ abstract class BleManagerHandler extends RequestHandler {
 			case WRITE_DESCRIPTOR: {
 				//noinspection ConstantConditions
 				final WriteRequest wr = (WriteRequest) request;
-				final BluetoothGattDescriptor descriptor = request.descriptor;
-				if (descriptor != null) {
-					descriptor.setValue(wr.getData(mtu));
-				}
-				result = internalWriteDescriptor(descriptor);
+				result = internalWriteDescriptor(wr.descriptor, wr.getData(mtu));
 				break;
 			}
 			case NOTIFY:
 			case INDICATE: {
 				//noinspection ConstantConditions
 				final WriteRequest wr = (WriteRequest) request;
-				final BluetoothGattCharacteristic characteristic = request.characteristic;
-				if (characteristic != null) {
-					characteristic.setValue(wr.getData(mtu));
-					if (characteristicValues != null && characteristicValues.containsKey(characteristic))
-						characteristicValues.put(characteristic, characteristic.getValue());
+				final byte[] data = wr.getData(mtu);
+				if (wr.characteristic != null) {
+					wr.characteristic.setValue(data);
+					if (characteristicValues != null && characteristicValues.containsKey(wr.characteristic))
+						characteristicValues.put(wr.characteristic, data);
 				}
-				result = internalSendNotification(request.characteristic, request.type == Request.Type.INDICATE);
+				result = internalSendNotification(wr.characteristic, request.type == Request.Type.INDICATE, data);
 				break;
 			}
 			case SET_VALUE: {

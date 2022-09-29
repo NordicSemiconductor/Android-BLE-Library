@@ -1,5 +1,6 @@
 package no.nordicsemi.android.ble;
 
+import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
 import android.bluetooth.BluetoothGattCharacteristic;
@@ -12,6 +13,11 @@ import android.content.Context;
 import android.os.Build;
 import android.util.Log;
 
+import androidx.annotation.NonNull;
+import androidx.annotation.Nullable;
+import androidx.annotation.RequiresApi;
+import androidx.annotation.StringRes;
+
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -19,16 +25,12 @@ import java.util.NoSuchElementException;
 import java.util.Queue;
 import java.util.UUID;
 
-import androidx.annotation.NonNull;
-import androidx.annotation.Nullable;
-import androidx.annotation.RequiresApi;
-import androidx.annotation.StringRes;
 import no.nordicsemi.android.ble.annotation.CharacteristicPermissions;
 import no.nordicsemi.android.ble.annotation.CharacteristicProperties;
 import no.nordicsemi.android.ble.annotation.DescriptorPermissions;
 import no.nordicsemi.android.ble.annotation.LogPriority;
-import no.nordicsemi.android.ble.observer.ServerObserver;
 import no.nordicsemi.android.ble.data.Data;
+import no.nordicsemi.android.ble.observer.ServerObserver;
 import no.nordicsemi.android.ble.utils.ILogger;
 
 /**
@@ -72,6 +74,7 @@ public abstract class BleServerManager implements ILogger {
 	 * be started, for example the Bluetooth is disabled, false is returned.
 	 * @see #close()
 	 */
+	@SuppressLint("MissingPermission")
 	public final boolean open() {
 		if (server != null)
 			return true;
@@ -103,6 +106,7 @@ public abstract class BleServerManager implements ILogger {
 	/**
 	 * Closes the GATT server.
 	 */
+	@SuppressLint("MissingPermission")
 	public final void close() {
 		if (server != null) {
 			server.close();
@@ -668,6 +672,7 @@ public abstract class BleServerManager implements ILogger {
 
 	private final BluetoothGattServerCallback gattServerCallback = new BluetoothGattServerCallback() {
 
+		@SuppressLint("MissingPermission")
 		@Override
 		public void onServiceAdded(final int status, @NonNull final BluetoothGattService service) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
