@@ -205,8 +205,8 @@ public final class WaitForReadRequest extends AwaitingRequest<DataSentCallback> 
 			return data != null ? data : new byte[] {};
 		}
 
-		// Read [procedure requires 3 bytes for handler and op code.
-		final int maxLength = mtu - 3;
+		// Max length of read response is ATT_MTU - 1 (opcode).
+		final int maxLength = mtu - 1;
 
 		byte[] chunk = nextChunk;
 		// Get the first chunk.
