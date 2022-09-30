@@ -259,6 +259,11 @@ abstract class BleManagerHandler extends RequestHandler {
 						operationInProgress = true;
 						taskQueue.clear();
 						initQueue = null;
+						// Reset the state, so that the callbacks below see the correct state.
+						final boolean wasConnected = connected;
+						connected = false;
+						ready = false;
+						connectionState = BluetoothGatt.STATE_DISCONNECTED;
 
 						final BluetoothDevice device = bluetoothDevice;
 						if (device != null) {
@@ -285,6 +290,7 @@ abstract class BleManagerHandler extends RequestHandler {
 						operationInProgress = false;
 						// This will call close()
 						if (device != null) {
+							connected = wasConnected;
 							notifyDeviceDisconnected(device, ConnectionObserver.REASON_TERMINATE_LOCAL_HOST);
 						}
 					} else {
@@ -1774,6 +1780,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	private void notifyDeviceDisconnected(@NonNull final BluetoothDevice device, final int status) {
 		final boolean wasConnected = connected;
 		connected = false;
+		ready = false;
 		servicesDiscovered = false;
 		serviceDiscoveryRequested = false;
 		deviceNotSupported = false;
@@ -1792,11 +1799,11 @@ abstract class BleManagerHandler extends RequestHandler {
 			// If Remove Bond was called, the broadcast may be called AFTER the device has disconnected.
 			// In that case, we can't call close() here, as that would unregister the broadcast
 			// receiver. Instead, close() will be called from the receiver.
+			final Request request = this.request;
 			if (request == null || request.type != Request.Type.REMOVE_BOND)
 				close();
 			postCallback(c -> c.onDeviceDisconnected(device));
 			postConnectionStateChange(o -> o.onDeviceDisconnected(device, status));
-			final Request request = this.request;
 			if (request != null && request.type == Request.Type.DISCONNECT) {
 				request.notifySuccess(device);
 				this.request = null;
