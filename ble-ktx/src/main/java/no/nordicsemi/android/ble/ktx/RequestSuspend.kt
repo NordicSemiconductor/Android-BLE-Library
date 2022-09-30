@@ -25,7 +25,7 @@ import kotlin.coroutines.suspendCoroutine
 	RequestFailedException::class,
 	InvalidRequestException::class
 )
-suspend fun SimpleRequest.suspend() = suspendNonCancellable()
+suspend fun Request.suspend() = suspendNonCancellable()
 
 /**
  * Suspends the coroutine until the request is completed.
@@ -366,7 +366,7 @@ suspend inline fun <reified T: WriteResponse> WaitForReadRequest.suspendForRespo
 		}
 }
 
-private suspend fun SimpleRequest.suspendNonCancellable() = suspendCoroutine { continuation ->
+private suspend fun Request.suspendNonCancellable() = suspendCoroutine { continuation ->
 	this
 		// Make sure the callbacks are called without unnecessary delay.
 		.setHandler(null)
