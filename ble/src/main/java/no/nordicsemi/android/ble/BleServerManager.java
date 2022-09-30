@@ -34,7 +34,12 @@ import no.nordicsemi.android.ble.observer.ServerObserver;
 import no.nordicsemi.android.ble.utils.ILogger;
 
 /**
- * The manager for local GATT server. To be used with one or more instances of {@link BleManager}
+ * The manager for local GATT server. To be used with one or more instances of {@link BleManager}.
+ * <p>
+ * Note, that BLE Library supports only Client-only or Client-and-Server mode. It does not support
+ * Server-only mode. All interactions with the remote device, both as client and server, are
+ * performed using the BLE Manager instance, one for each connected device.
+ * For that last use case, the Client can be limited and client operations can be unused.
  *
  * @since 2.2
  */
@@ -127,7 +132,7 @@ public abstract class BleServerManager implements ILogger {
 	 *
 	 * @param observer the observer.
 	 */
-	public final void setServerObserver(@NonNull final ServerObserver observer) {
+	public final void setServerObserver(@Nullable final ServerObserver observer) {
 		this.serverObserver = observer;
 	}
 
