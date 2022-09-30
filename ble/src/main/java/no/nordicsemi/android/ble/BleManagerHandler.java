@@ -1351,7 +1351,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	 */
 	@RequiresApi(api = Build.VERSION_CODES.O)
 	void setConnectionParametersListener(@Nullable final ConnectionParametersUpdatedCallback callback) {
-		this.connectionParametersUpdatedCallback = callback;
+		connectionParametersUpdatedCallback = callback;
 
 		// Notify the listener immediately.
 		if (callback != null && bluetoothDevice != null && interval > 0) {
