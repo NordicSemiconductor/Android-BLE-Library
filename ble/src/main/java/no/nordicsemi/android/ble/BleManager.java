@@ -54,6 +54,7 @@ import no.nordicsemi.android.ble.annotation.PhyMask;
 import no.nordicsemi.android.ble.annotation.PhyOption;
 import no.nordicsemi.android.ble.annotation.WriteType;
 import no.nordicsemi.android.ble.callback.ConnectionParametersUpdatedCallback;
+import no.nordicsemi.android.ble.data.DataProvider;
 import no.nordicsemi.android.ble.observer.BondingObserver;
 import no.nordicsemi.android.ble.observer.ConnectionObserver;
 import no.nordicsemi.android.ble.callback.ConnectionPriorityCallback;
@@ -997,8 +998,10 @@ public abstract class BleManager implements ILogger {
 	/**
 	 * Waits until the given characteristic is read by the remote device. The data must have been set
 	 * to the characteristic before the request is executed.
-	 * Use {@link #setCharacteristicValue(BluetoothGattCharacteristic, Data)} to set data, or
-	 * {@link #waitForRead(BluetoothGattCharacteristic, byte[], int, int)} to set the data immediately.
+	 * Use {@link #setCharacteristicValue(BluetoothGattCharacteristic, Data)} to set data,
+	 * {@link #waitForRead(BluetoothGattCharacteristic, byte[], int, int)} to set the data immediately,
+	 * or {@link #setCharacteristicValue(BluetoothGattCharacteristic, DataProvider)} to set the
+	 * data on demand.
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
 	 * asynchronous use, or awaited using await() in synchronous execution.
@@ -1053,8 +1056,9 @@ public abstract class BleManager implements ILogger {
 	/**
 	 * Waits until the given descriptor is read by the remote device. The data must have been set
 	 * to the descriptor before the request is executed.
-	 * Use {@link #setDescriptorValue(BluetoothGattDescriptor, byte[])} to set data, or
-	 * {@link #waitForRead(BluetoothGattDescriptor, byte[], int, int)} to set the data immediately.
+	 * Use {@link #setDescriptorValue(BluetoothGattDescriptor, byte[])} to set data,
+	 * {@link #waitForRead(BluetoothGattDescriptor, byte[], int, int)} to set the data immediately,
+	 * or {@link #setDescriptorValue(BluetoothGattDescriptor, DataProvider)} to set the
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
 	 * asynchronous use, or awaited using await() in synchronous execution.
@@ -1104,6 +1108,24 @@ public abstract class BleManager implements ILogger {
 											 @Nullable final byte[] data, final int offset, final int length) {
 		return Request.newWaitForReadRequest(serverDescriptor, data, offset, length)
 				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Sets the data provider to the given readable server characteristic.
+	 * <p>
+	 * The provider will be called when the remote device sends a read command to the given
+	 * characteristic. This allows returning current value without the need to update the value
+	 * periodically.
+	 * <p>
+	 * If the provider is not set, the value set using
+	 * {@link #setCharacteristicValue(BluetoothGattCharacteristic, Data)} will be returned.
+	 *
+	 * @param serverCharacteristic the target characteristic to provide data for.
+	 * @param provider the data provider for the given characteristic.
+	 */
+	protected void setCharacteristicValue(@Nullable final BluetoothGattCharacteristic serverCharacteristic,
+										  @Nullable final DataProvider provider) {
+		requestHandler.setCharacteristicValue(serverCharacteristic, provider);
 	}
 
 	/**
@@ -1161,6 +1183,24 @@ public abstract class BleManager implements ILogger {
 													 @Nullable final byte[] data, final int offset, final int length) {
 		return Request.newSetValueRequest(serverCharacteristic, data, offset, length)
 				.setRequestHandler(requestHandler);
+	}
+
+	/**
+	 * Sets the data provider to the given readable server descriptor.
+	 * <p>
+	 * The provider will be called when the remote device sends a read command to the given
+	 * descriptor. This allows returning current value without the need to update the value
+	 * periodically.
+	 * <p>
+	 * If the provider is not set, the value set using
+	 * {@link #setDescriptorValue(BluetoothGattDescriptor, Data)} will be returned.
+	 *
+	 * @param serverDescriptor the target descriptor to provide data for.
+	 * @param provider the data provider for the given characteristic.
+	 */
+	protected void setDescriptorValue(@Nullable final BluetoothGattDescriptor serverDescriptor,
+									  @Nullable final DataProvider provider) {
+		requestHandler.setDescriptorValue(serverDescriptor, provider);
 	}
 
 	/**

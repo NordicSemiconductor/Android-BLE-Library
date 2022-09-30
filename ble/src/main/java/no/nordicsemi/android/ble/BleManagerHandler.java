@@ -52,6 +52,7 @@ import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.callback.MtuCallback;
 import no.nordicsemi.android.ble.callback.SuccessCallback;
 import no.nordicsemi.android.ble.data.Data;
+import no.nordicsemi.android.ble.data.DataProvider;
 import no.nordicsemi.android.ble.error.GattError;
 import no.nordicsemi.android.ble.observer.BondingObserver;
 import no.nordicsemi.android.ble.observer.ConnectionObserver;
@@ -215,6 +216,11 @@ abstract class BleManagerHandler extends RequestHandler {
 	 */
 	@NonNull
 	private final HashMap<Object, ValueChangedCallback> valueChangedCallbacks = new HashMap<>();
+	/**
+	 * A map of {@link DataProvider}s serving data to server characteristic and descriptors.
+	 */
+	@NonNull
+	private final HashMap<Object, DataProvider> dataProviders = new HashMap<>();
 	/**
 	 * Connection priority callback, available from Android Oreo.
 	 */
@@ -1308,6 +1314,38 @@ abstract class BleManagerHandler extends RequestHandler {
 	}
 
 	/**
+	 * Sets the data provider for the given server characteristic.
+	 * @param serverCharacteristic the server characteristic to add the data provider to.
+	 * @param dataProvider the data provider to set.
+	 */
+	void setCharacteristicValue(@Nullable final BluetoothGattCharacteristic serverCharacteristic,
+								@Nullable final DataProvider dataProvider) {
+		if (serverCharacteristic == null)
+			return;
+		if (dataProvider == null) {
+			dataProviders.remove(serverCharacteristic);
+		} else {
+			dataProviders.put(serverCharacteristic, dataProvider);
+		}
+	}
+
+	/**
+	 * Sets the data provider for the given server descriptor.
+	 * @param serverDescriptor the server descriptor to add the data provider to.
+	 * @param dataProvider the data provider to set.
+	 */
+	void setDescriptorValue(@Nullable final BluetoothGattDescriptor serverDescriptor,
+							@Nullable final DataProvider dataProvider) {
+		if (serverDescriptor == null)
+			return;
+		if (dataProvider == null) {
+			dataProviders.remove(serverDescriptor);
+		} else {
+			dataProviders.put(serverDescriptor, dataProvider);
+		}
+	}
+
+	/**
 	 * Sets the connection priority callback.
 	 * @param callback the callback
 	 */
@@ -1780,6 +1818,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			callback.notifyClosed();
 		}
 		valueChangedCallbacks.clear();
+		dataProviders.clear();
 		batteryLevelNotificationCallback = null;
 		batteryValue = -1;
 		onServicesInvalidated();
@@ -2763,11 +2802,29 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (offset == 0)
 			log(Log.INFO, () -> "[Server] READ request for characteristic " + characteristic.getUuid() + " received");
 
-		byte[] data = characteristicValues == null || !characteristicValues.containsKey(characteristic)
-				? characteristic.getValue() : characteristicValues.get(characteristic);
+		// The data can be obtained fro 3 different places:
+		// 1. The Data provider, assigned to the characteristic
+		// 2. The characteristic itself
+		// 3. The WaitForReadRequest object
+
+		// First, let's check the data provider. We do it only when offset == 0 and then
+		// save the value in the characteristic.
+		final DataProvider dataProvider = dataProviders.get(characteristic);
+		byte[] data = offset == 0 && dataProvider != null ? dataProvider.getData(device) : null;
+		if (data != null) {
+			// If the data were returned, store them for later use.
+			// The client can request the data in multiple packets.
+			assign(characteristic, data);
+		} else {
+			// If there was no provider or the data were null, or the offset is greater than 0,
+			// get the value from the descriptor.
+			data = characteristicValues == null || !characteristicValues.containsKey(characteristic)
+					? characteristic.getValue()
+					: characteristicValues.get(characteristic);
+		}
 
 		WaitForReadRequest waitForReadRequest = null;
-		// First, try to get the data from the WaitForReadRequest if the request awaits,
+		// Then, try to get the data from the WaitForReadRequest if the request awaits,
 		if (awaitingRequest instanceof WaitForReadRequest
 				// is registered for this characteristic
 				&& awaitingRequest.characteristic == characteristic
@@ -2775,10 +2832,15 @@ abstract class BleManagerHandler extends RequestHandler {
 				// (not necessarily completed)
 				&& !awaitingRequest.isTriggerPending()) {
 			waitForReadRequest = (WaitForReadRequest) awaitingRequest;
+			// The data set in the WaitForReadRequest have priority over the data provider
+			// and the value of the characteristic.
 			waitForReadRequest.setDataIfNull(data);
 			data = waitForReadRequest.getData(mtu);
 		}
-		// If data are longer than MTU - 1, cut the array. Only ATT_MTU - 1 bytes can be sent in Long Read.
+
+		// If data are longer than MTU - 1, cut the array.
+		// Only ATT_MTU - 1 bytes can be sent in a single response.
+		// If the data are longer, the client will request another read with an offset.
 		if (data != null && data.length > mtu - 1) {
 			data = Bytes.copy(data, offset, mtu - 1);
 		}
@@ -2859,11 +2921,29 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (offset == 0)
 			log(Log.INFO, () -> "[Server] READ request for descriptor " + descriptor.getUuid() + " received");
 
-		byte[] data = descriptorValues == null || !descriptorValues.containsKey(descriptor)
-				? descriptor.getValue() : descriptorValues.get(descriptor);
+		// The data can be obtained fro 3 different places:
+		// 1. The Data provider, assigned to the descriptor
+		// 2. The descriptor itself
+		// 3. The WaitForReadRequest object
+
+		// First, let's check the data provider. We do it only when offset == 0 and then
+		// save the value in the characteristic.
+		final DataProvider dataProvider = dataProviders.get(descriptor);
+		byte[] data = offset == 0 && dataProvider != null ? dataProvider.getData(device) : null;
+		if (data != null) {
+			// If the data were returned, store them for later use.
+			// The client can request the data in multiple packets.
+			assign(descriptor, data);
+		} else {
+			// If there was no provider or the data were null, or the offset is greater than 0,
+			// get the value from the descriptor.
+			data = descriptorValues == null || !descriptorValues.containsKey(descriptor)
+					? descriptor.getValue()
+					: descriptorValues.get(descriptor);
+		}
 
 		WaitForReadRequest waitForReadRequest = null;
-		// First, try to get the data from the WaitForReadRequest if the request awaits,
+		// Then, try to get the data from the WaitForReadRequest if the request awaits,
 		if (awaitingRequest instanceof WaitForReadRequest
 				// is registered for this descriptor
 				&& awaitingRequest.descriptor == descriptor
@@ -2871,10 +2951,15 @@ abstract class BleManagerHandler extends RequestHandler {
 				// (not necessarily completed)
 				&& !awaitingRequest.isTriggerPending()) {
 			waitForReadRequest = (WaitForReadRequest) awaitingRequest;
+			// The data set in the WaitForReadRequest have priority over the data provider
+			// and the value of the characteristic.
 			waitForReadRequest.setDataIfNull(data);
 			data = waitForReadRequest.getData(mtu);
 		}
-		// If data are longer than MTU - 1, cut the array. Only ATT_MTU - 1 bytes can be sent in Long Read.
+
+		// If data are longer than MTU - 1, cut the array.
+		// Only ATT_MTU - 1 bytes can be sent in a single response.
+		// If the data are longer, the client will request another read with an offset.
 		if (data != null && data.length > mtu - 1) {
 			data = Bytes.copy(data, offset, mtu - 1);
 		}
@@ -3032,15 +3117,20 @@ abstract class BleManagerHandler extends RequestHandler {
 		}
 	}
 
-	private boolean assignAndNotify(@NonNull final BluetoothDevice device,
-									@NonNull final BluetoothGattCharacteristic characteristic,
-									@NonNull final byte[] value) {
+	private void assign(@NonNull final BluetoothGattCharacteristic characteristic,
+						@NonNull final byte[] value) {
 		final boolean isShared = characteristicValues == null || !characteristicValues.containsKey(characteristic);
 		if (isShared) {
 			characteristic.setValue(value);
 		} else {
 			characteristicValues.put(characteristic, value);
 		}
+	}
+
+	private boolean assignAndNotify(@NonNull final BluetoothDevice device,
+									@NonNull final BluetoothGattCharacteristic characteristic,
+									@NonNull final byte[] value) {
+		assign(characteristic, value);
 		// Notify listener
 		ValueChangedCallback callback;
 		if ((callback = valueChangedCallbacks.get(characteristic)) != null) {
@@ -3074,15 +3164,20 @@ abstract class BleManagerHandler extends RequestHandler {
 		return false;
 	}
 
-	private boolean assignAndNotify(@NonNull final BluetoothDevice device,
-									@NonNull final BluetoothGattDescriptor descriptor,
-									@NonNull final byte[] value) {
+	private void assign(@NonNull final BluetoothGattDescriptor descriptor,
+					    @NonNull final byte[] value) {
 		final boolean isShared = descriptorValues == null || !descriptorValues.containsKey(descriptor);
 		if (isShared) {
 			descriptor.setValue(value);
 		} else {
 			descriptorValues.put(descriptor, value);
 		}
+	}
+
+	private boolean assignAndNotify(@NonNull final BluetoothDevice device,
+									@NonNull final BluetoothGattDescriptor descriptor,
+									@NonNull final byte[] value) {
+		assign(descriptor, value);
 		// Notify listener
 		ValueChangedCallback callback;
 		if ((callback = valueChangedCallbacks.get(descriptor)) != null) {
