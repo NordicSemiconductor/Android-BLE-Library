@@ -39,17 +39,18 @@ android {
 }
 
 dependencies {
+    implementation project(path: ':ble-ktx')
+
     // Dagger and Hilt
     implementation 'com.google.dagger:hilt-android:2.43.2'
-    implementation project(path: ':ble')
     kapt 'com.google.dagger:hilt-compiler:2.43.2'
     implementation 'androidx.hilt:hilt-navigation-compose:1.0.0'
     kapt 'androidx.hilt:hilt-compiler:1.0.0'
 
     implementation 'androidx.activity:activity-compose:1.6.0'
     // To show Preview
-    implementation 'androidx.compose.ui:ui-tooling-preview:1.2.1'
     implementation 'androidx.compose.ui:ui-tooling:1.2.1'
+    implementation 'androidx.compose.ui:ui-tooling-preview:1.2.1'
     // Text, color, Surface
     implementation "androidx.compose.material3:material3:1.0.0-beta03"
     // Nordic theme
