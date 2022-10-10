@@ -12,33 +12,46 @@ import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
+import no.nordicsemi.android.ble.example.game.quiz.repository.QuestionRepository
 import no.nordicsemi.android.ble.example.game.server.repository.AdvertisingManager
 import no.nordicsemi.android.ble.example.game.server.repository.ServerConnection
 import no.nordicsemi.android.ble.example.game.server.repository.ServerManager
+import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.ble.ktx.stateAsFlow
 import no.nordicsemi.android.ble.observer.ServerObserver
 import javax.inject.Inject
+
 
 @HiltViewModel
 class ServerViewModel @Inject constructor(
     @ApplicationContext context: Context,
     private val advertiser: AdvertisingManager,
     private val serverManager: ServerManager,
+    private val questionRepository: QuestionRepository,
 ) : AndroidViewModel(context as Application) {
     private var clients = mutableListOf<ServerConnection>()
 
-    private var _numberOfClients = MutableStateFlow(0)
-    val clientsNumber = _numberOfClients.asStateFlow()
+    private var _state = MutableStateFlow<GameState>(WaitingForPlayers(0))
+    val state = _state.asStateFlow()
 
     init {
         startServer()
     }
 
-    fun startGame() {
-        Log.d("AAA", "startGame")
+    fun startGame(category: Int? = null) {
         advertiser.stopAdvertising()
 
-        // TODO
+        viewModelScope.launch {
+            _state.emit(DownloadingQuestions)
+            val questions = questionRepository.getQuestions(category = category)
+
+            // TODO send questions
+            clients.forEach {
+                it.sendQuestion()
+            }
+            // start game :)
+            _state.emit(Round(questions.questions[0]))
+        }
     }
 
     private fun startServer(){
@@ -56,16 +69,33 @@ class ServerViewModel @Inject constructor(
                 ServerConnection(getApplication(), viewModelScope, device)
                     .apply {
                         stateAsFlow()
-                            .onEach {
-                                // TODO disconnection events
-                                clients.remove(this)
-                                if (_numberOfClients.value>0) _numberOfClients.value -= 1
+                            .onEach { connectionState ->
+                                val currentState = _state.value
+                                when (connectionState) {
+                                    ConnectionState.Ready -> {
+                                        clients.add(this)
+                                        _state.value = WaitingForPlayers(clients.size)
+                                    }
+                                    is ConnectionState.Disconnected -> {
+                                        clients.remove(this)
+
+                                        when (currentState) {
+                                            is WaitingForPlayers -> {
+                                                _state.value = WaitingForPlayers(clients.size)
+                                            }
+                                            else -> {
+                                                // TODO handle disconnection during game
+                                            }
+                                        }
+                                    }
+                                    else -> {}
+                                }
                             }
                             .launchIn(viewModelScope)
                     }
                     .apply {
                         replies
-                            .onEach { reply() }
+                            .onEach { sendQuestion() }
                             .launchIn(viewModelScope)
                     }
                     .apply {
@@ -78,10 +108,8 @@ class ServerViewModel @Inject constructor(
                         }
                         viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
                             connect()
-                            _numberOfClients.value += 1
                         }
                     }
-                    .apply { clients.add(this) }
 
             }
 
