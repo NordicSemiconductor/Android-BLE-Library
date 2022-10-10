@@ -57,4 +57,16 @@ dependencies {
     implementation 'no.nordicsemi.android.common:theme:1.0.24'
     implementation 'no.nordicsemi.android.common:permission:1.0.24'
     implementation 'no.nordicsemi.android.common:navigation:1.0.24'
+
+    // Retrofit
+    implementation 'com.squareup.retrofit2:retrofit:2.9.0'
+    implementation 'com.squareup.retrofit2:converter-moshi:2.9.0'
+    implementation 'com.squareup.okhttp3:okhttp:5.0.0-alpha.10'
+    // https://square.github.io/okhttp/changelog/
+    implementation 'com.squareup.okhttp3:logging-interceptor:5.0.0-alpha.10'
+
+    // parse JSON
+    implementation'com.squareup.moshi:moshi-kotlin:1.14.0'
+    kapt 'com.squareup.moshi:moshi-kotlin-codegen:1.8.0'
+    implementation "androidx.compose.runtime:runtime-livedata:1.3.0-rc01"
 }
