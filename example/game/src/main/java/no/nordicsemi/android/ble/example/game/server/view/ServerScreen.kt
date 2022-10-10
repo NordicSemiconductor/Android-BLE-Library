@@ -3,6 +3,7 @@ package no.nordicsemi.android.ble.example.game.server.view
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -13,7 +14,10 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import no.nordicsemi.android.ble.example.game.server.viewmodel.DownloadingQuestions
+import no.nordicsemi.android.ble.example.game.server.viewmodel.Round
 import no.nordicsemi.android.ble.example.game.server.viewmodel.ServerViewModel
+import no.nordicsemi.android.ble.example.game.server.viewmodel.WaitingForPlayers
 import no.nordicsemi.android.common.navigation.NavigationManager
 import no.nordicsemi.android.common.permission.RequireBluetooth
 import no.nordicsemi.android.common.theme.view.NordicAppBar
@@ -31,32 +35,44 @@ fun ServerScreen(
         )
         RequireBluetooth {
             val serverViewModel: ServerViewModel = hiltViewModel()
-            val numberOfClients by serverViewModel.clientsNumber.collectAsState()
+            val gameState by serverViewModel.state.collectAsState()
 
-            when (numberOfClients) {
-                0 -> {
-                    OutlinedCard(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(32.dp),
-                    ) {
-                        Text(
-                            text = stringResource(id = R.string.looking_for_clients),
-                            modifier = Modifier.padding(16.dp)
-                        )
+            when (val currentState = gameState) {
+                is WaitingForPlayers -> when (currentState.connectedPlayers) {
+                    0 -> {
+                        OutlinedCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.looking_for_clients),
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                    }
+                    else -> {
+                        OutlinedCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                        ) {
+                            Text(
+                                text = "Connected clients: ${currentState.connectedPlayers}",
+                                modifier = Modifier.padding(16.dp)
+                            )
+
+                            Button(onClick = { serverViewModel.startGame() }) {
+                                Text(text = "Start game")
+                            }
+                        }
                     }
                 }
-                else -> {
-                    OutlinedCard(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(32.dp),
-                    ) {
-                        Text(
-                            text = "Connected clients: $numberOfClients",
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
+                DownloadingQuestions -> {
+                    Text(text = "Downloading...")
+                }
+                is Round -> {
+                    Text(text = currentState.question.question)
                 }
             }
         }

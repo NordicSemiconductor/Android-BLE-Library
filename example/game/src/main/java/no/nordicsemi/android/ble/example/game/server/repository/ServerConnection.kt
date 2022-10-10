@@ -79,7 +79,7 @@ class ServerConnection(
             .suspend()
     }
 
-    suspend fun reply() {
+    suspend fun sendQuestion() {
         log(Log.INFO, "Sending reply")
         sendNotification(serverCharacteristic, "world".toByteArray())
             .suspend()
