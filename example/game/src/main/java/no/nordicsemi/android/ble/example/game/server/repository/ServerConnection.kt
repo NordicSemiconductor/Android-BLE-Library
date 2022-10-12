@@ -10,8 +10,14 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import no.nordicsemi.android.ble.BleManager
+import no.nordicsemi.android.ble.example.game.proto.OpCodeProto
+import no.nordicsemi.android.ble.example.game.proto.RequestProto
+import no.nordicsemi.android.ble.example.game.quiz.repository.Question
+import no.nordicsemi.android.ble.example.game.quiz.repository.toProto
+import no.nordicsemi.android.ble.example.game.server.data.QuestionResponse
 import no.nordicsemi.android.ble.example.game.spec.DeviceSpecifications
-import no.nordicsemi.android.ble.ktx.asFlow
+import no.nordicsemi.android.ble.example.game.spec.PacketSplitter
+import no.nordicsemi.android.ble.ktx.asResponseFlow
 import no.nordicsemi.android.ble.ktx.suspend
 
 class ServerConnection(
@@ -21,7 +27,7 @@ class ServerConnection(
 ): BleManager(context) {
     var serverCharacteristic: BluetoothGattCharacteristic? = null
 
-    private val _replies = MutableSharedFlow<String>()
+    private val _replies = MutableSharedFlow<Int>()
     val replies = _replies.asSharedFlow()
 
     override fun log(priority: Int, message: String) {
@@ -49,9 +55,9 @@ class ServerConnection(
 
         @OptIn(ExperimentalCoroutinesApi::class)
         override fun initialize() {
-            setWriteCallback(serverCharacteristic).asFlow()
-                .onEach { log(Log.WARN, "Write received: $it") }
-                .mapNotNull { it.getStringValue(0) }
+            setWriteCallback(serverCharacteristic)
+                .asResponseFlow<QuestionResponse>()
+                .mapNotNull { it.answerId }
                 .onEach { _replies.emit(it) }
                 .launchIn(scope)
 
@@ -79,9 +85,23 @@ class ServerConnection(
             .suspend()
     }
 
-    suspend fun sendQuestion() {
-        log(Log.INFO, "Sending reply")
-        sendNotification(serverCharacteristic, "world".toByteArray())
+    suspend fun gameStart(isGameStarted: Boolean) {
+        log(Log.INFO, "Game Started : $isGameStarted")
+        sendNotification(serverCharacteristic, isGameStarted.toString().toByteArray())
+            .suspend()
+    }
+
+    suspend fun gameOver(isGameOver: ByteArray) {
+        log(Log.INFO, "Game over!!")
+        sendNotification(serverCharacteristic, isGameOver)
+            .suspend()
+    }
+
+    suspend fun sendQuestion(question: Question) {
+        val request = RequestProto(OpCodeProto.NEW_QUESTION, question.toProto())
+        val requestByteArray = request.encode()
+        sendNotification(serverCharacteristic, requestByteArray)
+            .split(PacketSplitter())
             .suspend()
     }
 
