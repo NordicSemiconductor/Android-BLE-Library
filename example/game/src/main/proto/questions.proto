@@ -1,0 +1,25 @@
+syntax = "proto3";
+
+package no.nordicsemi.android.ble.example.game.proto;
+
+enum OpCodeProto {
+  NEW_QUESTION = 0;
+  RESPONSE = 1;
+  RESULT = 2;
+}
+
+message RequestProto {
+  OpCodeProto opCode     = 1;
+  QuestionProto question = 2;
+  int32 answerId         = 3;
+}
+
+message QuestionProto {
+  string text                  = 1;
+  repeated AnswerProto answers = 2;
+}
+
+message AnswerProto {
+  string text = 1;
+  int32 id    = 2;
+}
