@@ -4,6 +4,7 @@ plugins {
     id 'org.jetbrains.kotlin.android'
     id 'kotlin-kapt'
     id 'dagger.hilt.android.plugin'
+    id 'com.squareup.wire'
 }
 
 android {
@@ -38,6 +39,10 @@ android {
     }
 }
 
+wire {
+    kotlin {}
+}
+
 dependencies {
     implementation project(path: ':ble-ktx')
 
@@ -52,7 +57,7 @@ dependencies {
     implementation 'androidx.compose.ui:ui-tooling:1.2.1'
     implementation 'androidx.compose.ui:ui-tooling-preview:1.2.1'
     // Text, color, Surface
-    implementation "androidx.compose.material3:material3:1.0.0-beta03"
+    implementation "androidx.compose.material3:material3:1.0.0-rc01"
     // Nordic theme
     implementation 'no.nordicsemi.android.common:theme:1.0.24'
     implementation 'no.nordicsemi.android.common:permission:1.0.24'
