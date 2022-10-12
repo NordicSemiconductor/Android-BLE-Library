@@ -9,12 +9,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import no.nordicsemi.android.ble.BleManager
-import no.nordicsemi.android.ble.example.game.client.data.QuestionRequest
+import no.nordicsemi.android.ble.example.game.client.data.Request
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
 import no.nordicsemi.android.ble.example.game.spec.DeviceSpecifications
 import no.nordicsemi.android.ble.example.game.spec.PacketMerger
 import no.nordicsemi.android.ble.ktx.asResponseFlow
 import no.nordicsemi.android.ble.ktx.suspend
+
 
 class ClientConnection(
     context: Context,
@@ -25,6 +26,8 @@ class ClientConnection(
 
     private val _question = MutableSharedFlow<Question>()
     val question = _question.asSharedFlow()
+    private val _answer = MutableSharedFlow<Int>()
+    val answer = _answer.asSharedFlow()
 
     override fun log(priority: Int, message: String) {
         Log.println(priority, "AAAClient", message)
@@ -50,12 +53,16 @@ class ClientConnection(
         override fun initialize() {
             requestMtu(512).enqueue()
 
-            setNotificationCallback(characteristic)
+            val flow = setNotificationCallback(characteristic)
                 .merge(PacketMerger())
-                .asResponseFlow<QuestionRequest>()
-                .mapNotNull { it.question }
-                .onEach { _question.tryEmit(it) }
-                .also { log(Log.INFO, "Receiving reply: ${it.toString()}") }
+                .asResponseFlow<Request>()
+
+            flow.mapNotNull { it.answerId }
+                .onEach { _answer.emit(it) }
+                .launchIn(scope)
+
+            flow.mapNotNull { it.question }
+                .onEach { _question.emit(it) }
                 .launchIn(scope)
 
             enableNotifications(characteristic).enqueue()
