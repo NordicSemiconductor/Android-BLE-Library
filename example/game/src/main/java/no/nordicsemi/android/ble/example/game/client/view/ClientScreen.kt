@@ -6,14 +6,16 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import no.nordicsemi.android.ble.example.game.R
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import no.nordicsemi.android.ble.example.game.R
 import no.nordicsemi.android.ble.example.game.client.viewmodel.ClientViewModel
+import no.nordicsemi.android.ble.example.game.quiz.repository.Question
+import no.nordicsemi.android.ble.example.game.quiz.view.QuestionScreenClient
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.common.navigation.NavigationManager
 import no.nordicsemi.android.common.permission.RequireBluetooth
@@ -32,8 +34,8 @@ fun ClientScreen(
         )
 
         RequireBluetooth {
-            val scanningViewModel: ClientViewModel = hiltViewModel()
-            val state by scanningViewModel.state.collectAsState()
+            val clientViewModel: ClientViewModel = hiltViewModel()
+            val state by clientViewModel.state.collectAsState()
 
             when (state) {
                 ConnectionState.Connecting -> {
@@ -49,16 +51,21 @@ fun ClientScreen(
                     }
                 }
                 ConnectionState.Ready -> {
-                    OutlinedCard(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(32.dp),
-                    ) {
-                        Text(
-                            text = stringResource(id = R.string.connected),
-                            modifier = Modifier.padding(16.dp)
-                        )
-                    }
+                    val question by clientViewModel.question.collectAsState()
+                    val answer by clientViewModel.answer.collectAsState()
+                    if (question == null){
+                        OutlinedCard(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(32.dp),
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.connected),
+                                modifier = Modifier.padding(16.dp)
+                            )
+                        }
+                    } else ShowQuestion(navigationManager, question!!, answer)
+
                 }
                 is ConnectionState.Disconnected -> {
                     OutlinedCard(
@@ -78,3 +85,13 @@ fun ClientScreen(
         }
     }
 }
+
+@Composable
+fun ShowQuestion(
+    navigationManager: NavigationManager,
+    question: Question,
+    correctAnswerId: Int?,
+) {
+    QuestionScreenClient(navigationManager, question, correctAnswerId)
+}
+

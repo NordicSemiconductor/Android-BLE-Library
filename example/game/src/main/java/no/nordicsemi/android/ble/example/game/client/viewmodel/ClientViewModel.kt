@@ -8,12 +8,10 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import no.nordicsemi.android.ble.example.game.client.repository.ClientConnection
 import no.nordicsemi.android.ble.example.game.client.repository.ScannerRepository
+import no.nordicsemi.android.ble.example.game.quiz.repository.Question
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.ble.ktx.stateAsFlow
 import no.nordicsemi.android.common.navigation.NavigationManager
@@ -24,12 +22,17 @@ class ClientViewModel @Inject constructor(
     @ApplicationContext context: Context,
     private val scannerRepository: ScannerRepository,
     private val navigationManager: NavigationManager,
-): AndroidViewModel(context as Application) {
-    var clientManager: ClientConnection? = null
-    var job: Job? = null
+) : AndroidViewModel(context as Application) {
+    private var clientManager: ClientConnection? = null
+    private var job: Job? = null
 
-    private val _state: MutableStateFlow<ConnectionState>
-        = MutableStateFlow(ConnectionState.Disconnected(ConnectionState.Disconnected.Reason.UNKNOWN))
+    private val _question: MutableStateFlow<Question?> = MutableStateFlow(null)
+    val question = _question.asStateFlow()
+    private val _answer: MutableStateFlow<Int?> = MutableStateFlow(null)
+    val answer = _answer.asStateFlow()
+
+    private val _state: MutableStateFlow<ConnectionState> =
+        MutableStateFlow(ConnectionState.Disconnected(ConnectionState.Disconnected.Reason.UNKNOWN))
     val state = _state.asStateFlow()
 
     init {
@@ -41,7 +44,11 @@ class ClientViewModel @Inject constructor(
             val device = scannerRepository.searchForServer()
             Log.w("AAA", "Device found!")
 
-            ClientConnection(getApplication(), viewModelScope, device)
+            ClientConnection(
+                getApplication(),
+                viewModelScope,
+                device
+            )
                 .apply {
                     stateAsFlow()
                         .onEach {
@@ -49,16 +56,23 @@ class ClientViewModel @Inject constructor(
                             _state.value = it
                         }
                         .launchIn(viewModelScope)
+                    question
+                        .onEach {
+                            _answer.value = null
+                            _question.value = it
+                        }
+                        .launchIn(viewModelScope)
+                    answer
+                        .onEach { _answer.value = it }
+                        .launchIn(viewModelScope)
                 }
                 .apply {
                     connect()
-
-                    // TODO
-                    sayHello()
                 }
                 .apply { clientManager = this }
         }
     }
+
 
     override fun onCleared() {
         super.onCleared()
