@@ -9,8 +9,11 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import no.nordicsemi.android.ble.BleManager
+import no.nordicsemi.android.ble.example.game.client.data.QuestionRequest
+import no.nordicsemi.android.ble.example.game.quiz.repository.Question
 import no.nordicsemi.android.ble.example.game.spec.DeviceSpecifications
-import no.nordicsemi.android.ble.ktx.asFlow
+import no.nordicsemi.android.ble.example.game.spec.PacketMerger
+import no.nordicsemi.android.ble.ktx.asResponseFlow
 import no.nordicsemi.android.ble.ktx.suspend
 
 class ClientConnection(
@@ -20,8 +23,8 @@ class ClientConnection(
 ): BleManager(context) {
     var characteristic: BluetoothGattCharacteristic? = null
 
-    private val _replies = MutableSharedFlow<String>()
-    val replies = _replies.asSharedFlow()
+    private val _question = MutableSharedFlow<Question>()
+    val question = _question.asSharedFlow()
 
     override fun log(priority: Int, message: String) {
         Log.println(priority, "AAAClient", message)
@@ -47,17 +50,18 @@ class ClientConnection(
         override fun initialize() {
             requestMtu(512).enqueue()
 
-            // TODO
-            setNotificationCallback(characteristic).asFlow()
-                .mapNotNull { it.getStringValue(0) }
-                .onEach { _replies.tryEmit(it) }
+            setNotificationCallback(characteristic)
+                .merge(PacketMerger())
+                .asResponseFlow<QuestionRequest>()
+                .mapNotNull { it.question }
+                .onEach { _question.tryEmit(it) }
+                .also { log(Log.INFO, "Receiving reply: ${it.toString()}") }
                 .launchIn(scope)
 
             enableNotifications(characteristic).enqueue()
-            // enable notifications, write user name, etc
-            // setNotificationCallback()
-            // enableNotifications().enqueue()
         }
+
+
 
         override fun onServicesInvalidated() {
             characteristic = null
@@ -71,16 +75,8 @@ class ClientConnection(
         connect(device)
             .retry(4, 300)
             .useAutoConnect(false)
-            .timeout(10_000)
+            .timeout(100_000)
             .suspend()
-    }
-
-    suspend fun sayHello() {
-        writeCharacteristic(
-            characteristic,
-            "Hello".toByteArray(),
-            BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-        ).suspend()
     }
 
     fun release() {
