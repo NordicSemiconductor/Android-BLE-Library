@@ -4,6 +4,7 @@ import android.app.Application
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.util.Log
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -13,6 +14,8 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.ble.example.game.quiz.repository.QuestionRepository
+import no.nordicsemi.android.ble.example.game.quiz.view.QuestionState
+import no.nordicsemi.android.ble.example.game.quiz.view.Questions
 import no.nordicsemi.android.ble.example.game.server.repository.AdvertisingManager
 import no.nordicsemi.android.ble.example.game.server.repository.ServerConnection
 import no.nordicsemi.android.ble.example.game.server.repository.ServerManager
@@ -33,6 +36,10 @@ class ServerViewModel @Inject constructor(
 
     private var _state = MutableStateFlow<GameState>(WaitingForPlayers(0))
     val state = _state.asStateFlow()
+    private val _uiState = MutableSharedFlow<Questions>()
+    val uiState = _uiState
+    private val gameStartedFlag = mutableStateOf(false)
+
 
     init {
         startServer()
@@ -40,16 +47,34 @@ class ServerViewModel @Inject constructor(
 
     fun startGame(category: Int? = null) {
         advertiser.stopAdvertising()
+        gameStartedFlag.value = true
+
 
         viewModelScope.launch {
             _state.emit(DownloadingQuestions)
             val questions = questionRepository.getQuestions(category = category)
 
+            val questionStates = questions.questions.mapIndexed { index, question ->
+                val showDone = index == questions.questions.size - 1
+
+                QuestionState(
+                    question = question,
+                    questionIndex = index,
+                    totalQuestions = questions.questions.size,
+                    showDone = showDone
+                )
+            }
+
             // TODO send questions
             clients.forEach {
-                it.sendQuestion()
+                if (gameStartedFlag.value){
+//                    it.sayHello()
+                    it.gameStart(gameStartedFlag.value)
+                    it.sendQuestion(questions.questions[0])
+                }
             }
             // start game :)
+            _uiState.emit(Questions(questionStates))
             _state.emit(Round(questions.questions[0]))
         }
     }
@@ -95,16 +120,16 @@ class ServerViewModel @Inject constructor(
                     }
                     .apply {
                         replies
-                            .onEach { sendQuestion() }
+                            .onEach { /* TODO handle response received */ }
                             .launchIn(viewModelScope)
                     }
                     .apply {
                         useServer(serverManager)
 
                         // TODO exceptions
-                        val exceptionHandler = CoroutineExceptionHandler { c, t ->
+                        val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
                             // Global handler
-                            Log.e("AAA", "Error", t)
+                            Log.e("AAA", "Error", throwable)
                         }
                         viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
                             connect()
@@ -142,3 +167,4 @@ class ServerViewModel @Inject constructor(
         stopServer()
     }
 }
+
