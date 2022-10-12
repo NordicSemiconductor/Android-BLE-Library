@@ -7,13 +7,14 @@ import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import no.nordicsemi.android.ble.example.game.R
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
+import no.nordicsemi.android.ble.example.game.R
+import no.nordicsemi.android.ble.example.game.quiz.view.QuestionsScreen
 import no.nordicsemi.android.ble.example.game.server.viewmodel.DownloadingQuestions
 import no.nordicsemi.android.ble.example.game.server.viewmodel.Round
 import no.nordicsemi.android.ble.example.game.server.viewmodel.ServerViewModel
@@ -36,6 +37,7 @@ fun ServerScreen(
         RequireBluetooth {
             val serverViewModel: ServerViewModel = hiltViewModel()
             val gameState by serverViewModel.state.collectAsState()
+            val questionState by serverViewModel.uiState.collectAsState(initial = null)
 
             when (val currentState = gameState) {
                 is WaitingForPlayers -> when (currentState.connectedPlayers) {
@@ -72,7 +74,17 @@ fun ServerScreen(
                     Text(text = "Downloading...")
                 }
                 is Round -> {
-                    Text(text = currentState.question.question)
+                    questionState?.let { question ->
+                        QuestionsScreen(questions = question,
+                            navigationManager = navigationManager,
+                            onDonePressed = {
+//                                val totalQuestions = questionState?.questionsState?.count()
+//                                val rightAnswers = questionState
+//                                    ?.questionsState
+//                                    ?.count { it.givenAnswerId == it.question.correctAnswer }
+                            }
+                        )
+                    }
                 }
             }
         }

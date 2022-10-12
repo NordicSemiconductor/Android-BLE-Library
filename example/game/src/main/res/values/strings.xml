@@ -4,6 +4,7 @@
     <string name="start_game_description">Please select one option</string>
     <string name="start_game">Start Game</string>
     <string name="join_game">Join Game</string>
+    <string name="play">Play Game</string>
 
     <string name="client">Client Side</string>
     <string name="looking_for_clients">Looking for clients…</string>
@@ -13,4 +14,8 @@
 
     <string name="connected">Connected</string>
     <string name="disconnected">Disconnected</string>
+
+    <string name="next">Next</string>
+    <string name="done">Done</string>
+
 </resources>
