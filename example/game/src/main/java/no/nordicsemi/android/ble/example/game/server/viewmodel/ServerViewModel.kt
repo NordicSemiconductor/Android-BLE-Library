@@ -36,8 +36,8 @@ class ServerViewModel @Inject constructor(
 
     private var _state = MutableStateFlow<GameState>(WaitingForPlayers(0))
     val state = _state.asStateFlow()
-    private val _uiState = MutableSharedFlow<Questions>()
-    val uiState = _uiState
+    private val _uiState = MutableSharedFlow<Questions>( replay = 1 )
+    val uiState = _uiState.asSharedFlow()
     private val gameStartedFlag = mutableStateOf(false)
 
 
@@ -69,7 +69,7 @@ class ServerViewModel @Inject constructor(
             clients.forEach {
                 if (gameStartedFlag.value){
 //                    it.sayHello()
-                    it.gameStart(gameStartedFlag.value)
+//                    it.gameStart(gameStartedFlag.value)
                     it.sendQuestion(questions.questions[0])
                 }
             }
