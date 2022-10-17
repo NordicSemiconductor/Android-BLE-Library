@@ -5,6 +5,9 @@ import no.nordicsemi.android.ble.example.game.quiz.repository.Question
 import no.nordicsemi.android.ble.example.game.quiz.repository.Questions
 import no.nordicsemi.android.ble.example.game.quiz.repository.QuestionsRemote
 import kotlin.random.Random
+/**
+ * A mapper object to map the remote data with the Local data format.
+ */
 
 object QuestionMapper {
     fun mapRemoteToLocal(questionRemote: QuestionsRemote): Questions {
