@@ -14,7 +14,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import no.nordicsemi.android.ble.example.game.R
-import no.nordicsemi.android.ble.example.game.quiz.view.QuestionsScreen
 import no.nordicsemi.android.ble.example.game.server.viewmodel.DownloadingQuestions
 import no.nordicsemi.android.ble.example.game.server.viewmodel.Round
 import no.nordicsemi.android.ble.example.game.server.viewmodel.ServerViewModel
@@ -75,7 +74,7 @@ fun ServerScreen(
                 }
                 is Round -> {
                     questionState?.let { question ->
-                        QuestionsScreen(questions = question,
+                        QuestionsScreenServer(questions = question,
                             navigationManager = navigationManager,
                             onDonePressed = {
 //                                val totalQuestions = questionState?.questionsState?.count()
