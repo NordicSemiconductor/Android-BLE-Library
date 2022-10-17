@@ -13,7 +13,9 @@
     <string name="scanning_for_server">Scanning for Server…</string>
 
     <string name="connected">Connected</string>
+    <string name="loading">Loading…</string>
     <string name="disconnected">Disconnected</string>
+    <string name="initializing">Waiting for server to connect…</string>
 
     <string name="next">Next</string>
     <string name="done">Done</string>
