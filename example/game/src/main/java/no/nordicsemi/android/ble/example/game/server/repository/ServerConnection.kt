@@ -81,7 +81,7 @@ class ServerConnection(
         connect(device)
             .retry(4, 300)
             .useAutoConnect(false)
-            .timeout(5_000)
+            .timeout(10_000)
             .suspend()
     }
 
