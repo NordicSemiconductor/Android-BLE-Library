@@ -14,8 +14,7 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import no.nordicsemi.android.ble.example.game.R
 import no.nordicsemi.android.ble.example.game.client.viewmodel.ClientViewModel
-import no.nordicsemi.android.ble.example.game.quiz.repository.Question
-import no.nordicsemi.android.ble.example.game.quiz.view.QuestionScreenClient
+import no.nordicsemi.android.ble.example.game.client.viewmodel.QuestionScreenClient
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.common.navigation.NavigationManager
 import no.nordicsemi.android.common.permission.RequireBluetooth
@@ -38,6 +37,18 @@ fun ClientScreen(
             val state by clientViewModel.state.collectAsState()
 
             when (state) {
+                ConnectionState.Initializing -> {
+                    OutlinedCard(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(32.dp),
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.initializing),
+                            modifier = Modifier.padding(16.dp)
+                        )
+                    }
+                }
                 ConnectionState.Connecting -> {
                     OutlinedCard(
                         modifier = Modifier
@@ -64,7 +75,7 @@ fun ClientScreen(
                                 modifier = Modifier.padding(16.dp)
                             )
                         }
-                    } else ShowQuestion(navigationManager, question!!, answer)
+                    } else QuestionScreenClient(navigationManager, question!!, answer)
 
                 }
                 is ConnectionState.Disconnected -> {
@@ -79,19 +90,16 @@ fun ClientScreen(
                         )
                     }
                 }
-                else -> {}
+                else -> {
+                    Text(
+                        text = stringResource(id = R.string.loading),
+                        modifier = Modifier.padding(16.dp)
+                    )
+                }
             }
 
         }
     }
 }
 
-@Composable
-fun ShowQuestion(
-    navigationManager: NavigationManager,
-    question: Question,
-    correctAnswerId: Int?,
-) {
-    QuestionScreenClient(navigationManager, question, correctAnswerId)
-}
 

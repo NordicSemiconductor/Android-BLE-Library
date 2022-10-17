@@ -32,7 +32,7 @@ class ClientViewModel @Inject constructor(
     val answer = _answer.asStateFlow()
 
     private val _state: MutableStateFlow<ConnectionState> =
-        MutableStateFlow(ConnectionState.Disconnected(ConnectionState.Disconnected.Reason.UNKNOWN))
+        MutableStateFlow(ConnectionState.Initializing)
     val state = _state.asStateFlow()
 
     init {
