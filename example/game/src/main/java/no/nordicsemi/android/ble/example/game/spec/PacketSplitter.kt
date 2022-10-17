@@ -1,6 +1,5 @@
 package no.nordicsemi.android.ble.example.game.spec
 
-import android.util.Log
 import no.nordicsemi.android.ble.data.DataSplitter
 import java.nio.ByteBuffer
 
@@ -9,10 +8,8 @@ class PacketSplitter: DataSplitter {
 
     override fun chunk(message: ByteArray, index: Int, maxLength: Int): ByteArray? {
         val messageSize = message.size
-        Log.d("PacketSplitter", "chunk: $messageSize  maximum length: $maxLength  index: $index")
         return if (index == 0) {
             val nextSize = if (messageSize + 2 <= maxLength) messageSize + 2 else maxLength
-            Log.d("PacketSplitter", "nextSize: $nextSize")
 
             ByteArray(nextSize).apply { ByteBuffer.wrap(this)
                 .putShort(messageSize.toShort()) // 2 bytes
@@ -22,7 +19,6 @@ class PacketSplitter: DataSplitter {
             val nextSize = if (messageSize - newIndex <= maxLength) messageSize - newIndex else maxLength
             if (nextSize <= 0)
                 return null
-            Log.d("PacketSplitter", "nextSize: $nextSize  new index: $newIndex")
 
             ByteArray(nextSize).apply { ByteBuffer.wrap(this)
                 .put(message, newIndex, size) }
