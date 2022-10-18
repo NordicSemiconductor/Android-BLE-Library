@@ -1,11 +1,10 @@
 package no.nordicsemi.android.ble.example.game.server.viewmodel
 
-import android.app.Application
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.mutableStateOf
-import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -14,24 +13,24 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.ble.example.game.quiz.repository.QuestionRepository
-import no.nordicsemi.android.ble.example.game.quiz.view.QuestionState
-import no.nordicsemi.android.ble.example.game.quiz.view.Questions
+import no.nordicsemi.android.ble.example.game.quiz.repository.Questions
 import no.nordicsemi.android.ble.example.game.server.repository.AdvertisingManager
 import no.nordicsemi.android.ble.example.game.server.repository.ServerConnection
 import no.nordicsemi.android.ble.example.game.server.repository.ServerManager
+import no.nordicsemi.android.ble.example.game.timer.TimerViewModel
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.ble.ktx.stateAsFlow
 import no.nordicsemi.android.ble.observer.ServerObserver
 import javax.inject.Inject
 
-
+@SuppressLint("StaticFieldLeak")
 @HiltViewModel
 class ServerViewModel @Inject constructor(
-    @ApplicationContext context: Context,
+     @ApplicationContext private val context: Context,
     private val advertiser: AdvertisingManager,
     private val serverManager: ServerManager,
     private val questionRepository: QuestionRepository,
-) : AndroidViewModel(context as Application) {
+) : TimerViewModel() {
     private var clients = mutableListOf<ServerConnection>()
 
     private var _state = MutableStateFlow<GameState>(WaitingForPlayers(0))
@@ -49,49 +48,45 @@ class ServerViewModel @Inject constructor(
         advertiser.stopAdvertising()
         gameStartedFlag.value = true
 
-
         viewModelScope.launch {
             _state.emit(DownloadingQuestions)
             val questions = questionRepository.getQuestions(category = category)
-
-            val questionStates = questions.questions.mapIndexed { index, question ->
-                val showDone = index == questions.questions.size - 1
-
-                QuestionState(
-                    question = question,
-                    questionIndex = index,
-                    totalQuestions = questions.questions.size,
-                    showDone = showDone
-                )
-            }
-
             // TODO send questions
+
             clients.forEach {
                 if (gameStartedFlag.value){
-//                    it.sayHello()
-//                    it.gameStart(gameStartedFlag.value)
                     it.sendQuestion(questions.questions[0])
                 }
             }
+            startCountDown()
+
+            timerFinished
+                .onEach {
+                    clients.forEach {
+                        questions.questions[0].correctAnswerId?.let { answer ->
+                            it.sendCorrectAnswerId( answer )
+                        }
+                    }
+                }
+                .launchIn(viewModelScope)
+
             // start game :)
-            _uiState.emit(Questions(questionStates))
+            _uiState.emit(questions)
             _state.emit(Round(questions.questions[0]))
         }
     }
 
     private fun startServer(){
-        Log.d("AAA", "startServer")
         advertiser.startAdvertising()
         serverManager.setServerObserver(object : ServerObserver {
 
             override fun onServerReady() {
-                Log.w("AAA", "onServerReady")
+                Log.w("AAA startServer", "onServerReady")
             }
 
             override fun onDeviceConnectedToServer(device: BluetoothDevice) {
-                Log.w("AAA", "onDeviceConnectedToServer")
 
-                ServerConnection(getApplication(), viewModelScope, device)
+                ServerConnection(context, viewModelScope, device)
                     .apply {
                         stateAsFlow()
                             .onEach { connectionState ->
@@ -147,12 +142,10 @@ class ServerViewModel @Inject constructor(
     }
 
     private fun stopServer(){
-        Log.d("AAA", "stopServer")
         serverManager.close()
     }
 
     private fun stopAdvertising() {
-        Log.d("AAA", "stopAdvertising")
         advertiser.stopAdvertising()
     }
 
