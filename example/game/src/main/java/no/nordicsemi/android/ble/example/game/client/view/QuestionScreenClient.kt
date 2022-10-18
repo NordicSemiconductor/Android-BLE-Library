@@ -1,47 +1,67 @@
-package no.nordicsemi.android.ble.example.game.quiz.view
+package no.nordicsemi.android.ble.example.game.client.view
 
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.text.font.FontWeight.Companion.Bold
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
+import androidx.hilt.navigation.compose.hiltViewModel
 import no.nordicsemi.android.ble.example.game.quiz.repository.Answer
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
+import no.nordicsemi.android.ble.example.game.timer.ShowTimer
+import no.nordicsemi.android.ble.example.game.timer.TimerViewModel
+import no.nordicsemi.android.common.navigation.NavigationManager
 
 
 @Composable
-fun QuestionTitle(
-    questionTitle: String = "Question title not available"
+fun QuestionScreenClient(
+    navigationManager: NavigationManager,
+    question: Question,
+    Answer: Int?
 ) {
-    Row(Modifier.fillMaxWidth()) {
-        Text(
-            text = questionTitle,
-            modifier = Modifier
-                .fillMaxWidth(),
-            fontWeight = Bold
-        )
+    var selectedAnswerId by mutableStateOf(-1)
+    val timerViewModel: TimerViewModel = hiltViewModel()
+    val ticks by timerViewModel.ticks.collectAsState()
+    val isTimerRunning = ticks>0
+
+    ShowTimer(ticks, ticks.toFloat() / timerViewModel.ticksTotal )
+    LaunchedEffect(key1 = Unit) {
+        timerViewModel.startCountDown()
     }
 
+    QuestionContentClient(
+        question = question,
+        selectedAnswer = selectedAnswerId,
+        isTimerRunning = isTimerRunning,
+        correctAnswer = Answer,
+        onAnswer = { selectedAnswerId = it.id },
+        modifier = Modifier
+            .fillMaxWidth()
+    )
 }
 
 
+
 @Composable
-fun QuestionContent(
+fun QuestionContentClient(
     question: Question,
     selectedAnswer: Int,
+    isTimerRunning: Boolean,
+    correctAnswer: Int?,
     onAnswer: (Answer) -> Unit,
     modifier: Modifier,
-) {
+
+    ) {
     LazyColumn(
         modifier = Modifier,
         contentPadding = PaddingValues(
@@ -50,12 +70,21 @@ fun QuestionContent(
         )
     ) {
         item {
-            QuestionTitle(question.question)
+            Row(Modifier.fillMaxWidth()) {
+                Text(
+                    text = question.question,
+                    modifier = Modifier
+                        .fillMaxWidth(),
+                    fontWeight = FontWeight.Bold
+                )
+            }
             Spacer(modifier = Modifier.height(24.dp))
 
-            SingleChoiceQuestion(
+            SingleChoiceQuestionClient(
                 question = question,
                 selectedAnswer = selectedAnswer,
+                correctAnswer = correctAnswer,
+                enableQuestionSelection = isTimerRunning,
                 onAnswerSelected = { answer -> onAnswer(answer) },
                 modifier = Modifier.fillParentMaxWidth()
             )
@@ -65,12 +94,15 @@ fun QuestionContent(
 }
 
 @Composable
-fun SingleChoiceQuestion(
+fun SingleChoiceQuestionClient(
     question: Question,
     selectedAnswer: Int,
+    enableQuestionSelection: Boolean,
+    correctAnswer: Int?,
     onAnswerSelected: (Answer) -> Unit,
-    modifier: Modifier = Modifier
-) {
+    modifier: Modifier = Modifier,
+
+    ) {
     val multipleOptions = question.answers
 
     val (selectedOption, onOptionSelected) = remember { mutableStateOf(selectedAnswer) }
@@ -95,7 +127,7 @@ fun SingleChoiceQuestion(
                     .selectable(
                         selected = optionSelected,
                         onClick = onClickHandle,
-//                        enabled = enableQuestionSelection
+                        enabled = enableQuestionSelection
                     )
                     .background(color = answerBackgroundColor, shape = RectangleShape)
                     .padding(
@@ -112,8 +144,26 @@ fun SingleChoiceQuestion(
             }
         }
     }
+ if (!enableQuestionSelection){
+     ShowAnswerClient(correctAnswer = correctAnswer, selectedAnswerId = selectedOption)
+ }
 }
-
-
-
+@Composable
+fun ShowAnswerClient(correctAnswer: Int?, selectedAnswerId: Int) {
+// TODO: Remove Toast messages and implement the actual code
+    val context = LocalContext.current
+    if (correctAnswer == selectedAnswerId){
+        Toast.makeText(
+            context,
+            "The answer is correct: $selectedAnswerId",
+            Toast.LENGTH_SHORT
+        ).show()
+    } else {
+        Toast.makeText(
+            context,
+            "The answer is correct: $selectedAnswerId",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+}
 

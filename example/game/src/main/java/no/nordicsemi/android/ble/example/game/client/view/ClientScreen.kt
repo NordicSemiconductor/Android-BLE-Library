@@ -5,16 +5,13 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.collectAsState
-import androidx.compose.runtime.getValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import no.nordicsemi.android.ble.example.game.R
 import no.nordicsemi.android.ble.example.game.client.viewmodel.ClientViewModel
-import no.nordicsemi.android.ble.example.game.client.viewmodel.QuestionScreenClient
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.common.navigation.NavigationManager
 import no.nordicsemi.android.common.permission.RequireBluetooth
@@ -63,8 +60,20 @@ fun ClientScreen(
                 }
                 ConnectionState.Ready -> {
                     val question by clientViewModel.question.collectAsState()
-                    val answer by clientViewModel.answer.collectAsState()
-                    if (question == null){
+                    var answerReceived by remember {
+                        mutableStateOf(-1)
+                    }
+                    LaunchedEffect(key1 = Unit ){
+                        clientViewModel.answer
+                            .collect{ answer ->
+                                if (answer != null) {
+                                    answerReceived = answer
+                                }
+                            }
+                    }
+                    question?.let {
+                        QuestionScreenClient(navigationManager, it, answerReceived)
+                    } ?: run {
                         OutlinedCard(
                             modifier = Modifier
                                 .fillMaxWidth()
@@ -75,8 +84,7 @@ fun ClientScreen(
                                 modifier = Modifier.padding(16.dp)
                             )
                         }
-                    } else QuestionScreenClient(navigationManager, question!!, answer)
-
+                    }
                 }
                 is ConnectionState.Disconnected -> {
                     OutlinedCard(
