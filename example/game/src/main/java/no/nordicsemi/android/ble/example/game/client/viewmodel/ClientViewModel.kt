@@ -42,7 +42,6 @@ class ClientViewModel @Inject constructor(
         }
         job = viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
             val device = scannerRepository.searchForServer()
-            Log.w("AAA", "Device found!")
 
             ClientConnection(
                 getApplication(),
@@ -52,7 +51,6 @@ class ClientViewModel @Inject constructor(
                 .apply {
                     stateAsFlow()
                         .onEach {
-                            Log.w("AAA", "State: $it")
                             _state.value = it
                         }
                         .launchIn(viewModelScope)
