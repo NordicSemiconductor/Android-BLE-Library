@@ -1,4 +1,4 @@
-package no.nordicsemi.android.ble.example.game
+package no.nordicsemi.android.ble.example.game.navigation
 
 object NavigationConst {
     const val HOME = "home"
