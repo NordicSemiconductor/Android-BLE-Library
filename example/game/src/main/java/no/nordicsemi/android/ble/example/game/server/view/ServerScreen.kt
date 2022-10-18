@@ -74,14 +74,9 @@ fun ServerScreen(
                 }
                 is Round -> {
                     questionState?.let { question ->
-                        QuestionsScreenServer(questions = question,
-                            navigationManager = navigationManager,
-                            onDonePressed = {
-//                                val totalQuestions = questionState?.questionsState?.count()
-//                                val rightAnswers = questionState
-//                                    ?.questionsState
-//                                    ?.count { it.givenAnswerId == it.question.correctAnswer }
-                            }
+                        QuestionsScreenServer(
+                            question = question.questions[0],
+                            navigationManager = navigationManager
                         )
                     }
                 }
