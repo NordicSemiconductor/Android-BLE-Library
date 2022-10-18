@@ -1,7 +1,6 @@
 package no.nordicsemi.android.ble.example.game.client.data
 
 import android.bluetooth.BluetoothDevice
-import android.util.Log
 import no.nordicsemi.android.ble.data.Data
 import no.nordicsemi.android.ble.example.game.proto.OpCodeProto
 import no.nordicsemi.android.ble.example.game.proto.RequestProto
@@ -27,12 +26,10 @@ class Request: ReadResponse() {
             OpCodeProto.NEW_QUESTION -> {
                 type = Type.QUESTION
                 question = request.question?.toQuestion()
-                Log.d("QuestionRequest", "onDataReceived: ${question?.question} ")
             }
             OpCodeProto.RESULT -> {
                 type = Type.ANSWER
                 answerId = request.answerId
-                Log.d("QuestionRequest", "onDataReceived: $answerId ")
             }
             else -> {}
             // game over
