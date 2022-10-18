@@ -97,8 +97,16 @@ class ServerConnection(
             .suspend()
     }
 
+    suspend fun sendCorrectAnswerId(correctAnswerId: Int) {
+        val request = RequestProto(OpCodeProto.RESULT, answerId = correctAnswerId)
+        val requestByteArray = request.encode()
+        sendNotification(serverCharacteristic, requestByteArray)
+            .split(PacketSplitter())
+            .suspend()
+    }
+
     suspend fun sendQuestion(question: Question) {
-        val request = RequestProto(OpCodeProto.NEW_QUESTION, question.toProto())
+        val request = RequestProto(OpCodeProto.NEW_QUESTION, question = question.toProto())
         val requestByteArray = request.encode()
         sendNotification(serverCharacteristic, requestByteArray)
             .split(PacketSplitter())
