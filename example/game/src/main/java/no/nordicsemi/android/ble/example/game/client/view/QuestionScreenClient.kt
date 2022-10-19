@@ -1,6 +1,5 @@
 package no.nordicsemi.android.ble.example.game.client.view
 
-import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -12,7 +11,6 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.RectangleShape
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
@@ -32,9 +30,9 @@ fun QuestionScreenClient(
     var selectedAnswerId by mutableStateOf(-1)
     val timerViewModel: TimerViewModel = hiltViewModel()
     val ticks by timerViewModel.ticks.collectAsState()
-    val isTimerRunning = ticks>0
+    val isTimerRunning = ticks > 0
 
-    ShowTimer(ticks, ticks.toFloat() / timerViewModel.ticksTotal )
+    ShowTimer( ticks, ticks.toFloat() / timerViewModel.ticksTotal )
     LaunchedEffect(key1 = Unit) {
         timerViewModel.startCountDown()
     }
@@ -49,7 +47,6 @@ fun QuestionScreenClient(
             .fillMaxWidth()
     )
 }
-
 
 
 @Composable
@@ -99,13 +96,14 @@ fun SingleChoiceQuestionClient(
     selectedAnswer: Int,
     enableQuestionSelection: Boolean,
     correctAnswer: Int?,
-    onAnswerSelected: (Answer) -> Unit,
+    onAnswerSelected: (Answer) -> Unit, // TODO: Check if this is needed or not, it looks like this is not needed
     modifier: Modifier = Modifier,
 
     ) {
     val multipleOptions = question.answers
 
     val (selectedOption, onOptionSelected) = remember { mutableStateOf(selectedAnswer) }
+
     Column(modifier = modifier) {
         multipleOptions.forEach { answer ->
             val onClickHandle = {
@@ -115,12 +113,6 @@ fun SingleChoiceQuestionClient(
 
             val optionSelected = answer.id == selectedOption
 
-            val materialPrimary = MaterialTheme.colorScheme.secondary
-            val answerBackgroundColor = when (optionSelected) {
-                true -> materialPrimary
-                false -> Color.Unspecified
-            }
-
             Row(
                 modifier = modifier
                     .fillMaxWidth()
@@ -129,7 +121,16 @@ fun SingleChoiceQuestionClient(
                         onClick = onClickHandle,
                         enabled = enableQuestionSelection
                     )
-                    .background(color = answerBackgroundColor, shape = RectangleShape)
+                    .background(
+                        color = checkColor(
+                            isTimerRunning = enableQuestionSelection,
+                            selectedOption = selectedOption,
+                            optionSelected = optionSelected,
+                            answerId = answer.id,
+                            correctAnswer = correctAnswer
+                        ),
+                        shape = RectangleShape
+                    )
                     .padding(
                         vertical = 16.dp,
                         horizontal = 16.dp
@@ -144,26 +145,24 @@ fun SingleChoiceQuestionClient(
             }
         }
     }
- if (!enableQuestionSelection){
-     ShowAnswerClient(correctAnswer = correctAnswer, selectedAnswerId = selectedOption)
  }
-}
-@Composable
-fun ShowAnswerClient(correctAnswer: Int?, selectedAnswerId: Int) {
-// TODO: Remove Toast messages and implement the actual code
-    val context = LocalContext.current
-    if (correctAnswer == selectedAnswerId){
-        Toast.makeText(
-            context,
-            "The answer is correct: $selectedAnswerId",
-            Toast.LENGTH_SHORT
-        ).show()
-    } else {
-        Toast.makeText(
-            context,
-            "The answer is correct: $selectedAnswerId",
-            Toast.LENGTH_SHORT
-        ).show()
-    }
-}
 
+@Composable
+fun checkColor(
+    isTimerRunning: Boolean,
+    selectedOption: Int,
+    optionSelected: Boolean,
+    answerId: Int,
+    correctAnswer: Int?
+): Color {
+    return if (optionSelected) {
+        when (isTimerRunning) {
+            true -> MaterialTheme.colorScheme.secondary
+            else -> {
+                if (selectedOption == correctAnswer) Color.Green
+                else Color.Red
+            }
+        }
+    } else if (correctAnswer == answerId && !isTimerRunning) Color.Green
+    else Color.Unspecified
+}
