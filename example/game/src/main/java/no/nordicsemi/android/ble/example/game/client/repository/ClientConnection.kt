@@ -30,7 +30,7 @@ class ClientConnection(
     val answer = _answer.asSharedFlow()
 
     override fun log(priority: Int, message: String) {
-        Log.println(priority, "AAAClient", message)
+        Log.println(priority, " AAA Client Connection", message) // TODO: Remove all logs with AAA or HHH tags
     }
 
     override fun getMinLogPriority(): Int {
@@ -53,18 +53,13 @@ class ClientConnection(
         override fun initialize() {
             requestMtu(512).enqueue()
 
-            val flow = setNotificationCallback(characteristic)
+            setNotificationCallback(characteristic)
                 .merge(PacketMerger())
                 .asResponseFlow<Request>()
-
-            flow.mapNotNull { it.answerId }
-                .onEach { _answer.emit(it) }
-                .launchIn(scope)
-
-            flow.mapNotNull { it.question }
-                .onEach { _question.emit(it) }
-                .launchIn(scope)
-
+                .onEach {
+                    it.answerId?.let { answer -> _answer.emit(answer) }
+                    it.question?.let { question ->  _question.emit(question) }
+                }.launchIn(scope)
             enableNotifications(characteristic).enqueue()
         }
 
