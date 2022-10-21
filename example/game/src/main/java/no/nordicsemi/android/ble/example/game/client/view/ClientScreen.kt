@@ -3,8 +3,7 @@ package no.nordicsemi.android.ble.example.game.client.view
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
-import androidx.compose.material3.OutlinedCard
-import androidx.compose.material3.Text
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -17,6 +16,7 @@ import no.nordicsemi.android.common.navigation.NavigationManager
 import no.nordicsemi.android.common.permission.RequireBluetooth
 import no.nordicsemi.android.common.theme.view.NordicAppBar
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClientScreen(
     navigationManager: NavigationManager,
@@ -60,19 +60,21 @@ fun ClientScreen(
                 }
                 ConnectionState.Ready -> {
                     val question by clientViewModel.question.collectAsState()
-                    var answerReceived by remember {
-                        mutableStateOf(-1)
-                    }
-                    LaunchedEffect(key1 = Unit ){
-                        clientViewModel.answer
-                            .collect{ answer ->
-                                if (answer != null) {
-                                    answerReceived = answer
-                                }
-                            }
-                    }
-                    question?.let {
-                        QuestionScreenClient(navigationManager, it, answerReceived)
+
+                    question?.let { q ->
+                        val correctAnswerId by clientViewModel.answer.collectAsState()
+                        val selectedAnswerId by clientViewModel.selectedAnswer
+                        val ticks by clientViewModel.ticks.collectAsState()
+
+                        QuestionScreenClient(
+                            question = q,
+                            correctAnswerId = correctAnswerId,
+                            selectedAnswerId = selectedAnswerId,
+                            ticks = ticks,
+                            modifier = Modifier.fillMaxWidth()
+                        ) { answerChosen ->
+                            clientViewModel.sendAnswer(answerChosen)
+                        }
                     } ?: run {
                         OutlinedCard(
                             modifier = Modifier
@@ -108,6 +110,12 @@ fun ClientScreen(
 
         }
     }
+}
+
+@Composable
+@OptIn(ExperimentalMaterial3Api::class)
+private fun AskDeviceName(textState: String, onTextChange: (String) -> Unit) {
+    TextField(value = textState, onValueChange = onTextChange)
 }
 
 
