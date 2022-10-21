@@ -1,28 +1,34 @@
 package no.nordicsemi.android.ble.example.game.client.viewmodel
 
-import android.app.Application
 import android.content.Context
 import android.util.Log
-import androidx.lifecycle.AndroidViewModel
+import androidx.compose.runtime.MutableState
+import androidx.compose.runtime.State
+import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.CoroutineExceptionHandler
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import no.nordicsemi.android.ble.example.game.client.repository.ClientConnection
 import no.nordicsemi.android.ble.example.game.client.repository.ScannerRepository
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
+import no.nordicsemi.android.ble.example.game.timer.TimerViewModel
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.ble.ktx.stateAsFlow
-import no.nordicsemi.android.common.navigation.NavigationManager
 import javax.inject.Inject
 
 @HiltViewModel
 class ClientViewModel @Inject constructor(
-    @ApplicationContext context: Context,
+    @ApplicationContext private val context: Context,
     private val scannerRepository: ScannerRepository,
-    private val navigationManager: NavigationManager,
-) : AndroidViewModel(context as Application) {
+) : TimerViewModel() {
     private var clientManager: ClientConnection? = null
     private var job: Job? = null
 
@@ -30,6 +36,8 @@ class ClientViewModel @Inject constructor(
     val question = _question.asStateFlow()
     private val _answer: MutableStateFlow<Int?> = MutableStateFlow(null)
     val answer = _answer.asStateFlow()
+    private val _selectedAnswer: MutableState<Int?> = mutableStateOf(null)
+    val selectedAnswer: State<Int?> = _selectedAnswer
 
     private val _state: MutableStateFlow<ConnectionState> =
         MutableStateFlow(ConnectionState.Initializing)
@@ -43,11 +51,7 @@ class ClientViewModel @Inject constructor(
         job = viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
             val device = scannerRepository.searchForServer()
 
-            ClientConnection(
-                getApplication(),
-                viewModelScope,
-                device
-            )
+            ClientConnection(context, viewModelScope, device)
                 .apply {
                     stateAsFlow()
                         .onEach {
@@ -57,7 +61,9 @@ class ClientViewModel @Inject constructor(
                     question
                         .onEach {
                             _answer.value = null
+                            _selectedAnswer.value = null
                             _question.value = it
+                            startCountDown()
                         }
                         .launchIn(viewModelScope)
                     answer
@@ -79,5 +85,19 @@ class ClientViewModel @Inject constructor(
 
         clientManager?.release()
         clientManager = null
+    }
+
+
+    fun sendAnswer(answerId: Int) {
+        // TODO
+        _selectedAnswer.value = answerId
+
+        val exceptionHandler = CoroutineExceptionHandler { _, t ->
+            // Global handler
+            Log.e("AAA", "Error", t)
+        }
+        viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
+            clientManager?.sendSelectedAnswer(answerId)
+        }
     }
 }

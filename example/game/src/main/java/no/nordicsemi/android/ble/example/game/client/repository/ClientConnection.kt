@@ -10,6 +10,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import no.nordicsemi.android.ble.BleManager
 import no.nordicsemi.android.ble.example.game.client.data.Request
+import no.nordicsemi.android.ble.example.game.proto.OpCodeProto
+import no.nordicsemi.android.ble.example.game.proto.RequestProto
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
 import no.nordicsemi.android.ble.example.game.spec.DeviceSpecifications
 import no.nordicsemi.android.ble.example.game.spec.PacketMerger
@@ -79,6 +81,23 @@ class ClientConnection(
             .useAutoConnect(false)
             .timeout(100_000)
             .suspend()
+    }
+
+    suspend fun sendSelectedAnswer(answer:Int) {
+        val result = RequestProto(OpCodeProto.RESPONSE, answerId = answer)
+        val resultByteArray = result.encode()
+        writeCharacteristic(
+            characteristic,
+            resultByteArray,
+            BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+        ).suspend()
+    }
+    fun sendDeviceName(value: String){
+        writeCharacteristic(
+            characteristic,
+            value.toByteArray(),
+            BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
+        )
     }
 
     fun release() {
