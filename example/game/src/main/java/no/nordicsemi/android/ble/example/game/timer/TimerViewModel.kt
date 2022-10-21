@@ -9,10 +9,13 @@ import kotlinx.coroutines.flow.transform
 import kotlinx.coroutines.launch
 import kotlin.time.Duration.Companion.seconds
 
-open class TimerViewModel: ViewModel() {
-    val ticksTotal = 20_000L
+object Timer {
+    const val TOTAL_TIME = 20_000L
+}
 
-    private val _ticks = MutableStateFlow(ticksTotal)
+open class TimerViewModel: ViewModel() {
+
+    private val _ticks = MutableStateFlow(Timer.TOTAL_TIME)
     val ticks = _ticks.asStateFlow()
 
     val timerFinished = _ticks.transform { value ->
@@ -23,6 +26,8 @@ open class TimerViewModel: ViewModel() {
 
     fun startCountDown() {
         viewModelScope.launch {
+            _ticks.value = Timer.TOTAL_TIME
+
             while (_ticks.value > 0) {
                 delay(1.seconds)
                 _ticks.value -= 1_000
