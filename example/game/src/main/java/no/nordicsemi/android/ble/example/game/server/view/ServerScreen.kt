@@ -89,7 +89,7 @@ fun ServerScreen(
                             modifier = Modifier.fillMaxWidth(),
                             onNextPressed = {
                                 coroutineScope.launch {
-                                    serverViewModel.increaseIndex()
+                                    serverViewModel.showNextQuestion()
                                 }
                             },
                         ) { answerChosen ->
