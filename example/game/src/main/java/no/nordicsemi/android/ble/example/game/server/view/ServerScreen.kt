@@ -9,12 +9,10 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
-import kotlinx.coroutines.launch
 import no.nordicsemi.android.ble.example.game.R
 import no.nordicsemi.android.ble.example.game.server.viewmodel.DownloadingQuestions
 import no.nordicsemi.android.ble.example.game.server.viewmodel.Round
@@ -38,7 +36,6 @@ fun ServerScreen(
         RequireBluetooth {
             val serverViewModel: ServerViewModel = hiltViewModel()
             val gameState by serverViewModel.state.collectAsState()
-            val questionState by serverViewModel.uiState.collectAsState(initial = null)
 
             when (val currentState = gameState) {
                 is WaitingForPlayers -> when (currentState.connectedPlayers) {
@@ -75,26 +72,19 @@ fun ServerScreen(
                     Text(text = "Downloading...")
                 }
                 is Round -> {
-                    questionState?.let { question ->
-                        val selectedAnswerId by serverViewModel.selectedAnswer
-                        val correctAnswerId by serverViewModel.correctAnswerId.collectAsState()
-                        val ticks by serverViewModel.ticks.collectAsState()
-                        val coroutineScope = rememberCoroutineScope()
+                    val selectedAnswerId by serverViewModel.selectedAnswer
+                    val correctAnswerId by serverViewModel.correctAnswerId.collectAsState()
+                    val ticks by serverViewModel.ticks.collectAsState()
 
-                        QuestionsScreenServer(
-                            question = question,
-                            selectedAnswerId = selectedAnswerId,
-                            correctAnswerId = correctAnswerId,
-                            ticks = ticks,
-                            modifier = Modifier.fillMaxWidth(),
-                            onNextPressed = {
-                                coroutineScope.launch {
-                                    serverViewModel.showNextQuestion()
-                                }
-                            },
-                        ) { answerChosen ->
-                            serverViewModel.saveScore(answerChosen)
-                        }
+                    QuestionsScreenServer(
+                        question = currentState.question,
+                        selectedAnswerId = selectedAnswerId,
+                        correctAnswerId = correctAnswerId,
+                        ticks = ticks,
+                        modifier = Modifier.fillMaxWidth(),
+                        onNextPressed = { serverViewModel.showNextQuestion() },
+                    ) { answerChosen ->
+                        serverViewModel.selectedAnswerServer(answerChosen)
                     }
                 }
             }
