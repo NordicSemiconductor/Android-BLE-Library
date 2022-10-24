@@ -1,5 +1,6 @@
 package no.nordicsemi.android.ble.example.game.client.repository
 
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
@@ -15,6 +16,7 @@ import no.nordicsemi.android.ble.example.game.proto.RequestProto
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
 import no.nordicsemi.android.ble.example.game.spec.DeviceSpecifications
 import no.nordicsemi.android.ble.example.game.spec.PacketMerger
+import no.nordicsemi.android.ble.example.game.spec.PacketSplitter
 import no.nordicsemi.android.ble.ktx.asResponseFlow
 import no.nordicsemi.android.ble.ktx.suspend
 
@@ -23,6 +25,7 @@ class ClientConnection(
     context: Context,
     private val scope: CoroutineScope,
     private val device: BluetoothDevice,
+    leAdapter: BluetoothAdapter
 ): BleManager(context) {
     var characteristic: BluetoothGattCharacteristic? = null
 
@@ -31,8 +34,10 @@ class ClientConnection(
     private val _answer = MutableSharedFlow<Int>()
     val answer = _answer.asSharedFlow()
 
+    val deviceName: String = leAdapter.name
+
     override fun log(priority: Int, message: String) {
-        Log.println(priority, " AAA Client Connection", message) // TODO: Remove all logs with AAA or HHH tags
+        Log.println(priority, " AAA Client ", message) // TODO: Remove all logs with AAA or HHH tags
     }
 
     override fun getMinLogPriority(): Int {
@@ -82,7 +87,9 @@ class ClientConnection(
             .timeout(100_000)
             .suspend()
     }
-
+    /**
+     * Send selected answer to the server.
+     */
     suspend fun sendSelectedAnswer(answer:Int) {
         val result = RequestProto(OpCodeProto.RESPONSE, answerId = answer)
         val resultByteArray = result.encode()
@@ -90,14 +97,24 @@ class ClientConnection(
             characteristic,
             resultByteArray,
             BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
-        ).suspend()
+        )
+            .split(PacketSplitter())
+            .suspend()
     }
-    fun sendDeviceName(value: String){
+    /**
+     * Send device name to the server.
+     */
+    suspend fun sendDeviceName(name: String){
+        Log.d("AAA Client 12", "sendDeviceName: $name ")
+        val deviceName = RequestProto(OpCodeProto.NAME, name = name)
+        val deviceNameByteArray = deviceName.encode()
         writeCharacteristic(
             characteristic,
-            value.toByteArray(),
+            deviceNameByteArray,
             BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
         )
+            .split(PacketSplitter())
+            .suspend()
     }
 
     fun release() {

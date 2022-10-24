@@ -9,10 +9,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineExceptionHandler
-import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.*
+import no.nordicsemi.android.ble.example.game.client.view.Result
 import kotlinx.coroutines.flow.*
-import kotlinx.coroutines.launch
+import no.nordicsemi.android.ble.example.game.client.view.Results
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
 import no.nordicsemi.android.ble.example.game.quiz.repository.QuestionRepository
 import no.nordicsemi.android.ble.example.game.quiz.repository.Questions
@@ -36,12 +36,13 @@ class ServerViewModel @Inject constructor(
 
     private var _state = MutableStateFlow<GameState>(WaitingForPlayers(0))
     val state = _state.asStateFlow()
-    private val _uiState = MutableSharedFlow<Question>(replay = 1)
-    val uiState = _uiState.asSharedFlow()
     private val gameStartedFlag = mutableStateOf(false)
 
     private val _clientAnswer = MutableSharedFlow<Int>()
     val clientAnswer = _clientAnswer.asSharedFlow()
+
+    private val _clientDevice = MutableSharedFlow<String>()
+    val clientDevice = _clientDevice.asSharedFlow()
 
     private val _selectedAnswer: MutableState<Int?> = mutableStateOf(null)
     val selectedAnswer: State<Int?> = _selectedAnswer
@@ -92,7 +93,6 @@ class ServerViewModel @Inject constructor(
                 }
             }
             .launchIn(viewModelScope)
-
         // start game :)
         _selectedAnswer.value = null
         _correctAnswerId.value = null
@@ -109,7 +109,6 @@ class ServerViewModel @Inject constructor(
             }
 
             override fun onDeviceConnectedToServer(device: BluetoothDevice) {
-
                 ServerConnection(context, viewModelScope, device)
                     .apply {
                         stateAsFlow()
@@ -142,7 +141,17 @@ class ServerViewModel @Inject constructor(
                             .onEach {
                                 /* TODO handle response received */
                                 _clientAnswer.tryEmit(it)
-                                Log.d("AAA Client Answer 2", "onDeviceConnectedToServer: $it")
+                                saveScore(it, deviceName = "Client-123")
+                            }
+                            .launchIn(viewModelScope)
+                    }
+                    .apply {
+                        clientDeviceName
+                            .onEach {
+                                /* TODO handle device name received from the client(s) */
+                                _clientDevice.tryEmit(it)
+                                Result(it, 0)
+                                println("Result, ${Result(it, 0)}")
                             }
                             .launchIn(viewModelScope)
                     }
@@ -188,20 +197,20 @@ class ServerViewModel @Inject constructor(
         stopServer()
     }
 
-    fun saveScore(selectedAnswer: Int, deviceName: String = "Server-123") {
+    fun selectedAnswerServer(selectedAnswer: Int) {
         _selectedAnswer.value = selectedAnswer
+        saveScore(selectedAnswer, deviceName = "Server-123")
     }
 
-    suspend fun showNextQuestion() {
-        index += 1
-        if (index < totalQuestions) {
-            questionSaved?.let { showQuestion(it) }
-        } else {
-            Log.d(
-                "AAAAQQQ Server ViewModel 999",
-                "Game over: All questions are displayed \n Show Score"
-            )
+    val result: Results? = null
+    private fun saveScore(selectedAnswer: Int, deviceName: String) {
+        questionSaved?.let { question ->
+            if (selectedAnswer == question.questions[index].correctAnswerId) {
+                Log.d(
+                    "AAA Correct Answer 888",
+                    "selectedAnswerServer: $selectedAnswer $deviceName "
+                )
+            }
         }
     }
 }
-

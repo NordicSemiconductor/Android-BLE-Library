@@ -16,6 +16,7 @@ import no.nordicsemi.android.ble.example.game.quiz.repository.Question
 import no.nordicsemi.android.ble.example.game.quiz.repository.toProto
 import no.nordicsemi.android.ble.example.game.server.data.QuestionResponse
 import no.nordicsemi.android.ble.example.game.spec.DeviceSpecifications
+import no.nordicsemi.android.ble.example.game.spec.PacketMerger
 import no.nordicsemi.android.ble.example.game.spec.PacketSplitter
 import no.nordicsemi.android.ble.ktx.asResponseFlow
 import no.nordicsemi.android.ble.ktx.suspend
@@ -29,6 +30,10 @@ class ServerConnection(
 
     private val _replies = MutableSharedFlow<Int>()
     val replies = _replies.asSharedFlow()
+
+    private val _clientDeviceName = MutableSharedFlow<String>()
+    val clientDeviceName = _clientDeviceName.asSharedFlow()
+
 
     override fun log(priority: Int, message: String) {
         Log.println(priority, "AAAServer", message)
@@ -56,17 +61,17 @@ class ServerConnection(
         @OptIn(ExperimentalCoroutinesApi::class)
         override fun initialize() {
             setWriteCallback(serverCharacteristic)
+                .merge(PacketMerger())
                 .asResponseFlow<QuestionResponse>()
-                .mapNotNull { it.answerId }
-                .onEach { _replies.emit(it) }
+                .onEach {
+                    it.answerId?.let { answer ->  _replies.emit(answer) }
+                    it.name?.let { name ->  _clientDeviceName.emit(name)
+                    }
+                }
                 .launchIn(scope)
 
-            // TODO
             waitUntilNotificationsEnabled(serverCharacteristic)
                 .enqueue()
-            // enable notifications, write user name, etc
-            // setNotificationCallback()
-            // enableNotifications().enqueue()
         }
 
         override fun onServicesInvalidated() {

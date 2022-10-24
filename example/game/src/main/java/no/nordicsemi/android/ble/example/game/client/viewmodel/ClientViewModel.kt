@@ -1,5 +1,6 @@
 package no.nordicsemi.android.ble.example.game.client.viewmodel
 
+import android.bluetooth.BluetoothAdapter
 import android.content.Context
 import android.util.Log
 import androidx.compose.runtime.MutableState
@@ -28,6 +29,7 @@ import javax.inject.Inject
 class ClientViewModel @Inject constructor(
     @ApplicationContext private val context: Context,
     private val scannerRepository: ScannerRepository,
+    private val leAdapter: BluetoothAdapter,
 ) : TimerViewModel() {
     private var clientManager: ClientConnection? = null
     private var job: Job? = null
@@ -38,7 +40,7 @@ class ClientViewModel @Inject constructor(
     val answer = _answer.asStateFlow()
     private val _selectedAnswer: MutableState<Int?> = mutableStateOf(null)
     val selectedAnswer: State<Int?> = _selectedAnswer
-
+    val deviceName = clientManager?.deviceName
     private val _state: MutableStateFlow<ConnectionState> =
         MutableStateFlow(ConnectionState.Initializing)
     val state = _state.asStateFlow()
@@ -51,7 +53,7 @@ class ClientViewModel @Inject constructor(
         job = viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
             val device = scannerRepository.searchForServer()
 
-            ClientConnection(context, viewModelScope, device)
+            ClientConnection(context, viewModelScope, device, leAdapter )
                 .apply {
                     stateAsFlow()
                         .onEach {
@@ -72,6 +74,8 @@ class ClientViewModel @Inject constructor(
                 }
                 .apply {
                     connect()
+                    // Send device name
+                    sendDeviceName(deviceName)
                 }
                 .apply { clientManager = this }
         }
