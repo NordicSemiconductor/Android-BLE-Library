@@ -6,12 +6,14 @@ enum OpCodeProto {
   NEW_QUESTION = 0;
   RESPONSE = 1;
   RESULT = 2;
+  NAME = 3;
 }
 
 message RequestProto {
   OpCodeProto opCode     = 1;
   QuestionProto question = 2;
   int32 answerId         = 3;
+  string name            = 4;
 }
 
 message QuestionProto {
