@@ -69,6 +69,8 @@ fun QuestionContent(
                     )
                     .padding(16.dp),
                 text = answer.text
+                    .replace("&quot;", "'")
+                    .replace("&#039;", "'")
             )
         }
     }
