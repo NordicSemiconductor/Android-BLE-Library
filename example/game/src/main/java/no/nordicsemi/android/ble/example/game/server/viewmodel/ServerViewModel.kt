@@ -62,6 +62,7 @@ class ServerViewModel @Inject constructor(
     fun startGame(category: Int? = null) {
         advertiser.stopAdvertising()
         gameStartedFlag.value = true
+        index = 0
 
         viewModelScope.launch {
             _state.emit(DownloadingQuestions)
@@ -69,35 +70,59 @@ class ServerViewModel @Inject constructor(
             questionSaved = questions
 
             // TODO send questions
-            showQuestion(questions)
-
+            showQuestion(questions.questions[0])
         }
     }
 
-    private suspend fun showQuestion(questions: Questions) {
+    fun showNextQuestion() {
+        viewModelScope.launch {
+            questionSaved?.let { questions ->
+                // Check if we have more questions.
+                index.takeIf { it + 1 < totalQuestions }
+                    // Increment the counter.
+                    ?.let { ++index }
+                    // Get next questions.
+                    ?.let { questions.questions[it] }
+                    // And show it to the user.
+                    ?.let { showQuestion(it) }
+                // Otherwise...
+                    ?: run {
+                        Log.d(
+                            "AAAAQQQ Server ViewModel 999",
+                            "Game over: All questions are displayed \n Show Score"
+                        )
+                    }
+            }
+        }
+    }
+
+    private suspend fun showQuestion(question: Question) {
+
         clients.forEach {
             if (gameStartedFlag.value) {
-                it.sendQuestion(questions.questions[index])
+                it.sendQuestion(question)
+                Log.d("AAA Server 44", "showQuestion: $question")
             }
         }
 
         startCountDown()
 
-        timerFinished
+        var job: Job? = null
+        job = timerFinished
             .onEach {
                 clients.forEach {
-                    questions.questions[index].correctAnswerId?.let { answer ->
+                    question.correctAnswerId?.let { answer ->
                         it.sendCorrectAnswerId(answer)
                         _correctAnswerId.value = answer
                     }
                 }
+                job?.cancel()
             }
             .launchIn(viewModelScope)
         // start game :)
         _selectedAnswer.value = null
         _correctAnswerId.value = null
-        _uiState.emit(questions.questions[index])
-        _state.emit(Round(questions.questions[index]))
+        _state.value = Round(question)
     }
 
     private fun startServer() {
@@ -171,7 +196,7 @@ class ServerViewModel @Inject constructor(
             }
 
             override fun onDeviceDisconnectedFromServer(device: BluetoothDevice) {
-                Log.w("AAA", "onDeviceDisconnectedFromServer")
+                Log.w("onDeviceDisconnectedFromServer", "Device Disconnected From the Server!")
             }
 
         })
