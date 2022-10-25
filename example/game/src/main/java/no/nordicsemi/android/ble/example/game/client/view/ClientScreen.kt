@@ -16,7 +16,6 @@ import no.nordicsemi.android.common.navigation.NavigationManager
 import no.nordicsemi.android.common.permission.RequireBluetooth
 import no.nordicsemi.android.common.theme.view.NordicAppBar
 
-@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClientScreen(
     navigationManager: NavigationManager,
@@ -112,10 +111,5 @@ fun ClientScreen(
     }
 }
 
-@Composable
-@OptIn(ExperimentalMaterial3Api::class)
-private fun AskDeviceName(textState: String, onTextChange: (String) -> Unit) {
-    TextField(value = textState, onValueChange = onTextChange)
-}
 
 

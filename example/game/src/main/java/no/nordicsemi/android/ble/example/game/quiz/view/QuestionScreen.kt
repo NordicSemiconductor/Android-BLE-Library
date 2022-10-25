@@ -8,7 +8,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
+import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -17,7 +17,6 @@ import no.nordicsemi.android.ble.example.game.client.view.QuestionScreenClient
 import no.nordicsemi.android.ble.example.game.quiz.repository.Answer
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
 import no.nordicsemi.android.ble.example.game.timer.ShowTimer
-import no.nordicsemi.android.ble.example.game.timer.Timer
 import no.nordicsemi.android.common.theme.NordicTheme
 
 @Composable
@@ -29,17 +28,17 @@ fun QuestionContent(
     onAnswerSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
 ) {
-    ShowTimer(
-        ticks = ticks,
-        progress = ticks.toFloat() / Timer.TOTAL_TIME,
-        modifier = modifier,
-    )
-    val isTimerRunning = ticks > 0
-
     Column(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
+        ShowTimer(
+            key = question,
+            duration = ticks,
+            modifier = Modifier.fillMaxWidth().padding(16.dp),
+        )
+        val isTimerRunning = ticks > 0
+
         Text(
             text = question.question
                 .replace("&quot;", "'")
