@@ -20,6 +20,7 @@ import no.nordicsemi.android.ble.example.game.spec.PacketMerger
 import no.nordicsemi.android.ble.example.game.spec.PacketSplitter
 import no.nordicsemi.android.ble.ktx.asResponseFlow
 import no.nordicsemi.android.ble.ktx.suspend
+import no.nordicsemi.android.ble.example.game.client.view.Result
 
 class ServerConnection(
     context: Context,
@@ -33,6 +34,9 @@ class ServerConnection(
 
     private val _clientDeviceName = MutableSharedFlow<String>()
     val clientDeviceName = _clientDeviceName.asSharedFlow()
+
+    private val _result = MutableSharedFlow<Result>()
+    val result = _result.asSharedFlow()
 
 
     override fun log(priority: Int, message: String) {
@@ -65,8 +69,8 @@ class ServerConnection(
                 .asResponseFlow<QuestionResponse>()
                 .onEach {
                     it.answerId?.let { answer ->  _replies.emit(answer) }
-                    it.name?.let { name ->  _clientDeviceName.emit(name)
-                    }
+                    it.name?.let { name ->  _clientDeviceName.emit(name)}
+                    it.result?.let { result ->  _result.emit(result) }
                 }
                 .launchIn(scope)
 

@@ -12,10 +12,10 @@ import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
 import no.nordicsemi.android.ble.example.game.client.view.Result
 import kotlinx.coroutines.flow.*
-import no.nordicsemi.android.ble.example.game.client.view.Results
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
 import no.nordicsemi.android.ble.example.game.quiz.repository.QuestionRepository
 import no.nordicsemi.android.ble.example.game.quiz.repository.Questions
+import no.nordicsemi.android.ble.example.game.server.data.ClientResult
 import no.nordicsemi.android.ble.example.game.server.repository.AdvertisingManager
 import no.nordicsemi.android.ble.example.game.server.repository.ServerConnection
 import no.nordicsemi.android.ble.example.game.server.repository.ServerManager
@@ -77,15 +77,10 @@ class ServerViewModel @Inject constructor(
     fun showNextQuestion() {
         viewModelScope.launch {
             questionSaved?.let { questions ->
-                // Check if we have more questions.
                 index.takeIf { it + 1 < totalQuestions }
-                    // Increment the counter.
                     ?.let { ++index }
-                    // Get next questions.
                     ?.let { questions.questions[it] }
-                    // And show it to the user.
                     ?.let { showQuestion(it) }
-                // Otherwise...
                     ?: run {
                         Log.d(
                             "AAAAQQQ Server ViewModel 999",
@@ -119,7 +114,6 @@ class ServerViewModel @Inject constructor(
                 job?.cancel()
             }
             .launchIn(viewModelScope)
-        // start game :)
         _selectedAnswer.value = null
         _correctAnswerId.value = null
         _state.value = Round(question)
@@ -130,7 +124,7 @@ class ServerViewModel @Inject constructor(
         serverManager.setServerObserver(object : ServerObserver {
 
             override fun onServerReady() {
-                Log.w("AAA startServer", "onServerReady")
+                Log.w("Stat Server", "Server is Ready!!")
             }
 
             override fun onDeviceConnectedToServer(device: BluetoothDevice) {
@@ -164,19 +158,21 @@ class ServerViewModel @Inject constructor(
                     .apply {
                         replies
                             .onEach {
-                                /* TODO handle response received */
                                 _clientAnswer.tryEmit(it)
-                                saveScore(it, deviceName = "Client-123")
                             }
                             .launchIn(viewModelScope)
                     }
                     .apply {
                         clientDeviceName
                             .onEach {
-                                /* TODO handle device name received from the client(s) */
                                 _clientDevice.tryEmit(it)
-                                Result(it, 0)
-                                println("Result, ${Result(it, 0)}")
+                            }
+                            .launchIn(viewModelScope)
+                    }
+                    .apply {
+                        result
+                            .onEach {
+                                saveScore(it)
                             }
                             .launchIn(viewModelScope)
                     }
@@ -196,7 +192,7 @@ class ServerViewModel @Inject constructor(
             }
 
             override fun onDeviceDisconnectedFromServer(device: BluetoothDevice) {
-                Log.w("onDeviceDisconnectedFromServer", "Device Disconnected From the Server!")
+                Log.w("Device Disconnected From Server", "Device Disconnected From the Server!")
             }
 
         })

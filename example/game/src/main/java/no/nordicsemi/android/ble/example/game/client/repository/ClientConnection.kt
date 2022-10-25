@@ -11,6 +11,8 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import no.nordicsemi.android.ble.BleManager
 import no.nordicsemi.android.ble.example.game.client.data.Request
+import no.nordicsemi.android.ble.example.game.client.view.Result
+import no.nordicsemi.android.ble.example.game.client.view.toProto
 import no.nordicsemi.android.ble.example.game.proto.OpCodeProto
 import no.nordicsemi.android.ble.example.game.proto.RequestProto
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
@@ -88,10 +90,10 @@ class ClientConnection(
             .suspend()
     }
     /**
-     * Send selected answer to the server.
+     * Send selected answer along with the device name to the server.
      */
     suspend fun sendSelectedAnswer(answer:Int) {
-        val result = RequestProto(OpCodeProto.RESPONSE, answerId = answer)
+        val result = RequestProto(OpCodeProto.RESULT, result = Result(deviceName, answer).toProto())
         val resultByteArray = result.encode()
         writeCharacteristic(
             characteristic,
@@ -105,7 +107,6 @@ class ClientConnection(
      * Send device name to the server.
      */
     suspend fun sendDeviceName(name: String){
-        Log.d("AAA Client 12", "sendDeviceName: $name ")
         val deviceName = RequestProto(OpCodeProto.NAME, name = name)
         val deviceNameByteArray = deviceName.encode()
         writeCharacteristic(
