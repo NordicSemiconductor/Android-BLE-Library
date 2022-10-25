@@ -14,11 +14,17 @@ message RequestProto {
   QuestionProto question = 2;
   int32 answerId         = 3;
   string name            = 4;
+  ResultProto result     =5;
 }
 
 message QuestionProto {
   string text                  = 1;
   repeated AnswerProto answers = 2;
+}
+
+message ResultProto {
+  string name             = 1;
+  int32 selectedAnswerId  = 2;
 }
 
 message AnswerProto {
