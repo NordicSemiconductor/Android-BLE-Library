@@ -53,6 +53,7 @@ class ServerViewModel @Inject constructor(
     var index = 0
 
     private val totalQuestions: Int = questionSaved?.questions?.size ?: 10
+    private val savedResult: MutableList<ClientResult> = mutableListOf()
 
     init {
         startServer()
@@ -220,18 +221,20 @@ class ServerViewModel @Inject constructor(
 
     fun selectedAnswerServer(selectedAnswer: Int) {
         _selectedAnswer.value = selectedAnswer
-        saveScore(selectedAnswer, deviceName = "Server-123")
+        saveScore(Result("Server-123", selectedAnswer))
     }
 
-    val result: Results? = null
-    private fun saveScore(selectedAnswer: Int, deviceName: String) {
+    private fun saveScore(result: Result) {
         questionSaved?.let { question ->
-            if (selectedAnswer == question.questions[index].correctAnswerId) {
-                Log.d(
-                    "AAA Correct Answer 888",
-                    "selectedAnswerServer: $selectedAnswer $deviceName "
-                )
-            }
+            if (result.selectedAnswerId == question.questions[index].correctAnswerId) updateScore(
+                result.deviceName
+            )
         }
+    }
+
+    private fun updateScore(deviceName: String) {
+        savedResult.find { it.deviceName == deviceName }
+            ?.let { it.score = it.score + 1 }
+            ?: run { savedResult.add(ClientResult(deviceName, 1)) }
     }
 }
