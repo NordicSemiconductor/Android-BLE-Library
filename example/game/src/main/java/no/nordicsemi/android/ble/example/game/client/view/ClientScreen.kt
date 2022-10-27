@@ -11,6 +11,8 @@ import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import no.nordicsemi.android.ble.example.game.R
 import no.nordicsemi.android.ble.example.game.client.viewmodel.ClientViewModel
+import no.nordicsemi.android.ble.example.game.quiz.view.ShowResult
+import no.nordicsemi.android.ble.example.game.quiz.view.AskPlayersName
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.common.navigation.NavigationManager
 import no.nordicsemi.android.common.permission.RequireBluetooth
@@ -80,10 +82,25 @@ fun ClientScreen(
                                 .fillMaxWidth()
                                 .padding(32.dp),
                         ) {
-                            Text(
-                                text = stringResource(id = R.string.connected),
-                                modifier = Modifier.padding(16.dp)
-                            )
+                            val openDialog = remember { mutableStateOf(true) }
+                            var playersName: String by remember { mutableStateOf("") }
+                            val onValueChange = { name: String -> playersName = name }
+                            val onSendClick = {
+                                if (playersName !=  "") {
+                                    clientViewModel.sendName(playersName)
+                                    openDialog.value = false
+                                }
+                            }
+
+                            if (openDialog.value) {
+                                AskPlayersName(playersName, onValueChange, onSendClick)
+                            }
+                            else {
+                                Text(
+                                    text = stringResource(id = R.string.connected),
+                                    modifier = Modifier.padding(16.dp)
+                                )
+                            }
                         }
                     }
                 }

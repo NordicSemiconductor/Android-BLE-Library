@@ -36,6 +36,9 @@ fun ServerScreen(
         RequireBluetooth {
             val serverViewModel: ServerViewModel = hiltViewModel()
             val gameState by serverViewModel.state.collectAsState()
+            val result by serverViewModel.savedResult.collectAsState()
+            val clients by serverViewModel.clients.collectAsState()
+            var playersName: String by remember { mutableStateOf("") }
 
             when (val currentState = gameState) {
                 is WaitingForPlayers -> when (currentState.connectedPlayers) {
@@ -62,8 +65,24 @@ fun ServerScreen(
                                 modifier = Modifier.padding(16.dp)
                             )
 
-                            Button(onClick = { serverViewModel.startGame() }) {
-                                Text(text = "Start game")
+                            val openDialog = remember { mutableStateOf(true) }
+                            val onValueChange = { name: String -> playersName = name }
+                            val onSendClick = {
+                                if (playersName != "") {
+                                    serverViewModel.savePlayersName(playersName)
+                                    openDialog.value = false
+                                }
+                            }
+                            if (openDialog.value) {
+                                AskPlayersName(playersName, onValueChange, onSendClick)
+                            } else {
+                                Button(
+                                    onClick = { serverViewModel.startGame() },
+                                    enabled = result.size > clients.size + 1,
+
+                                    ) {
+                                    Text(text = stringResource(id = R.string.start_game))
+                                }
                             }
                         }
                     }
