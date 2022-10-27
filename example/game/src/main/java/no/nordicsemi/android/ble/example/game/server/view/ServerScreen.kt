@@ -94,16 +94,21 @@ fun ServerScreen(
                     val selectedAnswerId by serverViewModel.selectedAnswer
                     val correctAnswerId by serverViewModel.correctAnswerId.collectAsState()
                     val ticks by serverViewModel.ticks.collectAsState()
+                    val isGameOver by serverViewModel.isGameOver
 
-                    QuestionsScreenServer(
-                        question = currentState.question,
-                        selectedAnswerId = selectedAnswerId,
-                        correctAnswerId = correctAnswerId,
-                        ticks = ticks,
-                        modifier = Modifier.fillMaxWidth(),
-                        onNextPressed = { serverViewModel.showNextQuestion() },
-                    ) { answerChosen ->
-                        serverViewModel.selectedAnswerServer(answerChosen)
+                    if (isGameOver == false) {
+                        QuestionsScreenServer(
+                            question = currentState.question,
+                            selectedAnswerId = selectedAnswerId,
+                            correctAnswerId = correctAnswerId,
+                            ticks = ticks,
+                            modifier = Modifier.fillMaxWidth(),
+                            onNextPressed = { serverViewModel.showNextQuestion() },
+                        ) { answerChosen ->
+                            serverViewModel.selectedAnswerServer(playersName, answerChosen)
+                        }
+                    } else {
+                        ShowResult(result = result)
                     }
                 }
             }

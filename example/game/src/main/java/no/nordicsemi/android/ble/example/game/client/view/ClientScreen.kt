@@ -66,15 +66,19 @@ fun ClientScreen(
                         val correctAnswerId by clientViewModel.answer.collectAsState()
                         val selectedAnswerId by clientViewModel.selectedAnswer
                         val ticks by clientViewModel.ticks.collectAsState()
+                        val finalResult by clientViewModel.finalResult.collectAsState()
 
-                        QuestionScreenClient(
-                            question = q,
-                            correctAnswerId = correctAnswerId,
-                            selectedAnswerId = selectedAnswerId,
-                            ticks = ticks,
-                            modifier = Modifier.fillMaxWidth()
-                        ) { answerChosen ->
-                            clientViewModel.sendAnswer(answerChosen)
+                        if (finalResult?.isGameOver == true) ShowResult(result = finalResult!!.finalResult)
+                        else {
+                            QuestionScreenClient(
+                                question = q,
+                                correctAnswerId = correctAnswerId,
+                                selectedAnswerId = selectedAnswerId,
+                                ticks = ticks,
+                                modifier = Modifier.fillMaxWidth()
+                            ) { answerChosen ->
+                                clientViewModel.sendAnswer(answerChosen)
+                            }
                         }
                     } ?: run {
                         OutlinedCard(
