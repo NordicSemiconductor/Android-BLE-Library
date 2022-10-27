@@ -36,10 +36,7 @@ class ServerViewModel @Inject constructor(
 
     private var _state = MutableStateFlow<GameState>(WaitingForPlayers(0))
     val state = _state.asStateFlow()
-    private val gameStartedFlag = mutableStateOf(false)
-
-    private val _clientAnswer = MutableSharedFlow<Int>()
-    val clientAnswer = _clientAnswer.asSharedFlow()
+    val isGameOver: MutableState<Boolean?> = mutableStateOf(null)
 
     private val _clientDevice = MutableSharedFlow<String>()
     val clientDevice = _clientDevice.asSharedFlow()
@@ -53,7 +50,7 @@ class ServerViewModel @Inject constructor(
     var index = 0
 
     private val totalQuestions: Int = questionSaved?.questions?.size ?: 10
-    private val savedResult: MutableList<ClientResult> = mutableListOf()
+    val savedResult: MutableStateFlow<List<FinalResult>> = MutableStateFlow(emptyList())
 
     init {
         startServer()
@@ -62,7 +59,7 @@ class ServerViewModel @Inject constructor(
 
     fun startGame(category: Int? = null) {
         advertiser.stopAdvertising()
-        gameStartedFlag.value = true
+        isGameOver.value = false
         index = 0
 
         viewModelScope.launch {
@@ -83,10 +80,10 @@ class ServerViewModel @Inject constructor(
                     ?.let { questions.questions[it] }
                     ?.let { showQuestion(it) }
                     ?: run {
-                        Log.d(
-                            "AAAAQQQ Server ViewModel 999",
-                            "Game over: All questions are displayed \n Show Score"
-                        )
+                        isGameOver.value = true
+                        clients.value.forEach {
+                            it.gameOver(ResultToClient(isGameOver.value!!, savedResult.value))
+                        }
                     }
             }
         }

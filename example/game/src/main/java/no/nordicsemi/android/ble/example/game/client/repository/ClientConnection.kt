@@ -33,6 +33,10 @@ class ClientConnection(
 
     private val _question = MutableSharedFlow<Question>()
     val question = _question.asSharedFlow()
+
+    private val _finalResult = MutableSharedFlow<ResultToClient>()
+    val finalResult = _finalResult.asSharedFlow()
+
     private val _answer = MutableSharedFlow<Int>()
     val answer = _answer.asSharedFlow()
 
@@ -68,6 +72,7 @@ class ClientConnection(
                 .onEach {
                     it.answerId?.let { answer -> _answer.emit(answer) }
                     it.question?.let { question ->  _question.emit(question) }
+                    it.resultToClient?.let { isGameOver ->  _finalResult.emit(isGameOver) }
                 }.launchIn(scope)
             enableNotifications(characteristic).enqueue()
         }

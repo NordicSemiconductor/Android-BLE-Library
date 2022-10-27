@@ -36,6 +36,10 @@ class ClientViewModel @Inject constructor(
 
     private val _question: MutableStateFlow<Question?> = MutableStateFlow(null)
     val question = _question.asStateFlow()
+
+    private val _finalResult: MutableStateFlow<ResultToClient?> = MutableStateFlow(null)
+    val finalResult = _finalResult.asStateFlow()
+
     private val _answer: MutableStateFlow<Int?> = MutableStateFlow(null)
     val answer = _answer.asStateFlow()
     private val _selectedAnswer: MutableState<Int?> = mutableStateOf(null)
@@ -70,6 +74,10 @@ class ClientViewModel @Inject constructor(
                         .launchIn(viewModelScope)
                     answer
                         .onEach { _answer.value = it }
+                        .launchIn(viewModelScope)
+
+                    finalResult
+                        .onEach { _finalResult.value = it }
                         .launchIn(viewModelScope)
                 }
                 .apply {

@@ -102,7 +102,10 @@ class ServerConnection(
 
     suspend fun gameOver(isGameOver: ByteArray) {
         log(Log.INFO, "Game over!!")
-        sendNotification(serverCharacteristic, isGameOver)
+        val request = RequestProto(OpCodeProto.GAME_OVER, resultToClient = resultToClient.toProto())
+        val requestByteArray = request.encode()
+        sendNotification(serverCharacteristic, requestByteArray)
+            .split(PacketSplitter())
             .suspend()
     }
 
