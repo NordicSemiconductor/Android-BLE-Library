@@ -32,8 +32,8 @@ class ServerViewModel @Inject constructor(
     private val serverManager: ServerManager,
     private val questionRepository: QuestionRepository,
 ) : TimerViewModel() {
-    private var clients = mutableListOf<ServerConnection>()
-
+    var clients: MutableStateFlow<List<ServerConnection>> = MutableStateFlow(emptyList())
+    private val TAG = "Server Connection"
     private var _state = MutableStateFlow<GameState>(WaitingForPlayers(0))
     val state = _state.asStateFlow()
     val isGameOver: MutableState<Boolean?> = mutableStateOf(null)
@@ -66,8 +66,7 @@ class ServerViewModel @Inject constructor(
             _state.emit(DownloadingQuestions)
             val questions = questionRepository.getQuestions(category = category)
             questionSaved = questions
-
-            // TODO send questions
+            /** Send first Question */
             showQuestion(questions.questions[0])
         }
     }
@@ -91,8 +90,8 @@ class ServerViewModel @Inject constructor(
 
     private suspend fun showQuestion(question: Question) {
 
-        clients.forEach {
-            if (gameStartedFlag.value) {
+        clients.value.forEach {
+            if (isGameOver.value == false) {
                 it.sendQuestion(question)
                 Log.d("AAA Server 44", "showQuestion: $question")
             }
@@ -103,7 +102,7 @@ class ServerViewModel @Inject constructor(
         var job: Job? = null
         job = timerFinished
             .onEach {
-                clients.forEach {
+                clients.value.forEach {
                     question.correctAnswerId?.let { answer ->
                         it.sendCorrectAnswerId(answer)
                         _correctAnswerId.value = answer
@@ -133,15 +132,15 @@ class ServerViewModel @Inject constructor(
                                 val currentState = _state.value
                                 when (connectionState) {
                                     ConnectionState.Ready -> {
-                                        clients.add(this)
-                                        _state.value = WaitingForPlayers(clients.size)
+                                        clients.value += this
+                                        _state.value = WaitingForPlayers(clients.value.size)
                                     }
                                     is ConnectionState.Disconnected -> {
-                                        clients.remove(this)
+                                        clients.value -= this
 
                                         when (currentState) {
                                             is WaitingForPlayers -> {
-                                                _state.value = WaitingForPlayers(clients.size)
+                                                _state.value = WaitingForPlayers(clients.value.size)
                                             }
                                             else -> {
                                                 // TODO handle disconnection during game
@@ -209,7 +208,7 @@ class ServerViewModel @Inject constructor(
         super.onCleared()
         stopAdvertising()
 
-        clients.forEach {
+        clients.value.forEach {
             it.release()
         }
 
