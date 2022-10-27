@@ -6,6 +6,8 @@ import no.nordicsemi.android.ble.example.game.proto.OpCodeProto
 import no.nordicsemi.android.ble.example.game.proto.RequestProto
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
 import no.nordicsemi.android.ble.example.game.quiz.repository.toQuestion
+import no.nordicsemi.android.ble.example.game.server.data.ResultToClient
+import no.nordicsemi.android.ble.example.game.server.data.toResultToClient
 import no.nordicsemi.android.ble.response.ReadResponse
 
 class Request: ReadResponse() {
@@ -17,6 +19,7 @@ class Request: ReadResponse() {
     var type: Type? = null
     var answerId: Int? = null
     var question: Question? = null
+    var resultToClient: ResultToClient? = null
 
 
     override fun onDataReceived(device: BluetoothDevice, data: Data) {
@@ -30,6 +33,10 @@ class Request: ReadResponse() {
             OpCodeProto.RESULT -> {
                 type = Type.ANSWER
                 answerId = request.answerId
+            }
+            OpCodeProto.GAME_OVER -> {
+                type = Type.GAME_OVER
+                resultToClient = request.resultToClient?.toResultToClient()
             }
             else -> {}
             // game over
