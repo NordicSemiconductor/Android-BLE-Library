@@ -41,7 +41,6 @@ class ScannerRepository @Inject constructor(
             }
 
             override fun onScanFailed(errorCode: Int) {
-                Log.d("Scan Fail:", "onScanFailed: $errorCode")
                 continuation.resumeWithException(ScanningException(errorCode))
             }
         }
