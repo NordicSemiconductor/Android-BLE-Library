@@ -29,13 +29,10 @@ class ServerConnection(
 ): BleManager(context) {
     var serverCharacteristic: BluetoothGattCharacteristic? = null
 
-    private val _replies = MutableSharedFlow<Int>()
-    val replies = _replies.asSharedFlow()
+    private val _playersName = MutableSharedFlow<String>()
+    val playersName = _playersName.asSharedFlow()
 
-    private val _clientDeviceName = MutableSharedFlow<String>()
-    val clientDeviceName = _clientDeviceName.asSharedFlow()
-
-    private val _result = MutableSharedFlow<Result>()
+    private val _result = MutableSharedFlow<ClientResult>()
     val result = _result.asSharedFlow()
 
 
@@ -68,8 +65,7 @@ class ServerConnection(
                 .merge(PacketMerger())
                 .asResponseFlow<QuestionResponse>()
                 .onEach {
-                    it.answerId?.let { answer ->  _replies.emit(answer) }
-                    it.name?.let { name ->  _clientDeviceName.emit(name)}
+                    it.name?.let { name ->  _playersName.emit(name)}
                     it.result?.let { result ->  _result.emit(result) }
                 }
                 .launchIn(scope)

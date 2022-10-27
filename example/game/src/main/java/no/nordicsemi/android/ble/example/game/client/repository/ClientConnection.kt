@@ -40,7 +40,7 @@ class ClientConnection(
     private val _answer = MutableSharedFlow<Int>()
     val answer = _answer.asSharedFlow()
 
-    val deviceName: String = leAdapter.name
+    var deviceName: String = ""
 
     override fun log(priority: Int, message: String) {
         Log.println(priority, " AAA Client ", message) // TODO: Remove all logs with AAA or HHH tags
@@ -111,7 +111,8 @@ class ClientConnection(
     /**
      * Send device name to the server.
      */
-    suspend fun sendDeviceName(name: String){
+    suspend fun sendPlayersName(name: String){
+        deviceName = name
         val deviceName = RequestProto(OpCodeProto.NAME, name = name)
         val deviceNameByteArray = deviceName.encode()
         writeCharacteristic(

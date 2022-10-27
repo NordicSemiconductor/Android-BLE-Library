@@ -160,17 +160,13 @@ class ServerViewModel @Inject constructor(
                             .launchIn(viewModelScope)
                     }
                     .apply {
-                        clientDeviceName
-                            .onEach {
-                                _clientDevice.tryEmit(it)
-                            }
+                        playersName
+                            .onEach { savePlayersName(it) }
                             .launchIn(viewModelScope)
                     }
                     .apply {
                         result
-                            .onEach {
-                                saveScore(it)
-                            }
+                            .onEach { saveScore(it) }
                             .launchIn(viewModelScope)
                     }
                     .apply {
@@ -196,6 +192,15 @@ class ServerViewModel @Inject constructor(
         serverManager.open()
     }
 
+    fun savePlayersName(playerName: String) {
+        if (playerName != "") {
+            savedResult.value += FinalResult(
+                name = playerName,
+                score = 0
+            )
+        }
+    }
+
     private fun stopServer() {
         serverManager.close()
     }
@@ -215,22 +220,21 @@ class ServerViewModel @Inject constructor(
         stopServer()
     }
 
-    fun selectedAnswerServer(selectedAnswer: Int) {
+    fun selectedAnswerServer(playerName: String, selectedAnswer: Int) {
         _selectedAnswer.value = selectedAnswer
-        saveScore(Result("Server-123", selectedAnswer))
+        saveScore(ClientResult(playerName, selectedAnswer))
     }
 
-    private fun saveScore(result: Result) {
+    private fun saveScore(result: ClientResult) {
         questionSaved?.let { question ->
-            if (result.selectedAnswerId == question.questions[index].correctAnswerId) updateScore(
-                result.deviceName
-            )
+            result.takeIf { it.selectedAnswerId == question.questions[index].correctAnswerId }
+                ?.let { updateScore(it.playersName) }
         }
     }
 
     private fun updateScore(deviceName: String) {
-        savedResult.find { it.deviceName == deviceName }
+        savedResult.value.find { it.name == deviceName }
             ?.let { it.score = it.score + 1 }
-            ?: run { savedResult.add(ClientResult(deviceName, 1)) }
+            ?: run { savedResult.value += (FinalResult(deviceName, 1)) }
     }
 }

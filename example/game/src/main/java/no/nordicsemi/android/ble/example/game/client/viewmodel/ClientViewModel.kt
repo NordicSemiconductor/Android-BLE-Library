@@ -82,8 +82,8 @@ class ClientViewModel @Inject constructor(
                 }
                 .apply {
                     connect()
-                    // Send device name
-                    sendDeviceName(deviceName)
+                    // Send players name
+                    sendPlayersName(deviceName)
                 }
                 .apply { clientManager = this }
         }
@@ -110,6 +110,15 @@ class ClientViewModel @Inject constructor(
         }
         viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
             clientManager?.sendSelectedAnswer(answerId)
+        }
+    }
+    fun sendName(playersName: String) {
+
+        val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+            Log.e("Exception", "Error", throwable)
+        }
+        viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
+            clientManager?.sendPlayersName(playersName)
         }
     }
 }
