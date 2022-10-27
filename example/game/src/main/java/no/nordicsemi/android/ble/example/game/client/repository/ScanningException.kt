@@ -1,3 +1,3 @@
 package no.nordicsemi.android.ble.example.game.client.repository
 
-class ScanningException(val errorCode: Int): Exception()
+data class ScanningException(val errorCode: Int): Exception()
