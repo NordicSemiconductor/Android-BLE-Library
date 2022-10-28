@@ -40,16 +40,7 @@ fun ServerScreen(
             when (val currentState = gameState) {
                 is WaitingForPlayers -> when (currentState.connectedPlayers) {
                     0 -> {
-                        OutlinedCard(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(32.dp),
-                        ) {
-                            Text(
-                                text = stringResource(id = R.string.looking_for_clients),
-                                modifier = Modifier.padding(16.dp)
-                            )
-                        }
+                        WaitingForClientsView()
                     }
                     else -> {
                         OutlinedCard(
@@ -127,5 +118,19 @@ fun ServerScreen(
                 }
             }
         }
+    }
+}
+
+@Composable
+private fun WaitingForClientsView() {
+    OutlinedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(32.dp),
+    ) {
+        Text(
+            text = stringResource(id = R.string.looking_for_clients),
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }
