@@ -1,16 +1,13 @@
 package no.nordicsemi.android.ble.example.game.client.viewmodel
 
 import android.content.Context
-import android.util.Log
 import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.State
 import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -31,7 +28,6 @@ class ClientViewModel @Inject constructor(
     private val scannerRepository: ScannerRepository,
 ) : TimerViewModel() {
     private var clientManager: ClientConnection? = null
-    private var job: Job? = null
 
     private val _question: MutableStateFlow<Question?> = MutableStateFlow(null)
     val question = _question.asStateFlow()
@@ -49,11 +45,7 @@ class ClientViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     init {
-        val exceptionHandler = CoroutineExceptionHandler { _, t ->
-            // Global handler
-            Log.e("Exception", "Error", t)
-        }
-        job = viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
+            viewModelScope.launch(Dispatchers.IO ) {
             val device = scannerRepository.searchForServer()
 
             ClientConnection(context, viewModelScope, device )
@@ -91,8 +83,6 @@ class ClientViewModel @Inject constructor(
 
     override fun onCleared() {
         super.onCleared()
-        job?.cancel()
-        job = null
 
         clientManager?.release()
         clientManager = null
@@ -102,19 +92,12 @@ class ClientViewModel @Inject constructor(
     fun sendAnswer(answerId: Int) {
         _selectedAnswer.value = answerId
 
-        val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
-            Log.e("Exception", "Error", throwable)
-        }
-        viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
+        viewModelScope.launch(Dispatchers.IO) {
             clientManager?.sendSelectedAnswer(answerId)
         }
     }
     fun sendName(playersName: String) {
-
-        val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
-            Log.e("Exception", "Error", throwable)
-        }
-        viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
+        viewModelScope.launch(Dispatchers.IO) {
             clientManager?.sendPlayersName(playersName)
         }
     }
