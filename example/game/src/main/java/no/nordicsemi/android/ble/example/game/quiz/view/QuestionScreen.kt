@@ -35,15 +35,14 @@ fun QuestionContent(
         ShowTimer(
             key = question,
             duration = ticks,
-            modifier = Modifier.fillMaxWidth().padding(16.dp),
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp),
         )
         val isTimerRunning = ticks > 0
 
         Text(
-            text = question.question
-                .replace("&quot;", "'")
-                .replace("&#039;", "'")
-                .replace("&ouml;","ö"),
+            text = question.question.replace(),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp),
@@ -67,9 +66,8 @@ fun QuestionContent(
                         ),
                     )
                     .padding(16.dp),
-                text = answer.text
-                    .replace("&quot;", "'")
-                    .replace("&#039;", "'")
+                text = answer.text.replace()
+
             )
         }
     }
@@ -92,12 +90,14 @@ fun Color(
 private fun QuestionScreenClient_Preview() {
     NordicTheme {
         QuestionScreenClient(
-            question = Question("How are you?", listOf(
-                Answer("Good", 0),
-                Answer("OK", 1),
-                Answer("Bad", 2),
-                Answer("Are you joking?", 3),
-            )),
+            question = Question(
+                "How are you?", listOf(
+                    Answer("Good", 0),
+                    Answer("OK", 1),
+                    Answer("Bad", 2),
+                    Answer("Are you joking?", 3),
+                )
+            ),
             correctAnswerId = 0,
             selectedAnswerId = 3,
             ticks = 4000,
