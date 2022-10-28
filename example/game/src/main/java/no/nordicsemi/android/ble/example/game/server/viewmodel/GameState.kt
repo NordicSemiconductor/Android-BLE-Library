@@ -2,12 +2,12 @@ package no.nordicsemi.android.ble.example.game.server.viewmodel
 
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
 
-sealed class GameState
+sealed interface GameState
 
-data class WaitingForPlayers(val connectedPlayers: Int): GameState()
+data class WaitingForPlayers(val connectedPlayers: Int): GameState
 
-object DownloadingQuestions: GameState()
+object DownloadingQuestions: GameState
 
 data class Round(
     val question: Question
-): GameState()
+): GameState
