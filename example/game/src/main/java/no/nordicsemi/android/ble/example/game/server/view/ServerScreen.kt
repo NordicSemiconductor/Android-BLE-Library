@@ -55,7 +55,8 @@ fun ServerScreen(
                         OutlinedCard(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(32.dp),
+                                .padding(32.dp)
+                                .clickable { serverViewModel.startGame() },
                         ) {
                             Text(
                                 text = "Connected clients: ${currentState.connectedPlayers}",
@@ -85,7 +86,7 @@ fun ServerScreen(
                     }
                 }
                 DownloadingQuestions -> {
-                    Text(text = "Downloading...")
+                    Text(text = stringResource(id = R.string.downloading))
                 }
                 is Round -> {
                     val selectedAnswerId by serverViewModel.selectedAnswer

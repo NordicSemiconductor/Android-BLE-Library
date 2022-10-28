@@ -16,8 +16,16 @@
     <string name="loading">Loading…</string>
     <string name="disconnected">Disconnected</string>
     <string name="initializing">Waiting for server to connect…</string>
+    <string name="downloading">Downloading…</string>
 
     <string name="next">Next</string>
     <string name="done">Done</string>
+
+    <string name="game_over">Game Over!!</string>
+    <string name="show_result">Show Result</string>
+    <string name="show_result_des">Click on \'Show Result\' to show result</string>
+
+    <string name="ask_players_name">Enter player\'s name</string>
+    <string name="send_players_name">Send</string>
 
 </resources>

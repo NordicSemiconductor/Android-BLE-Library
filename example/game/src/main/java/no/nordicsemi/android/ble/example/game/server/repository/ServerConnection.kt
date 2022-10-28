@@ -20,7 +20,9 @@ import no.nordicsemi.android.ble.example.game.spec.PacketMerger
 import no.nordicsemi.android.ble.example.game.spec.PacketSplitter
 import no.nordicsemi.android.ble.ktx.asResponseFlow
 import no.nordicsemi.android.ble.ktx.suspend
-import no.nordicsemi.android.ble.example.game.client.view.Result
+import no.nordicsemi.android.ble.example.game.server.data.ClientResult
+import no.nordicsemi.android.ble.example.game.server.data.ResultToClient
+import no.nordicsemi.android.ble.example.game.server.data.toProto
 
 class ServerConnection(
     context: Context,
@@ -28,6 +30,7 @@ class ServerConnection(
     private val device: BluetoothDevice,
 ): BleManager(context) {
     var serverCharacteristic: BluetoothGattCharacteristic? = null
+    private val TAG = "Server Connection"
 
     private val _playersName = MutableSharedFlow<String>()
     val playersName = _playersName.asSharedFlow()
@@ -37,7 +40,7 @@ class ServerConnection(
 
 
     override fun log(priority: Int, message: String) {
-        Log.println(priority, "AAAServer", message)
+        Log.println(priority, TAG, message)
     }
 
     override fun getMinLogPriority(): Int {
@@ -90,13 +93,10 @@ class ServerConnection(
             .suspend()
     }
 
-    suspend fun gameStart(isGameStarted: Boolean) {
-        log(Log.INFO, "Game Started : $isGameStarted")
-        sendNotification(serverCharacteristic, isGameStarted.toString().toByteArray())
-            .suspend()
-    }
-
-    suspend fun gameOver(isGameOver: ByteArray) {
+    /**
+     * send result after game over
+     */
+    suspend fun gameOver(resultToClient: ResultToClient) {
         log(Log.INFO, "Game over!!")
         val request = RequestProto(OpCodeProto.GAME_OVER, resultToClient = resultToClient.toProto())
         val requestByteArray = request.encode()
@@ -105,6 +105,9 @@ class ServerConnection(
             .suspend()
     }
 
+    /**
+     * send correct answer id
+     */
     suspend fun sendCorrectAnswerId(correctAnswerId: Int) {
         val request = RequestProto(OpCodeProto.RESULT, answerId = correctAnswerId)
         val requestByteArray = request.encode()
@@ -113,6 +116,9 @@ class ServerConnection(
             .suspend()
     }
 
+    /**
+     * send question
+     */
     suspend fun sendQuestion(question: Question) {
         val request = RequestProto(OpCodeProto.NEW_QUESTION, question = question.toProto())
         val requestByteArray = request.encode()

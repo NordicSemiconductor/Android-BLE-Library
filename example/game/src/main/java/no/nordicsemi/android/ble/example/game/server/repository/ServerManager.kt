@@ -12,9 +12,10 @@ import javax.inject.Inject
 class ServerManager @Inject constructor(
     @ApplicationContext context: Context,
 ): BleServerManager(context) {
+    private val TAG = "Server Manager"
 
     override fun log(priority: Int, message: String) {
-        Log.println(priority, "AAA", message)
+        Log.println(priority, TAG, message)
     }
 
     override fun getMinLogPriority(): Int {

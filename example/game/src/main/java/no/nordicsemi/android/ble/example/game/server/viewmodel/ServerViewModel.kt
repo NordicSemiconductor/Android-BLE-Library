@@ -10,12 +10,13 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
-import no.nordicsemi.android.ble.example.game.client.view.Result
+import no.nordicsemi.android.ble.example.game.server.data.ClientResult
 import kotlinx.coroutines.flow.*
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
 import no.nordicsemi.android.ble.example.game.quiz.repository.QuestionRepository
 import no.nordicsemi.android.ble.example.game.quiz.repository.Questions
-import no.nordicsemi.android.ble.example.game.server.data.ClientResult
+import no.nordicsemi.android.ble.example.game.server.data.FinalResult
+import no.nordicsemi.android.ble.example.game.server.data.ResultToClient
 import no.nordicsemi.android.ble.example.game.server.repository.AdvertisingManager
 import no.nordicsemi.android.ble.example.game.server.repository.ServerConnection
 import no.nordicsemi.android.ble.example.game.server.repository.ServerManager
@@ -77,6 +78,7 @@ class ServerViewModel @Inject constructor(
                 index.takeIf { it + 1 < totalQuestions }
                     ?.let { ++index }
                     ?.let { questions.questions[it] }
+                    /** Send Next Question */
                     ?.let { showQuestion(it) }
                     ?: run {
                         isGameOver.value = true
@@ -93,7 +95,6 @@ class ServerViewModel @Inject constructor(
         clients.value.forEach {
             if (isGameOver.value == false) {
                 it.sendQuestion(question)
-                Log.d("AAA Server 44", "showQuestion: $question")
             }
         }
 
@@ -121,7 +122,7 @@ class ServerViewModel @Inject constructor(
         serverManager.setServerObserver(object : ServerObserver {
 
             override fun onServerReady() {
-                Log.w("Stat Server", "Server is Ready!!")
+                Log.w("Start Server", "Server is Ready!!")
             }
 
             override fun onDeviceConnectedToServer(device: BluetoothDevice) {
@@ -153,13 +154,6 @@ class ServerViewModel @Inject constructor(
                             .launchIn(viewModelScope)
                     }
                     .apply {
-                        replies
-                            .onEach {
-                                _clientAnswer.tryEmit(it)
-                            }
-                            .launchIn(viewModelScope)
-                    }
-                    .apply {
                         playersName
                             .onEach { savePlayersName(it) }
                             .launchIn(viewModelScope)
@@ -172,10 +166,8 @@ class ServerViewModel @Inject constructor(
                     .apply {
                         useServer(serverManager)
 
-                        // TODO exceptions
                         val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
-                            // Global handler
-                            Log.e("AAA", "Error", throwable)
+                            Log.e(TAG, "Error", throwable)
                         }
                         viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
                             connect()
@@ -185,7 +177,7 @@ class ServerViewModel @Inject constructor(
             }
 
             override fun onDeviceDisconnectedFromServer(device: BluetoothDevice) {
-                Log.w("Device Disconnected From Server", "Device Disconnected From the Server!")
+                Log.w("Device Disconnected", "Device Disconnected From the Server!")
             }
 
         })

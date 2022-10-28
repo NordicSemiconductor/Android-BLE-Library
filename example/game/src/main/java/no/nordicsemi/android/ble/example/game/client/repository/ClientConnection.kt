@@ -1,6 +1,5 @@
 package no.nordicsemi.android.ble.example.game.client.repository
 
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
 import android.bluetooth.BluetoothGattCharacteristic
@@ -11,11 +10,12 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import no.nordicsemi.android.ble.BleManager
 import no.nordicsemi.android.ble.example.game.client.data.Request
-import no.nordicsemi.android.ble.example.game.client.view.Result
-import no.nordicsemi.android.ble.example.game.client.view.toProto
+import no.nordicsemi.android.ble.example.game.server.data.ClientResult
+import no.nordicsemi.android.ble.example.game.server.data.toProto
 import no.nordicsemi.android.ble.example.game.proto.OpCodeProto
 import no.nordicsemi.android.ble.example.game.proto.RequestProto
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
+import no.nordicsemi.android.ble.example.game.server.data.ResultToClient
 import no.nordicsemi.android.ble.example.game.spec.DeviceSpecifications
 import no.nordicsemi.android.ble.example.game.spec.PacketMerger
 import no.nordicsemi.android.ble.example.game.spec.PacketSplitter
@@ -27,8 +27,9 @@ class ClientConnection(
     context: Context,
     private val scope: CoroutineScope,
     private val device: BluetoothDevice,
-    leAdapter: BluetoothAdapter
 ): BleManager(context) {
+    private val TAG = "Client Connection"
+
     var characteristic: BluetoothGattCharacteristic? = null
 
     private val _question = MutableSharedFlow<Question>()
@@ -43,7 +44,7 @@ class ClientConnection(
     var deviceName: String = ""
 
     override fun log(priority: Int, message: String) {
-        Log.println(priority, " AAA Client ", message) // TODO: Remove all logs with AAA or HHH tags
+        Log.println(priority, TAG, message)
     }
 
     override fun getMinLogPriority(): Int {
@@ -98,7 +99,7 @@ class ClientConnection(
      * Send selected answer along with the device name to the server.
      */
     suspend fun sendSelectedAnswer(answer:Int) {
-        val result = RequestProto(OpCodeProto.RESULT, result = Result(deviceName, answer).toProto())
+        val result = RequestProto(OpCodeProto.RESULT, result = ClientResult(deviceName, answer).toProto())
         val resultByteArray = result.encode()
         writeCharacteristic(
             characteristic,
