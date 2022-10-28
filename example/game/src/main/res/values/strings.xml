@@ -27,5 +27,6 @@
 
     <string name="ask_players_name">Enter player\'s name</string>
     <string name="send_players_name">Send</string>
+    <string name="duplicate_name_error">Duplicate Name!!</string>
 
 </resources>

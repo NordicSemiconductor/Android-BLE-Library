@@ -64,19 +64,35 @@ fun ServerScreen(
                             )
 
                             val openDialog = remember { mutableStateOf(true) }
-                            val onValueChange = { name: String -> playersName = name }
+                            var isDuplicate by remember { mutableStateOf(false) }
+
+                            val onValueChange = { name: String ->
+                                playersName = name
+                                isDuplicate = false
+                            }
                             val onSendClick = {
                                 if (playersName != "") {
-                                    serverViewModel.savePlayersName(playersName)
-                                    openDialog.value = false
+                                    result.find { it.name == playersName }
+                                        ?.let {
+                                            isDuplicate = true
+                                        }
+                                        ?: run {
+                                            serverViewModel.savePlayersName(playersName)
+                                            openDialog.value = false
+                                        }
                                 }
                             }
                             if (openDialog.value) {
-                                AskPlayersName(playersName, onValueChange, onSendClick)
+                                AskPlayersName(
+                                    playersName = playersName,
+                                    isDuplicate = isDuplicate,
+                                    onValueChange = onValueChange,
+                                    onSendClick = onSendClick
+                                )
                             } else {
                                 Button(
                                     onClick = { serverViewModel.startGame() },
-                                    enabled = result.size > clients.size + 1,
+                                    enabled = result.size >= clients.size + 1,
 
                                     ) {
                                     Text(text = stringResource(id = R.string.start_game))

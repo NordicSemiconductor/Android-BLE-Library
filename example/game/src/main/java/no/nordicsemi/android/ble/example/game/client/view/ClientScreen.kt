@@ -33,6 +33,7 @@ fun ClientScreen(
         RequireBluetooth {
             val clientViewModel: ClientViewModel = hiltViewModel()
             val state by clientViewModel.state.collectAsState()
+            val finalResult by clientViewModel.finalResult.collectAsState()
 
             when (state) {
                 ConnectionState.Initializing -> {
@@ -66,7 +67,6 @@ fun ClientScreen(
                         val correctAnswerId by clientViewModel.answer.collectAsState()
                         val selectedAnswerId by clientViewModel.selectedAnswer
                         val ticks by clientViewModel.ticks.collectAsState()
-                        val finalResult by clientViewModel.finalResult.collectAsState()
 
                         if (finalResult?.isGameOver == true) ShowResult(result = finalResult!!.finalResult)
                         else {
@@ -88,18 +88,34 @@ fun ClientScreen(
                         ) {
                             val openDialog = remember { mutableStateOf(true) }
                             var playersName: String by remember { mutableStateOf("") }
-                            val onValueChange = { name: String -> playersName = name }
+                            var isDuplicate by remember { mutableStateOf(false) }
+
+                            val onValueChange = { name: String ->
+                                playersName = name
+                                isDuplicate = false
+                            }
+
                             val onSendClick = {
-                                if (playersName !=  "") {
-                                    clientViewModel.sendName(playersName)
-                                    openDialog.value = false
+                                if (playersName != "") {
+                                    finalResult?.finalResult?.find { it.name == playersName }
+                                        ?.let {
+                                            isDuplicate = true
+                                        }
+                                        ?: run {
+                                            clientViewModel.sendName(playersName)
+                                            openDialog.value = false
+                                        }
                                 }
                             }
 
                             if (openDialog.value) {
-                                AskPlayersName(playersName, onValueChange, onSendClick)
-                            }
-                            else {
+                                AskPlayersName(
+                                    playersName = playersName,
+                                    isDuplicate = isDuplicate,
+                                    onValueChange = onValueChange,
+                                    onSendClick = onSendClick
+                                )
+                            } else {
                                 Text(
                                     text = stringResource(id = R.string.connected),
                                     modifier = Modifier.padding(16.dp)
@@ -129,6 +145,56 @@ fun ClientScreen(
             }
 
         }
+    }
+}
+
+@Composable
+private fun LoadingView() {
+    Text(
+        text = stringResource(id = R.string.loading),
+        modifier = Modifier.padding(16.dp)
+    )
+}
+
+@Composable
+private fun DisconnectedView() {
+    OutlinedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(32.dp),
+    ) {
+        Text(
+            text = stringResource(id = R.string.disconnected),
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}
+
+@Composable
+private fun InitializingView() {
+    OutlinedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(32.dp),
+    ) {
+        Text(
+            text = stringResource(id = R.string.initializing),
+            modifier = Modifier.padding(16.dp)
+        )
+    }
+}
+
+@Composable
+private fun ConnectingView() {
+    OutlinedCard(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(32.dp),
+    ) {
+        Text(
+            text = stringResource(id = R.string.scanning_for_server),
+            modifier = Modifier.padding(16.dp)
+        )
     }
 }
 

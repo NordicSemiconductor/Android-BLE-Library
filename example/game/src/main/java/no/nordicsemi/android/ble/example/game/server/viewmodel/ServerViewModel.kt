@@ -39,9 +39,6 @@ class ServerViewModel @Inject constructor(
     val state = _state.asStateFlow()
     val isGameOver: MutableState<Boolean?> = mutableStateOf(null)
 
-    private val _clientDevice = MutableSharedFlow<String>()
-    val clientDevice = _clientDevice.asSharedFlow()
-
     private val _selectedAnswer: MutableState<Int?> = mutableStateOf(null)
     val selectedAnswer: State<Int?> = _selectedAnswer
 
@@ -190,6 +187,11 @@ class ServerViewModel @Inject constructor(
                 name = playerName,
                 score = 0
             )
+            viewModelScope.launch {
+                clients.value.forEach {
+                    it.gameOver(ResultToClient(false, savedResult.value))
+                }
+            }
         }
     }
 
