@@ -3,9 +3,16 @@ package no.nordicsemi.android.ble.example.game.spec
 import no.nordicsemi.android.ble.data.DataSplitter
 import java.nio.ByteBuffer
 
-
 class PacketSplitter: DataSplitter {
 
+    /**
+     * A method that splits the message and returns a index-th byte array from given message,
+     * with at most maxLength size, or null if no bytes are left to be sent.
+     * @param message the full message to be chunked.
+     * @param index index of a packet, 0-based.
+     * @param maxLength maximum length of the returned packet.
+     * @return The packet to be sent, or null, if the whole message was already split.
+     */
     override fun chunk(message: ByteArray, index: Int, maxLength: Int): ByteArray? {
         val messageSize = message.size
         return if (index == 0) {

@@ -11,7 +11,7 @@ import javax.inject.Inject
 
 class ServerManager @Inject constructor(
     @ApplicationContext context: Context,
-): BleServerManager(context) {
+) : BleServerManager(context) {
     private val TAG = "Server Manager"
 
     override fun log(priority: Int, message: String) {
@@ -22,6 +22,11 @@ class ServerManager @Inject constructor(
         return Log.VERBOSE
     }
 
+    /**
+     * It opens the GATT server and starts initializing services.
+     * It returns a list of server GATT services with given UUID that will be available to the remote device
+     * to use and a list of characteristics.
+     */
     override fun initializeServer(): List<BluetoothGattService> {
         return listOf(
             service(DeviceSpecifications.UUID_SERVICE_DEVICE,
@@ -30,7 +35,7 @@ class ServerManager @Inject constructor(
                     BluetoothGattCharacteristic.PROPERTY_WRITE or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
                     BluetoothGattCharacteristic.PERMISSION_WRITE,
                     cccd(),
-                    description("A place to write Hello", false)
+                    description("A sample client server interaction.", false)
                 )
             )
         )
