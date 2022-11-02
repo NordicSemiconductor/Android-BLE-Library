@@ -16,7 +16,7 @@ import kotlinx.coroutines.launch
 import no.nordicsemi.android.ble.example.game.client.repository.ClientConnection
 import no.nordicsemi.android.ble.example.game.client.repository.ScannerRepository
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
-import no.nordicsemi.android.ble.example.game.server.data.ResultToClient
+import no.nordicsemi.android.ble.example.game.server.data.Results
 import no.nordicsemi.android.ble.example.game.timer.TimerViewModel
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.ble.ktx.stateAsFlow
@@ -31,13 +31,10 @@ class ClientViewModel @Inject constructor(
 
     private val _question: MutableStateFlow<Question?> = MutableStateFlow(null)
     val question = _question.asStateFlow()
-
-    private val _finalResult: MutableStateFlow<ResultToClient?> = MutableStateFlow(null)
-    val finalResult = _finalResult.asStateFlow()
-
+    private val _result: MutableStateFlow<Results?> = MutableStateFlow(null)
+    val result = _result.asStateFlow()
     private val _answer: MutableStateFlow<Int?> = MutableStateFlow(null)
     val answer = _answer.asStateFlow()
-
     private val _selectedAnswer: MutableState<Int?> = mutableStateOf(null)
     val selectedAnswer: State<Int?> = _selectedAnswer
 
@@ -45,15 +42,13 @@ class ClientViewModel @Inject constructor(
     val state = _state.asStateFlow()
 
     init {
-            viewModelScope.launch(Dispatchers.IO ) {
+        viewModelScope.launch(Dispatchers.IO) {
             val device = scannerRepository.searchForServer()
 
-            ClientConnection(context, viewModelScope, device )
+            ClientConnection(context, viewModelScope, device)
                 .apply {
                     stateAsFlow()
-                        .onEach {
-                            _state.value = it
-                        }
+                        .onEach { _state.value = it }
                         .launchIn(viewModelScope)
                     question
                         .onEach {
@@ -66,36 +61,31 @@ class ClientViewModel @Inject constructor(
                     answer
                         .onEach { _answer.value = it }
                         .launchIn(viewModelScope)
-
-                    finalResult
-                        .onEach { _finalResult.value = it }
+                    result
+                        .onEach { _result.value = it }
                         .launchIn(viewModelScope)
                 }
                 .apply {
                     connect()
-                    // Send players name
-                    sendPlayersName(deviceName)
+                    playersName?.let { sendPlayersName(it) }
                 }
                 .apply { clientManager = this }
         }
     }
 
-
     override fun onCleared() {
         super.onCleared()
-
         clientManager?.release()
         clientManager = null
     }
 
-
     fun sendAnswer(answerId: Int) {
         _selectedAnswer.value = answerId
-
         viewModelScope.launch(Dispatchers.IO) {
             clientManager?.sendSelectedAnswer(answerId)
         }
     }
+
     fun sendName(playersName: String) {
         viewModelScope.launch(Dispatchers.IO) {
             clientManager?.sendPlayersName(playersName)
