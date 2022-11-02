@@ -13,20 +13,23 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import no.nordicsemi.android.ble.example.game.client.view.QuestionScreenClient
+import no.nordicsemi.android.ble.example.game.quiz.model.htmlTextMapper
 import no.nordicsemi.android.ble.example.game.quiz.repository.Answer
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
 import no.nordicsemi.android.ble.example.game.timer.ShowTimer
 import no.nordicsemi.android.common.theme.NordicTheme
 
+/**
+ * Shows questions and list of answers.
+ */
 @Composable
-fun QuestionContent(
+fun QuestionContentView(
     question: Question,
     selectedAnswerId: Int?,
     correctAnswerId: Int?,
     ticks: Long,
-    onAnswerSelected: (Int) -> Unit,
     modifier: Modifier = Modifier,
+    onAnswerSelected: (Int) -> Unit,
 ) {
     Column(
         modifier = modifier,
@@ -86,9 +89,9 @@ fun Color(
 
 @Preview
 @Composable
-private fun QuestionScreenClient_Preview() {
+private fun QuestionScreen_Preview() {
     NordicTheme {
-        QuestionScreenClient(
+        QuestionContentView(
             question = Question(
                 "How are you?", listOf(
                     Answer("Good", 0),
