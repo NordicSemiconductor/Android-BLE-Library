@@ -3,30 +3,28 @@ package no.nordicsemi.android.ble.example.game.server.data
 import no.nordicsemi.android.ble.example.game.proto.FinalResultProto
 import no.nordicsemi.android.ble.example.game.proto.ResultToClientProto
 
-
 /**
  * Final result to send to all players.
  * @property isGameOver Will be true once game is over.
- * @property finalResult Contains a list of players with score.
- *
+ * @property result Contains a list of players with score.
  * */
-data class ResultToClient(
+data class Results(
     val isGameOver: Boolean,
-    val finalResult: List<FinalResult>
+    val result: List<Result>
 )
 
-data class FinalResult(
-    val name : String,
+data class Result(
+    val name: String,
     var score: Int,
 )
 
+fun Results.toProto() = ResultToClientProto(isGameOver, result.map { it.toProto() })
 
-fun ResultToClient.toProto() = ResultToClientProto(isGameOver, finalResult.map { it.toProto() })
+fun Result.toProto() = FinalResultProto(name, score)
 
-fun FinalResult.toProto() = FinalResultProto(name, score)
+fun ResultToClientProto.toResultToClient() =
+    Results(isGameOver, finalResult.map { it.finalResult() })
 
-fun ResultToClientProto.toResultToClient() = ResultToClient(isGameOver, finalResult.map { it.finalResult() })
-
-fun FinalResultProto.finalResult() = FinalResult(name, score)
+fun FinalResultProto.finalResult() = Result(name, score)
 
 
