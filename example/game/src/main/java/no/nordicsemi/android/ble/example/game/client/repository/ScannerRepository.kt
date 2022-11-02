@@ -14,11 +14,11 @@ import kotlin.coroutines.resumeWithException
 
 class ScannerRepository @Inject constructor(
     @ApplicationContext val context: Context,
-    private val leAdapter: BluetoothAdapter,
+    private val bluetoothAdapter: BluetoothAdapter?,
 ) {
     private val bluetoothLeScanner: BluetoothLeScanner by lazy {
-        // FIXME This may return null if Bluetooth is off
-        leAdapter.bluetoothLeScanner
+        if (bluetoothAdapter != null) bluetoothAdapter.bluetoothLeScanner
+        else throw NullPointerException("Bluetooth not initialized")
     }
 
     /**

@@ -10,24 +10,24 @@ import android.util.Log
 import no.nordicsemi.android.ble.example.game.spec.DeviceSpecifications.Companion.UUID_SERVICE_DEVICE
 import javax.inject.Inject
 
-
 class AdvertisingManager @Inject constructor(
-    private val leAdapter: BluetoothAdapter,
+    private val bluetoothAdapter: BluetoothAdapter?,
 ) {
+    private val TAG = "BLE Advertising"
     private val bluetoothLeAdvertiser: BluetoothLeAdvertiser by lazy {
-        leAdapter.bluetoothLeAdvertiser
+        if (bluetoothAdapter != null) bluetoothAdapter.bluetoothLeAdvertiser
+        else throw NullPointerException("Bluetooth not initialized")
     }
 
     private val advertisingCallback: AdvertiseCallback = object : AdvertiseCallback() {
 
-        override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-            Log.d("BLE Advertising", "onStartSuccess: success!!")
-        }
+            override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
+                Log.d(TAG, "onStartSuccess: success!!")
+            }
 
-        override fun onStartFailure(errorCode: Int) {
-            Log.e("BLE Advertising", "Advertising onStartFailure: $errorCode")
-        }
-
+            override fun onStartFailure(errorCode: Int) {
+                Log.e(TAG, "Advertising onStartFailure: $errorCode")
+            }
     }
 
     fun startAdvertising(){
