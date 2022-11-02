@@ -6,6 +6,10 @@ import no.nordicsemi.android.ble.example.game.proto.OpCodeProto
 import no.nordicsemi.android.ble.example.game.proto.RequestProto
 import no.nordicsemi.android.ble.response.ReadResponse
 
+/**
+ * A ReadResponse class that returns the data received and the device from which data
+ * were read.
+ */
 class QuestionResponse : ReadResponse() {
     var name: String? = null
     var result: ClientResult? = null
