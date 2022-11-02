@@ -15,8 +15,8 @@ import kotlinx.coroutines.flow.*
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
 import no.nordicsemi.android.ble.example.game.quiz.repository.QuestionRepository
 import no.nordicsemi.android.ble.example.game.quiz.repository.Questions
-import no.nordicsemi.android.ble.example.game.server.data.FinalResult
-import no.nordicsemi.android.ble.example.game.server.data.ResultToClient
+import no.nordicsemi.android.ble.example.game.server.data.Result
+import no.nordicsemi.android.ble.example.game.server.data.Results
 import no.nordicsemi.android.ble.example.game.server.repository.AdvertisingManager
 import no.nordicsemi.android.ble.example.game.server.repository.ServerConnection
 import no.nordicsemi.android.ble.example.game.server.repository.ServerManager
@@ -34,31 +34,28 @@ class ServerViewModel @Inject constructor(
     private val questionRepository: QuestionRepository,
 ) : TimerViewModel() {
     var clients: MutableStateFlow<List<ServerConnection>> = MutableStateFlow(emptyList())
-    private val TAG = "Server Connection"
     private var _state = MutableStateFlow<GameState>(WaitingForPlayers(0))
     val state = _state.asStateFlow()
     val isGameOver: MutableState<Boolean?> = mutableStateOf(null)
 
     private val _selectedAnswer: MutableState<Int?> = mutableStateOf(null)
     val selectedAnswer: State<Int?> = _selectedAnswer
-
     private val _correctAnswerId: MutableStateFlow<Int?> = MutableStateFlow(null)
     val correctAnswerId = _correctAnswerId.asStateFlow()
-    private var questionSaved: Questions? = null
-    var index = 0
 
-    private val totalQuestions: Int = questionSaved?.questions?.size ?: 10
-    val savedResult: MutableStateFlow<List<FinalResult>> = MutableStateFlow(emptyList())
+    private var questionSaved: Questions? = null
+    var questionIndex = 0
+    private val totalQuestions = questionSaved?.questions?.size ?: 10
+    val savedResult: MutableStateFlow<List<Result>> = MutableStateFlow(emptyList())
 
     init {
         startServer()
     }
 
-
     fun startGame(category: Int? = null) {
         advertiser.stopAdvertising()
         isGameOver.value = false
-        index = 0
+        questionIndex = 0
 
         viewModelScope.launch {
             _state.emit(DownloadingQuestions)
@@ -72,15 +69,21 @@ class ServerViewModel @Inject constructor(
     fun showNextQuestion() {
         viewModelScope.launch {
             questionSaved?.let { questions ->
-                index.takeIf { it + 1 < totalQuestions }
-                    ?.let { ++index }
+                questionIndex.takeIf { it + 1 < totalQuestions }
+                    ?.let { ++questionIndex }
                     ?.let { questions.questions[it] }
                     /** Send Next Question */
                     ?.let { showQuestion(it) }
                     ?: run {
                         isGameOver.value = true
+                        /** Send game over flag and results to all players.*/
                         clients.value.forEach {
-                            it.gameOver(ResultToClient(isGameOver.value!!, savedResult.value))
+                            it.gameOver(
+                                Results(
+                                    isGameOver = true,
+                                    result = savedResult.value
+                                )
+                            )
                         }
                     }
             }
@@ -88,15 +91,8 @@ class ServerViewModel @Inject constructor(
     }
 
     private suspend fun showQuestion(question: Question) {
-
-        clients.value.forEach {
-            if (isGameOver.value == false) {
-                it.sendQuestion(question)
-            }
-        }
-
+        clients.value.forEach { it.sendQuestion(question) }
         startCountDown()
-
         var job: Job? = null
         job = timerFinished
             .onEach {
@@ -162,35 +158,28 @@ class ServerViewModel @Inject constructor(
                     }
                     .apply {
                         useServer(serverManager)
-
-                        val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
-                            Log.e(TAG, "Error", throwable)
-                        }
-                        viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
+                        viewModelScope.launch(Dispatchers.IO) {
                             connect()
                         }
                     }
-
             }
 
             override fun onDeviceDisconnectedFromServer(device: BluetoothDevice) {
                 Log.w("Device Disconnected", "Device Disconnected From the Server!")
             }
-
         })
         serverManager.open()
     }
 
     fun savePlayersName(playerName: String) {
-        if (playerName != "") {
-            savedResult.value += FinalResult(
-                name = playerName,
-                score = 0
-            )
-            viewModelScope.launch {
-                clients.value.forEach {
-                    it.gameOver(ResultToClient(false, savedResult.value))
-                }
+        savedResult.value += Result(
+            name = playerName,
+            score = 0
+        )
+        // Send name to all players to prevent duplicate name
+        viewModelScope.launch {
+            clients.value.forEach {
+                it.gameOver(Results(false, savedResult.value))
             }
         }
     }
@@ -210,7 +199,6 @@ class ServerViewModel @Inject constructor(
         clients.value.forEach {
             it.release()
         }
-
         stopServer()
     }
 
@@ -221,14 +209,13 @@ class ServerViewModel @Inject constructor(
 
     private fun saveScore(result: ClientResult) {
         questionSaved?.let { question ->
-            result.takeIf { it.selectedAnswerId == question.questions[index].correctAnswerId }
+            result.takeIf { it.selectedAnswerId == question.questions[questionIndex].correctAnswerId }
                 ?.let { updateScore(it.playersName) }
         }
     }
 
-    private fun updateScore(deviceName: String) {
-        savedResult.value.find { it.name == deviceName }
+    private fun updateScore(playersName: String) {
+        savedResult.value.find { it.name == playersName }
             ?.let { it.score = it.score + 1 }
-            ?: run { savedResult.value += (FinalResult(deviceName, 1)) }
     }
 }
