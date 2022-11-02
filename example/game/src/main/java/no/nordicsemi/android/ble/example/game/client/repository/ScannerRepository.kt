@@ -25,17 +25,12 @@ class ScannerRepository @Inject constructor(
      * Starts scanning for an advertising server.
      * Returns the first found device.
      */
-    suspend fun searchForServer() = suspendCancellableCoroutine { continuation ->
+    suspend fun searchForServer(): BluetoothDevice? = suspendCancellableCoroutine { continuation ->
         Log.d("ScannerRepository", "startScanning: Scanning Started...")
 
         val callback = object : ScanCallback() {
             override fun onScanResult(callbackType: Int, result: ScanResult?) {
                 result
-                    ?.takeIf {
-                        it.scanRecord
-                            ?.serviceUuids
-                            ?.contains(ParcelUuid(UUID_SERVICE_DEVICE)) == true
-                    }
                     ?.let { continuation.resume(it.device) }
                     .also { bluetoothLeScanner.stopScan(this) }
             }
