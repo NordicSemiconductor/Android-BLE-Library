@@ -15,33 +15,28 @@ import no.nordicsemi.android.ble.example.game.server.data.toProto
 import no.nordicsemi.android.ble.example.game.proto.OpCodeProto
 import no.nordicsemi.android.ble.example.game.proto.RequestProto
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
-import no.nordicsemi.android.ble.example.game.server.data.ResultToClient
+import no.nordicsemi.android.ble.example.game.server.data.Results
 import no.nordicsemi.android.ble.example.game.spec.DeviceSpecifications
 import no.nordicsemi.android.ble.example.game.spec.PacketMerger
 import no.nordicsemi.android.ble.example.game.spec.PacketSplitter
 import no.nordicsemi.android.ble.ktx.asResponseFlow
 import no.nordicsemi.android.ble.ktx.suspend
 
-
 class ClientConnection(
     context: Context,
     private val scope: CoroutineScope,
-    private val device: BluetoothDevice,
-): BleManager(context) {
+    private val device: BluetoothDevice?,
+) : BleManager(context) {
     private val TAG = "Client Connection"
-
     var characteristic: BluetoothGattCharacteristic? = null
 
     private val _question = MutableSharedFlow<Question>()
     val question = _question.asSharedFlow()
-
-    private val _finalResult = MutableSharedFlow<ResultToClient>()
-    val finalResult = _finalResult.asSharedFlow()
-
+    private val _result = MutableSharedFlow<Results>()
+    val result = _result.asSharedFlow()
     private val _answer = MutableSharedFlow<Int>()
     val answer = _answer.asSharedFlow()
-
-    var deviceName: String = ""
+    var playersName: String? = null
 
     override fun log(priority: Int, message: String) {
         Log.println(priority, TAG, message)
@@ -72,13 +67,11 @@ class ClientConnection(
                 .asResponseFlow<Request>()
                 .onEach {
                     it.answerId?.let { answer -> _answer.emit(answer) }
-                    it.question?.let { question ->  _question.emit(question) }
-                    it.resultToClient?.let { isGameOver ->  _finalResult.emit(isGameOver) }
+                    it.question?.let { question -> _question.emit(question) }
+                    it.result?.let { isGameOver -> _result.emit(isGameOver) }
                 }.launchIn(scope)
             enableNotifications(characteristic).enqueue()
         }
-
-
 
         override fun onServicesInvalidated() {
             characteristic = null
@@ -89,17 +82,24 @@ class ClientConnection(
      * Connects to the server.
      */
     suspend fun connect() {
-        connect(device)
-            .retry(4, 300)
-            .useAutoConnect(false)
-            .timeout(100_000)
-            .suspend()
+        device?.let {
+            connect(it)
+                .retry(4, 300)
+                .useAutoConnect(false)
+                .timeout(100_000)
+                .suspend()
+        }
     }
+
     /**
      * Send selected answer along with the device name to the server.
      */
-    suspend fun sendSelectedAnswer(answer:Int) {
-        val result = RequestProto(OpCodeProto.RESULT, result = ClientResult(deviceName, answer).toProto())
+    suspend fun sendSelectedAnswer(answer: Int) {
+        val result =
+            RequestProto(
+                OpCodeProto.RESULT,
+                result = playersName?.let { ClientResult(it, answer).toProto() }
+            )
         val resultByteArray = result.encode()
         writeCharacteristic(
             characteristic,
@@ -109,11 +109,12 @@ class ClientConnection(
             .split(PacketSplitter())
             .suspend()
     }
+
     /**
      * Send device name to the server.
      */
-    suspend fun sendPlayersName(name: String){
-        deviceName = name
+    suspend fun sendPlayersName(name: String) {
+        playersName = name
         val deviceName = RequestProto(OpCodeProto.NAME, name = name)
         val deviceNameByteArray = deviceName.encode()
         writeCharacteristic(
