@@ -42,7 +42,7 @@ fun QuestionContent(
         val isTimerRunning = ticks > 0
 
         Text(
-            text = question.question.replace(),
+            text = htmlTextMapper(question.question),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp),
@@ -66,8 +66,7 @@ fun QuestionContent(
                         ),
                     )
                     .padding(16.dp),
-                text = answer.text.replace()
-
+                text = htmlTextMapper(answer.text)
             )
         }
     }
