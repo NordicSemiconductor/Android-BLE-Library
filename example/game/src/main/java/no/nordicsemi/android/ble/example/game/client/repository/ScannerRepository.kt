@@ -1,6 +1,7 @@
 package no.nordicsemi.android.ble.example.game.client.repository
 
 import android.bluetooth.BluetoothAdapter
+import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.*
 import android.content.Context
 import android.os.ParcelUuid
@@ -44,8 +45,7 @@ class ScannerRepository @Inject constructor(
         }
 
         val scanSettings = ScanSettings.Builder()
-            .setLegacy(true)
-            .setReportDelay(0)
+            .setReportDelay(0) // set to 0 to be notified of scan results immediately.
             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
             .build()
 
