@@ -21,7 +21,7 @@ import no.nordicsemi.android.ble.example.game.spec.PacketSplitter
 import no.nordicsemi.android.ble.ktx.asResponseFlow
 import no.nordicsemi.android.ble.ktx.suspend
 import no.nordicsemi.android.ble.example.game.server.data.ClientResult
-import no.nordicsemi.android.ble.example.game.server.data.ResultToClient
+import no.nordicsemi.android.ble.example.game.server.data.Results
 import no.nordicsemi.android.ble.example.game.server.data.toProto
 
 class ServerConnection(
@@ -34,10 +34,8 @@ class ServerConnection(
 
     private val _playersName = MutableSharedFlow<String>()
     val playersName = _playersName.asSharedFlow()
-
     private val _result = MutableSharedFlow<ClientResult>()
     val result = _result.asSharedFlow()
-
 
     override fun log(priority: Int, message: String) {
         Log.println(priority, TAG, message)
@@ -94,10 +92,9 @@ class ServerConnection(
     }
 
     /**
-     * send result after game over
+     * Send result after game over.
      */
-    suspend fun gameOver(resultToClient: ResultToClient) {
-        log(Log.INFO, "Game over!!")
+    suspend fun gameOver(resultToClient: Results) {
         val request = RequestProto(OpCodeProto.GAME_OVER, resultToClient = resultToClient.toProto())
         val requestByteArray = request.encode()
         sendNotification(serverCharacteristic, requestByteArray)
@@ -106,7 +103,7 @@ class ServerConnection(
     }
 
     /**
-     * send correct answer id
+     * Send correct answer id.
      */
     suspend fun sendCorrectAnswerId(correctAnswerId: Int) {
         val request = RequestProto(OpCodeProto.RESULT, answerId = correctAnswerId)
@@ -117,7 +114,7 @@ class ServerConnection(
     }
 
     /**
-     * send question
+     * Send question.
      */
     suspend fun sendQuestion(question: Question) {
         val request = RequestProto(OpCodeProto.NEW_QUESTION, question = question.toProto())
