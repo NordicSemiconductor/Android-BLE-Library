@@ -27,15 +27,14 @@ fun StartScreen(
                 .padding(16.dp)
                 .fillMaxWidth(),
             horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(16.dp),
         ) {
             Text(
                 text = stringResource(id = R.string.start_game_description)
             )
-
-            Spacer(modifier = Modifier.height(16.dp))
-
             Row(
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Button(
                     onClick = {
@@ -44,9 +43,6 @@ fun StartScreen(
                 ) {
                     Text(text = stringResource(id = R.string.start_game))
                 }
-
-                Spacer(modifier = Modifier.padding(16.dp))
-
                 Button(
                     onClick = {
                         navigationManager.navigateTo(MainActivity.Client)
