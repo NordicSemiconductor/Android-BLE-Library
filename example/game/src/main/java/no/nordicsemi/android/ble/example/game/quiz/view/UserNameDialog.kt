@@ -7,33 +7,40 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import no.nordicsemi.android.ble.example.game.R
-
+import no.nordicsemi.android.common.theme.NordicTheme
 
 @Composable
 @OptIn(ExperimentalMaterial3Api::class)
-fun AskPlayersName(
+fun PlayersNameDialog(
     playersName: String,
     isDuplicate: Boolean,
-    onValueChange: (String) -> Unit,
+    onDismiss: () -> Unit,
+    onNameSet: (String) -> Unit,
     onSendClick: () -> Unit
 ) {
     AlertDialog(
-        onDismissRequest = { },
+        properties = DialogProperties(
+            dismissOnClickOutside = false,
+        ),
+        onDismissRequest = onDismiss,
         title = {
             Text(text = stringResource(id = R.string.ask_players_name))
         },
         text = {
             TextField(
                 value = playersName,
-                onValueChange = onValueChange,
+                onValueChange = onNameSet,
                 trailingIcon = {
                     if (isDuplicate)
                         Icon(
                             imageVector = Icons.Filled.Info,
-                            contentDescription = "Duplicate name error message",
-                            tint = MaterialTheme.colorScheme.error
+                            contentDescription = stringResource(id = R.string.duplicate_name_error_des),
+                            tint = MaterialTheme.colorScheme.error,
+                            modifier = Modifier.padding(16.dp)
                         )
                 },
                 singleLine = true,
@@ -56,4 +63,19 @@ fun AskPlayersName(
             }
         },
     )
+}
+
+@Preview
+@Composable
+fun PlayersNameDialog_Preview(){
+    NordicTheme {
+        PlayersNameDialog(
+            playersName = "",
+            isDuplicate = true,
+            onDismiss = { },
+            onNameSet = { }
+        ) {
+
+        }
+    }
 }

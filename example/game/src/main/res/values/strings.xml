@@ -21,12 +21,14 @@
     <string name="next">Next</string>
     <string name="done">Done</string>
 
-    <string name="game_over">Game Over!!</string>
+    <string name="game_over">Game Over</string>
     <string name="show_result">Show Result</string>
-    <string name="show_result_des">Click on \'Show Result\' to show result</string>
+    <string name="winner">Winner</string>
+    <string name="score">Score</string>
 
     <string name="ask_players_name">Enter player\'s name</string>
     <string name="send_players_name">Send</string>
-    <string name="duplicate_name_error">Duplicate Name!!</string>
+    <string name="duplicate_name_error">Name already exists</string>
+    <string name="duplicate_name_error_des">Duplicate name error message</string>
 
 </resources>
