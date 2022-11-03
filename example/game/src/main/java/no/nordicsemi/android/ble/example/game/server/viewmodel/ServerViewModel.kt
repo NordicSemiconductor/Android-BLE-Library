@@ -119,7 +119,6 @@ class ServerViewModel @Inject constructor(
                 Log.d(TAG, "Error in starting server with exception $exception")
             }
         }
-
         serverManager.setServerObserver(object : ServerObserver {
 
             override fun onServerReady() {

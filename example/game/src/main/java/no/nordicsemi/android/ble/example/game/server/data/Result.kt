@@ -5,8 +5,8 @@ import no.nordicsemi.android.ble.example.game.proto.ResultToClientProto
 
 /**
  * Final result to send to all players.
- * @property isGameOver Will be true once game is over.
- * @property result Contains a list of players with score.
+ * @property isGameOver will be true once game is over.
+ * @property result     contains a list of players with score.
  * */
 data class Results(
     val isGameOver: Boolean,

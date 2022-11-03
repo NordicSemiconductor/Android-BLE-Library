@@ -34,15 +34,9 @@ fun ClientScreen(
             val state by clientViewModel.state.collectAsState()
 
             when (state) {
-                ConnectionState.Initializing -> {
-                    InitializingView()
-                }
-                ConnectionState.Connecting -> {
-                    ConnectingView()
-                }
-                is ConnectionState.Disconnected -> {
-                    DisconnectedView()
-                }
+                ConnectionState.Initializing -> { InitializingView() }
+                ConnectionState.Connecting -> { ConnectingView() }
+                is ConnectionState.Disconnected -> { DisconnectedView() }
                 ConnectionState.Ready -> {
                     val question by clientViewModel.question.collectAsState()
                     val results by clientViewModel.result.collectAsState()

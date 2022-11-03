@@ -9,7 +9,6 @@ import android.os.ParcelUuid
 import android.util.Log
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
-import no.nordicsemi.android.ble.example.game.client.repository.AdvertisingException
 import no.nordicsemi.android.ble.example.game.spec.DeviceSpecifications.Companion.UUID_SERVICE_DEVICE
 import javax.inject.Inject
 import kotlin.coroutines.resumeWithException

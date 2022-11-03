@@ -8,8 +8,8 @@ class PacketSplitter: DataSplitter {
     /**
      * A method that splits the message and returns a index-th byte array from given message,
      * with at most maxLength size, or null if no bytes are left to be sent.
-     * @param message the full message to be chunked.
-     * @param index index of a packet, 0-based.
+     * @param message   full message to be chunked.
+     * @param index     index of a packet, 0-based.
      * @param maxLength maximum length of the returned packet.
      * @return The packet to be sent, or null, if the whole message was already split.
      */

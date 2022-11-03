@@ -45,7 +45,7 @@ class ScannerRepository @Inject constructor(
         }
 
         val scanSettings = ScanSettings.Builder()
-            .setReportDelay(0) // set to 0 to be notified of scan results immediately.
+            .setReportDelay(0) // Set to 0 to be notified of scan results immediately.
             .setScanMode(ScanSettings.SCAN_MODE_LOW_LATENCY)
             .build()
 

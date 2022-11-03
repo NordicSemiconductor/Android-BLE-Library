@@ -4,8 +4,8 @@ import no.nordicsemi.android.ble.example.game.proto.ResultProto
 
 /**
  * Result to be received from remote players.
- * @property playersName Name of the player.
- * @property selectedAnswerId Selected answer id.
+ * @property playersName        name of the player.
+ * @property selectedAnswerId   selected answer id.
  * */
 data class ClientResult(
     val playersName: String,

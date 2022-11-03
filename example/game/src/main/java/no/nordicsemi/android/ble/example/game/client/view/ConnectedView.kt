@@ -11,7 +11,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import no.nordicsemi.android.ble.example.game.R
 
-
 @Composable
 fun ConnectedView() {
     OutlinedCard(

@@ -6,6 +6,7 @@ import androidx.compose.animation.core.snap
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.Text
@@ -13,9 +14,10 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-
+import no.nordicsemi.android.common.theme.NordicTheme
 
 @Composable
 fun ShowTimer(
@@ -59,4 +61,16 @@ private fun checkColor(ticks: Long) = when {
     ticks >= Timer.TOTAL_TIME / 4 -> Color.Green
     ticks >= Timer.TOTAL_TIME / 8 -> Color.Yellow
     else -> Color.Red
+}
+
+@Preview
+@Composable
+fun ShowTimer_Preview() {
+    NordicTheme {
+        ShowTimer(
+            key = "",
+            duration = 5_000L,
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
 }
