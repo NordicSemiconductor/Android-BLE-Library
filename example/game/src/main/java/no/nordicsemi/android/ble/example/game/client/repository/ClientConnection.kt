@@ -10,8 +10,6 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import no.nordicsemi.android.ble.BleManager
 import no.nordicsemi.android.ble.example.game.client.data.Request
-import no.nordicsemi.android.ble.example.game.server.data.ClientResult
-import no.nordicsemi.android.ble.example.game.server.data.toProto
 import no.nordicsemi.android.ble.example.game.proto.OpCodeProto
 import no.nordicsemi.android.ble.example.game.proto.RequestProto
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
@@ -36,7 +34,6 @@ class ClientConnection(
     val result = _result.asSharedFlow()
     private val _answer = MutableSharedFlow<Int>()
     val answer = _answer.asSharedFlow()
-    var playersName: String? = null
 
     override fun log(priority: Int, message: String) {
         Log.println(priority, TAG, message)
@@ -92,14 +89,12 @@ class ClientConnection(
     }
 
     /**
-     * Send selected answer along with the device name to the server.
+     * Send selected answer id to the server.
      */
     suspend fun sendSelectedAnswer(answer: Int) {
         val result =
             RequestProto(
-                OpCodeProto.RESULT,
-                result = playersName?.let { ClientResult(it, answer).toProto() }
-            )
+                OpCodeProto.RESULT, answerId = answer)
         val resultByteArray = result.encode()
         writeCharacteristic(
             characteristic,
@@ -114,7 +109,6 @@ class ClientConnection(
      * Send device name to the server.
      */
     suspend fun sendPlayersName(name: String) {
-        playersName = name
         val deviceName = RequestProto(OpCodeProto.NAME, name = name)
         val deviceNameByteArray = deviceName.encode()
         writeCharacteristic(

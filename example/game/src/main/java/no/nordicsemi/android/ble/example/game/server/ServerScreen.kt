@@ -37,13 +37,13 @@ fun ServerScreen(
             val serverViewModel: ServerViewModel = hiltViewModel()
             val gameState by serverViewModel.state.collectAsState()
             val result by serverViewModel.savedResult.collectAsState()
-            var playersName by remember { mutableStateOf("") }
 
             when (val currentState = gameState) {
                 is WaitingForPlayers ->
                     if (currentState.connectedPlayers == 0) {
                         WaitingForClientsView()
                     } else {
+                        var playersName by remember { mutableStateOf("") }
                         var openDialog by remember { mutableStateOf(true) }
                         var isDuplicate by remember { mutableStateOf(false) }
 
@@ -96,7 +96,7 @@ fun ServerScreen(
                                 ticks = ticks,
                                 modifier = Modifier.fillMaxWidth(),
                             ) { answerChosen ->
-                                serverViewModel.selectedAnswerServer(playersName, answerChosen)
+                                serverViewModel.selectedAnswerServer(answerChosen)
                             }
                             BottomNavigationView(
                                 onNextClick = { serverViewModel.showNextQuestion() },

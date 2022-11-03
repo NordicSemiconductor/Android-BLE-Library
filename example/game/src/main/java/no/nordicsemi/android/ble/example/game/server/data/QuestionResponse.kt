@@ -12,14 +12,13 @@ import no.nordicsemi.android.ble.response.ReadResponse
  */
 class QuestionResponse : ReadResponse() {
     var name: String? = null
-    var result: ClientResult? = null
-
+    var selectedAnswerId: Int? = null
     override fun onDataReceived(device: BluetoothDevice, data: Data) {
         val bytes = data.value!!
         val request = RequestProto.ADAPTER.decode(bytes)
         when (request.opCode) {
             OpCodeProto.NAME -> { name = request.name }
-            OpCodeProto.RESULT -> { result = request.result?.toResult() }
+            OpCodeProto.RESULT -> { selectedAnswerId = request.answerId }
             else -> {}
         }
     }

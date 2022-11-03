@@ -67,7 +67,6 @@ class ClientViewModel @Inject constructor(
                 }
                 .apply {
                     connect()
-                    playersName?.let { sendPlayersName(it) }
                 }
                 .apply { clientManager = this }
         }

@@ -1,5 +1,6 @@
 package no.nordicsemi.android.ble.example.game.server.viewmodel
 
+import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.util.Log
@@ -10,13 +11,13 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.*
-import no.nordicsemi.android.ble.example.game.server.data.ClientResult
 import kotlinx.coroutines.flow.*
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
 import no.nordicsemi.android.ble.example.game.quiz.repository.QuestionRepository
 import no.nordicsemi.android.ble.example.game.quiz.repository.Questions
 import no.nordicsemi.android.ble.example.game.server.data.Result
 import no.nordicsemi.android.ble.example.game.server.data.Results
+import no.nordicsemi.android.ble.example.game.server.data.Name
 import no.nordicsemi.android.ble.example.game.server.repository.AdvertisingManager
 import no.nordicsemi.android.ble.example.game.server.repository.ServerConnection
 import no.nordicsemi.android.ble.example.game.server.repository.ServerManager
@@ -32,6 +33,7 @@ class ServerViewModel @Inject constructor(
     private val advertiser: AdvertisingManager,
     private val serverManager: ServerManager,
     private val questionRepository: QuestionRepository,
+    private val adapter: BluetoothAdapter?,
 ) : TimerViewModel() {
     val TAG = "Server Connection"
     var clients: MutableStateFlow<List<ServerConnection>> = MutableStateFlow(emptyList())
@@ -48,6 +50,8 @@ class ServerViewModel @Inject constructor(
     var questionIndex = 0
     private val totalQuestions = questionSaved?.questions?.size ?: 10
     val savedResult: MutableStateFlow<List<Result>> = MutableStateFlow(emptyList())
+
+    private val mapNameWithDevice: MutableStateFlow<List<Name>> = MutableStateFlow(emptyList())
 
     init {
         startServer()
@@ -159,12 +163,17 @@ class ServerViewModel @Inject constructor(
                     }
                     .apply {
                         playersName
-                            .onEach { savePlayersName(it) }
+                            .onEach {
+                                mapNameAndDevice(
+                                    playerName = it,
+                                    device = device.address
+                                )
+                            }
                             .launchIn(viewModelScope)
                     }
                     .apply {
-                        result
-                            .onEach { saveScore(it) }
+                        clientAnswer
+                            .onEach { saveScore(it, device.address) }
                             .launchIn(viewModelScope)
                     }
                     .apply {
@@ -212,20 +221,33 @@ class ServerViewModel @Inject constructor(
         stopServer()
     }
 
-    fun selectedAnswerServer(playerName: String, selectedAnswer: Int) {
+    fun selectedAnswerServer(selectedAnswer: Int) {
         _selectedAnswer.value = selectedAnswer
-        saveScore(ClientResult(playerName, selectedAnswer))
+        adapter?.address?.let { saveScore(selectedAnswer, it) }
     }
 
-    private fun saveScore(result: ClientResult) {
+    private fun saveScore(result: Int, device: String) {
         questionSaved?.let { question ->
-            result.takeIf { it.selectedAnswerId == question.questions[questionIndex].correctAnswerId }
-                ?.let { updateScore(it.playersName) }
+            result.takeIf { result == question.questions[questionIndex].correctAnswerId }
+                ?.let { updateScore(device) }
         }
     }
 
-    private fun updateScore(playersName: String) {
+    private fun updateScore(device: String) {
+        val playersName = mapName(device)
         savedResult.value.find { it.name == playersName }
             ?.let { it.score = it.score + 1 }
+    }
+
+    private fun mapNameAndDevice(playerName: String, device: String) {
+        mapNameWithDevice.value += Name(
+            name = playerName,
+            device = device
+        )
+        savePlayersName(playerName = playerName)
+    }
+
+    private fun mapName(device: String): String? {
+        return mapNameWithDevice.value.find { it.device == device }?.name
     }
 }

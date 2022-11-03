@@ -8,21 +8,23 @@ import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import no.nordicsemi.android.ble.BleManager
 import no.nordicsemi.android.ble.example.game.proto.OpCodeProto
 import no.nordicsemi.android.ble.example.game.proto.RequestProto
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
 import no.nordicsemi.android.ble.example.game.quiz.repository.toProto
 import no.nordicsemi.android.ble.example.game.server.data.QuestionResponse
+import no.nordicsemi.android.ble.example.game.server.data.Results
+import no.nordicsemi.android.ble.example.game.server.data.toProto
 import no.nordicsemi.android.ble.example.game.spec.DeviceSpecifications
 import no.nordicsemi.android.ble.example.game.spec.PacketMerger
 import no.nordicsemi.android.ble.example.game.spec.PacketSplitter
 import no.nordicsemi.android.ble.ktx.asResponseFlow
 import no.nordicsemi.android.ble.ktx.suspend
-import no.nordicsemi.android.ble.example.game.server.data.ClientResult
-import no.nordicsemi.android.ble.example.game.server.data.Results
-import no.nordicsemi.android.ble.example.game.server.data.toProto
 
 class ServerConnection(
     context: Context,
@@ -34,8 +36,8 @@ class ServerConnection(
 
     private val _playersName = MutableSharedFlow<String>()
     val playersName = _playersName.asSharedFlow()
-    private val _result = MutableSharedFlow<ClientResult>()
-    val result = _result.asSharedFlow()
+    private val _clientAnswer = MutableSharedFlow<Int>()
+    val clientAnswer = _clientAnswer.asSharedFlow()
 
     override fun log(priority: Int, message: String) {
         Log.println(priority, TAG, message)
@@ -67,7 +69,7 @@ class ServerConnection(
                 .asResponseFlow<QuestionResponse>()
                 .onEach {
                     it.name?.let { name ->  _playersName.emit(name)}
-                    it.result?.let { result ->  _result.emit(result) }
+                    it.selectedAnswerId?.let { result ->  _clientAnswer.emit(result) }
                 }
                 .launchIn(scope)
 
