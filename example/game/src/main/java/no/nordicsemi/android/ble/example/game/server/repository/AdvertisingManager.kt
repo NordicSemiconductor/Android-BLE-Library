@@ -7,8 +7,12 @@ import android.bluetooth.le.AdvertiseSettings
 import android.bluetooth.le.BluetoothLeAdvertiser
 import android.os.ParcelUuid
 import android.util.Log
+import kotlinx.coroutines.ExperimentalCoroutinesApi
+import kotlinx.coroutines.suspendCancellableCoroutine
+import no.nordicsemi.android.ble.example.game.client.repository.AdvertisingException
 import no.nordicsemi.android.ble.example.game.spec.DeviceSpecifications.Companion.UUID_SERVICE_DEVICE
 import javax.inject.Inject
+import kotlin.coroutines.resumeWithException
 
 class AdvertisingManager @Inject constructor(
     private val bluetoothAdapter: BluetoothAdapter?,
@@ -18,19 +22,26 @@ class AdvertisingManager @Inject constructor(
         if (bluetoothAdapter != null) bluetoothAdapter.bluetoothLeAdvertiser
         else throw NullPointerException("Bluetooth not initialized")
     }
+    var advertisingCallback: AdvertiseCallback? = null
 
-    private val advertisingCallback: AdvertiseCallback = object : AdvertiseCallback() {
+    @OptIn(ExperimentalCoroutinesApi::class)
+    suspend fun startAdvertising() = suspendCancellableCoroutine { continuation ->
+        advertisingCallback = object : AdvertiseCallback() {
 
             override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
                 Log.d(TAG, "onStartSuccess: success!!")
+                continuation.resume(Unit) { }
             }
 
             override fun onStartFailure(errorCode: Int) {
-                Log.e(TAG, "Advertising onStartFailure: $errorCode")
+                continuation.resumeWithException(AdvertisingException(errorCode))
             }
-    }
+        }
 
-    fun startAdvertising(){
+        continuation.invokeOnCancellation {
+            bluetoothLeAdvertiser.stopAdvertising(advertisingCallback)
+        }
+
         val advertisingSettings = AdvertiseSettings.Builder()
             .setAdvertiseMode(AdvertiseSettings.ADVERTISE_MODE_LOW_LATENCY)
             .setConnectable(true)
@@ -41,8 +52,8 @@ class AdvertisingManager @Inject constructor(
             .build()
 
         val scanResponse = AdvertiseData.Builder()
-                .setIncludeDeviceName(true)
-                .build()
+            .setIncludeDeviceName(true)
+            .build()
 
         bluetoothLeAdvertiser.startAdvertising(
             advertisingSettings,

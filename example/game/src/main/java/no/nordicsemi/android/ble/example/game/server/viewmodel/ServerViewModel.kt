@@ -33,6 +33,7 @@ class ServerViewModel @Inject constructor(
     private val serverManager: ServerManager,
     private val questionRepository: QuestionRepository,
 ) : TimerViewModel() {
+    val TAG = "Server Connection"
     var clients: MutableStateFlow<List<ServerConnection>> = MutableStateFlow(emptyList())
     private var _state = MutableStateFlow<GameState>(WaitingForPlayers(0))
     val state = _state.asStateFlow()
@@ -53,7 +54,7 @@ class ServerViewModel @Inject constructor(
     }
 
     fun startGame(category: Int? = null) {
-        advertiser.stopAdvertising()
+        stopAdvertising()
         isGameOver.value = false
         questionIndex = 0
 
@@ -111,11 +112,18 @@ class ServerViewModel @Inject constructor(
     }
 
     private fun startServer() {
-        advertiser.startAdvertising()
+        viewModelScope.launch {
+            try {
+                advertiser.startAdvertising()
+            } catch (exception: Exception) {
+                Log.d(TAG, "Error in starting server with exception $exception")
+            }
+        }
+
         serverManager.setServerObserver(object : ServerObserver {
 
             override fun onServerReady() {
-                Log.w("Start Server", "Server is Ready!!")
+                Log.w(TAG, "Server is Ready.")
             }
 
             override fun onDeviceConnectedToServer(device: BluetoothDevice) {
@@ -138,6 +146,10 @@ class ServerViewModel @Inject constructor(
                                             }
                                             else -> {
                                                 // TODO handle disconnection during game
+                                                Log.d(
+                                                    TAG,
+                                                    "Device Disconnected: $device Disconnected From the Server."
+                                                )
                                             }
                                         }
                                     }
@@ -165,7 +177,7 @@ class ServerViewModel @Inject constructor(
             }
 
             override fun onDeviceDisconnectedFromServer(device: BluetoothDevice) {
-                Log.w("Device Disconnected", "Device Disconnected From the Server!")
+                Log.w(TAG, "Device Disconnected: $device Disconnected From the Server.")
             }
         })
         serverManager.open()
@@ -176,7 +188,7 @@ class ServerViewModel @Inject constructor(
             name = playerName,
             score = 0
         )
-        // Send name to all players to prevent duplicate name
+        /** Send name to all players to prevent duplicate */
         viewModelScope.launch {
             clients.value.forEach {
                 it.gameOver(Results(false, savedResult.value))
@@ -195,7 +207,6 @@ class ServerViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         stopAdvertising()
-
         clients.value.forEach {
             it.release()
         }
