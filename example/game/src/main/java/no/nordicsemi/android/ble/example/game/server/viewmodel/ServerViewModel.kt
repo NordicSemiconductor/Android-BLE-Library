@@ -166,7 +166,7 @@ class ServerViewModel @Inject constructor(
                             .onEach {
                                 mapNameAndDevice(
                                     playerName = it,
-                                    device = device.address
+                                    deviceAddress = device.address
                                 )
                             }
                             .launchIn(viewModelScope)
@@ -226,28 +226,27 @@ class ServerViewModel @Inject constructor(
         adapter?.address?.let { saveScore(selectedAnswer, it) }
     }
 
-    private fun saveScore(result: Int, device: String) {
+    private fun saveScore(result: Int, deviceAddress: String) {
         questionSaved?.let { question ->
             result.takeIf { result == question.questions[questionIndex].correctAnswerId }
-                ?.let { updateScore(device) }
+                ?.let { updateScore(deviceAddress) }
         }
     }
 
-    private fun updateScore(device: String) {
-        val playersName = mapName(device)
-        savedResult.value.find { it.name == playersName }
+    private fun updateScore(deviceAddress: String) {
+        savedResult.value.find { it.name == mapName(deviceAddress) }
             ?.let { it.score = it.score + 1 }
     }
 
-    private fun mapNameAndDevice(playerName: String, device: String) {
+    private fun mapNameAndDevice(playerName: String, deviceAddress: String) {
         mapNameWithDevice.value += Name(
             name = playerName,
-            device = device
+            deviceAddress = deviceAddress
         )
         savePlayersName(playerName = playerName)
     }
 
-    private fun mapName(device: String): String? {
-        return mapNameWithDevice.value.find { it.device == device }?.name
+    private fun mapName(deviceAddress: String): String? {
+        return mapNameWithDevice.value.find { it.deviceAddress == deviceAddress }?.name
     }
 }
