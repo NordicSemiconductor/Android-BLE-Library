@@ -56,6 +56,7 @@ fun ServerScreen(
                                     playersName = it
                                     isDuplicate = false
                                 }) {
+                                playersName  = playersName.trim()
                                 if (playersName.isNotEmpty()) {
                                     result.find { it.name == playersName }
                                         ?.let {

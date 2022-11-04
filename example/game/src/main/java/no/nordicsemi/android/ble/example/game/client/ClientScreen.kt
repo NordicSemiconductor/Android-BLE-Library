@@ -74,6 +74,7 @@ fun ClientScreen(
                                     playersName = it
                                     isDuplicate = false
                                 }) {
+                                playersName  = playersName.trim()
                                 if (playersName.isNotEmpty()) {
                                     results?.result?.find { it.name == playersName }
                                         ?.let {

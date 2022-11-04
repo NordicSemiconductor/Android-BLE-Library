@@ -109,8 +109,8 @@ class ClientConnection(
      * Send device name to the server.
      */
     suspend fun sendPlayersName(name: String) {
-        val deviceName = RequestProto(OpCodeProto.NAME, name = name)
-        val deviceNameByteArray = deviceName.encode()
+        val playersName = RequestProto(OpCodeProto.NAME, name = name)
+        val deviceNameByteArray = playersName.encode()
         writeCharacteristic(
             characteristic,
             deviceNameByteArray,
