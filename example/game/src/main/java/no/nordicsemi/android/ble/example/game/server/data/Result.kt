@@ -1,7 +1,7 @@
 package no.nordicsemi.android.ble.example.game.server.data
 
-import no.nordicsemi.android.ble.example.game.proto.FinalResultProto
-import no.nordicsemi.android.ble.example.game.proto.ResultToClientProto
+import no.nordicsemi.android.ble.example.game.proto.ResultProto
+import no.nordicsemi.android.ble.example.game.proto.ResultsProto
 
 /**
  * Final result to send to all players.
@@ -18,13 +18,12 @@ data class Result(
     var score: Int,
 )
 
-fun Results.toProto() = ResultToClientProto(isGameOver, result.map { it.toProto() })
+fun Results.toProto() = ResultsProto(isGameOver, result.map { it.toProto() })
 
-fun Result.toProto() = FinalResultProto(name, score)
+fun Result.toProto() = ResultProto(name, score)
 
-fun ResultToClientProto.toResultToClient() =
-    Results(isGameOver, finalResult.map { it.finalResult() })
+fun ResultsProto.toResults() = Results(isGameOver, result.map { it.result() })
 
-fun FinalResultProto.finalResult() = Result(name, score)
+fun ResultProto.result() = Result(name, score)
 
 

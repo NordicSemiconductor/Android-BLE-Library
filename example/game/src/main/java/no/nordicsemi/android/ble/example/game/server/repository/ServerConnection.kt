@@ -96,8 +96,8 @@ class ServerConnection(
     /**
      * Send result after game over.
      */
-    suspend fun gameOver(resultToClient: Results) {
-        val request = RequestProto(OpCodeProto.GAME_OVER, resultToClient = resultToClient.toProto())
+    suspend fun gameOver(results: Results) {
+        val request = RequestProto(OpCodeProto.GAME_OVER, results = results.toProto() )
         val requestByteArray = request.encode()
         sendNotification(serverCharacteristic, requestByteArray)
             .split(PacketSplitter())

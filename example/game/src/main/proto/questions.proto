@@ -11,34 +11,30 @@ enum OpCodeProto {
 }
 
 message RequestProto {
-  OpCodeProto opCode                 = 1;
-  QuestionProto question             = 2;
-  int32 answerId                     = 3;
-  string name                        = 4;
-  ResultProto result                 = 5;
-  ResultToClientProto resultToClient = 6;
+  OpCodeProto opCode      = 1;
+  QuestionProto question  = 2;
+  int32 answerId          = 3;
+  string name             = 4;
+  ResultProto result      = 5;
+  ResultsProto results    = 6;
 }
 
 message QuestionProto {
   string text                  = 1;
   repeated AnswerProto answers = 2;
 }
-message ResultToClientProto{
-  bool isGameOver                       = 1;
-  repeated FinalResultProto finalResult = 2;
-}
-
-message FinalResultProto {
-  string name  = 1;
-  int32 score  = 2;
-}
-
-message ResultProto {
-  string name             = 1;
-  int32 selectedAnswerId  = 2;
-}
 
 message AnswerProto {
   string text = 1;
   int32 id    = 2;
+}
+
+message ResultsProto {
+  bool isGameOver             = 1;
+  repeated ResultProto result = 2;
+}
+
+message ResultProto {
+  string name  = 1;
+  int32 score  = 2;
 }
