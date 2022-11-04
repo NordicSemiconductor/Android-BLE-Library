@@ -7,7 +7,7 @@ import no.nordicsemi.android.ble.example.game.proto.RequestProto
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
 import no.nordicsemi.android.ble.example.game.quiz.repository.toQuestion
 import no.nordicsemi.android.ble.example.game.server.data.Results
-import no.nordicsemi.android.ble.example.game.server.data.toResultToClient
+import no.nordicsemi.android.ble.example.game.server.data.toResults
 import no.nordicsemi.android.ble.response.ReadResponse
 
 /**
@@ -25,7 +25,7 @@ class Request : ReadResponse() {
         when (request.opCode) {
             OpCodeProto.NEW_QUESTION -> { question = request.question?.toQuestion() }
             OpCodeProto.RESULT -> { answerId = request.answerId }
-            OpCodeProto.GAME_OVER -> { result = request.resultToClient?.toResultToClient() }
+            OpCodeProto.GAME_OVER -> { result = request.results?.toResults() }
             else -> {}
         }
     }
