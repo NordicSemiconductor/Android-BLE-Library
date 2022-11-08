@@ -2,6 +2,7 @@ package no.nordicsemi.android.ble.example.game.server
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -22,17 +23,21 @@ import no.nordicsemi.android.common.navigation.NavigationManager
 import no.nordicsemi.android.common.permission.RequireBluetooth
 import no.nordicsemi.android.common.theme.view.NordicAppBar
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ServerScreen(
-    navigationManager: NavigationManager,
+    onNavigationUp: () -> Unit,
 ) {
     Column {
+        var playersName by rememberSaveable { mutableStateOf("") }
         NordicAppBar(
-            text = stringResource(id = R.string.server),
-            onNavigationButtonClick = {
-                navigationManager.navigateUp()
-            }
+            text = when (playersName.isNotEmpty()) {
+                true -> stringResource(id = R.string.good_luck_player, playersName)
+                else -> stringResource(id = R.string.server)
+            },
+            onNavigationButtonClick = onNavigationUp
         )
+
         RequireBluetooth {
             val serverViewModel: ServerViewModel = hiltViewModel()
             val gameState by serverViewModel.state.collectAsState()

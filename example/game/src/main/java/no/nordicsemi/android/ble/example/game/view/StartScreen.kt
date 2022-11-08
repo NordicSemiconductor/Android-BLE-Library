@@ -2,6 +2,7 @@ package no.nordicsemi.android.ble.example.game.view
 
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.Button
+import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -10,16 +11,17 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import no.nordicsemi.android.ble.example.game.MainActivity
 import no.nordicsemi.android.ble.example.game.R
-import no.nordicsemi.android.common.navigation.NavigationManager
+import no.nordicsemi.android.common.navigation.DestinationId
 import no.nordicsemi.android.common.theme.view.NordicAppBar
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StartScreen(
-    navigationManager: NavigationManager,
+    onNavigation: (DestinationId<Unit, *>) -> Unit,
 ) {
     Column {
         NordicAppBar(
-            text = stringResource(id = R.string.app_name)
+            text = stringResource(id = R.string.welcome_message)
         )
 
         Column(
@@ -37,16 +39,12 @@ fun StartScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Button(
-                    onClick = {
-                        navigationManager.navigateTo(MainActivity.Server)
-                    }
+                    onClick = { onNavigation(MainActivity.Server) }
                 ) {
                     Text(text = stringResource(id = R.string.start_game))
                 }
                 Button(
-                    onClick = {
-                        navigationManager.navigateTo(MainActivity.Client)
-                    }
+                    onClick = { onNavigation(MainActivity.Client) }
                 ) {
                     Text(text = stringResource(id = R.string.join_game))
                 }

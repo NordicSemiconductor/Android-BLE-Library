@@ -1,11 +1,16 @@
 package no.nordicsemi.android.ble.example.game.navigation
 
+import androidx.hilt.navigation.compose.hiltViewModel
 import no.nordicsemi.android.ble.example.game.MainActivity
 import no.nordicsemi.android.ble.example.game.server.ServerScreen
-import no.nordicsemi.android.common.navigation.ComposeDestination
-import no.nordicsemi.android.common.navigation.ComposeDestinations
+import no.nordicsemi.android.common.navigation.defineDestination
+import no.nordicsemi.android.common.navigation.viewmodel.SimpleNavigationViewModel
 
-private val Server = ComposeDestination(MainActivity.Server) { navigationManager ->
-    ServerScreen(navigationManager)
+private val Server = defineDestination(MainActivity.Server) {
+    val viewModel: SimpleNavigationViewModel = hiltViewModel()
+
+    ServerScreen(
+        onNavigationUp = { viewModel.navigateUp() }
+    )
 }
-val ServerDestinations = ComposeDestinations(Server)
+val ServerDestinations = Server
