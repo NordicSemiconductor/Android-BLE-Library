@@ -69,7 +69,10 @@ class ServerViewModel @Inject constructor(
             val questions = questionRepository.getQuestions(category = category)
             questionSaved = questions
             /** Send first Question */
-            showQuestion(questions.questions[0])
+            showQuestion(
+                (questionSaved?.questions?.get(questionIndex))
+                    ?: throw NullPointerException("Unable to download the question.")
+            )
         }
     }
 
@@ -120,7 +123,7 @@ class ServerViewModel @Inject constructor(
             try {
                 advertiser.startAdvertising()
             } catch (exception: Exception) {
-                Log.d(TAG, "Error in starting server with exception $exception")
+                throw Exception("Could not start server.", exception)
             }
         }
         serverManager.setServerObserver(object : ServerObserver {
@@ -151,7 +154,7 @@ class ServerViewModel @Inject constructor(
                                                 // TODO handle disconnection during game
                                                 Log.d(
                                                     TAG,
-                                                    "Device Disconnected: $device Disconnected From the Server."
+                                                    "Device Disconnected: $device disconnected from the server."
                                                 )
                                             }
                                         }
@@ -188,7 +191,7 @@ class ServerViewModel @Inject constructor(
             }
 
             override fun onDeviceDisconnectedFromServer(device: BluetoothDevice) {
-                Log.w(TAG, "Device Disconnected: $device Disconnected From the Server.")
+                Log.w(TAG, "Device Disconnected: $device disconnected from the server.")
             }
         })
         serverManager.open()
