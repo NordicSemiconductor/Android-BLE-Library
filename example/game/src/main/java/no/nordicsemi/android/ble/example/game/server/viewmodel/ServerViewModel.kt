@@ -165,10 +165,13 @@ class ServerViewModel @Inject constructor(
                     .apply {
                         playersName
                             .onEach {
-                                mapNameAndDevice(
-                                    playerName = it,
-                                    deviceAddress = device.address
-                                )
+                                if (!isValidateName(it)) {
+                                    /** Save only if the name is valid. */
+                                    mapNameAndDevice(
+                                        playerName = it,
+                                        deviceAddress = device.address
+                                    )
+                                }
                             }
                             .launchIn(viewModelScope)
                     }
@@ -192,17 +195,10 @@ class ServerViewModel @Inject constructor(
         serverManager.open()
     }
 
-    fun savePlayersName(playerName: String) {
-        savedResult.value += Result(
-            name = playerName,
-            score = 0
-        )
-        /** Send name to all players to prevent duplicate */
-        viewModelScope.launch {
-            clients.value.forEach {
-                it.gameOver(Results(false, savedResult.value))
-            }
-        }
+    /** Validate the players name sent from clients. */
+    private fun isValidateName(playersName: String): Boolean {
+        val name = playersName.trim()
+        return name.isEmpty() || (savedResult.value.find { it.name == name }?.name == name)
     }
 
     private fun stopServer() {
