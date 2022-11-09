@@ -23,7 +23,6 @@ fun BottomNavigationView(
             .padding(16.dp),
         onClick = onNextClick,
         enabled = correctAnswerId != null
-
     ) {
         Text(text = stringResource(id = R.string.next))
     }

@@ -7,7 +7,7 @@ import no.nordicsemi.android.ble.example.game.proto.QuestionProto
  * Remote Question data fetched from a remote api.
  * @property response_code  response code (always 0).
  * @property results        list of questions from the remote api.
- * */
+ */
 data class QuestionsRemote(
     val response_code: Int,
     val results: List<QuestionRemote>
@@ -25,7 +25,7 @@ data class QuestionRemote(
 /**
  * Local Question Data.
  * @property questions list of questions with list of answers and correct answer id.
- * */
+ */
 data class Questions(
     val questions: List<Question>,
 )

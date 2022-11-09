@@ -41,8 +41,7 @@ fun StartGameView(
                 .align(Alignment.CenterHorizontally),
             onClick = onStartGame,
             enabled = isAllNameCollected,
-
-            ) {
+        ) {
             Text(text = stringResource(id = R.string.start_game))
         }
     }

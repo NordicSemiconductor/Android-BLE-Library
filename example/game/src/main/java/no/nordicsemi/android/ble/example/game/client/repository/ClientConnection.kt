@@ -39,8 +39,6 @@ class ClientConnection(
     val isGameOver = _isGameOver.asSharedFlow()
     private val _result = MutableSharedFlow<Results>()
     val result = _result.asSharedFlow()
-    private val _answer = MutableSharedFlow<Int>()
-    val answer = _answer.asSharedFlow()
 
     override fun log(priority: Int, message: String) {
         Log.println(priority, TAG, message)
@@ -100,17 +98,15 @@ class ClientConnection(
      * Send selected answer id to the server.
      */
     suspend fun sendSelectedAnswer(answer: Int) {
-        val result =
-            RequestProto(
-                OpCodeProto.RESULT, answerId = answer)
+        val result = RequestProto(OpCodeProto.RESULT, answerId = answer)
         val resultByteArray = result.encode()
         writeCharacteristic(
             characteristic,
             resultByteArray,
             BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
         )
-            .split(PacketSplitter())
-            .suspend()
+        .split(PacketSplitter())
+        .suspend()
     }
 
     /**
@@ -124,8 +120,8 @@ class ClientConnection(
             deviceNameByteArray,
             BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
         )
-            .split(PacketSplitter())
-            .suspend()
+        .split(PacketSplitter())
+        .suspend()
     }
 
     fun release() {

@@ -211,6 +211,7 @@ class ServerViewModel @Inject constructor(
     override fun onCleared() {
         super.onCleared()
         stopAdvertising()
+
         clients.value.forEach {
             it.release()
         }

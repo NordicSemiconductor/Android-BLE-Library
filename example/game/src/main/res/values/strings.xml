@@ -1,35 +1,34 @@
 <resources>
     <string name="app_name">Game</string>
 
+    <string name="welcome_message">Welcome</string>
+    <string name="good_luck_player">Good Luck %s</string>
+
     <string name="start_game_description">Please select one option</string>
     <string name="start_game">Start Game</string>
     <string name="join_game">Join Game</string>
-    <string name="play">Play Game</string>
 
-    <string name="client">Client Side</string>
     <string name="looking_for_clients">Looking for clients…</string>
-    <string name="connected_players">Connected clients: %s</string>
+    <string name="connected_players">Connected players: %s</string>
 
-    <string name="server">Server Side</string>
-    <string name="scanning_for_server">Scanning for Server…</string>
-
-    <string name="connected">Connected</string>
-    <string name="loading">Loading…</string>
-    <string name="disconnected">Disconnected</string>
     <string name="initializing">Waiting for server to connect…</string>
-    <string name="downloading">Downloading…</string>
+    <string name="scanning_for_server">Scanning for Server…</string>
+    <string name="connected">Connected</string>
+    <string name="disconnected">Disconnected</string>
+
+    <string name="ask_players_name">Enter player\'s name</string>
+    <string name="empty_name_error">Name cannot be empty</string>
+    <string name="duplicate_name_error">Name already taken</string>
+    <string name="send_players_name">Send</string>
+
+    <string name="user_joined">Joined players</string>
+    <string name="waiting_to_start_game">Waiting for server to start game…</string>
 
     <string name="next">Next</string>
-    <string name="done">Done</string>
 
     <string name="game_over">Game Over</string>
     <string name="show_result">Show Result</string>
-    <string name="winner">Winner</string>
+    <string name="players">Players</string>
     <string name="score">Score</string>
-
-    <string name="ask_players_name">Enter player\'s name</string>
-    <string name="send_players_name">Send</string>
-    <string name="duplicate_name_error">Name already taken</string>
-    <string name="duplicate_name_error_des">Duplicate name error message</string>
 
 </resources>
