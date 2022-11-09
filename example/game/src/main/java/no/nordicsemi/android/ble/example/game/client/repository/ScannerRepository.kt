@@ -1,11 +1,11 @@
 package no.nordicsemi.android.ble.example.game.client.repository
 
+import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.*
 import android.content.Context
 import android.os.ParcelUuid
-import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.suspendCancellableCoroutine
 import no.nordicsemi.android.ble.example.game.spec.DeviceSpecifications.Companion.UUID_SERVICE_DEVICE
@@ -13,21 +13,21 @@ import javax.inject.Inject
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
+@SuppressLint("MissingPermission")
 class ScannerRepository @Inject constructor(
     @ApplicationContext val context: Context,
-    private val bluetoothAdapter: BluetoothAdapter?,
+    private val bluetoothAdapter: BluetoothAdapter,
 ) {
     private val bluetoothLeScanner: BluetoothLeScanner by lazy {
-        if (bluetoothAdapter != null) bluetoothAdapter.bluetoothLeScanner
-        else throw NullPointerException("Bluetooth not initialized")
+        bluetoothAdapter.bluetoothLeScanner
+            ?: throw NullPointerException("Bluetooth not initialized")
     }
 
     /**
      * Starts scanning for an advertising server.
      * Returns the first found device.
      */
-    suspend fun searchForServer(): BluetoothDevice? = suspendCancellableCoroutine { continuation ->
-        Log.d("ScannerRepository", "startScanning: Scanning Started...")
+    suspend fun searchForServer(): BluetoothDevice = suspendCancellableCoroutine { continuation ->
 
         val callback = object : ScanCallback() {
             override fun onScanResult(callbackType: Int, result: ScanResult?) {

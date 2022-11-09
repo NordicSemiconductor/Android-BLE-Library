@@ -16,13 +16,9 @@ object BluetoothAdapterModule {
     @Provides
     fun provideBluetoothAdapter(
         @ApplicationContext context: Context,
-    ): BluetoothAdapter? {
+    ): BluetoothAdapter {
         val manager = context.getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
-        return if (!manager.adapter.isEnabled) {
-            null
-        } else {
-            manager.adapter
-        }
+        return manager.adapter
     }
 
 }

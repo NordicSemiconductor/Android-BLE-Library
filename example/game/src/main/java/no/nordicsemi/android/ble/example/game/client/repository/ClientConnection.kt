@@ -24,7 +24,7 @@ import no.nordicsemi.android.ble.ktx.suspend
 class ClientConnection(
     context: Context,
     private val scope: CoroutineScope,
-    private val device: BluetoothDevice?,
+    private val device: BluetoothDevice,
 ) : BleManager(context) {
     private val TAG = "Client Connection"
     var characteristic: BluetoothGattCharacteristic? = null
@@ -89,13 +89,11 @@ class ClientConnection(
      * Connects to the server.
      */
     suspend fun connect() {
-        device?.let {
-            connect(it)
-                .retry(4, 300)
-                .useAutoConnect(false)
-                .timeout(100_000)
-                .suspend()
-        }
+        connect(device)
+            .retry(4, 300)
+            .useAutoConnect(false)
+            .timeout(100_000)
+            .suspend()
     }
 
     /**

@@ -35,7 +35,6 @@ class ServerViewModel @Inject constructor(
     private val advertiser: AdvertisingManager,
     private val serverManager: ServerManager,
     private val questionRepository: QuestionRepository,
-    private val adapter: BluetoothAdapter?,
 ) : TimerViewModel() {
     val TAG = "Server Connection"
     var clients: MutableStateFlow<List<ServerConnection>> = MutableStateFlow(emptyList())
@@ -238,7 +237,7 @@ class ServerViewModel @Inject constructor(
 
     fun selectedAnswerServer(selectedAnswer: Int) {
         _selectedAnswer.value = selectedAnswer
-        adapter?.address?.let { saveScore(selectedAnswer, it) }
+        advertiser.address?.let { saveScore(selectedAnswer, it) }
     }
 
     private fun saveScore(result: Int, deviceAddress: String) {
