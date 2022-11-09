@@ -8,7 +8,9 @@ class PacketMerger: DataMerger {
     var expectedSize = 0
 
     /**
-     * A method that merges the last packet into the output message.
+     * A method that merges the last packet into the output message. All bytes from the lastPacket
+     * are simply copied to the output stream until null is returned.
+     *
      * @param output     the stream for the output message, initially empty.
      * @param lastPacket the data received in the last read/notify/indicate operation.
      * @param index      an index of the packet, 0-based.
