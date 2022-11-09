@@ -59,9 +59,9 @@ dependencies {
     // Text, color, Surface
     implementation "androidx.compose.material3:material3:1.1.0-alpha01"
     // Nordic theme
-    implementation 'no.nordicsemi.android.common:theme:1.2.1'
-    implementation 'no.nordicsemi.android.common:permission:1.2.1'
-    implementation 'no.nordicsemi.android.common:navigation:1.2.1'
+    implementation 'no.nordicsemi.android.common:theme:1.2.3'
+    implementation 'no.nordicsemi.android.common:permission:1.2.3'
+    implementation 'no.nordicsemi.android.common:navigation:1.2.3'
 
     // Retrofit
     implementation 'com.squareup.retrofit2:retrofit:2.9.0'
