@@ -18,6 +18,7 @@ import no.nordicsemi.android.common.theme.NordicTheme
 fun PlayersNameDialog(
     playersName: String,
     isDuplicate: Boolean,
+    isEmptyName: Boolean,
     onDismiss: () -> Unit,
     onNameSet: (String) -> Unit,
     onSendClick: () -> Unit
@@ -35,20 +36,21 @@ fun PlayersNameDialog(
                 value = playersName,
                 onValueChange = onNameSet,
                 trailingIcon = {
-                    if (isDuplicate)
+                    if (isDuplicate || isEmptyName)
                         Icon(
                             imageVector = Icons.Filled.Info,
-                            contentDescription = stringResource(id = R.string.duplicate_name_error_des),
+                            contentDescription = null,
                             tint = MaterialTheme.colorScheme.error,
                             modifier = Modifier.padding(16.dp)
                         )
                 },
                 singleLine = true,
-                isError = isDuplicate,
+                isError = isDuplicate || isEmptyName,
             )
-            if (isDuplicate) {
+            if (isDuplicate || isEmptyName) {
                 Text(
-                    text = stringResource(id = R.string.duplicate_name_error),
+                    text = if (isDuplicate) stringResource(id = R.string.duplicate_name_error)
+                    else stringResource(id = R.string.empty_name_error),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium,
                     modifier = Modifier.padding(start = 16.dp)
@@ -67,15 +69,15 @@ fun PlayersNameDialog(
 
 @Preview
 @Composable
-fun PlayersNameDialog_Preview(){
+fun PlayersNameDialog_Preview() {
     NordicTheme {
         PlayersNameDialog(
             playersName = "",
+            isEmptyName = true,
             isDuplicate = true,
             onDismiss = { },
-            onNameSet = { }
-        ) {
-
-        }
+            onNameSet = { },
+            onSendClick = {},
+        )
     }
 }
