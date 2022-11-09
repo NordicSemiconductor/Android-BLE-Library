@@ -17,9 +17,7 @@ import no.nordicsemi.android.ble.example.game.proto.OpCodeProto
 import no.nordicsemi.android.ble.example.game.proto.RequestProto
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
 import no.nordicsemi.android.ble.example.game.quiz.repository.toProto
-import no.nordicsemi.android.ble.example.game.server.data.QuestionResponse
-import no.nordicsemi.android.ble.example.game.server.data.Results
-import no.nordicsemi.android.ble.example.game.server.data.toProto
+import no.nordicsemi.android.ble.example.game.server.data.*
 import no.nordicsemi.android.ble.example.game.spec.DeviceSpecifications
 import no.nordicsemi.android.ble.example.game.spec.PacketMerger
 import no.nordicsemi.android.ble.example.game.spec.PacketSplitter
@@ -56,7 +54,6 @@ class ServerConnection(
         }
 
         override fun onServerReady(server: BluetoothGattServer) {
-            log(Log.INFO, "Server ready")
             server.getService(DeviceSpecifications.UUID_SERVICE_DEVICE)?.let { service ->
                 serverCharacteristic = service.getCharacteristic(DeviceSpecifications.UUID_MSG_CHARACTERISTIC)
             }
@@ -96,8 +93,8 @@ class ServerConnection(
     /**
      * Send result after game over.
      */
-    suspend fun gameOver(results: Results) {
-        val request = RequestProto(OpCodeProto.GAME_OVER, results = results.toProto() )
+    suspend fun gameOver(isGameOver: Boolean) {
+        val request = RequestProto(OpCodeProto.GAME_OVER, isGameOver = isGameOver)
         val requestByteArray = request.encode()
         sendNotification(serverCharacteristic, requestByteArray)
             .split(PacketSplitter())
@@ -108,7 +105,7 @@ class ServerConnection(
      * Send correct answer id.
      */
     suspend fun sendCorrectAnswerId(correctAnswerId: Int) {
-        val request = RequestProto(OpCodeProto.RESULT, answerId = correctAnswerId)
+        val request = RequestProto(OpCodeProto.RESPONSE, answerId = correctAnswerId)
         val requestByteArray = request.encode()
         sendNotification(serverCharacteristic, requestByteArray)
             .split(PacketSplitter())
@@ -120,6 +117,28 @@ class ServerConnection(
      */
     suspend fun sendQuestion(question: Question) {
         val request = RequestProto(OpCodeProto.NEW_QUESTION, question = question.toProto())
+        val requestByteArray = request.encode()
+        sendNotification(serverCharacteristic, requestByteArray)
+            .split(PacketSplitter())
+            .suspend()
+    }
+
+    /**
+     * Send players name to all clients to eliminate duplicates.
+     */
+    suspend fun sendNameToAllPlayers(players: Players) {
+        val request = RequestProto(OpCodeProto.PLAYERS, players = players.toProto())
+        val requestByteArray = request.encode()
+        sendNotification(serverCharacteristic, requestByteArray)
+            .split(PacketSplitter())
+            .suspend()
+    }
+
+    /**
+     * Send final result.
+     */
+    suspend fun sendResult(results: Results) {
+        val request = RequestProto(OpCodeProto.RESULT, results = results.toProto())
         val requestByteArray = request.encode()
         sendNotification(serverCharacteristic, requestByteArray)
             .split(PacketSplitter())

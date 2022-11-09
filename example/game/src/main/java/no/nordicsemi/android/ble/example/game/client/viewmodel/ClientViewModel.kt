@@ -8,14 +8,12 @@ import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.launchIn
-import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.ble.example.game.client.repository.ClientConnection
 import no.nordicsemi.android.ble.example.game.client.repository.ScannerRepository
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
+import no.nordicsemi.android.ble.example.game.server.data.Players
 import no.nordicsemi.android.ble.example.game.server.data.Results
 import no.nordicsemi.android.ble.example.game.timer.TimerViewModel
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
@@ -29,12 +27,17 @@ class ClientViewModel @Inject constructor(
 ) : TimerViewModel() {
     private var clientManager: ClientConnection? = null
 
+    private val _userJoined: MutableStateFlow<Players?> = MutableStateFlow(null)
+    val userJoined = _userJoined.asStateFlow()
     private val _question: MutableStateFlow<Question?> = MutableStateFlow(null)
     val question = _question.asStateFlow()
-    private val _result: MutableStateFlow<Results?> = MutableStateFlow(null)
-    val result = _result.asStateFlow()
     private val _answer: MutableStateFlow<Int?> = MutableStateFlow(null)
     val answer = _answer.asStateFlow()
+    private val _isGameOver: MutableStateFlow<Boolean?> = MutableStateFlow(null)
+    val isGameOver = _isGameOver.asStateFlow()
+    private val _result: MutableStateFlow<Results?> = MutableStateFlow(null)
+    val result = _result.asStateFlow()
+
     private val _selectedAnswer: MutableState<Int?> = mutableStateOf(null)
     val selectedAnswer: State<Int?> = _selectedAnswer
 
@@ -50,6 +53,9 @@ class ClientViewModel @Inject constructor(
                     stateAsFlow()
                         .onEach { _state.value = it }
                         .launchIn(viewModelScope)
+                    userJoined
+                        .onEach { _userJoined.value = it }
+                        .launchIn(viewModelScope)
                     question
                         .onEach {
                             _answer.value = null
@@ -60,6 +66,9 @@ class ClientViewModel @Inject constructor(
                         .launchIn(viewModelScope)
                     answer
                         .onEach { _answer.value = it }
+                        .launchIn(viewModelScope)
+                    isGameOver
+                        .onEach { _isGameOver.value = it }
                         .launchIn(viewModelScope)
                     result
                         .onEach { _result.value = it }

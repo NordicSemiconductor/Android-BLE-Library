@@ -13,6 +13,7 @@ import no.nordicsemi.android.ble.example.game.client.data.Request
 import no.nordicsemi.android.ble.example.game.proto.OpCodeProto
 import no.nordicsemi.android.ble.example.game.proto.RequestProto
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
+import no.nordicsemi.android.ble.example.game.server.data.Players
 import no.nordicsemi.android.ble.example.game.server.data.Results
 import no.nordicsemi.android.ble.example.game.spec.DeviceSpecifications
 import no.nordicsemi.android.ble.example.game.spec.PacketMerger
@@ -28,8 +29,14 @@ class ClientConnection(
     private val TAG = "Client Connection"
     var characteristic: BluetoothGattCharacteristic? = null
 
+    private val _userJoined = MutableSharedFlow<Players>()
+    val userJoined = _userJoined.asSharedFlow()
     private val _question = MutableSharedFlow<Question>()
     val question = _question.asSharedFlow()
+    private val _answer = MutableSharedFlow<Int>()
+    val answer = _answer.asSharedFlow()
+    private val _isGameOver = MutableSharedFlow<Boolean>()
+    val isGameOver = _isGameOver.asSharedFlow()
     private val _result = MutableSharedFlow<Results>()
     val result = _result.asSharedFlow()
     private val _answer = MutableSharedFlow<Int>()
@@ -63,10 +70,13 @@ class ClientConnection(
                 .merge(PacketMerger())
                 .asResponseFlow<Request>()
                 .onEach {
-                    it.answerId?.let { answer -> _answer.emit(answer) }
+                    it.userJoined?.let { userJoined -> _userJoined.emit(userJoined) }
                     it.question?.let { question -> _question.emit(question) }
-                    it.result?.let { isGameOver -> _result.emit(isGameOver) }
-                }.launchIn(scope)
+                    it.answerId?.let { answer -> _answer.emit(answer) }
+                    it.isGameOver?.let { isGameOver -> _isGameOver.emit(isGameOver) }
+                    it.result?.let { results -> _result.emit(results) }
+                }
+                .launchIn(scope)
             enableNotifications(characteristic).enqueue()
         }
 

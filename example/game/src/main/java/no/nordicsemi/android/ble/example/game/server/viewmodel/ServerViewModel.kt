@@ -1,6 +1,5 @@
 package no.nordicsemi.android.ble.example.game.server.viewmodel
 
-import android.bluetooth.BluetoothAdapter
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.util.Log
@@ -10,14 +9,17 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
-import kotlinx.coroutines.*
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.launch
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
 import no.nordicsemi.android.ble.example.game.quiz.repository.QuestionRepository
 import no.nordicsemi.android.ble.example.game.quiz.repository.Questions
-import no.nordicsemi.android.ble.example.game.server.data.Result
-import no.nordicsemi.android.ble.example.game.server.data.Results
-import no.nordicsemi.android.ble.example.game.server.data.Name
+import no.nordicsemi.android.ble.example.game.server.data.*
 import no.nordicsemi.android.ble.example.game.server.repository.AdvertisingManager
 import no.nordicsemi.android.ble.example.game.server.repository.ServerConnection
 import no.nordicsemi.android.ble.example.game.server.repository.ServerManager
@@ -50,6 +52,7 @@ class ServerViewModel @Inject constructor(
     var questionIndex = 0
     private val totalQuestions = questionSaved?.questions?.size ?: 10
     val savedResult: MutableStateFlow<List<Result>> = MutableStateFlow(emptyList())
+    val userJoined: MutableStateFlow<List<Player>> = MutableStateFlow(emptyList())
 
     private val mapNameWithDevice: MutableStateFlow<List<Name>> = MutableStateFlow(emptyList())
 
@@ -83,11 +86,9 @@ class ServerViewModel @Inject constructor(
                         isGameOver.value = true
                         /** Send game over flag and results to all players.*/
                         clients.value.forEach {
-                            it.gameOver(
-                                Results(
-                                    isGameOver = true,
-                                    result = savedResult.value
-                                )
+                            it.gameOver(true)
+                            it.sendResult(
+                                Results(savedResult.value)
                             )
                         }
                     }
@@ -219,6 +220,24 @@ class ServerViewModel @Inject constructor(
             it.release()
         }
         stopServer()
+    }
+
+    private fun savePlayersName(playerName: String) {
+        userJoined.value += Player(playerName)
+        savedResult.value += Result(
+            name = playerName,
+            score = 0
+        )
+        /** Send name to all players to prevent duplicate. */
+        viewModelScope.launch {
+            clients.value.forEach {
+                it.sendNameToAllPlayers(Players(userJoined.value))
+            }
+        }
+    }
+
+    fun saveServerPlayer(playerName: String) {
+        advertiser.address?.let { mapNameAndDevice(playerName, it) }
     }
 
     fun selectedAnswerServer(selectedAnswer: Int) {

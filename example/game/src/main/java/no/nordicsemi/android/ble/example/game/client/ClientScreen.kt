@@ -12,7 +12,7 @@ import no.nordicsemi.android.ble.example.game.client.view.*
 import no.nordicsemi.android.ble.example.game.client.viewmodel.ClientViewModel
 import no.nordicsemi.android.ble.example.game.quiz.view.PlayersNameDialog
 import no.nordicsemi.android.ble.example.game.quiz.view.QuestionContentView
-import no.nordicsemi.android.ble.example.game.quiz.view.ShowResultView
+import no.nordicsemi.android.ble.example.game.quiz.view.ResultView
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.common.navigation.NavigationManager
 import no.nordicsemi.android.common.permission.RequireBluetooth
@@ -49,9 +49,11 @@ fun ClientScreen(
                         val correctAnswerId by clientViewModel.answer.collectAsState()
                         val selectedAnswerId by clientViewModel.selectedAnswer
                         val ticks by clientViewModel.ticks.collectAsState()
+                        val results by clientViewModel.result.collectAsState()
+                        val isGameOver by clientViewModel.isGameOver.collectAsState()
 
-                        when (results?.isGameOver) {
-                            true -> results?.result?.let { result -> ShowResultView(result = result) }
+                        when (isGameOver) {
+                            true -> results?.result?.let { result -> ResultView(result = result) }
                             else -> {
                                 QuestionContentView(
                                     question = q,

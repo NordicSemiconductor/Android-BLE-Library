@@ -8,6 +8,7 @@ enum OpCodeProto {
   RESULT       = 2;
   NAME         = 3;
   GAME_OVER    = 4;
+  PLAYERS      = 5;
 }
 
 message RequestProto {
@@ -17,6 +18,8 @@ message RequestProto {
   string name             = 4;
   ResultProto result      = 5;
   ResultsProto results    = 6;
+  PlayersProto players    = 7;
+  bool isGameOver         = 8;
 }
 
 message QuestionProto {
@@ -30,11 +33,18 @@ message AnswerProto {
 }
 
 message ResultsProto {
-  bool isGameOver             = 1;
-  repeated ResultProto result = 2;
+  repeated ResultProto result = 1;
 }
 
 message ResultProto {
   string name  = 1;
   int32 score  = 2;
+}
+
+message PlayersProto {
+  repeated PlayerProto player = 1;
+}
+
+message PlayerProto {
+  string name = 1;
 }
