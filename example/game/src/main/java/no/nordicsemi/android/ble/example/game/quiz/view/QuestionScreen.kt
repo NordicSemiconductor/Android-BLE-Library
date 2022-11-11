@@ -5,10 +5,12 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.selection.selectable
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.runtime.*
+import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
@@ -51,26 +53,27 @@ fun QuestionContentView(
                 .padding(8.dp),
             style = MaterialTheme.typography.titleLarge,
         )
-
-        question.answers.forEach { answer ->
-            Text(
-                modifier = modifier
-                    .fillMaxWidth()
-                    .selectable(
-                        selected = answer.id == selectedAnswerId,
-                        onClick = { onAnswerSelected(answer.id) },
-                        enabled = isTimerRunning && selectedAnswerId == null
-                    )
-                    .background(
-                        color = Color(
-                            isCorrect = answer.id == correctAnswerId,
-                            isSelected = answer.id == selectedAnswerId,
-                            isTimerRunning = isTimerRunning,
-                        ),
-                    )
-                    .padding(16.dp),
-                text = htmlTextMapper(answer.text)
-            )
+        LazyColumn {
+            items(question.answers) { answer ->
+                Text(
+                    modifier = modifier
+                        .fillMaxWidth()
+                        .selectable(
+                            selected = answer.id == selectedAnswerId,
+                            onClick = { onAnswerSelected(answer.id) },
+                            enabled = isTimerRunning && selectedAnswerId == null
+                        )
+                        .background(
+                            color = Color(
+                                isCorrect = answer.id == correctAnswerId,
+                                isSelected = answer.id == selectedAnswerId,
+                                isTimerRunning = isTimerRunning,
+                            ),
+                        )
+                        .padding(16.dp),
+                    text = htmlTextMapper(answer.text)
+                )
+            }
         }
     }
 }
@@ -89,7 +92,7 @@ fun Color(
 
 @Preview
 @Composable
-private fun QuestionScreen_Preview() {
+private fun QuestionContentView_Preview() {
     NordicTheme {
         QuestionContentView(
             question = Question(
