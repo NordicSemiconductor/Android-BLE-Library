@@ -146,6 +146,16 @@ class ServerViewModel @Inject constructor(
                                     is ConnectionState.Disconnected -> {
                                         clients.value -= this
 
+                                        // Remove device name from the savedResult and all joined users list.
+                                        if (userJoined.value.isNotEmpty()) {
+                                            val removedPlayer = mapName(device.address)!!
+                                            userJoined.value -= Player(removedPlayer)
+                                            savedResult.value -= Result(
+                                                name = removedPlayer,
+                                                score = 0
+                                            )
+                                        }
+
                                         when (currentState) {
                                             is WaitingForPlayers -> {
                                                 _state.value = WaitingForPlayers(clients.value.size)

@@ -33,7 +33,7 @@ fun ServerScreen(
         NordicAppBar(
             text = when (playersName.isNotEmpty()) {
                 true -> stringResource(id = R.string.good_luck_player, playersName)
-                else -> ""
+                else -> stringResource(id = R.string.good_luck_player, "")
             },
             onNavigationButtonClick = onNavigationUp
         )
@@ -42,16 +42,16 @@ fun ServerScreen(
             val serverViewModel: ServerViewModel = hiltViewModel()
             val gameState by serverViewModel.state.collectAsState()
             val result by serverViewModel.savedResult.collectAsState()
+            var openDialog by rememberSaveable { mutableStateOf(true) }
+            var isDuplicate by rememberSaveable { mutableStateOf(false) }
+            var isEmpty by rememberSaveable { mutableStateOf(false) }
+            val userJoined by serverViewModel.userJoined.collectAsState()
 
             when (val currentState = gameState) {
                 is WaitingForPlayers ->
                     if (currentState.connectedPlayers == 0) {
                         WaitingForClientsView()
                     } else {
-                        var openDialog by rememberSaveable { mutableStateOf(true) }
-                        var isDuplicate by rememberSaveable { mutableStateOf(false) }
-                        var isEmpty by rememberSaveable { mutableStateOf(false) }
-                        val userJoined by serverViewModel.userJoined.collectAsState()
 
                         if (openDialog) {
                             PlayersNameDialog(

@@ -28,7 +28,7 @@ fun ClientScreen(
         NordicAppBar(
             text = when (playersName.isNotEmpty()) {
                 true -> stringResource(id = R.string.good_luck_player, playersName)
-                else -> ""
+                else -> stringResource(id = R.string.good_luck_player,"")
             },
             onNavigationButtonClick = onNavigationUp
         )
@@ -36,6 +36,7 @@ fun ClientScreen(
         RequireBluetooth {
             val clientViewModel: ClientViewModel = hiltViewModel()
             val state by clientViewModel.state.collectAsState()
+            val userJoined by clientViewModel.userJoined.collectAsState()
 
             when (state) {
                 ConnectionState.Initializing -> { InitializingView() }
@@ -70,7 +71,6 @@ fun ClientScreen(
                         var openDialog by rememberSaveable { mutableStateOf(true) }
                         var isDuplicate by rememberSaveable { mutableStateOf(false) }
                         var isEmptyName by rememberSaveable { mutableStateOf(false) }
-                        val userJoined by clientViewModel.userJoined.collectAsState()
 
                         if (openDialog) {
                             PlayersNameDialog(
