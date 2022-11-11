@@ -62,6 +62,7 @@ class ServerConnection(
         @OptIn(ExperimentalCoroutinesApi::class)
         override fun initialize() {
             setWriteCallback(serverCharacteristic)
+                // Merges packets until the entire text is present in the stream [PacketMerger.merge].
                 .merge(PacketMerger())
                 .asResponseFlow<QuestionResponse>()
                 .onEach {
@@ -91,7 +92,8 @@ class ServerConnection(
     }
 
     /**
-     * Send result after game over.
+     * Send result after game over. The data is split into MTU size packets using
+     * packet splitter [PacketSplitter.chunk] before sending it to the client.
      */
     suspend fun gameOver(isGameOver: Boolean) {
         val request = RequestProto(OpCodeProto.GAME_OVER, isGameOver = isGameOver)
@@ -102,7 +104,8 @@ class ServerConnection(
     }
 
     /**
-     * Send correct answer id.
+     * Send correct answer id. The data is split into MTU size packets using
+     * packet splitter [PacketSplitter.chunk] before sending it to the client.
      */
     suspend fun sendCorrectAnswerId(correctAnswerId: Int) {
         val request = RequestProto(OpCodeProto.RESPONSE, answerId = correctAnswerId)
@@ -113,7 +116,8 @@ class ServerConnection(
     }
 
     /**
-     * Send question.
+     * Send question. The data is split into MTU size
+     * packets using packet splitter [PacketSplitter.chunk] before sending it to the client.
      */
     suspend fun sendQuestion(question: Question) {
         val request = RequestProto(OpCodeProto.NEW_QUESTION, question = question.toProto())
@@ -124,7 +128,8 @@ class ServerConnection(
     }
 
     /**
-     * Send players name to all clients to eliminate duplicates.
+     * Send players name to all clients to eliminate duplicates. The data is split into MTU size
+     * packets using packet splitter [PacketSplitter.chunk] before sending it to the client.
      */
     suspend fun sendNameToAllPlayers(players: Players) {
         val request = RequestProto(OpCodeProto.PLAYERS, players = players.toProto())
@@ -135,7 +140,8 @@ class ServerConnection(
     }
 
     /**
-     * Send final result.
+     * Send final result and scores to all clients. The data is split into MTU size
+     * packets using packet splitter [PacketSplitter.chunk] before sending it to the client.
      */
     suspend fun sendResult(results: Results) {
         val request = RequestProto(OpCodeProto.RESULT, results = results.toProto())

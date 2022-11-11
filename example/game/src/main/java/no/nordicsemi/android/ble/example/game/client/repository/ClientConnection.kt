@@ -53,6 +53,7 @@ class ClientConnection(
     private inner class ClientGattCallback: BleManagerGattCallback() {
 
         override fun isRequiredServiceSupported(gatt: BluetoothGatt): Boolean {
+            // Return false if a required service has not been discovered.
             gatt.getService(DeviceSpecifications.UUID_SERVICE_DEVICE)?.let { service ->
                 characteristic = service.getCharacteristic(DeviceSpecifications.UUID_MSG_CHARACTERISTIC)
             }
@@ -60,11 +61,15 @@ class ClientConnection(
             return characteristic != null
         }
 
+        /**
+         * Initialize the device by enabling notifications.
+         */
         @OptIn(ExperimentalCoroutinesApi::class)
         override fun initialize() {
-            requestMtu(512).enqueue()
+            requestMtu(512).enqueue() // request Mtu-512
 
             setNotificationCallback(characteristic)
+                // Merges packets until the entire text is present in the stream [PacketMerger.merge].
                 .merge(PacketMerger())
                 .asResponseFlow<Request>()
                 .onEach {
@@ -78,6 +83,10 @@ class ClientConnection(
             enableNotifications(characteristic).enqueue()
         }
 
+        /**
+         * This method is called when the services get invalidated, i.e. when the device is disconnected.
+         * When device is disconnected, the reference to the characteristics becomes null.
+         */
         override fun onServicesInvalidated() {
             characteristic = null
         }
@@ -95,7 +104,8 @@ class ClientConnection(
     }
 
     /**
-     * Send selected answer id to the server.
+     * Send selected answer id. The data is split into MTU size packets using
+     * packet splitter [PacketSplitter.chunk] before sending it to the server.
      */
     suspend fun sendSelectedAnswer(answer: Int) {
         val result = RequestProto(OpCodeProto.RESULT, answerId = answer)
@@ -110,7 +120,8 @@ class ClientConnection(
     }
 
     /**
-     * Send device name to the server.
+     * Send device name. The data is split into MTU size packets using
+     * packet splitter [PacketSplitter.chunk] before sending it to the server.
      */
     suspend fun sendPlayersName(name: String) {
         val playersName = RequestProto(OpCodeProto.NAME, name = name)

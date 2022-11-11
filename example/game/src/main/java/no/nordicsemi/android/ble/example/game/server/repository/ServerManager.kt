@@ -23,7 +23,7 @@ class ServerManager @Inject constructor(
     }
 
     /**
-     * It opens the GATT server and starts initializing services.
+     * It opens the GATT server and starts initializing services [BleServerManager.initializeServer].
      * It returns a list of server GATT services with given UUID that will be available to the remote device
      * to use and a list of characteristics.
      */
