@@ -36,7 +36,7 @@ class ServerViewModel @Inject constructor(
     private val serverManager: ServerManager,
     private val questionRepository: QuestionRepository,
 ) : TimerViewModel() {
-    val TAG = "Server Connection"
+    val TAG = "Server ViewModel"
     var clients: MutableStateFlow<List<ServerConnection>> = MutableStateFlow(emptyList())
     private var _state = MutableStateFlow<GameState>(WaitingForPlayers(0))
     val state = _state.asStateFlow()
@@ -162,10 +162,7 @@ class ServerViewModel @Inject constructor(
                                             }
                                             else -> {
                                                 // TODO handle disconnection during game
-                                                Log.d(
-                                                    TAG,
-                                                    "Device Disconnected: $device disconnected from the server."
-                                                )
+                                                Log.d(TAG, "Device Disconnected: $device disconnected from the server.")
                                             }
                                         }
                                     }
@@ -177,8 +174,8 @@ class ServerViewModel @Inject constructor(
                     .apply {
                         playersName
                             .onEach {
-                                if (!isValidateName(it)) {
-                                    /** Save only if the name is valid. */
+                                if (iInvalidateName(it)) {
+                                    // Save only if the name is valid.
                                     mapNameAndDevice(
                                         playerName = it,
                                         deviceAddress = device.address
@@ -207,10 +204,10 @@ class ServerViewModel @Inject constructor(
         serverManager.open()
     }
 
-    /** Validate the players name sent from clients. */
-    private fun isValidateName(playersName: String): Boolean {
+    /** Validate players name sent from clients. */
+    private fun iInvalidateName(playersName: String): Boolean {
         val name = playersName.trim()
-        return name.isEmpty() || (savedResult.value.find { it.name == name }?.name == name)
+        return !(name.isEmpty() || (savedResult.value.find { it.name == name }?.name == name))
     }
 
     private fun stopServer() {
@@ -231,13 +228,13 @@ class ServerViewModel @Inject constructor(
         stopServer()
     }
 
+    /** Save the player's name and send it to all players to prevent duplicates. */
     private fun savePlayersName(playerName: String) {
         userJoined.value += Player(playerName)
         savedResult.value += Result(
             name = playerName,
             score = 0
         )
-        /** Send name to all players to prevent duplicate. */
         viewModelScope.launch {
             clients.value.forEach {
                 it.sendNameToAllPlayers(Players(userJoined.value))
@@ -254,18 +251,23 @@ class ServerViewModel @Inject constructor(
         advertiser.address?.let { saveScore(selectedAnswer, it) }
     }
 
+    /** Save score. Before updating the score, it will check for the players' names that are
+     * associated with the device address. The mapping is done to avoid the possibility of
+     * the client providing a new name each time.
+     */
     private fun saveScore(result: Int, deviceAddress: String) {
         questionSaved?.let { question ->
+            // Check if selected answer is correct.
             result.takeIf { result == question.questions[questionIndex].correctAnswerId }
-                ?.let { updateScore(deviceAddress) }
+                ?.let {
+                    // Update score
+                    savedResult.value.find { it.name == mapName(deviceAddress) }
+                        ?.let { it.score = it.score + 1 }
+                }
         }
     }
 
-    private fun updateScore(deviceAddress: String) {
-        savedResult.value.find { it.name == mapName(deviceAddress) }
-            ?.let { it.score = it.score + 1 }
-    }
-
+    /**  Map players name with device address. */
     private fun mapNameAndDevice(playerName: String, deviceAddress: String) {
         mapNameWithDevice.value += Name(
             name = playerName,
