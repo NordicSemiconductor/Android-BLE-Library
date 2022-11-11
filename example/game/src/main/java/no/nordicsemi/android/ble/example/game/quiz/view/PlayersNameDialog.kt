@@ -49,7 +49,8 @@ fun PlayersNameDialog(
             )
             if (isDuplicate || isEmptyName) {
                 Text(
-                    text = if (isDuplicate) stringResource(id = R.string.duplicate_name_error)
+                    text =
+                    if (isDuplicate) stringResource(id = R.string.duplicate_name_error)
                     else stringResource(id = R.string.empty_name_error),
                     color = MaterialTheme.colorScheme.error,
                     style = MaterialTheme.typography.bodyMedium,
@@ -73,7 +74,7 @@ fun PlayersNameDialog_Preview() {
     NordicTheme {
         PlayersNameDialog(
             playersName = "",
-            isEmptyName = true,
+            isEmptyName = false,
             isDuplicate = true,
             onDismiss = { },
             onNameSet = { },
