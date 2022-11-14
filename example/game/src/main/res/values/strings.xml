@@ -11,7 +11,7 @@
     <string name="looking_for_clients">Looking for clients…</string>
     <string name="connected_players">Connected players: %s</string>
 
-    <string name="initializing">Waiting for server to connect…</string>
+    <string name="initializing">Initializing Server…</string>
     <string name="scanning_for_server">Scanning for Server…</string>
     <string name="connected">Connected</string>
     <string name="disconnected">Disconnected</string>
