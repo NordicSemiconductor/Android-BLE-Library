@@ -46,7 +46,7 @@ sequenceDiagram
 
 ## About the game
 This is a simple quiz game that could be played by multiple players.
-The game will include a server that will host the game and one or more clients.
+It includes a server that will host the game and one or more clients.
 Each participant will be given a question and multiple answers from which they must choose one.
 A timer will appear at the top of the screen, allowing the user to choose the correct answer within
 a given time limit. Only one response per question will be allowed.
