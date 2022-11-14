@@ -56,10 +56,10 @@ it will be highlighted in red.
 A total of ten questions collected from an open source [Trivia API](https://opentdb.com/api_config.php)  
 will be presented. At the end of the game, all players' scores will be distributed.
 
-<img src="images/startScreen.png" alt="startScreen" width="100"/>
-<img src="images/userNameDialog.png" alt="userNameDialog" width="100"/>
-<img src="images/waitingServer.png" alt="waitingServer" width="100"/>
-<img src="align/questionContent.png" alt="questionContent" width="100"/>
+<img src="src/images/startScreen.png" alt="startScreen" width="100"/>
+<img src="src/images/userNameDialog.png" alt="userNameDialog" width="100"/>
+<img src="src/images/waitingServer.png" alt="waitingServer" width="100"/>
+<img src="src/images/questionContent.png" alt="questionContent" width="100"/>
 
 # Requirements
 - The application depends on [Android BLE Library](https://github.com/NordicSemiconductor/Android-BLE-Library/)
