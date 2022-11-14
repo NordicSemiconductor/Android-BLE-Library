@@ -41,25 +41,22 @@ sequenceDiagram
         Note over Server,Client: Process continues until game over
         Server->>Client: Game Over flag
         Server->>Client: Result
-    endu
+    end
 ```
 
 ## About the game
 This is a simple quiz game that could be played by multiple players.
-The game will include a server that will host the game and one or more clients.
+It includes a server that will host the game and one or more clients.
 Each participant will be given a question and multiple answers from which they must choose one.
 A timer will appear at the top of the screen, allowing the user to choose the correct answer within
 a given time limit. Only one response per question will be allowed.
 Once the timer is off, the right answer will be highlighted on each player's screen.
 If the user's selection is correct, it will be highlighted in green; otherwise,
-it will be highlighted in red.
+it will be highlighted in red. At the end of the game, all players' scores will be distributed. 
 A total of ten questions collected from an open source [Trivia API](https://opentdb.com/api_config.php)  
-will be presented. At the end of the game, all players' scores will be distributed.
+will be presented. 
 
-<img src="images/startScreen.png" alt="startScreen" width="100"/>
-<img src="images/userNameDialog.png" alt="userNameDialog" width="100"/>
-<img src="images/waitingServer.png" alt="waitingServer" width="100"/>
-<img src="align/questionContent.png" alt="questionContent" width="100"/>
+<img src="src/images/startScreen.png" alt="startScreen" width="100"/> <img src="src/images/userNameDialog.png" alt="userNameDialog" width="100"/> <img src="src/images/waitingServer.png" alt="waitingServer" width="100"/> <img src="src/images/startGame.jpg" alt="startGame" width="100"/> <img src="src/images/questionContent.png" alt="questionContent" width="100"/> <img src="src/images/nextButton.jpg" alt="nextButton" width="100"/> <img src="src/images/gameOver.jpg" alt="gameOver" width="100"/> <img src="src/images/result.jpg" alt="result" width="100"/>
 
 # Requirements
 - The application depends on [Android BLE Library](https://github.com/NordicSemiconductor/Android-BLE-Library/)
@@ -73,4 +70,4 @@ were introduced.
 The BLUETOOTH_SCAN permission can now be requested with ```usesPermissionFlags="neverForLocation"``` 
 parameter, which excludes location related data from the scan results, making requesting location not needed anymore.
 
-Furthermore, INTERNET access permission is needed to retrieve the question data from the Trivia API.
+Furthermore, internet access permission is needed to retrieve the question data from the Trivia API.
