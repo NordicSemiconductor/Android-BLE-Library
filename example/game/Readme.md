@@ -41,7 +41,7 @@ sequenceDiagram
         Note over Server,Client: Process continues until game over
         Server->>Client: Game Over flag
         Server->>Client: Result
-    endu
+    end
 ```
 
 ## About the game
