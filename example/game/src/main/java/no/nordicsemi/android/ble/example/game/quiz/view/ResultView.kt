@@ -23,7 +23,7 @@ import no.nordicsemi.android.common.theme.NordicTheme
 @Composable
 fun ResultView(result: List<Result?>) {
     val sortedResult: List<Result?> = result.sortedByDescending { it?.score }
-    var openDialog by remember { mutableStateOf(false) }
+    var openDialog by remember { mutableStateOf(true) }
     if (openDialog) {
         ResultDialog(
             onDismiss = { openDialog = false },
