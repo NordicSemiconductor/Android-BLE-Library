@@ -145,8 +145,6 @@ class ServerViewModel @Inject constructor(
                                     }
                                     is ConnectionState.Disconnected -> {
                                         clients.value -= this
-                                        // Remove device name from the savedResult and all joined users list.
-                                        removePlayer(device)
 
                                         when (currentState) {
                                             is WaitingForPlayers -> {
@@ -154,7 +152,6 @@ class ServerViewModel @Inject constructor(
                                             }
                                             else -> {
                                                 Log.d(TAG, "Device Disconnected: $device disconnected from the server.")
-                                                removePlayer(device)
                                             }
                                         }
                                     }
@@ -166,7 +163,7 @@ class ServerViewModel @Inject constructor(
                     .apply {
                         playersName
                             .onEach {
-                                if (iInvalidateName(it)) {
+                                if (isValidateName(it)) {
                                     // Save only if the name is valid.
                                     mapNameAndDevice(
                                         playerName = it,
@@ -197,21 +194,28 @@ class ServerViewModel @Inject constructor(
         serverManager.open()
     }
 
+    /**
+     * A method to remove a disconnected player from the list of all connected users and the result list.
+     */
     private fun removePlayer(device: BluetoothDevice) {
         if (userJoined.value.isNotEmpty()) {
             val disconnectedPlayer = mapName(device.address)!!
             userJoined.value -= Player(disconnectedPlayer)
-            if (savedResult.value.find { it.name == disconnectedPlayer}?.name?.isNotEmpty() == true){
-                savedResult.value -= Result(
-                    disconnectedPlayer,
-                    savedResult.value.find { it.name == disconnectedPlayer }?.score!!
-                )
+            // Checks and removes the corresponding player's name if it is not removed from the list.
+            val player = savedResult.value.find { it.name == disconnectedPlayer}
+            when {
+                player?.name?.isNotEmpty() == true -> {
+                    savedResult.value -= Result(
+                        player.name,
+                        player.score
+                    )
+                }
             }
         }
     }
 
     /** Validate players name sent from a client device. */
-    private fun iInvalidateName(playersName: String): Boolean {
+    private fun isValidateName(playersName: String): Boolean {
         val name = playersName.trim()
         return !(name.isEmpty() || (savedResult.value.find { it.name == name }?.name == name))
     }

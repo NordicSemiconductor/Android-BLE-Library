@@ -18,7 +18,7 @@ import androidx.compose.ui.unit.dp
 import no.nordicsemi.android.ble.example.game.quiz.model.htmlTextMapper
 import no.nordicsemi.android.ble.example.game.quiz.repository.Answer
 import no.nordicsemi.android.ble.example.game.quiz.repository.Question
-import no.nordicsemi.android.ble.example.game.timer.ShowTimer
+import no.nordicsemi.android.ble.example.game.timer.TimerView
 import no.nordicsemi.android.common.theme.NordicTheme
 
 /**
@@ -37,7 +37,7 @@ fun QuestionContentView(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        ShowTimer(
+        TimerView(
             key = question,
             duration = ticks,
             modifier = Modifier

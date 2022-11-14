@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.sp
 import no.nordicsemi.android.common.theme.NordicTheme
 
 @Composable
-fun ShowTimer(
+fun TimerView(
     key: Any,
     duration: Long,
     modifier: Modifier = Modifier,
@@ -67,7 +67,7 @@ private fun checkColor(ticks: Long) = when {
 @Composable
 fun ShowTimer_Preview() {
     NordicTheme {
-        ShowTimer(
+        TimerView(
             key = "",
             duration = 5_000L,
             modifier = Modifier.fillMaxWidth()
