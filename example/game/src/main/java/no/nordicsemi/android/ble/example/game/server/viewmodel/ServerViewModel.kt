@@ -107,9 +107,9 @@ class ServerViewModel @Inject constructor(
                 clients.value.forEach {
                     question.correctAnswerId?.let { answer ->
                         it.sendCorrectAnswerId(answer)
-                        _correctAnswerId.value = answer
                     }
                 }
+                _correctAnswerId.value = question.correctAnswerId
                 job?.cancel()
             }
             .launchIn(viewModelScope)
@@ -145,24 +145,16 @@ class ServerViewModel @Inject constructor(
                                     }
                                     is ConnectionState.Disconnected -> {
                                         clients.value -= this
-
                                         // Remove device name from the savedResult and all joined users list.
-                                        if (userJoined.value.isNotEmpty()) {
-                                            val removedPlayer = mapName(device.address)!!
-                                            userJoined.value -= Player(removedPlayer)
-                                            savedResult.value -= Result(
-                                                name = removedPlayer,
-                                                score = 0
-                                            )
-                                        }
+                                        removePlayer(device)
 
                                         when (currentState) {
                                             is WaitingForPlayers -> {
                                                 _state.value = WaitingForPlayers(clients.value.size)
                                             }
                                             else -> {
-                                                // TODO handle disconnection during game
                                                 Log.d(TAG, "Device Disconnected: $device disconnected from the server.")
+                                                removePlayer(device)
                                             }
                                         }
                                     }
@@ -199,12 +191,26 @@ class ServerViewModel @Inject constructor(
 
             override fun onDeviceDisconnectedFromServer(device: BluetoothDevice) {
                 Log.w(TAG, "Device Disconnected: $device disconnected from the server.")
+                removePlayer(device)
             }
         })
         serverManager.open()
     }
 
-    /** Validate players name sent from clients. */
+    private fun removePlayer(device: BluetoothDevice) {
+        if (userJoined.value.isNotEmpty()) {
+            val disconnectedPlayer = mapName(device.address)!!
+            userJoined.value -= Player(disconnectedPlayer)
+            if (savedResult.value.find { it.name == disconnectedPlayer}?.name?.isNotEmpty() == true){
+                savedResult.value -= Result(
+                    disconnectedPlayer,
+                    savedResult.value.find { it.name == disconnectedPlayer }?.score!!
+                )
+            }
+        }
+    }
+
+    /** Validate players name sent from a client device. */
     private fun iInvalidateName(playersName: String): Boolean {
         val name = playersName.trim()
         return !(name.isEmpty() || (savedResult.value.find { it.name == name }?.name == name))
