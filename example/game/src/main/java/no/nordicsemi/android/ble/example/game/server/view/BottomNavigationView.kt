@@ -15,14 +15,14 @@ import no.nordicsemi.android.common.theme.NordicTheme
 @Composable
 fun BottomNavigationView(
     onNextClick: () -> Unit,
-    correctAnswerId: Int?
+    isTimerRunning: Boolean
 ) {
     Button(
         modifier = Modifier
             .fillMaxWidth()
             .padding(16.dp),
         onClick = onNextClick,
-        enabled = correctAnswerId != null
+        enabled = !isTimerRunning
     ) {
         Text(text = stringResource(id = R.string.next))
     }
@@ -34,7 +34,7 @@ fun BottomNavigationView_Preview() {
     NordicTheme {
         BottomNavigationView(
             onNextClick = { },
-            correctAnswerId = 0,
+            isTimerRunning = true,
         )
     }
 }

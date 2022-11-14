@@ -114,7 +114,7 @@ fun ServerScreen(
                             )
                             BottomNavigationView(
                                 onNextClick = { serverViewModel.showNextQuestion() },
-                                correctAnswerId = correctAnswerId
+                                isTimerRunning = ticks > 0
                             )
                         }
                     }
