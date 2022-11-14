@@ -26,7 +26,10 @@ fun StartGameView(
         modifier = Modifier
             .fillMaxWidth()
             .padding(32.dp)
-            .clickable(onClick = onStartGame),
+            .clickable(
+                enabled = isAllNameCollected,
+                onClick = onStartGame,
+            ),
     ) {
         Text(
             text = stringResource(

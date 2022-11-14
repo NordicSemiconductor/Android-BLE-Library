@@ -52,7 +52,6 @@ fun ServerScreen(
                     if (currentState.connectedPlayers == 0) {
                         WaitingForClientsView()
                     } else {
-
                         if (openDialog) {
                             PlayersNameDialog(
                                 playersName = playersName,
@@ -89,9 +88,7 @@ fun ServerScreen(
                             )
                         }
                     }
-                DownloadingQuestions -> {
-                    LoadingView()
-                }
+                DownloadingQuestions -> { LoadingView() }
                 is Round -> {
                     val isGameOver by serverViewModel.isGameOver
 
