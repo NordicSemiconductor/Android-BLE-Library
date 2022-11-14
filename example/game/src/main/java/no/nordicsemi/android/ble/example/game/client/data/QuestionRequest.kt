@@ -13,8 +13,8 @@ import no.nordicsemi.android.ble.example.game.server.data.toResults
 import no.nordicsemi.android.ble.response.ReadResponse
 
 /**
- * A ReadResponse class that returns the data received and the device from which data
- * were read.
+ * A ReadResponse class that returns both the data and the device from which it was received.
+ * The data received will be decoded using Protobuf before being sent to the client.
  */
 class Request : ReadResponse() {
     var userJoined: Players? = null
