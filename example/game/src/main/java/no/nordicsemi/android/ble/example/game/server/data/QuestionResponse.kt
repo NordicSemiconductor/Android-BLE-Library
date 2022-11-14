@@ -7,8 +7,7 @@ import no.nordicsemi.android.ble.example.game.proto.RequestProto
 import no.nordicsemi.android.ble.response.ReadResponse
 
 /**
- * A ReadResponse class that returns both the data and the device from which it was received.
- * The data received will be decoded using Protobuf before being sent to the server.
+ * This class decodes the received packet using Protobuf.
  */
 class QuestionResponse : ReadResponse() {
     var name: String? = null
