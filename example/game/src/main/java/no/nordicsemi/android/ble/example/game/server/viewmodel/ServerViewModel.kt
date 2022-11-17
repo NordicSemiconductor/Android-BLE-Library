@@ -13,14 +13,13 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import no.nordicsemi.android.ble.example.game.quiz.repository.Question
-import no.nordicsemi.android.ble.example.game.quiz.repository.QuestionRepository
-import no.nordicsemi.android.ble.example.game.quiz.repository.Questions
+import no.nordicsemi.android.ble.example.game.server.repository.Question
+import no.nordicsemi.android.ble.example.game.server.repository.QuestionRepository
+import no.nordicsemi.android.ble.example.game.server.repository.Questions
 import no.nordicsemi.android.ble.example.game.server.data.*
 import no.nordicsemi.android.ble.example.game.server.repository.AdvertisingManager
 import no.nordicsemi.android.ble.example.game.server.repository.ServerConnection
 import no.nordicsemi.android.ble.example.game.server.repository.ServerManager
-import no.nordicsemi.android.ble.example.game.timer.TimerViewModel
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.ble.ktx.stateAsFlow
 import no.nordicsemi.android.ble.observer.ServerObserver
@@ -52,7 +51,7 @@ class ServerViewModel @Inject constructor(
         questionIndex = 0
 
         viewModelScope.launch {
-            _serverState.value = _serverState.value.copy(state =DownloadingQuestions )
+            _serverState.value = _serverState.value.copy(state = DownloadingQuestions )
             val questions = questionRepository.getQuestions(category = category)
             questionSaved = questions
             /** Send first Question */

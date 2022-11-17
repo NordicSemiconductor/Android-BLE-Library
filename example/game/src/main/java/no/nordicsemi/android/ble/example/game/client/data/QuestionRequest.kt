@@ -4,8 +4,8 @@ import android.bluetooth.BluetoothDevice
 import no.nordicsemi.android.ble.data.Data
 import no.nordicsemi.android.ble.example.game.proto.OpCodeProto
 import no.nordicsemi.android.ble.example.game.proto.RequestProto
-import no.nordicsemi.android.ble.example.game.quiz.repository.Question
-import no.nordicsemi.android.ble.example.game.quiz.repository.toQuestion
+import no.nordicsemi.android.ble.example.game.server.repository.Question
+import no.nordicsemi.android.ble.example.game.server.repository.toQuestion
 import no.nordicsemi.android.ble.example.game.server.data.Players
 import no.nordicsemi.android.ble.example.game.server.data.Results
 import no.nordicsemi.android.ble.example.game.server.data.toPlayers

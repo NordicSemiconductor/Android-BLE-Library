@@ -1,9 +1,9 @@
-package no.nordicsemi.android.ble.example.game.quiz.model
+package no.nordicsemi.android.ble.example.game.server.model
 
-import no.nordicsemi.android.ble.example.game.quiz.repository.Answer
-import no.nordicsemi.android.ble.example.game.quiz.repository.Question
-import no.nordicsemi.android.ble.example.game.quiz.repository.Questions
-import no.nordicsemi.android.ble.example.game.quiz.repository.QuestionsRemote
+import no.nordicsemi.android.ble.example.game.server.repository.Answer
+import no.nordicsemi.android.ble.example.game.server.repository.Question
+import no.nordicsemi.android.ble.example.game.server.repository.Questions
+import no.nordicsemi.android.ble.example.game.server.repository.QuestionsRemote
 
 /**
  * A mapper object to map the remote data with the Local data format.

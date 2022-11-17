@@ -11,10 +11,10 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import no.nordicsemi.android.ble.example.game.R
 import no.nordicsemi.android.ble.example.game.client.view.*
 import no.nordicsemi.android.ble.example.game.client.viewmodel.ClientViewModel
-import no.nordicsemi.android.ble.example.game.client.viewmodel.toViewState
-import no.nordicsemi.android.ble.example.game.quiz.view.PlayersNameDialog
-import no.nordicsemi.android.ble.example.game.quiz.view.QuestionContentView
-import no.nordicsemi.android.ble.example.game.quiz.view.ResultView
+import no.nordicsemi.android.ble.example.game.server.view.PlayersNameDialog
+import no.nordicsemi.android.ble.example.game.server.view.QuestionContentView
+import no.nordicsemi.android.ble.example.game.client.data.toViewState
+import no.nordicsemi.android.ble.example.game.server.view.ResultView
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.common.permission.RequireBluetooth
 import no.nordicsemi.android.common.theme.view.NordicAppBar

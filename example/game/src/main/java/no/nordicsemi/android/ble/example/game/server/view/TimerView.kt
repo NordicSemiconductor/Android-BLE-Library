@@ -1,4 +1,4 @@
-package no.nordicsemi.android.ble.example.game.timer
+package no.nordicsemi.android.ble.example.game.server.view
 
 import androidx.compose.animation.core.LinearEasing
 import androidx.compose.animation.core.animateFloatAsState
@@ -17,6 +17,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import no.nordicsemi.android.ble.example.game.server.viewmodel.Timer
 import no.nordicsemi.android.common.theme.NordicTheme
 
 @Composable

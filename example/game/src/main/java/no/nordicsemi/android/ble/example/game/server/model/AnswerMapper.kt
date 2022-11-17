@@ -1,8 +1,8 @@
-package no.nordicsemi.android.ble.example.game.quiz.model
+package no.nordicsemi.android.ble.example.game.server.model
 
-import no.nordicsemi.android.ble.example.game.quiz.repository.Answer
-import no.nordicsemi.android.ble.example.game.server.viewmodel.ColorState
-import no.nordicsemi.android.ble.example.game.server.viewmodel.DisplayAnswer
+import no.nordicsemi.android.ble.example.game.server.repository.Answer
+import no.nordicsemi.android.ble.example.game.server.data.ColorState
+import no.nordicsemi.android.ble.example.game.server.data.DisplayAnswer
 
 fun Answer.toViewState(
     selectedAnswerId: Int? = null,

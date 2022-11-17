@@ -1,4 +1,4 @@
-package no.nordicsemi.android.ble.example.game.timer
+package no.nordicsemi.android.ble.example.game.server.viewmodel
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope

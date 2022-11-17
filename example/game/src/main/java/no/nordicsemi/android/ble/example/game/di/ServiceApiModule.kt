@@ -7,7 +7,7 @@ import dagger.Provides
 import dagger.hilt.InstallIn
 import dagger.hilt.components.SingletonComponent
 import no.nordicsemi.android.ble.example.game.BuildConfig
-import no.nordicsemi.android.ble.example.game.quiz.api.QuestionsService
+import no.nordicsemi.android.ble.example.game.server.api.QuestionsService
 import okhttp3.OkHttpClient
 import okhttp3.logging.HttpLoggingInterceptor
 import retrofit2.Retrofit

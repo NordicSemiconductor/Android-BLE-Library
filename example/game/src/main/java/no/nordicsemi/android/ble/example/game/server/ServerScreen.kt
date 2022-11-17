@@ -10,9 +10,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
 import no.nordicsemi.android.ble.example.game.R
 import no.nordicsemi.android.ble.example.game.client.view.LoadingView
-import no.nordicsemi.android.ble.example.game.quiz.view.PlayersNameDialog
-import no.nordicsemi.android.ble.example.game.quiz.view.QuestionContentView
-import no.nordicsemi.android.ble.example.game.quiz.view.ResultView
+import no.nordicsemi.android.ble.example.game.server.data.DownloadingQuestions
+import no.nordicsemi.android.ble.example.game.server.data.Round
+import no.nordicsemi.android.ble.example.game.server.data.WaitingForPlayers
+import no.nordicsemi.android.ble.example.game.server.data.toViewState
+import no.nordicsemi.android.ble.example.game.server.view.PlayersNameDialog
+import no.nordicsemi.android.ble.example.game.server.view.QuestionContentView
+import no.nordicsemi.android.ble.example.game.server.view.ResultView
 import no.nordicsemi.android.ble.example.game.server.view.BottomNavigationView
 import no.nordicsemi.android.ble.example.game.server.view.StartGameView
 import no.nordicsemi.android.ble.example.game.server.view.WaitingForClientsView

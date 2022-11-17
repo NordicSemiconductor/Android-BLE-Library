@@ -1,4 +1,4 @@
-package no.nordicsemi.android.ble.example.game.quiz.repository
+package no.nordicsemi.android.ble.example.game.server.repository
 
 import no.nordicsemi.android.ble.example.game.proto.AnswerProto
 import no.nordicsemi.android.ble.example.game.proto.QuestionProto

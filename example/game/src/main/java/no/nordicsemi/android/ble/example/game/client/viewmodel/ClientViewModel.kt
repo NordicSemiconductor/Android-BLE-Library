@@ -10,10 +10,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import no.nordicsemi.android.ble.example.game.client.data.ClientViewState
 import no.nordicsemi.android.ble.example.game.client.repository.ClientConnection
 import no.nordicsemi.android.ble.example.game.client.repository.ScannerRepository
-import no.nordicsemi.android.ble.example.game.timer.Timer
-import no.nordicsemi.android.ble.example.game.timer.TimerViewModel
+import no.nordicsemi.android.ble.example.game.server.viewmodel.Timer
+import no.nordicsemi.android.ble.example.game.server.viewmodel.TimerViewModel
 import no.nordicsemi.android.ble.ktx.stateAsFlow
 import javax.inject.Inject
 

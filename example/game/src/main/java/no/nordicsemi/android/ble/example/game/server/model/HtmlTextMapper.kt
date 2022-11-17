@@ -1,4 +1,4 @@
-package no.nordicsemi.android.ble.example.game.quiz.model
+package no.nordicsemi.android.ble.example.game.server.model
 
 import android.os.Build
 import android.text.Html

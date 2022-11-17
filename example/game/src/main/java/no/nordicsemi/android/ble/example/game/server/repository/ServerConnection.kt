@@ -15,8 +15,6 @@ import kotlinx.coroutines.flow.onEach
 import no.nordicsemi.android.ble.BleManager
 import no.nordicsemi.android.ble.example.game.proto.OpCodeProto
 import no.nordicsemi.android.ble.example.game.proto.RequestProto
-import no.nordicsemi.android.ble.example.game.quiz.repository.Question
-import no.nordicsemi.android.ble.example.game.quiz.repository.toProto
 import no.nordicsemi.android.ble.example.game.server.data.*
 import no.nordicsemi.android.ble.example.game.spec.DeviceSpecifications
 import no.nordicsemi.android.ble.example.game.spec.PacketMerger

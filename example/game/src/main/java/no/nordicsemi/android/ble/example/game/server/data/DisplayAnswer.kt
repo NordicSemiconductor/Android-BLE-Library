@@ -1,4 +1,4 @@
-package no.nordicsemi.android.ble.example.game.server.viewmodel
+package no.nordicsemi.android.ble.example.game.server.data
 
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable

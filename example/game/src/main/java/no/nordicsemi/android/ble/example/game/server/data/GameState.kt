@@ -1,6 +1,6 @@
-package no.nordicsemi.android.ble.example.game.server.viewmodel
+package no.nordicsemi.android.ble.example.game.server.data
 
-import no.nordicsemi.android.ble.example.game.quiz.repository.Question
+import no.nordicsemi.android.ble.example.game.server.repository.Question
 
 sealed interface GameState
 

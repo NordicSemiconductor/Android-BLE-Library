@@ -1,4 +1,4 @@
-package no.nordicsemi.android.ble.example.game.quiz.view
+package no.nordicsemi.android.ble.example.game.server.view
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
@@ -14,10 +14,9 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import no.nordicsemi.android.ble.example.game.quiz.model.htmlTextMapper
-import no.nordicsemi.android.ble.example.game.server.viewmodel.ColorState
-import no.nordicsemi.android.ble.example.game.server.viewmodel.DisplayAnswer
-import no.nordicsemi.android.ble.example.game.timer.TimerView
+import no.nordicsemi.android.ble.example.game.server.model.htmlTextMapper
+import no.nordicsemi.android.ble.example.game.server.data.ColorState
+import no.nordicsemi.android.ble.example.game.server.data.DisplayAnswer
 import no.nordicsemi.android.common.theme.NordicTheme
 
 /**

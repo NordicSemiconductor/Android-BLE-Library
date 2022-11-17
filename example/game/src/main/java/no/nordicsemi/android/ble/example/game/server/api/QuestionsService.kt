@@ -1,6 +1,6 @@
-package no.nordicsemi.android.ble.example.game.quiz.api
+package no.nordicsemi.android.ble.example.game.server.api
 
-import no.nordicsemi.android.ble.example.game.quiz.repository.QuestionsRemote
+import no.nordicsemi.android.ble.example.game.server.repository.QuestionsRemote
 import retrofit2.http.GET
 import retrofit2.http.Query
 
