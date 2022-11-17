@@ -18,7 +18,7 @@ import no.nordicsemi.android.common.theme.NordicTheme
 fun PlayersNameDialog(
     playersName: String,
     isDuplicate: Boolean,
-    isEmptyName: Boolean,
+    isError: Boolean,
     onDismiss: () -> Unit,
     onNameSet: (String) -> Unit,
     onSendClick: () -> Unit
@@ -36,7 +36,7 @@ fun PlayersNameDialog(
                 value = playersName,
                 onValueChange = onNameSet,
                 trailingIcon = {
-                    if (isDuplicate || isEmptyName)
+                    if (isError)
                         Icon(
                             imageVector = Icons.Filled.Info,
                             contentDescription = null,
@@ -45,9 +45,9 @@ fun PlayersNameDialog(
                         )
                 },
                 singleLine = true,
-                isError = isDuplicate || isEmptyName,
+                isError = isError,
             )
-            if (isDuplicate || isEmptyName) {
+            if (isError) {
                 Text(
                     text =
                     if (isDuplicate) stringResource(id = R.string.duplicate_name_error)
@@ -74,8 +74,8 @@ fun PlayersNameDialog_Preview() {
     NordicTheme {
         PlayersNameDialog(
             playersName = "",
-            isEmptyName = false,
             isDuplicate = true,
+            isError = true,
             onDismiss = { },
             onNameSet = { },
             onSendClick = {},
