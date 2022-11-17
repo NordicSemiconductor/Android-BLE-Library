@@ -1,8 +1,11 @@
 package no.nordicsemi.android.ble.example.game.server.view
 
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.material3.Button
 import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Text
@@ -13,13 +16,13 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import no.nordicsemi.android.ble.example.game.R
-import no.nordicsemi.android.ble.example.game.server.viewmodel.WaitingForPlayers
+import no.nordicsemi.android.ble.example.game.server.data.Player
 import no.nordicsemi.android.common.theme.NordicTheme
 
 @Composable
 fun StartGameView(
-    currentState: WaitingForPlayers,
     isAllNameCollected: Boolean,
+    joinedPlayer: List<Player>,
     onStartGame: () -> Unit
 ) {
     OutlinedCard(
@@ -31,13 +34,17 @@ fun StartGameView(
                 onClick = onStartGame,
             ),
     ) {
-        Text(
-            text = stringResource(
-                id = R.string.connected_players,
-                "${currentState.connectedPlayers}"
-            ),
-            modifier = Modifier.padding(16.dp)
-        )
+        Text(text = stringResource(id = R.string.user_joined),
+            modifier = Modifier.padding(8.dp))
+        LazyColumn(
+            modifier = Modifier.fillMaxWidth(),
+            contentPadding = PaddingValues(8.dp),
+        ) {
+            items(items = joinedPlayer) { players ->
+                Text(text = players.name,
+                modifier = Modifier.padding(start = 16.dp))
+            }
+        }
         Button(
             modifier = Modifier
                 .padding(16.dp)
@@ -55,9 +62,11 @@ fun StartGameView(
 fun StartGameView_Preview() {
     NordicTheme {
         StartGameView(
-            currentState = WaitingForPlayers(1),
             isAllNameCollected = false,
-            onStartGame = { }
-        )
+            joinedPlayer = listOf(
+                Player("User 1"),
+                Player("User 2")
+            )
+        ) { }
     }
 }
