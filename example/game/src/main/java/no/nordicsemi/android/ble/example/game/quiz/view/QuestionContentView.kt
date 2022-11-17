@@ -12,12 +12,11 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import no.nordicsemi.android.ble.example.game.quiz.model.htmlTextMapper
-import no.nordicsemi.android.ble.example.game.quiz.repository.Answer
-import no.nordicsemi.android.ble.example.game.quiz.repository.Question
+import no.nordicsemi.android.ble.example.game.server.viewmodel.ColorState
+import no.nordicsemi.android.ble.example.game.server.viewmodel.DisplayAnswer
 import no.nordicsemi.android.ble.example.game.timer.TimerView
 import no.nordicsemi.android.common.theme.NordicTheme
 
@@ -26,9 +25,8 @@ import no.nordicsemi.android.common.theme.NordicTheme
  */
 @Composable
 fun QuestionContentView(
-    question: Question,
-    selectedAnswerId: Int?,
-    correctAnswerId: Int?,
+    question: String?,
+    answers: List<DisplayAnswer>,
     ticks: Long,
     modifier: Modifier = Modifier,
     onAnswerSelected: (Int) -> Unit,
@@ -37,38 +35,34 @@ fun QuestionContentView(
         modifier = modifier,
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        TimerView(
-            key = question,
-            duration = ticks,
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(16.dp),
-        )
-        val isTimerRunning = ticks > 0
-
+        question?.let {
+            TimerView(
+                key = it,
+                duration = ticks,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+            )
+        }
         Text(
-            text = htmlTextMapper(question.question),
+            text = htmlTextMapper(question),
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(8.dp),
             style = MaterialTheme.typography.titleLarge,
         )
         LazyColumn {
-            items(question.answers) { answer ->
+            items(answers) { answer ->
                 Text(
                     modifier = modifier
                         .fillMaxWidth()
                         .selectable(
-                            selected = answer.id == selectedAnswerId,
+                            selected = answer.isSelected,
                             onClick = { onAnswerSelected(answer.id) },
-                            enabled = isTimerRunning && selectedAnswerId == null
+                            enabled = answer.enableSelection
                         )
                         .background(
-                            color = Color(
-                                isCorrect = answer.id == correctAnswerId,
-                                isSelected = answer.id == selectedAnswerId,
-                                isTimerRunning = isTimerRunning,
-                            ),
+                            color = answer.color.color(),
                         )
                         .padding(16.dp),
                     text = htmlTextMapper(answer.text)
@@ -78,36 +72,39 @@ fun QuestionContentView(
     }
 }
 
-@Composable
-fun Color(
-    isCorrect: Boolean,
-    isSelected: Boolean,
-    isTimerRunning: Boolean,
-): Color = when {
-    isCorrect -> Color.Green
-    isSelected && isTimerRunning -> MaterialTheme.colorScheme.secondary
-    isTimerRunning or !isSelected -> Color.Unspecified
-    else -> Color.Red
-}
-
 @Preview
 @Composable
-private fun QuestionContentView_Preview() {
+private fun QuestionContentView2_Preview() {
     NordicTheme {
         QuestionContentView(
-            question = Question(
-                "How are you?", listOf(
-                    Answer("Good", 0),
-                    Answer("OK", 1),
-                    Answer("Bad", 2),
-                    Answer("Are you joking?", 3),
-                )
-            ),
-            correctAnswerId = 0,
-            selectedAnswerId = 3,
+            question =
+            "How are you?",
             ticks = 4000,
             modifier = Modifier.fillMaxWidth(),
-            onAnswerSelected = {}
+            onAnswerSelected = {},
+            answers = listOf(
+                DisplayAnswer(1, "Excellent",
+                    isSelected = false,
+                    enableSelection = true,
+                    color = ColorState.NOT_SELECTED_AND_TIMER_RUNNING
+                ),
+                DisplayAnswer(1, "Good",
+                    isSelected = true,
+                    enableSelection = true,
+                    color = ColorState.SELECTED_AND_TIMER_RUNNING
+                ),
+                DisplayAnswer(1, "Ok",
+                    isSelected = false,
+                    enableSelection = true,
+                    color = ColorState.NOT_SELECTED_AND_TIMER_RUNNING
+                ),
+                DisplayAnswer(1, "Bad",
+                    isSelected = false,
+                    enableSelection = true,
+                    color = ColorState.NOT_SELECTED_AND_TIMER_RUNNING
+                ),
+
+                )
         )
     }
 }

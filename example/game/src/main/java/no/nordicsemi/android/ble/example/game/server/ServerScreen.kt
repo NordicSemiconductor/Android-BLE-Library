@@ -16,10 +16,7 @@ import no.nordicsemi.android.ble.example.game.quiz.view.ResultView
 import no.nordicsemi.android.ble.example.game.server.view.BottomNavigationView
 import no.nordicsemi.android.ble.example.game.server.view.StartGameView
 import no.nordicsemi.android.ble.example.game.server.view.WaitingForClientsView
-import no.nordicsemi.android.ble.example.game.server.viewmodel.DownloadingQuestions
-import no.nordicsemi.android.ble.example.game.server.viewmodel.Round
-import no.nordicsemi.android.ble.example.game.server.viewmodel.ServerViewModel
-import no.nordicsemi.android.ble.example.game.server.viewmodel.WaitingForPlayers
+import no.nordicsemi.android.ble.example.game.server.viewmodel.*
 import no.nordicsemi.android.common.permission.RequireBluetooth
 import no.nordicsemi.android.common.theme.view.NordicAppBar
 
@@ -40,14 +37,12 @@ fun ServerScreen(
 
         RequireBluetooth {
             val serverViewModel: ServerViewModel = hiltViewModel()
-            val gameState by serverViewModel.state.collectAsState()
-            val result by serverViewModel.savedResult.collectAsState()
+            val serverViewState by serverViewModel.serverViewState.collectAsState()
             var openDialog by rememberSaveable { mutableStateOf(true) }
             var isDuplicate by rememberSaveable { mutableStateOf(false) }
             var isEmpty by rememberSaveable { mutableStateOf(false) }
-            val userJoined by serverViewModel.userJoined.collectAsState()
 
-            when (val currentState = gameState) {
+            when (val currentState = serverViewState.state) {
                 is WaitingForPlayers ->
                     if (currentState.connectedPlayers == 0) {
                         WaitingForClientsView()
@@ -56,7 +51,7 @@ fun ServerScreen(
                             PlayersNameDialog(
                                 playersName = playersName,
                                 isDuplicate = isDuplicate,
-                                isEmptyName = isEmpty,
+                                isError = isEmpty || isDuplicate,
                                 onDismiss = { openDialog = false },
                                 onNameSet = {
                                     playersName = it
@@ -67,7 +62,7 @@ fun ServerScreen(
                                     playersName = playersName.trim()
                                     if (playersName.isNotEmpty()) {
                                         isEmpty = false
-                                        userJoined.find { it.name == playersName }
+                                        serverViewState.userJoined.find { it.name == playersName }
                                             ?.let {
                                                 isDuplicate = true
                                             }
@@ -79,30 +74,22 @@ fun ServerScreen(
                                 },
                             )
                         } else {
-                            val clients by serverViewModel.clients.collectAsState()
-
                             StartGameView(
-                                currentState = currentState,
-                                isAllNameCollected = result.size >= (clients.size + 1),
-                                onStartGame = { serverViewModel.startGame() }
-                            )
+                                isAllNameCollected = serverViewState.userJoined.size == (currentState.connectedPlayers + 1),
+                                joinedPlayer = serverViewState.userJoined
+                            ) { serverViewModel.startGame() }
                         }
                     }
                 DownloadingQuestions -> { LoadingView() }
                 is Round -> {
-                    val isGameOver by serverViewModel.isGameOver
-
-                    when (isGameOver) {
-                        true -> ResultView(result = result)
+                    when (serverViewState.isGameOver) {
+                        true -> ResultView(result = serverViewState.result)
                         else -> {
-                            val selectedAnswerId by serverViewModel.selectedAnswer
-                            val correctAnswerId by serverViewModel.correctAnswerId.collectAsState()
                             val ticks by serverViewModel.ticks.collectAsState()
 
                             QuestionContentView(
-                                question = currentState.question,
-                                selectedAnswerId = selectedAnswerId,
-                                correctAnswerId = correctAnswerId,
+                                question = currentState.question.question,
+                                answers = serverViewState.toViewState(),
                                 ticks = ticks,
                                 modifier = Modifier.fillMaxWidth(),
                                 onAnswerSelected = { answerChosen ->

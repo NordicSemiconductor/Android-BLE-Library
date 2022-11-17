@@ -3,9 +3,6 @@ package no.nordicsemi.android.ble.example.game.server.viewmodel
 import android.bluetooth.BluetoothDevice
 import android.content.Context
 import android.util.Log
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
@@ -37,22 +34,13 @@ class ServerViewModel @Inject constructor(
     private val questionRepository: QuestionRepository,
 ) : TimerViewModel() {
     val TAG = "Server ViewModel"
-    var clients: MutableStateFlow<List<ServerConnection>> = MutableStateFlow(emptyList())
-    private var _state = MutableStateFlow<GameState>(WaitingForPlayers(0))
-    val state = _state.asStateFlow()
-    val isGameOver: MutableState<Boolean?> = mutableStateOf(null)
-
-    private val _selectedAnswer: MutableState<Int?> = mutableStateOf(null)
-    val selectedAnswer: State<Int?> = _selectedAnswer
-    private val _correctAnswerId: MutableStateFlow<Int?> = MutableStateFlow(null)
-    val correctAnswerId = _correctAnswerId.asStateFlow()
-
+    private val _serverState: MutableStateFlow<ServerViewState> =
+        MutableStateFlow(ServerViewState())
+    val serverViewState = _serverState.asStateFlow()
+    private var clients: MutableStateFlow<List<ServerConnection>> = MutableStateFlow(emptyList())
     private var questionSaved: Questions? = null
     var questionIndex = 0
     private val totalQuestions = questionSaved?.questions?.size ?: 10
-    val savedResult: MutableStateFlow<List<Result>> = MutableStateFlow(emptyList())
-    val userJoined: MutableStateFlow<List<Player>> = MutableStateFlow(emptyList())
-
     private val mapNameWithDevice: MutableStateFlow<List<Name>> = MutableStateFlow(emptyList())
 
     init {
@@ -61,11 +49,10 @@ class ServerViewModel @Inject constructor(
 
     fun startGame(category: Int? = null) {
         stopAdvertising()
-        isGameOver.value = false
         questionIndex = 0
 
         viewModelScope.launch {
-            _state.emit(DownloadingQuestions)
+            _serverState.value = _serverState.value.copy(state =DownloadingQuestions )
             val questions = questionRepository.getQuestions(category = category)
             questionSaved = questions
             /** Send first Question */
@@ -85,12 +72,12 @@ class ServerViewModel @Inject constructor(
                     /** Send Next Question */
                     ?.let { showQuestion(it) }
                     ?: run {
-                        isGameOver.value = true
+                        _serverState.value = _serverState.value.copy(isGameOver = true)
                         /** Send game over flag and results to all players.*/
                         clients.value.forEach {
                             it.gameOver(true)
                             it.sendResult(
-                                Results(savedResult.value)
+                                Results(_serverState.value.result)
                             )
                         }
                     }
@@ -109,13 +96,19 @@ class ServerViewModel @Inject constructor(
                         it.sendCorrectAnswerId(answer)
                     }
                 }
-                _correctAnswerId.value = question.correctAnswerId
+                _serverState.value = _serverState.value.copy(
+                    correctAnswerId = question.correctAnswerId,
+                    ticks = ticks.value
+                )
                 job?.cancel()
             }
             .launchIn(viewModelScope)
-        _selectedAnswer.value = null
-        _correctAnswerId.value = null
-        _state.value = Round(question)
+        _serverState.value = _serverState.value.copy(
+            state = Round(question),
+        ticks = ticks.value,
+            correctAnswerId = null,
+            selectedAnswerId = null
+        )
     }
 
     private fun startServer() {
@@ -137,22 +130,23 @@ class ServerViewModel @Inject constructor(
                     .apply {
                         stateAsFlow()
                             .onEach { connectionState ->
-                                val currentState = _state.value
+                                val currentState = _serverState.value.state
                                 when (connectionState) {
                                     ConnectionState.Ready -> {
                                         clients.value += this
-                                        _state.value = WaitingForPlayers(clients.value.size)
+                                        _serverState.value = _serverState.value.copy(
+                                            state = WaitingForPlayers(clients.value.size)
+                                        )
                                     }
                                     is ConnectionState.Disconnected -> {
                                         clients.value -= this
-
                                         when (currentState) {
                                             is WaitingForPlayers -> {
-                                                _state.value = WaitingForPlayers(clients.value.size)
+                                                _serverState.value = _serverState.value.copy(
+                                                    state = WaitingForPlayers(clients.value.size)
+                                                )
                                             }
-                                            else -> {
-                                                Log.d(TAG, "Device Disconnected: $device disconnected from the server.")
-                                            }
+                                            else -> Log.d(TAG, "Device Disconnected: $device disconnected from the server.")
                                         }
                                     }
                                     else -> {}
@@ -163,8 +157,8 @@ class ServerViewModel @Inject constructor(
                     .apply {
                         playersName
                             .onEach {
+                                // Save only if the name is valid.
                                 if (isValidateName(it)) {
-                                    // Save only if the name is valid.
                                     mapNameAndDevice(
                                         playerName = it,
                                         deviceAddress = device.address
@@ -198,16 +192,20 @@ class ServerViewModel @Inject constructor(
      * A method to remove a disconnected player from the list of all connected users and the result list.
      */
     private fun removePlayer(device: BluetoothDevice) {
-        if (userJoined.value.isNotEmpty()) {
+        if (_serverState.value.userJoined.isNotEmpty()) {
             val disconnectedPlayer = mapName(device.address)!!
-            userJoined.value -= Player(disconnectedPlayer)
+            val oldState = _serverState.value
+            _serverState.value =
+                oldState.copy(userJoined = oldState.userJoined - Player(disconnectedPlayer))
             // Checks and removes the corresponding player's name if it is not removed from the list.
-            val player = savedResult.value.find { it.name == disconnectedPlayer}
+            val player = _serverState.value.result.find { it.name == disconnectedPlayer }
             when {
                 player?.name?.isNotEmpty() == true -> {
-                    savedResult.value -= Result(
-                        player.name,
-                        player.score
+                    _serverState.value = _serverState.value.copy(
+                        result = _serverState.value.result - Result(
+                            player.name,
+                            player.score
+                        )
                     )
                 }
             }
@@ -217,7 +215,7 @@ class ServerViewModel @Inject constructor(
     /** Validate players name sent from a client device. */
     private fun isValidateName(playersName: String): Boolean {
         val name = playersName.trim()
-        return !(name.isEmpty() || (savedResult.value.find { it.name == name }?.name == name))
+        return !(name.isEmpty() || (_serverState.value.result.find { it.name == name }?.name == name))
     }
 
     private fun stopServer() {
@@ -238,16 +236,21 @@ class ServerViewModel @Inject constructor(
         stopServer()
     }
 
+
     /** Save the player's name and send it to all players to prevent duplicates. */
     private fun savePlayersName(playerName: String) {
-        userJoined.value += Player(playerName)
-        savedResult.value += Result(
-            name = playerName,
-            score = 0
+        val oldState = _serverState.value
+        _serverState.value = oldState.copy(
+            userJoined = oldState.userJoined + Player(playerName),
+            result = oldState.result + Result(
+                name = playerName,
+                score = 0
+            )
         )
+        println(_serverState.value.result)
         viewModelScope.launch {
             clients.value.forEach {
-                it.sendNameToAllPlayers(Players(userJoined.value))
+                it.sendNameToAllPlayers(Players(_serverState.value.userJoined))
             }
         }
     }
@@ -257,7 +260,7 @@ class ServerViewModel @Inject constructor(
     }
 
     fun selectedAnswerServer(selectedAnswer: Int) {
-        _selectedAnswer.value = selectedAnswer
+        _serverState.value = _serverState.value.copy(selectedAnswerId = selectedAnswer)
         advertiser.address?.let { saveScore(selectedAnswer, it) }
     }
 
@@ -271,8 +274,10 @@ class ServerViewModel @Inject constructor(
             result.takeIf { result == question.questions[questionIndex].correctAnswerId }
                 ?.let {
                     // Update score
-                    savedResult.value.find { it.name == mapName(deviceAddress) }
-                        ?.let { it.score = it.score + 1 }
+                    _serverState.value.result.find { it.name == mapName(deviceAddress) }
+                        ?.let {
+                            it.score = it.score + 1
+                        }
                 }
         }
     }

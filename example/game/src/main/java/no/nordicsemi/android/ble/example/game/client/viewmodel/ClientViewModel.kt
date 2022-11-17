@@ -1,22 +1,19 @@
 package no.nordicsemi.android.ble.example.game.client.viewmodel
 
 import android.content.Context
-import androidx.compose.runtime.MutableState
-import androidx.compose.runtime.State
-import androidx.compose.runtime.mutableStateOf
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.Dispatchers
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.launchIn
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.ble.example.game.client.repository.ClientConnection
 import no.nordicsemi.android.ble.example.game.client.repository.ScannerRepository
-import no.nordicsemi.android.ble.example.game.quiz.repository.Question
-import no.nordicsemi.android.ble.example.game.server.data.Players
-import no.nordicsemi.android.ble.example.game.server.data.Results
+import no.nordicsemi.android.ble.example.game.timer.Timer
 import no.nordicsemi.android.ble.example.game.timer.TimerViewModel
-import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.ble.ktx.stateAsFlow
 import javax.inject.Inject
 
@@ -26,23 +23,9 @@ class ClientViewModel @Inject constructor(
     private val scannerRepository: ScannerRepository,
 ) : TimerViewModel() {
     private var clientManager: ClientConnection? = null
-
-    private val _userJoined: MutableStateFlow<Players?> = MutableStateFlow(null)
-    val userJoined = _userJoined.asStateFlow()
-    private val _question: MutableStateFlow<Question?> = MutableStateFlow(null)
-    val question = _question.asStateFlow()
-    private val _answer: MutableStateFlow<Int?> = MutableStateFlow(null)
-    val answer = _answer.asStateFlow()
-    private val _isGameOver: MutableStateFlow<Boolean?> = MutableStateFlow(null)
-    val isGameOver = _isGameOver.asStateFlow()
-    private val _result: MutableStateFlow<Results?> = MutableStateFlow(null)
-    val result = _result.asStateFlow()
-
-    private val _selectedAnswer: MutableState<Int?> = mutableStateOf(null)
-    val selectedAnswer: State<Int?> = _selectedAnswer
-
-    private val _state: MutableStateFlow<ConnectionState> = MutableStateFlow(ConnectionState.Initializing)
-    val state = _state.asStateFlow()
+    private val _clientState: MutableStateFlow<ClientViewState> =
+        MutableStateFlow(ClientViewState())
+    val clientState = _clientState.asStateFlow()
 
     init {
         viewModelScope.launch(Dispatchers.IO) {
@@ -51,32 +34,38 @@ class ClientViewModel @Inject constructor(
             ClientConnection(context, viewModelScope, device)
                 .apply {
                     stateAsFlow()
-                        .onEach { _state.value = it }
+                        .onEach { _clientState.value = _clientState.value.copy(state = it) }
                         .launchIn(viewModelScope)
                     userJoined
-                        .onEach { _userJoined.value = it }
+                        .onEach { _clientState.value = _clientState.value.copy(userJoined = it) }
                         .launchIn(viewModelScope)
                     question
                         .onEach {
-                            _answer.value = null
-                            _selectedAnswer.value = null
-                            _question.value = it
+                            _clientState.value = _clientState.value.copy(
+                                selectedAnswerId = null,
+                                correctAnswerId = null,
+                                ticks = Timer.TOTAL_TIME,
+                                question = it
+                            )
                             startCountDown()
                         }
                         .launchIn(viewModelScope)
                     answer
-                        .onEach { _answer.value = it }
+                        .onEach {
+                            _clientState.value = _clientState.value.copy(
+                                correctAnswerId = it,
+                                ticks = ticks.value
+                            )
+                        }
                         .launchIn(viewModelScope)
                     isGameOver
-                        .onEach { _isGameOver.value = it }
+                        .onEach { _clientState.value = _clientState.value.copy(isGameOver = it) }
                         .launchIn(viewModelScope)
                     result
-                        .onEach { _result.value = it }
+                        .onEach { _clientState.value = _clientState.value.copy(result = it) }
                         .launchIn(viewModelScope)
                 }
-                .apply {
-                    connect()
-                }
+                .apply { connect() }
                 .apply { clientManager = this }
         }
     }
@@ -88,7 +77,11 @@ class ClientViewModel @Inject constructor(
     }
 
     fun sendAnswer(answerId: Int) {
-        _selectedAnswer.value = answerId
+        _clientState.value = _clientState.value.copy(
+            selectedAnswerId = answerId,
+            ticks = ticks.value
+        )
+
         viewModelScope.launch(Dispatchers.IO) {
             clientManager?.sendSelectedAnswer(answerId)
         }

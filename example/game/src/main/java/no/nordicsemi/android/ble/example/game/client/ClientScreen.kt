@@ -11,6 +11,7 @@ import androidx.hilt.navigation.compose.hiltViewModel
 import no.nordicsemi.android.ble.example.game.R
 import no.nordicsemi.android.ble.example.game.client.view.*
 import no.nordicsemi.android.ble.example.game.client.viewmodel.ClientViewModel
+import no.nordicsemi.android.ble.example.game.client.viewmodel.toViewState
 import no.nordicsemi.android.ble.example.game.quiz.view.PlayersNameDialog
 import no.nordicsemi.android.ble.example.game.quiz.view.QuestionContentView
 import no.nordicsemi.android.ble.example.game.quiz.view.ResultView
@@ -28,76 +29,73 @@ fun ClientScreen(
         NordicAppBar(
             text = when (playersName.isNotEmpty()) {
                 true -> stringResource(id = R.string.good_luck_player, playersName)
-                else -> stringResource(id = R.string.good_luck_player,"")
+                else -> stringResource(id = R.string.good_luck_player, "")
             },
             onNavigationButtonClick = onNavigationUp
         )
 
         RequireBluetooth {
             val clientViewModel: ClientViewModel = hiltViewModel()
-            val state by clientViewModel.state.collectAsState()
-            val userJoined by clientViewModel.userJoined.collectAsState()
+            val clientViewState by clientViewModel.clientState.collectAsState()
+            val ticks by clientViewModel.ticks.collectAsState()
 
-            when (state) {
-                ConnectionState.Initializing -> { InitializingView() }
-                ConnectionState.Connecting -> { ConnectingView() }
-                is ConnectionState.Disconnected -> { DisconnectedView() }
+            when (clientViewState.state) {
+                ConnectionState.Initializing -> {
+                    InitializingView()
+                }
+                ConnectionState.Connecting -> {
+                    ConnectingView()
+                }
+                is ConnectionState.Disconnected -> {
+                    DisconnectedView()
+                }
                 ConnectionState.Ready -> {
-                    val question by clientViewModel.question.collectAsState()
-
-                    question?.let { q ->
-                        val correctAnswerId by clientViewModel.answer.collectAsState()
-                        val selectedAnswerId by clientViewModel.selectedAnswer
-                        val ticks by clientViewModel.ticks.collectAsState()
-                        val results by clientViewModel.result.collectAsState()
-                        val isGameOver by clientViewModel.isGameOver.collectAsState()
-
-                        when (isGameOver) {
-                            true -> results?.result?.let { result -> ResultView(result = result) }
-                            else -> {
+                    when (clientViewState.isGameOver) {
+                        true -> clientViewState.result?.result?.let { result -> ResultView(result = result) }
+                        else -> {
+                            clientViewState.question?.let {
                                 QuestionContentView(
-                                    question = q,
-                                    correctAnswerId = correctAnswerId,
-                                    selectedAnswerId = selectedAnswerId,
+                                    question = clientViewState.question?.question,
+                                    answers = clientViewState.toViewState(),
                                     ticks = ticks,
                                     modifier = Modifier.fillMaxWidth(),
                                     onAnswerSelected = { answerChosen ->
                                         clientViewModel.sendAnswer(answerChosen)
                                     }
                                 )
-                            }
-                        }
-                    } ?: run {
-                        var openDialog by rememberSaveable { mutableStateOf(true) }
-                        var isDuplicate by rememberSaveable { mutableStateOf(false) }
-                        var isEmptyName by rememberSaveable { mutableStateOf(false) }
+                            } ?: run {
+                                    var openDialog by rememberSaveable { mutableStateOf(true) }
+                                    var isDuplicate by rememberSaveable { mutableStateOf(false) }
+                                    var isEmptyName by rememberSaveable { mutableStateOf(false) }
 
-                        if (openDialog) {
-                            PlayersNameDialog(
-                                playersName = playersName,
-                                isDuplicate = isDuplicate,
-                                isEmptyName = isEmptyName,
-                                onDismiss = { openDialog = false },
-                                onNameSet = {
-                                    playersName = it
-                                    isDuplicate = false
-                                    isEmptyName = false
-                                },
-                                onSendClick = {
-                                    playersName = playersName.trim()
-                                    clientViewModel.sendName(playersName)
-                                    if (playersName.isNotEmpty()) {
-                                        isEmptyName = false
-                                        userJoined?.player?.find { it.name == playersName }
-                                            ?.let {
-                                                isDuplicate = true
-                                            }
-                                            ?: run {
-                                                openDialog = false
-                                            }
-                                    } else isEmptyName = true
-                                })
-                        } else userJoined?.let { ConnectedView(it.player) }
+                                    if (openDialog) {
+                                        PlayersNameDialog(
+                                            playersName = playersName,
+                                            isDuplicate = isDuplicate,
+                                            isError = isDuplicate || isEmptyName,
+                                            onDismiss = { openDialog = false },
+                                            onNameSet = {
+                                                playersName = it
+                                                isDuplicate = false
+                                                isEmptyName = false
+                                            },
+                                            onSendClick = {
+                                                playersName = playersName.trim()
+                                                clientViewModel.sendName(playersName)
+                                                if (playersName.isNotEmpty()) {
+                                                    isEmptyName = false
+                                                    clientViewState.userJoined?.player?.find { it.name == playersName }
+                                                        ?.let {
+                                                            isDuplicate = true
+                                                        }
+                                                        ?: run {
+                                                            openDialog = false
+                                                        }
+                                                } else isEmptyName = true
+                                            })
+                                    } else clientViewState.userJoined?.let { ConnectedView(it.player) }
+                                }
+                        }
                     }
                 }
                 else -> LoadingView()
