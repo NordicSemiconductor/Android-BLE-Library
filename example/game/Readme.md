@@ -39,7 +39,7 @@ sequenceDiagram
         Note right of Client: Wait for next question
         Server->>Client: Next Question
         Note over Server,Client: Process continues until game over
-        Server->>Client: Game Over flag
+        Server->>Client: Game Over
         Server->>Client: Result
     end
 ```
