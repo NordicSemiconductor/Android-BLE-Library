@@ -3,7 +3,7 @@ package no.nordicsemi.android.ble.example.game.server.data
 import no.nordicsemi.android.ble.example.game.server.model.toViewState
 
 /**
- * It holds the data to be used in the client screen.
+ * It holds the data to be used in the server screen.
  * @property state              game state.
  * @property correctAnswerId    correct answer id.
  * @property selectedAnswerId   selected answer id.
@@ -32,4 +32,4 @@ fun ServerViewState.toViewState(): List<DisplayAnswer> {
             .map { it.toViewState(selectedAnswerId, correctAnswerId, isTimerRunning) }
         else -> emptyList()
     }
-}
+}  

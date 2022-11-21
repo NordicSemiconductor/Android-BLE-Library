@@ -246,7 +246,6 @@ class ServerViewModel @Inject constructor(
                 score = 0
             )
         )
-        println(_serverState.value.result)
         viewModelScope.launch {
             clients.value.forEach {
                 it.sendNameToAllPlayers(Players(_serverState.value.userJoined))
