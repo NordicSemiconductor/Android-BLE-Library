@@ -2334,17 +2334,18 @@ abstract class BleManagerHandler extends RequestHandler {
 		public void onCharacteristicWrite(final BluetoothGatt gatt,
 										  final BluetoothGattCharacteristic characteristic,
 										  final int status) {
-			final byte[] data = characteristic.getValue();
-
 			if (status == BluetoothGatt.GATT_SUCCESS) {
-				log(Log.INFO, () ->
-						"Data written to " + characteristic.getUuid() +
-						", value: " + ParserUtils.parse(data));
+				// When writing without response, the characteristic value is not updated on Android 13+.
+				// The data written was logged out when the request was executed.
+				log(Log.INFO, () -> "Data written to " + characteristic.getUuid());
 
 				BleManagerHandler.this.onCharacteristicWrite(gatt, characteristic);
 				if (request instanceof WriteRequest) {
 					final WriteRequest wr = (WriteRequest) request;
-					final boolean valid = wr.notifyPacketSent(gatt.getDevice(), data);
+					// Notify the listeners about the packet being sent.
+					// This method also compares the data written with the data received in the callback
+					// if the write type is WRITE_TYPE_DEFAULT.
+					final boolean valid = wr.notifyPacketSent(gatt.getDevice(), characteristic.getValue());
 					if (!valid && requestQueue instanceof ReliableWriteRequest) {
 						wr.notifyFail(gatt.getDevice(), FailCallback.REASON_VALIDATION);
 						requestQueue.cancelQueue();
@@ -2451,8 +2452,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			final byte[] data = descriptor.getValue();
 
 			if (status == BluetoothGatt.GATT_SUCCESS) {
-				log(Log.INFO, () -> "Data written to descr. " + descriptor.getUuid() +
-						", value: " + ParserUtils.parse(data));
+				log(Log.INFO, () -> "Data written to descr. " + descriptor.getUuid());
 
 				if (isServiceChangedCCCD(descriptor)) {
 					log(Log.INFO, () -> "Service Changed notifications enabled");
