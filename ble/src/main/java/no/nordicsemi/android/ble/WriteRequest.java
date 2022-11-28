@@ -275,7 +275,7 @@ public final class WriteRequest extends SimpleValueRequest<DataSentCallback> imp
 		handler.post(() -> {
 			if (progressCallback != null) {
 				try {
-					progressCallback.onPacketSent(device, data, count);
+					progressCallback.onPacketSent(device, currentChunk, count);
 				} catch (final Throwable t) {
 					Log.e(TAG, "Exception in Progress callback", t);
 				}
@@ -293,7 +293,13 @@ public final class WriteRequest extends SimpleValueRequest<DataSentCallback> imp
 				}
 			});
 		}
-		return Arrays.equals(data, currentChunk);
+		if (writeType == BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT) {
+			// Compare the data received with the data sent.
+			return Arrays.equals(data, currentChunk);
+		} else {
+			// Don't check the data when using Write Without Response.
+			return true;
+		}
 	}
 
 	/**
