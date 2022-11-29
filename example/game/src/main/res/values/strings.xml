@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Game</string>
+    <string name="app_name">Trivia Game</string>
 
     <string name="welcome_message">Welcome</string>
     <string name="good_luck_player">Good Luck %s</string>
