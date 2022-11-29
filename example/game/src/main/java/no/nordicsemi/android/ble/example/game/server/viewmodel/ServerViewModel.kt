@@ -32,7 +32,7 @@ class ServerViewModel @Inject constructor(
     private val serverManager: ServerManager,
     private val questionRepository: QuestionRepository,
 ) : TimerViewModel() {
-    val TAG = "ServerViewModel"
+    val TAG = ServerViewModel::class.java.simpleName
     private val _serverState: MutableStateFlow<ServerViewState> =
         MutableStateFlow(ServerViewState())
     val serverViewState = _serverState.asStateFlow()

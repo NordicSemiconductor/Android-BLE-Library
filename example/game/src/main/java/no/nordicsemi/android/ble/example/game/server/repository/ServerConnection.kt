@@ -28,7 +28,7 @@ class ServerConnection(
     private val device: BluetoothDevice,
 ): BleManager(context) {
     var serverCharacteristic: BluetoothGattCharacteristic? = null
-    private val TAG = "Server Connection"
+    private val TAG = ServerConnection::class.java.simpleName
 
     private val _playersName = MutableSharedFlow<String>()
     val playersName = _playersName.asSharedFlow()

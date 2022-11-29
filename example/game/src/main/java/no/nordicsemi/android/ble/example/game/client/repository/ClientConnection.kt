@@ -30,7 +30,7 @@ class ClientConnection(
     private val scope: CoroutineScope,
     private val device: BluetoothDevice,
 ) : BleManager(context) {
-    private val TAG = "Client Connection"
+    private val TAG = ClientConnection::class.java.simpleName
     var characteristic: BluetoothGattCharacteristic? = null
 
     private val _userJoined = MutableSharedFlow<Players>()

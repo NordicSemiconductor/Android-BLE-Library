@@ -12,7 +12,7 @@ import javax.inject.Inject
 class ServerManager @Inject constructor(
     @ApplicationContext context: Context,
 ) : BleServerManager(context) {
-    private val TAG = "Server Manager"
+    private val TAG = ServerManager::class.java.simpleName
 
     override fun log(priority: Int, message: String) {
         Log.println(priority, TAG, message)
