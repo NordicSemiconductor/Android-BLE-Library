@@ -45,6 +45,7 @@ fun ServerScreen(
             var openDialog by rememberSaveable { mutableStateOf(true) }
             var isDuplicate by rememberSaveable { mutableStateOf(false) }
             var isEmpty by rememberSaveable { mutableStateOf(false) }
+            val isError = isEmpty || isDuplicate
 
             when (val currentState = serverViewState.state) {
                 is WaitingForPlayers ->
@@ -55,7 +56,7 @@ fun ServerScreen(
                             PlayersNameDialog(
                                 playersName = playersName,
                                 isDuplicate = isDuplicate,
-                                isError = isEmpty || isDuplicate,
+                                isError = isError,
                                 onDismiss = { openDialog = false },
                                 onNameSet = {
                                     playersName = it
@@ -66,20 +67,17 @@ fun ServerScreen(
                                     playersName = playersName.trim()
                                     if (playersName.isNotEmpty()) {
                                         isEmpty = false
-                                        serverViewState.userJoined.find { it.name == playersName }
-                                            ?.let {
-                                                isDuplicate = true
-                                            }
-                                            ?: run {
-                                                serverViewModel.saveServerPlayer(playersName)
-                                                openDialog = false
-                                            }
+                                        if (serverViewState.isDuplicate(playersName)) isDuplicate = true
+                                        else {
+                                            serverViewModel.saveServerPlayer(playersName)
+                                            openDialog = false
+                                        }
                                     } else isEmpty = true
                                 },
                             )
                         } else {
                             StartGameView(
-                                isAllNameCollected = serverViewState.userJoined.size == (currentState.connectedPlayers + 1),
+                                isAllNameCollected = serverViewState.isAllNameCollected,
                                 joinedPlayer = serverViewState.userJoined
                             ) { serverViewModel.startGame() }
                         }

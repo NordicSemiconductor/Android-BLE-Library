@@ -24,6 +24,14 @@ data class ServerViewState(
     val result: List<Result> = emptyList(),
 ) {
     val isTimerRunning: Boolean = ticks?.let { it > 0 } == true
+    val isAllNameCollected: Boolean = userJoined.size == (when(val currentState = state) {
+        is WaitingForPlayers ->
+            currentState.connectedPlayers  + 1
+        else -> {false}
+    })
+
+    fun isDuplicate(playerName: String): Boolean =
+        (userJoined.find { it.name == playerName }?.name == playerName)
 }
 
 fun ServerViewState.toViewState(): List<DisplayAnswer> {
