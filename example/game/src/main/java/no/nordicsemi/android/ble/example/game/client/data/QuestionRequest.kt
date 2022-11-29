@@ -11,6 +11,7 @@ import no.nordicsemi.android.ble.example.game.server.data.Results
 import no.nordicsemi.android.ble.example.game.server.data.toPlayers
 import no.nordicsemi.android.ble.example.game.server.data.toResults
 import no.nordicsemi.android.ble.response.ReadResponse
+import no.nordicsemi.android.ble.example.game.server.data.Error
 
 /**
  * This class decodes the received packet using Protobuf.
@@ -21,6 +22,7 @@ class Request : ReadResponse() {
     var answerId: Int? = null
     var isGameOver: Boolean? = null
     var result: Results? = null
+    var isError: Error? = null
 
     override fun onDataReceived(device: BluetoothDevice, data: Data) {
         val bytes = data.value!!
@@ -31,6 +33,10 @@ class Request : ReadResponse() {
             OpCodeProto.RESPONSE -> { answerId = request.answerId }
             OpCodeProto.GAME_OVER -> { isGameOver = request.isGameOver }
             OpCodeProto.RESULT -> { result = request.results?.toResults() }
+            OpCodeProto.ERROR -> { isError = Error(
+                isEmptyName = request.isEmptyName,
+                isDuplicateName = request.isDuplicateName,
+            ) }
             else -> {}
         }
     }

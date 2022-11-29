@@ -37,7 +37,10 @@ class ClientViewModel @Inject constructor(
                     stateAsFlow()
                         .onEach { _clientState.value = _clientState.value.copy(state = it) }
                         .launchIn(viewModelScope)
-                    userJoined
+                    isError
+                        .onEach { _clientState.value = _clientState.value.copy(isError = it) }
+                        .launchIn(viewModelScope)
+                     userJoined
                         .onEach { _clientState.value = _clientState.value.copy(userJoined = it) }
                         .launchIn(viewModelScope)
                     question
@@ -88,7 +91,16 @@ class ClientViewModel @Inject constructor(
         }
     }
 
+    fun onUserTyping() {
+        _clientState.value = _clientState.value.copy(isUserTyping = true)
+    }
+
+    fun dismissPlayersNameDialog() {
+        _clientState.value = _clientState.value.copy(userRequestedPlayersNameDialog = false)
+    }
+
     fun sendName(playersName: String) {
+        _clientState.value = _clientState.value.copy(isUserTyping = false, isError = null)
         viewModelScope.launch(Dispatchers.IO) {
             clientManager?.sendPlayersName(playersName)
         }

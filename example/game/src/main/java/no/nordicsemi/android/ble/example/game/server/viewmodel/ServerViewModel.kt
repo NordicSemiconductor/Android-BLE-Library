@@ -156,13 +156,9 @@ class ServerViewModel @Inject constructor(
                     .apply {
                         playersName
                             .onEach {
-                                // Save only if the name is valid.
-                                if (isValidateName(it)) {
-                                    mapNameAndDevice(
-                                        playerName = it,
-                                        deviceAddress = device.address
-                                    )
-                                }
+                                // Validates name and if its valid it will save the name,
+                                // otherwise sends an error message to the client.
+                                validateName(it, device)
                             }
                             .launchIn(viewModelScope)
                     }
@@ -211,10 +207,42 @@ class ServerViewModel @Inject constructor(
         }
     }
 
-    /** Validate players name sent from a client device. */
-    private fun isValidateName(playersName: String): Boolean {
+    /** Validate players name sent from a client device.
+     * If it is valid, it notifies the client that the name is correct; otherwise,
+     * it sends the corresponding error message, either name empty or duplicate name.
+     */
+    private fun validateName(playersName: String, device: BluetoothDevice) {
         val name = playersName.trim()
-        return !(name.isEmpty() || (_serverState.value.result.find { it.name == name }?.name == name))
+        if (name.isEmpty()) {
+            viewModelScope.launch {
+                clients.value.forEach {
+                    if (it.bluetoothDevice == device) {
+                        it.sendEmptyNameError(isEmptyName = true)
+                    }
+                }
+            }
+        } else if ((_serverState.value.userJoined.find { it.name == name }?.name == name)) {
+            viewModelScope.launch {
+                clients.value.forEach {
+                    if (it.bluetoothDevice == device) {
+                        it.sendDuplicateNameError(isDuplicateName = true)
+                    }
+                }
+            }
+        } else {
+            mapNameAndDevice(
+                playerName = playersName,
+                deviceAddress = device.address
+            )
+            viewModelScope.launch {
+                clients.value.forEach {
+                    if (it.bluetoothDevice == device) {
+                        it.sendDuplicateNameError(isDuplicateName = false)
+                        it.sendEmptyNameError(isEmptyName = false)
+                    }
+                }
+            }
+        }
     }
 
     private fun stopServer() {

@@ -64,37 +64,25 @@ fun ClientScreen(
                                     }
                                 )
                             } ?: run {
-                                    var openDialog by rememberSaveable { mutableStateOf(true) }
-                                    var isDuplicate by rememberSaveable { mutableStateOf(false) }
-                                    var isEmptyName by rememberSaveable { mutableStateOf(false) }
-
-                                    if (openDialog) {
-                                        PlayersNameDialog(
-                                            playersName = playersName,
-                                            isDuplicate = isDuplicate,
-                                            isError = isDuplicate || isEmptyName,
-                                            onDismiss = { openDialog = false },
-                                            onNameSet = {
-                                                playersName = it
-                                                isDuplicate = false
-                                                isEmptyName = false
-                                            },
-                                            onSendClick = {
-                                                playersName = playersName.trim()
-                                                clientViewModel.sendName(playersName)
-                                                if (playersName.isNotEmpty()) {
-                                                    isEmptyName = false
-                                                    clientViewState.userJoined?.player?.find { it.name == playersName }
-                                                        ?.let {
-                                                            isDuplicate = true
-                                                        }
-                                                        ?: run {
-                                                            openDialog = false
-                                                        }
-                                                } else isEmptyName = true
-                                            })
-                                    } else clientViewState.userJoined?.let { ConnectedView(it.player) }
-                                }
+                                if (clientViewState.openDialog) {
+                                    PlayersNameDialog(
+                                        playersName = playersName,
+                                        isDuplicate = clientViewState.playersNameIsDuplicate,
+                                        isError = clientViewState.playersNameIsError,
+                                        onDismiss = {
+                                            clientViewModel.dismissPlayersNameDialog()
+                                                    },
+                                        onNameSet = {
+                                            playersName = it
+                                            clientViewModel.onUserTyping()
+                                        },
+                                        onSendClick = {
+                                            playersName = playersName.trim()
+                                            clientViewModel.sendName(playersName)
+                                        }
+                                    )
+                                } else clientViewState.userJoined?.let { ConnectedView(it.player) }
+                            }
                         }
                     }
                 }

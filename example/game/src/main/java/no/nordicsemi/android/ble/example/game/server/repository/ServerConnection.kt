@@ -149,6 +149,30 @@ class ServerConnection(
             .suspend()
     }
 
+    /**
+     * Sends whether or not name provided by the client is empty. The data is split into MTU size
+     * packets using packet splitter [PacketSplitter.chunk] before sending it to the client.
+     */
+    suspend fun sendEmptyNameError(isEmptyName: Boolean){
+        val request = RequestProto(OpCodeProto.ERROR, isEmptyName = isEmptyName)
+        val requestByteArray = request.encode()
+        sendNotification(serverCharacteristic, requestByteArray)
+            .split(PacketSplitter())
+            .suspend()
+    }
+
+    /**
+     * Sends whether or not name provided by the client is duplicate. The data is split into MTU size
+     * packets using packet splitter [PacketSplitter.chunk] before sending it to the client.
+     */
+    suspend fun sendDuplicateNameError(isDuplicateName: Boolean){
+        val request = RequestProto(OpCodeProto.ERROR, isDuplicateName = isDuplicateName)
+        val requestByteArray = request.encode()
+        sendNotification(serverCharacteristic, requestByteArray)
+            .split(PacketSplitter())
+            .suspend()
+    }
+
     fun release() {
         cancelQueue()
         disconnect().enqueue()

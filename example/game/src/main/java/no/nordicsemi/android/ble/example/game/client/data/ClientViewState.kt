@@ -6,6 +6,7 @@ import no.nordicsemi.android.ble.example.game.server.data.DisplayAnswer
 import no.nordicsemi.android.ble.example.game.server.data.Players
 import no.nordicsemi.android.ble.example.game.server.data.Results
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
+import no.nordicsemi.android.ble.example.game.server.data.Error
 
 /**
  * It holds the data to be used in the client screen.
@@ -28,9 +29,20 @@ data class ClientViewState(
     val question: Question? = null,
     val userJoined: Players? = null,
     val isGameOver: Boolean? = null,
-    val result: Results? = null
+    val result: Results? = null,
+    val isError: Error? = null,
+    val isUserTyping: Boolean = false,
+    val userRequestedPlayersNameDialog: Boolean = true
 ) {
     val isTimerRunning: Boolean = ticks?.let { it > 0 } == true
+
+    val isDuplicate: Boolean = isError?.isDuplicateName ?: false
+
+    private val isEmptyName: Boolean = isError?.isEmptyName ?: false
+    val openDialog: Boolean = isError?.isError() ?: true
+    val playersNameIsDuplicate: Boolean = isDuplicate && !isUserTyping && userRequestedPlayersNameDialog
+    val playersNameIsError: Boolean = (isDuplicate || isEmptyName) && !isUserTyping
+
 }
 
 fun ClientViewState.toViewState(): List<DisplayAnswer> {
