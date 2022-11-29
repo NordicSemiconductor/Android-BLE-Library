@@ -4,10 +4,7 @@ import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
-import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
+import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
@@ -36,8 +33,8 @@ fun ResultView(result: List<Result?>) {
                 stickyHeader {
                     Surface(shadowElevation = 4.dp) {
                         Row(
-                            horizontalArrangement = Arrangement.spacedBy(8.dp),
-                            modifier = Modifier.padding(horizontal = 16.dp),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp),
+                            modifier = Modifier.padding(16.dp),
                         ) {
                             Text(
                                 text = stringResource(id = R.string.players),
@@ -49,8 +46,8 @@ fun ResultView(result: List<Result?>) {
                 }
                 items(sortedResult) { sortedResult ->
                     Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp),
-                        modifier = Modifier.padding(horizontal = 16.dp),
+                        horizontalArrangement = Arrangement.spacedBy(16.dp),
+                        modifier = Modifier.padding(16.dp),
                     ) {
                         Text(
                             text = sortedResult?.name ?: "",
@@ -58,6 +55,7 @@ fun ResultView(result: List<Result?>) {
                         )
                         Text(text = sortedResult?.score.toString())
                     }
+                    Divider()
                 }
             }
     }

@@ -32,7 +32,7 @@ class ServerViewModel @Inject constructor(
     private val serverManager: ServerManager,
     private val questionRepository: QuestionRepository,
 ) : TimerViewModel() {
-    val TAG = "Server ViewModel"
+    val TAG = "ServerViewModel"
     private val _serverState: MutableStateFlow<ServerViewState> =
         MutableStateFlow(ServerViewState())
     val serverViewState = _serverState.asStateFlow()
@@ -51,7 +51,7 @@ class ServerViewModel @Inject constructor(
         questionIndex = 0
 
         viewModelScope.launch {
-            _serverState.value = _serverState.value.copy(state = DownloadingQuestions )
+            _serverState.value = _serverState.value.copy(state = DownloadingQuestions)
             val questions = questionRepository.getQuestions(category = category)
             questionSaved = questions
             /** Send first Question */
@@ -104,7 +104,7 @@ class ServerViewModel @Inject constructor(
             .launchIn(viewModelScope)
         _serverState.value = _serverState.value.copy(
             state = Round(question),
-        ticks = ticks.value,
+            ticks = ticks.value,
             correctAnswerId = null,
             selectedAnswerId = null
         )
@@ -139,6 +139,7 @@ class ServerViewModel @Inject constructor(
                                     }
                                     is ConnectionState.Disconnected -> {
                                         clients.value -= this
+                                        removePlayer(device)
                                         when (currentState) {
                                             is WaitingForPlayers -> {
                                                 _serverState.value = _serverState.value.copy(
@@ -308,7 +309,7 @@ class ServerViewModel @Inject constructor(
         }
     }
 
-    /**  Map players name with device address. */
+    /** Map players name with device address. */
     private fun mapNameAndDevice(playerName: String, deviceAddress: String) {
         mapNameWithDevice.value += Name(
             name = playerName,

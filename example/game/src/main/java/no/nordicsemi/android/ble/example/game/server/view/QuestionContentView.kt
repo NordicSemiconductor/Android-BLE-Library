@@ -73,7 +73,7 @@ fun QuestionContentView(
 
 @Preview
 @Composable
-private fun QuestionContentView2_Preview() {
+private fun QuestionContentView_Preview() {
     NordicTheme {
         QuestionContentView(
             question =
