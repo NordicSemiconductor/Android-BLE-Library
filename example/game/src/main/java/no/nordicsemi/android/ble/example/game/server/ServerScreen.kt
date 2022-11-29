@@ -78,8 +78,9 @@ fun ServerScreen(
                         } else {
                             StartGameView(
                                 isAllNameCollected = serverViewState.isAllNameCollected,
-                                joinedPlayer = serverViewState.userJoined
-                            ) { serverViewModel.startGame() }
+                                joinedPlayer = serverViewState.userJoined,
+                                onStartGame = { serverViewModel.startGame() }
+                            )
                         }
                     }
                 DownloadingQuestions -> { LoadingView() }
@@ -88,6 +89,7 @@ fun ServerScreen(
                         true -> ResultView(result = serverViewState.result)
                         else -> {
                             val ticks by serverViewModel.ticks.collectAsState()
+                            val isTimerRunning = ticks > 0
 
                             QuestionContentView(
                                 question = currentState.question.question,
@@ -100,7 +102,7 @@ fun ServerScreen(
                             )
                             BottomNavigationView(
                                 onNextClick = { serverViewModel.showNextQuestion() },
-                                isTimerRunning = ticks > 0
+                                isTimerRunning = isTimerRunning
                             )
                         }
                     }
