@@ -9,6 +9,7 @@ enum OpCodeProto {
   NAME         = 3;
   GAME_OVER    = 4;
   PLAYERS      = 5;
+  ERROR        = 6;
 }
 
 message RequestProto {
@@ -20,6 +21,8 @@ message RequestProto {
   ResultsProto results    = 6;
   PlayersProto players    = 7;
   bool isGameOver         = 8;
+  bool isEmptyName        = 9;
+  bool isDuplicateName    = 10;
 }
 
 message QuestionProto {
