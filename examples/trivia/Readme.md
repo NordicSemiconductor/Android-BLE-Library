@@ -56,7 +56,7 @@ it will be highlighted in red. At the end of the game, all players' scores will 
 A total of ten questions collected from an open source [Trivia&NonBreakingSpace;API](https://opentdb.com/api_config.php)
 will be presented. 
 
-<img src="src/images/startScreen.png" alt="startScreen" width="100"/> <img src="src/images/userNameDialog.png" alt="userNameDialog" width="100"/> <img src="src/images/waitingServer.png" alt="waitingServer" width="100"/> <img src="src/images/startGame.jpg" alt="startGame" width="100"/> <img src="src/images/questionContent.png" alt="questionContent" width="100"/> <img src="src/images/nextButton.jpg" alt="nextButton" width="100"/> <img src="src/images/gameOver.jpg" alt="gameOver" width="100"/> <img src="src/images/result.jpg" alt="result" width="100"/>
+<img src="images/startScreen.png" alt="startScreen" width="100"/> <img src="images/userNameDialog.png" alt="userNameDialog" width="100"/> <img src="images/waitingServer.png" alt="waitingServer" width="100"/> <img src="images/startGame.jpg" alt="startGame" width="100"/> <img src="images/questionContent.png" alt="questionContent" width="100"/> <img src="images/nextButton.jpg" alt="nextButton" width="100"/> <img src="images/gameOver.jpg" alt="gameOver" width="100"/> <img src="images/result.jpg" alt="result" width="100"/>
 
 # Requirements
 - The application depends on [Android BLE Library](https://github.com/NordicSemiconductor/Android-BLE-Library/)
