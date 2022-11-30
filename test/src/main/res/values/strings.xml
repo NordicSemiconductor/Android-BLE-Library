@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">Test App</string>
+    <string name="welcome_message">Welcome</string>
+    <string name="select_one">Please select one option</string>
+
+    <string name="advertise">Advertise</string>
+    <string name="scanning">Scan</string>
+</resources>
