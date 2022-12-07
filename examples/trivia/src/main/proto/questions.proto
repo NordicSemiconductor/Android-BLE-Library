@@ -1,0 +1,53 @@
+syntax = "proto3";
+
+package no.nordicsemi.android.ble.trivia.proto;
+
+enum OpCodeProto {
+  NEW_QUESTION = 0;
+  RESPONSE     = 1;
+  RESULT       = 2;
+  NAME         = 3;
+  GAME_OVER    = 4;
+  PLAYERS      = 5;
+  ERROR        = 6;
+}
+
+message RequestProto {
+  OpCodeProto opCode      = 1;
+  QuestionProto question  = 2;
+  int32 answerId          = 3;
+  string name             = 4;
+  ResultProto result      = 5;
+  ResultsProto results    = 6;
+  PlayersProto players    = 7;
+  bool isGameOver         = 8;
+  bool isEmptyName        = 9;
+  bool isDuplicateName    = 10;
+}
+
+message QuestionProto {
+  string text                  = 1;
+  repeated AnswerProto answers = 2;
+}
+
+message AnswerProto {
+  string text = 1;
+  int32 id    = 2;
+}
+
+message ResultsProto {
+  repeated ResultProto result = 1;
+}
+
+message ResultProto {
+  string name  = 1;
+  int32 score  = 2;
+}
+
+message PlayersProto {
+  repeated PlayerProto player = 1;
+}
+
+message PlayerProto {
+  string name = 1;
+}
