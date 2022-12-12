@@ -1,4 +1,4 @@
-package no.nordicsemi.andorid.ble.test.client.repository
+package no.nordicsemi.andorid.ble.test.scanner.repository
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
@@ -6,7 +6,6 @@ import android.bluetooth.BluetoothDevice
 import android.bluetooth.le.*
 import android.os.ParcelUuid
 import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.suspendCancellableCoroutine
 import no.nordicsemi.andorid.ble.test.spec.DeviceSpecifications.Companion.UUID_SERVICE_DEVICE
 import javax.inject.Inject
@@ -17,12 +16,10 @@ import kotlin.coroutines.resumeWithException
 class ScanningManager @Inject constructor(
     private val bluetoothAdapter: BluetoothAdapter,
 ) {
-    private val TAG = ScanningManager::class.java.simpleName
     private val bluetoothLeScanner: BluetoothLeScanner by lazy {
         bluetoothAdapter.bluetoothLeScanner
             ?: throw NullPointerException("Bluetooth not initialized")
     }
-    val bluetoothDevice: MutableStateFlow<BluetoothDevice?> = MutableStateFlow(null)
 
     /**
      * Starts scanning for an advertising server.
@@ -35,7 +32,6 @@ class ScanningManager @Inject constructor(
             override fun onScanResult(callbackType: Int, result: ScanResult?) {
                 result
                     ?.let { continuation.resume(it.device) {} }
-                    .also { bluetoothDevice.value = result?.device }
                     .also { bluetoothLeScanner.stopScan(this) }
             }
 

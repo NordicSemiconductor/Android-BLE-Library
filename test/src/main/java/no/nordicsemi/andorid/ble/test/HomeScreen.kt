@@ -31,8 +31,12 @@ fun StartScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Button(onClick = { onNavigation(ServerDestination) }) { Text(text = stringResource(id = R.string.advertise)) }
-                Button(onClick = { onNavigation(ClientDestination) }) { Text(text = stringResource(id = R.string.scanning)) }
+                Button(onClick = { onNavigation(ServerDestination) }) {
+                    Text(text = stringResource(id = R.string.advertise))
+                }
+                Button(onClick = { onNavigation(ClientDestination) }) {
+                    Text(text = stringResource(id = R.string.scanning))
+                }
             }
         }
     }

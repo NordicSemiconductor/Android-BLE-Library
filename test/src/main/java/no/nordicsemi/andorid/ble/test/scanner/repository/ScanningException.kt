@@ -1,3 +1,3 @@
-package no.nordicsemi.andorid.ble.test.client.repository
+package no.nordicsemi.andorid.ble.test.scanner.repository
 
 data class ScanningException (val errorCode: Int): Exception()

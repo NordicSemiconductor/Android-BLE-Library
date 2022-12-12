@@ -5,4 +5,14 @@
 
     <string name="advertise">Advertise</string>
     <string name="scanning">Scan</string>
+    <string name="advertiser">Advertiser</string>
+    <string name="scanner">Scanner</string>
+
+    <string name="ready">Ready</string>
+    <string name="initializing">Initializing</string>
+    <string name="connected">Connected</string>
+    <string name="connecting">Connecting</string>
+    <string name="disconnected">Disconnected</string>
+    <string name="loading">Loading</string>
+    <string name="waiting_for_scanner">Waiting for scanning device…</string>
 </resources>

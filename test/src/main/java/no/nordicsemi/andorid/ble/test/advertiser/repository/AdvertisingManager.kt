@@ -1,4 +1,4 @@
-package no.nordicsemi.andorid.ble.test.server.repository
+package no.nordicsemi.andorid.ble.test.advertiser.repository
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothAdapter
@@ -30,7 +30,7 @@ class AdvertisingManager @Inject constructor(
         advertisingCallback = object : AdvertiseCallback() {
 
             override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-                Log.d(TAG, "onStartSuccess:Started Advertising ")
+                Log.d(TAG, "onStartSuccess: Started Advertising ")
                 continuation.resume(Unit) { }
             }
 
