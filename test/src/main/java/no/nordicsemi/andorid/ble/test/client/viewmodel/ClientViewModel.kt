@@ -13,9 +13,9 @@ import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import no.nordicsemi.andorid.ble.test.client.data.TestItem
-import no.nordicsemi.andorid.ble.test.server.view.TestEvent
 import no.nordicsemi.andorid.ble.test.client.repository.ClientConnection
 import no.nordicsemi.andorid.ble.test.client.repository.ScanningManager
+import no.nordicsemi.andorid.ble.test.server.view.TestEvent
 import no.nordicsemi.android.ble.ktx.stateAsFlow
 import javax.inject.Inject
 
@@ -50,7 +50,8 @@ class ClientViewModel @Inject constructor(
                 }
                 .apply {
                     connect()
-                    hello()
+                    testIndicationsWithCallback()
+                    testNotificationsWithCallback()
                     updateTestList(TestEvent(TestItem.CONNECTED_WITH_SERVER.item, true))
                 }
                 .apply { clientConnection = this }

@@ -33,7 +33,6 @@ class ServerViewModel @Inject constructor(
     private val context = application.applicationContext
     private val client: MutableStateFlow<List<ServerConnection>> = MutableStateFlow(emptyList())
 
-
     private val _serverViewState: MutableStateFlow<ServerViewState> =
         MutableStateFlow(ServerViewState())
     val serverViewState = _serverViewState.asStateFlow()
@@ -72,7 +71,8 @@ class ServerViewModel @Inject constructor(
                         viewModelScope
                             .launch {
                                 connect()
-                                replyHello()
+                                testIndication()
+                                testNotification()
                                 updateTestList(TestEvent(TestItem.DEVICE_CONNECTION.item, true))
                             }
                     }
@@ -105,8 +105,7 @@ class ServerViewModel @Inject constructor(
                                     }
                                     else -> {}
                                 }
-                            }
-                            .launchIn(viewModelScope)
+                            }.launchIn(viewModelScope)
                     }
             }
 

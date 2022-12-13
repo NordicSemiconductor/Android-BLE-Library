@@ -6,22 +6,22 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
-import no.nordicsemi.andorid.ble.test.spec.DeviceSpecifications.Companion.UUID_MSG_CHARACTERISTIC
-import no.nordicsemi.andorid.ble.test.spec.DeviceSpecifications.Companion.UUID_SERVICE_DEVICE
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
+import no.nordicsemi.andorid.ble.test.spec.DeviceSpecifications
 import no.nordicsemi.android.ble.BleManager
-import no.nordicsemi.android.ble.ktx.asFlow
 import no.nordicsemi.android.ble.ktx.suspend
+import kotlin.coroutines.resume
+import kotlin.coroutines.suspendCoroutine
 
-@OptIn(ExperimentalCoroutinesApi::class)
 class ClientConnection(
     context: Context,
     private val scope: CoroutineScope,
     private val device: BluetoothDevice,
 ) : BleManager(context) {
     private val TAG = ClientConnection::class.java.simpleName
-    var characteristic: BluetoothGattCharacteristic? = null
+    var notificationCharacteristic: BluetoothGattCharacteristic? = null
+    var indicationCharacteristic: BluetoothGattCharacteristic? = null
 
     private val _replies: MutableSharedFlow<String> = MutableSharedFlow()
     val replies = _replies.asSharedFlow()
@@ -40,31 +40,38 @@ class ClientConnection(
 
         override fun isRequiredServiceSupported(gatt: BluetoothGatt): Boolean {
             // Return false if a required service has not been discovered.
-            gatt.getService(UUID_SERVICE_DEVICE)?.let { service ->
-                characteristic = service.getCharacteristic(UUID_MSG_CHARACTERISTIC)
+            gatt.getService(DeviceSpecifications.UUID_SERVICE_DEVICE)?.let { service ->
+                notificationCharacteristic =
+                    service.getCharacteristic(DeviceSpecifications.NOTIFICATION_CHARACTERISTIC)
+                indicationCharacteristic =
+                    service.getCharacteristic(DeviceSpecifications.INDICATION_CHARACTERISTIC)
             }
 
-            return characteristic != null
+            return notificationCharacteristic != null
+
         }
 
         override fun initialize() {
             requestMtu(512).enqueue()
-            setNotificationCallback(characteristic)
-                .asFlow()
-                .mapNotNull { it.getStringValue(0) }
-                .onEach { replies ->
-                    _replies.emit(replies)
-                    Log.d(TAG, "initialize: this is replies $replies")
-                }
-                .launchIn(scope)
-
-            enableNotifications(characteristic).enqueue()
         }
 
         override fun onServicesInvalidated() {
-            characteristic = null
+            notificationCharacteristic = null
+            indicationCharacteristic = null
         }
 
+    }
+
+    suspend fun testIndicationsWithCallback() = suspendCoroutine { continuation ->
+        setIndicationCallback(indicationCharacteristic)
+            .with { _, data -> continuation.resume(data) }
+        enableIndications(indicationCharacteristic).enqueue()
+    }
+
+    suspend fun testNotificationsWithCallback() = suspendCoroutine { continuation ->
+        setNotificationCallback(notificationCharacteristic)
+            .with { _, data -> continuation.resume(data) }
+        enableNotifications(notificationCharacteristic).enqueue()
     }
 
     suspend fun connect() {
@@ -77,12 +84,6 @@ class ClientConnection(
         } catch (e: Exception) {
             e.printStackTrace()
         }
-    }
-
-    suspend fun hello() {
-        val request = "Hello".toByteArray()
-        writeCharacteristic(characteristic, request, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
-            .suspend()
     }
 
     fun release() {

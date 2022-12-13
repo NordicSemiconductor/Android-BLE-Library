@@ -33,9 +33,12 @@ class ServerManager @Inject constructor(
             service(
                 DeviceSpecifications.UUID_SERVICE_DEVICE,
                 characteristic(
-                    DeviceSpecifications.UUID_MSG_CHARACTERISTIC,
-                    BluetoothGattCharacteristic.PROPERTY_WRITE or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
-                    BluetoothGattCharacteristic.PERMISSION_WRITE,
+                    DeviceSpecifications.NOTIFICATION_CHARACTERISTIC,
+                    BluetoothGattCharacteristic.PROPERTY_WRITE or
+                            BluetoothGattCharacteristic.PROPERTY_NOTIFY or
+                            BluetoothGattCharacteristic.PROPERTY_INDICATE,
+                    BluetoothGattCharacteristic.PERMISSION_WRITE or
+                            BluetoothGattCharacteristic.PERMISSION_READ,
                     cccd(),
                     description("Testing App", false)
                 )

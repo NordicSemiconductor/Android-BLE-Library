@@ -8,17 +8,15 @@ import android.bluetooth.BluetoothGattServer
 import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.ExperimentalCoroutinesApi
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import no.nordicsemi.andorid.ble.test.server.data.TestItem
 import no.nordicsemi.andorid.ble.test.server.view.TestEvent
 import no.nordicsemi.andorid.ble.test.spec.DeviceSpecifications
 import no.nordicsemi.android.ble.BleManager
-import no.nordicsemi.android.ble.ktx.asFlow
 import no.nordicsemi.android.ble.ktx.suspend
 
-@OptIn(ExperimentalCoroutinesApi::class)
 @SuppressLint("MissingPermission")
 class ServerConnection(
     context: Context,
@@ -26,10 +24,9 @@ class ServerConnection(
     private val device: BluetoothDevice,
 ) : BleManager(context) {
     private val TAG = ServerConnection::class.java.simpleName
-    private var serverCharacteristic: BluetoothGattCharacteristic? = null
+    private var notificationCharacteristic: BluetoothGattCharacteristic? = null
+    private var indicationCharacteristic: BluetoothGattCharacteristic? = null
 
-    private val _replies: MutableSharedFlow<String> = MutableSharedFlow()
-    val replies = _replies.asSharedFlow()
     private val _testingFeature: MutableSharedFlow<TestEvent> = MutableSharedFlow()
     val testingFeature =_testingFeature.asSharedFlow()
 
@@ -59,7 +56,8 @@ class ServerConnection(
 
         override fun onServerReady(server: BluetoothGattServer) {
             server.getService(DeviceSpecifications.UUID_SERVICE_DEVICE)?.let { service ->
-                serverCharacteristic = service.getCharacteristic(DeviceSpecifications.UUID_MSG_CHARACTERISTIC)
+                notificationCharacteristic = service.getCharacteristic(DeviceSpecifications.NOTIFICATION_CHARACTERISTIC)
+                indicationCharacteristic = service.getCharacteristic(DeviceSpecifications.INDICATION_CHARACTERISTIC)
             }
         }
 
@@ -67,7 +65,8 @@ class ServerConnection(
         }
 
         override fun onServicesInvalidated() {
-            serverCharacteristic = null
+            notificationCharacteristic = null
+            indicationCharacteristic = null
         }
     }
 
@@ -86,10 +85,25 @@ class ServerConnection(
         }
     }
 
-    suspend fun replyHello(){
-        val request = "Hello!".toByteArray()
-        sendNotification(serverCharacteristic,request)
-            .suspend()
+    suspend fun testIndication(){
+        val request = "This is Indication".toByteArray()
+        // Creates a request that will wait for enabling indications. If indications were
+        // enabled at the time of executing the request, it will complete immediately.
+        waitUntilIndicationsEnabled(indicationCharacteristic).suspend()
+
+        sendIndication(indicationCharacteristic, request).suspend()
+    }
+
+    suspend fun testNotification(){
+        val request = "This is Notification".toByteArray()
+
+        //Creates a request that will wait for enabling notifications. If notifications were
+        // enabled at the time of executing the request, it will complete immediately.
+        waitUntilNotificationsEnabled(notificationCharacteristic).suspend()
+
+        // Sends the notification from the server characteristic. The notifications on this
+        // characteristic must be enabled before the request is executed.
+        sendNotification(notificationCharacteristic, request).suspend()
     }
 
     fun release() {
