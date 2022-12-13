@@ -3,8 +3,8 @@ package no.nordicsemi.andorid.ble.test
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.hilt.navigation.compose.hiltViewModel
-import no.nordicsemi.andorid.ble.test.scanner.view.ScanningScreen
-import no.nordicsemi.andorid.ble.test.advertiser.view.AdvertisingScreen
+import no.nordicsemi.andorid.ble.test.client.view.ScanningScreen
+import no.nordicsemi.andorid.ble.test.server.view.AdvertisingScreen
 import no.nordicsemi.android.common.navigation.createSimpleDestination
 import no.nordicsemi.android.common.navigation.defineDestination
 import no.nordicsemi.android.common.navigation.viewmodel.SimpleNavigationViewModel

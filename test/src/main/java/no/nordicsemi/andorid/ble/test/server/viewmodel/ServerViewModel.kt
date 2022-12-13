@@ -1,4 +1,4 @@
-package no.nordicsemi.andorid.ble.test.advertiser.viewmodel
+package no.nordicsemi.andorid.ble.test.server.viewmodel
 
 import android.annotation.SuppressLint
 import android.app.Application
@@ -12,11 +12,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import no.nordicsemi.andorid.ble.test.advertiser.data.TestItem
-import no.nordicsemi.andorid.ble.test.advertiser.repository.AdvertisingManager
-import no.nordicsemi.andorid.ble.test.advertiser.repository.ServerConnection
-import no.nordicsemi.andorid.ble.test.advertiser.repository.ServerManager
-import no.nordicsemi.andorid.ble.test.advertiser.view.TestEvent
+import no.nordicsemi.andorid.ble.test.server.data.TestItem
+import no.nordicsemi.andorid.ble.test.server.repository.AdvertisingManager
+import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
+import no.nordicsemi.andorid.ble.test.server.repository.ServerManager
+import no.nordicsemi.andorid.ble.test.server.view.TestEvent
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.ble.ktx.stateAsFlow
 import no.nordicsemi.android.ble.observer.ServerObserver

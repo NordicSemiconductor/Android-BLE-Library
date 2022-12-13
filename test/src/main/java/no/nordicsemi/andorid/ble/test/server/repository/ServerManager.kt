@@ -1,4 +1,4 @@
-package no.nordicsemi.andorid.ble.test.advertiser.repository
+package no.nordicsemi.andorid.ble.test.server.repository
 
 import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattService

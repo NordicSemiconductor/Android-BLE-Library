@@ -1,4 +1,4 @@
-package no.nordicsemi.andorid.ble.test.advertiser.viewmodel
+package no.nordicsemi.andorid.ble.test.server.viewmodel
 
 sealed interface TestState
 

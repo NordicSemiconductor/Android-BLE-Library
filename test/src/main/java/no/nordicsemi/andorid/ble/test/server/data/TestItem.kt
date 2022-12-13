@@ -1,4 +1,4 @@
-package no.nordicsemi.andorid.ble.test.advertiser.data
+package no.nordicsemi.andorid.ble.test.server.data
 
 enum class TestItem(val item: String) {
     START_ADVERTISING("Start Advertising"),

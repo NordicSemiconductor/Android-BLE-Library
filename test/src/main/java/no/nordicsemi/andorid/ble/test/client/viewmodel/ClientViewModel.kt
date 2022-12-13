@@ -1,4 +1,4 @@
-package no.nordicsemi.andorid.ble.test.scanner.viewmodel
+package no.nordicsemi.andorid.ble.test.client.viewmodel
 
 import android.annotation.SuppressLint
 import android.app.Application
@@ -12,10 +12,10 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import no.nordicsemi.andorid.ble.test.scanner.data.TestItem
-import no.nordicsemi.andorid.ble.test.advertiser.view.TestEvent
-import no.nordicsemi.andorid.ble.test.scanner.repository.ClientConnection
-import no.nordicsemi.andorid.ble.test.scanner.repository.ScanningManager
+import no.nordicsemi.andorid.ble.test.client.data.TestItem
+import no.nordicsemi.andorid.ble.test.server.view.TestEvent
+import no.nordicsemi.andorid.ble.test.client.repository.ClientConnection
+import no.nordicsemi.andorid.ble.test.client.repository.ScanningManager
 import no.nordicsemi.android.ble.ktx.stateAsFlow
 import javax.inject.Inject
 

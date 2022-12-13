@@ -1,14 +1,15 @@
-package no.nordicsemi.andorid.ble.test.advertiser.viewmodel
+package no.nordicsemi.andorid.ble.test.client.viewmodel
 
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import no.nordicsemi.andorid.ble.test.advertiser.view.TestEvent
+import no.nordicsemi.andorid.ble.test.server.view.TestEvent
+import no.nordicsemi.android.ble.ktx.state.ConnectionState
 
-data class ServerViewState(
-    val state: TestState = WaitingForClient(0),
+data class ClientViewState(
+    val state: ConnectionState = ConnectionState.Disconnected(ConnectionState.Disconnected.Reason.UNKNOWN),
     val testItems: List<TestEvent> = emptyList()
 ) {
     val color = if (getIcon() == Icons.Default.Check) Color.Green

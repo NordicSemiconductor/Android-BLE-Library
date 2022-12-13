@@ -1,4 +1,4 @@
-package no.nordicsemi.andorid.ble.test.scanner.view
+package no.nordicsemi.andorid.ble.test.client.view
 
 import android.annotation.SuppressLint
 import android.os.Build
@@ -17,9 +17,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import no.nordicsemi.andorid.ble.test.R
-import no.nordicsemi.andorid.ble.test.scanner.viewmodel.ClientViewModel
-import no.nordicsemi.andorid.ble.test.advertiser.view.LoadingView
-import no.nordicsemi.andorid.ble.test.scanner.viewmodel.ClientViewState
+import no.nordicsemi.andorid.ble.test.client.viewmodel.ClientViewModel
+import no.nordicsemi.andorid.ble.test.server.view.LoadingView
+import no.nordicsemi.andorid.ble.test.client.viewmodel.ClientViewState
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.common.permission.RequireBluetooth
 import no.nordicsemi.android.common.permission.RequireLocation

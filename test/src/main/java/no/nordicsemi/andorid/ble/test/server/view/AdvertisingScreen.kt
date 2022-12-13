@@ -1,4 +1,4 @@
-package no.nordicsemi.andorid.ble.test.advertiser.view
+package no.nordicsemi.andorid.ble.test.server.view
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
@@ -14,9 +14,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.hilt.navigation.compose.hiltViewModel
 import no.nordicsemi.andorid.ble.test.R
-import no.nordicsemi.andorid.ble.test.advertiser.viewmodel.ServerViewModel
-import no.nordicsemi.andorid.ble.test.advertiser.viewmodel.ServerViewState
-import no.nordicsemi.andorid.ble.test.advertiser.viewmodel.WaitingForClient
+import no.nordicsemi.andorid.ble.test.server.viewmodel.ServerViewModel
+import no.nordicsemi.andorid.ble.test.server.viewmodel.ServerViewState
+import no.nordicsemi.andorid.ble.test.server.viewmodel.WaitingForClient
 import no.nordicsemi.android.common.permission.RequireBluetooth
 import no.nordicsemi.android.common.theme.NordicTheme
 import no.nordicsemi.android.common.theme.view.NordicAppBar

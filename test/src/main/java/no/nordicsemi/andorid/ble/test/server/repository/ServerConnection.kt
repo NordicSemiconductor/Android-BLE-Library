@@ -1,4 +1,4 @@
-package no.nordicsemi.andorid.ble.test.advertiser.repository
+package no.nordicsemi.andorid.ble.test.server.repository
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
@@ -11,8 +11,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import no.nordicsemi.andorid.ble.test.advertiser.data.TestItem
-import no.nordicsemi.andorid.ble.test.advertiser.view.TestEvent
+import no.nordicsemi.andorid.ble.test.server.data.TestItem
+import no.nordicsemi.andorid.ble.test.server.view.TestEvent
 import no.nordicsemi.andorid.ble.test.spec.DeviceSpecifications
 import no.nordicsemi.android.ble.BleManager
 import no.nordicsemi.android.ble.ktx.asFlow
@@ -64,20 +64,6 @@ class ServerConnection(
         }
 
         override fun initialize() {
-            requestMtu(512).enqueue()
-            setWriteCallback(serverCharacteristic)
-                .asFlow()
-                .mapNotNull { it.getStringValue(0) }
-                .onEach { replies ->
-                    _replies.emit(replies)
-                    Log.d(TAG, "initialize: this is  $replies")
-                }.launchIn(scope)
-
-            /**
-             * Creates a request that will wait for enabling notifications. If notifications were
-             * enabled at the time of executing the request, it will complete immediately.
-             */
-            waitUntilNotificationsEnabled(serverCharacteristic).enqueue()
         }
 
         override fun onServicesInvalidated() {

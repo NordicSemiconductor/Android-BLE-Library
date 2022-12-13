@@ -1,4 +1,4 @@
-package no.nordicsemi.andorid.ble.test.scanner.repository
+package no.nordicsemi.andorid.ble.test.client.repository
 
 import android.bluetooth.BluetoothDevice
 import android.bluetooth.BluetoothGatt
