@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 import no.nordicsemi.andorid.ble.test.client.data.TestItem
 import no.nordicsemi.andorid.ble.test.client.repository.ClientConnection
 import no.nordicsemi.andorid.ble.test.client.repository.ScanningManager
-import no.nordicsemi.andorid.ble.test.server.view.TestEvent
+import no.nordicsemi.andorid.ble.test.server.data.TestEvent
 import no.nordicsemi.android.ble.ktx.stateAsFlow
 import javax.inject.Inject
 
@@ -30,8 +30,8 @@ class ClientViewModel @Inject constructor(
     private var clientConnection: ClientConnection? = null
     private val context = application.applicationContext
 
-    private val _scanningStateView: MutableStateFlow<ClientViewState> = MutableStateFlow(ClientViewState())
-    val scanningStateView = _scanningStateView.asStateFlow()
+    private val _clientViewState: MutableStateFlow<ClientViewState> = MutableStateFlow(ClientViewState())
+    val clientViewState = _clientViewState.asStateFlow()
 
     init {
         viewModelScope.launch {
@@ -45,14 +45,19 @@ class ClientViewModel @Inject constructor(
             ClientConnection(context, viewModelScope, device)
                 .apply {
                     stateAsFlow()
-                        .onEach { _scanningStateView.value = _scanningStateView.value.copy(state = it) }
+                        .onEach { _clientViewState.value = _clientViewState.value.copy(state = it) }
+                        .launchIn(viewModelScope)
+                    testingFeature
+                        .onEach {
+                            updateTestList(TestEvent(it.testName, it.isPassed))
+                        }
                         .launchIn(viewModelScope)
                 }
                 .apply {
                     connect()
-                    testIndicationsWithCallback()
+                    testWrite()
                     testNotificationsWithCallback()
-                    updateTestList(TestEvent(TestItem.CONNECTED_WITH_SERVER.item, true))
+                    testIndicationsWithCallback()
                 }
                 .apply { clientConnection = this }
         }
@@ -65,17 +70,17 @@ class ClientViewModel @Inject constructor(
         clientConnection = null
     }
 
-    private fun updateTestList(testEvent: TestEvent):  List<TestEvent> {
-        _scanningStateView.value.testItems.find { it.testName == testEvent.testName }
+    private fun updateTestList(testEvent: TestEvent): List<TestEvent> {
+        _clientViewState.value.testItems.find { it.testName == testEvent.testName }
             ?.let { it.isPassed == testEvent.isPassed }
             ?: run {
-                _scanningStateView.value = _scanningStateView.value.copy(
-                    testItems = _scanningStateView.value.testItems + TestEvent(
+                _clientViewState.value = _clientViewState.value.copy(
+                    testItems = _clientViewState.value.testItems + TestEvent(
                         testEvent.testName,
                         testEvent.isPassed
                     )
                 )
             }
-        return _scanningStateView.value.testItems
+        return _clientViewState.value.testItems
     }
 }

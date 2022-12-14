@@ -33,7 +33,7 @@ class ServerManager @Inject constructor(
             service(
                 DeviceSpecifications.UUID_SERVICE_DEVICE,
                 characteristic(
-                    DeviceSpecifications.NOTIFICATION_CHARACTERISTIC,
+                    DeviceSpecifications.WRITE_CHARACTERISTIC,
                     BluetoothGattCharacteristic.PROPERTY_WRITE or
                             BluetoothGattCharacteristic.PROPERTY_NOTIFY or
                             BluetoothGattCharacteristic.PROPERTY_INDICATE,

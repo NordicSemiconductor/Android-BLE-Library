@@ -29,18 +29,18 @@ import no.nordicsemi.android.common.theme.view.NordicAppBar
 @OptIn(ExperimentalMaterial3Api::class)
 @RequiresApi(Build.VERSION_CODES.O)
 @Composable
-fun ScanningScreen() {
+fun ClientScreen() {
     Column {
         NordicAppBar(text = stringResource(id = R.string.scanner))
         RequireBluetooth {
             RequireLocation {
                 val clientViewModel: ClientViewModel = hiltViewModel()
-                val scanningState by clientViewModel.scanningStateView.collectAsState()
+                val clientViewState by clientViewModel.clientViewState.collectAsState()
 
-                when(scanningState.state){
+                when(clientViewState.state){
                     ConnectionState.Connecting -> ConnectingView()
                     ConnectionState.Initializing -> InitializingView()
-                    ConnectionState.Ready -> ReadyView(scanningState)
+                    ConnectionState.Ready -> ReadyView(clientViewState)
                     is ConnectionState.Disconnected -> DisconnectedView()
                     else -> LoadingView()
                 }
@@ -87,13 +87,6 @@ fun ReadyView(scanningState: ClientViewState ) {
             }
 
         }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun ReadyViewPreview() {
-//    NordicTheme {
-//        ReadyView() ///    }
 }
 
 @Composable
@@ -167,6 +160,6 @@ fun InitializingViewPreview() {
 @Composable
 fun ScanningScreenPreview() {
     NordicTheme {
-        ScanningScreen()
+        ClientScreen()
     }
 }

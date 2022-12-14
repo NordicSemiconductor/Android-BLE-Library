@@ -12,11 +12,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import no.nordicsemi.andorid.ble.test.server.data.TestEvent
 import no.nordicsemi.andorid.ble.test.server.data.TestItem
 import no.nordicsemi.andorid.ble.test.server.repository.AdvertisingManager
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.repository.ServerManager
-import no.nordicsemi.andorid.ble.test.server.view.TestEvent
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.ble.ktx.stateAsFlow
 import no.nordicsemi.android.ble.observer.ServerObserver
@@ -71,9 +71,9 @@ class ServerViewModel @Inject constructor(
                         viewModelScope
                             .launch {
                                 connect()
-                                testIndication()
+                                testWrite()
                                 testNotification()
-                                updateTestList(TestEvent(TestItem.DEVICE_CONNECTION.item, true))
+                                testIndication()
                             }
                     }
                     .apply {

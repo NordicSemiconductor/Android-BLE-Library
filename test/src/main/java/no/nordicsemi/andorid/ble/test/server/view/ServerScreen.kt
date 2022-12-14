@@ -23,7 +23,7 @@ import no.nordicsemi.android.common.theme.view.NordicAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun AdvertisingScreen() {
+fun ServerScreen() {
     Column {
         NordicAppBar(text = stringResource(id = R.string.advertiser))
         RequireBluetooth {
@@ -85,11 +85,6 @@ fun LoadingViewPreview() {
     }
 }
 
-data class TestEvent(
-    val testName: String,
-    val isPassed: Boolean
-)
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun TestResultView(serverViewState: ServerViewState) {
@@ -125,14 +120,5 @@ fun TestResultView(serverViewState: ServerViewState) {
             }
         }
 
-    }
-
-}
-
-@Preview(showBackground = true)
-@Composable
-fun TestingStaticsViewPreview() {
-    NordicTheme {
-//        TestResultView
     }
 }

@@ -11,8 +11,8 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import no.nordicsemi.andorid.ble.test.server.data.TestEvent
 import no.nordicsemi.andorid.ble.test.server.data.TestItem
-import no.nordicsemi.andorid.ble.test.server.view.TestEvent
 import no.nordicsemi.andorid.ble.test.spec.DeviceSpecifications
 import no.nordicsemi.android.ble.BleManager
 import no.nordicsemi.android.ble.ktx.suspend
@@ -24,11 +24,10 @@ class ServerConnection(
     private val device: BluetoothDevice,
 ) : BleManager(context) {
     private val TAG = ServerConnection::class.java.simpleName
-    private var notificationCharacteristic: BluetoothGattCharacteristic? = null
-    private var indicationCharacteristic: BluetoothGattCharacteristic? = null
+    private var serverCharacteristics: BluetoothGattCharacteristic? = null
 
     private val _testingFeature: MutableSharedFlow<TestEvent> = MutableSharedFlow()
-    val testingFeature =_testingFeature.asSharedFlow()
+    val testingFeature = _testingFeature.asSharedFlow()
 
     override fun log(priority: Int, message: String) {
         Log.println(priority, TAG, message)
@@ -49,15 +48,14 @@ class ServerConnection(
          */
         override fun isRequiredServiceSupported(gatt: BluetoothGatt): Boolean {
             scope.launch {
-                _testingFeature.emit(TestEvent(TestItem.SERVICE_DISCOVERY.item, true) )
+                _testingFeature.emit(TestEvent(TestItem.SERVICE_DISCOVERY.item, true))
             }
             return true
         }
 
         override fun onServerReady(server: BluetoothGattServer) {
             server.getService(DeviceSpecifications.UUID_SERVICE_DEVICE)?.let { service ->
-                notificationCharacteristic = service.getCharacteristic(DeviceSpecifications.NOTIFICATION_CHARACTERISTIC)
-                indicationCharacteristic = service.getCharacteristic(DeviceSpecifications.INDICATION_CHARACTERISTIC)
+                serverCharacteristics = service.getCharacteristic(DeviceSpecifications.WRITE_CHARACTERISTIC)
             }
         }
 
@@ -65,8 +63,7 @@ class ServerConnection(
         }
 
         override fun onServicesInvalidated() {
-            notificationCharacteristic = null
-            indicationCharacteristic = null
+            serverCharacteristics = null
         }
     }
 
@@ -79,31 +76,73 @@ class ServerConnection(
                 .retry(4, 300)
                 .useAutoConnect(false)
                 .timeout(10_000)
+                .also {
+                    scope.launch {
+                        _testingFeature.emit(TestEvent(TestItem.DEVICE_CONNECTION.item, true))
+                    }
+                }
                 .suspend()
         } catch (e: Exception) {
             e.printStackTrace()
         }
     }
 
-    suspend fun testIndication(){
+    suspend fun testIndication() {
         val request = "This is Indication".toByteArray()
         // Creates a request that will wait for enabling indications. If indications were
         // enabled at the time of executing the request, it will complete immediately.
-        waitUntilIndicationsEnabled(indicationCharacteristic).suspend()
+        waitUntilIndicationsEnabled(serverCharacteristics)
+            .also {
+                scope.launch {
+                    _testingFeature.emit(TestEvent(TestItem.WAIT_UNTIL_INDICATION_ENABLED.item, true))
+                }
+            }
+            .enqueue()
 
-        sendIndication(indicationCharacteristic, request).suspend()
+        sendIndication(serverCharacteristics, request)
+            .also {
+                scope.launch {
+                    _testingFeature.emit(TestEvent(TestItem.SEND_INDICATION.item, true))
+                }
+            }
+            .enqueue()
     }
 
-    suspend fun testNotification(){
+    suspend fun testNotification() {
         val request = "This is Notification".toByteArray()
-
         //Creates a request that will wait for enabling notifications. If notifications were
         // enabled at the time of executing the request, it will complete immediately.
-        waitUntilNotificationsEnabled(notificationCharacteristic).suspend()
+        waitUntilNotificationsEnabled(serverCharacteristics)
+            .also {
+                scope.launch {
+                    _testingFeature.emit(
+                        TestEvent(
+                            TestItem.WAIT_UNTIL_NOTIFICATION_ENABLED.item,
+                            true
+                        )
+                    )
+                }
+            }
+            .enqueue()
 
         // Sends the notification from the server characteristic. The notifications on this
         // characteristic must be enabled before the request is executed.
-        sendNotification(notificationCharacteristic, request).suspend()
+        sendNotification(serverCharacteristics, request)
+            .also {
+                scope.launch {
+                    _testingFeature.emit(TestEvent(TestItem.SEND_NOTIFICATION.item, true))
+                }
+            }
+            .enqueue()
+    }
+
+    suspend fun testWrite() {
+        setWriteCallback(serverCharacteristics)
+            .also {
+                scope.launch {
+                    _testingFeature.emit(TestEvent(TestItem.WRITE_CALLBACK.item, true))
+                }
+            }
     }
 
     fun release() {
