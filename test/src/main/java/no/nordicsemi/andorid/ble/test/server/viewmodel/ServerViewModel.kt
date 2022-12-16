@@ -72,6 +72,7 @@ class ServerViewModel @Inject constructor(
                             .launch {
                                 connect()
                                 testWrite()
+                                testWriteWithMerger()
                                 testNotification()
                                 testIndication()
                             }
@@ -111,6 +112,7 @@ class ServerViewModel @Inject constructor(
 
             override fun onDeviceDisconnectedFromServer(device: BluetoothDevice) {
                 Log.d(TAG, "onDeviceDisconnectedFromServer: $device disconnected")
+                updateTestList(TestEvent(TestItem.DEVICE_DISCONNECTION.item, true))
             }
         })
         serverManager.open()

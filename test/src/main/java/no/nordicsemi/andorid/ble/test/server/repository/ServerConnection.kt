@@ -14,6 +14,9 @@ import kotlinx.coroutines.launch
 import no.nordicsemi.andorid.ble.test.server.data.TestEvent
 import no.nordicsemi.andorid.ble.test.server.data.TestItem
 import no.nordicsemi.andorid.ble.test.spec.DeviceSpecifications
+import no.nordicsemi.andorid.ble.test.spec.FlagBasedPacketMerger
+import no.nordicsemi.andorid.ble.test.spec.HeaderBasedPacketMerger
+import no.nordicsemi.andorid.ble.test.spec.MtuBasedMerger
 import no.nordicsemi.android.ble.BleManager
 import no.nordicsemi.android.ble.ktx.suspend
 
@@ -28,6 +31,8 @@ class ServerConnection(
 
     private val _testingFeature: MutableSharedFlow<TestEvent> = MutableSharedFlow()
     val testingFeature = _testingFeature.asSharedFlow()
+
+    private var maxLength = 0
 
     override fun log(priority: Int, message: String) {
         Log.println(priority, TAG, message)
@@ -60,6 +65,7 @@ class ServerConnection(
         }
 
         override fun initialize() {
+            maxLength = mtu - 3
         }
 
         override fun onServicesInvalidated() {
@@ -76,11 +82,7 @@ class ServerConnection(
                 .retry(4, 300)
                 .useAutoConnect(false)
                 .timeout(10_000)
-                .also {
-                    scope.launch {
-                        _testingFeature.emit(TestEvent(TestItem.DEVICE_CONNECTION.item, true))
-                    }
-                }
+                .also { _testingFeature.emit(TestEvent(TestItem.DEVICE_CONNECTION.item, true)) }
                 .suspend()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -93,18 +95,17 @@ class ServerConnection(
         // enabled at the time of executing the request, it will complete immediately.
         waitUntilIndicationsEnabled(serverCharacteristics)
             .also {
-                scope.launch {
-                    _testingFeature.emit(TestEvent(TestItem.WAIT_UNTIL_INDICATION_ENABLED.item, true))
-                }
+                _testingFeature.emit(
+                    TestEvent(
+                        TestItem.WAIT_UNTIL_INDICATION_ENABLED.item,
+                        true
+                    )
+                )
             }
             .enqueue()
 
         sendIndication(serverCharacteristics, request)
-            .also {
-                scope.launch {
-                    _testingFeature.emit(TestEvent(TestItem.SEND_INDICATION.item, true))
-                }
-            }
+            .also { _testingFeature.emit(TestEvent(TestItem.SEND_INDICATION.item, true)) }
             .enqueue()
     }
 
@@ -114,35 +115,42 @@ class ServerConnection(
         // enabled at the time of executing the request, it will complete immediately.
         waitUntilNotificationsEnabled(serverCharacteristics)
             .also {
-                scope.launch {
-                    _testingFeature.emit(
-                        TestEvent(
-                            TestItem.WAIT_UNTIL_NOTIFICATION_ENABLED.item,
-                            true
-                        )
+                _testingFeature.emit(
+                    TestEvent(
+                        TestItem.WAIT_UNTIL_NOTIFICATION_ENABLED.item,
+                        true
                     )
-                }
+                )
             }
             .enqueue()
 
         // Sends the notification from the server characteristic. The notifications on this
         // characteristic must be enabled before the request is executed.
         sendNotification(serverCharacteristics, request)
-            .also {
-                scope.launch {
-                    _testingFeature.emit(TestEvent(TestItem.SEND_NOTIFICATION.item, true))
-                }
-            }
+            .also { _testingFeature.emit(TestEvent(TestItem.SEND_NOTIFICATION.item, true)) }
             .enqueue()
     }
 
     suspend fun testWrite() {
         setWriteCallback(serverCharacteristics)
-            .also {
-                scope.launch {
-                    _testingFeature.emit(TestEvent(TestItem.WRITE_CALLBACK.item, true))
-                }
-            }
+            .also { _testingFeature.emit(TestEvent(TestItem.WRITE_CALLBACK.item, true)) }
+    }
+
+    suspend fun testWriteWithMerger() {
+        // Write callback with flag based merger
+        setWriteCallback(serverCharacteristics)
+            .merge(FlagBasedPacketMerger())
+            .also { _testingFeature.emit( TestEvent( TestItem.WRITE_WITH_FLAG_BASED_MERGER.item, true )) }
+
+        // Write callback with header based merger
+        setWriteCallback(serverCharacteristics)
+            .merge(HeaderBasedPacketMerger())
+            .also { _testingFeature.emit( TestEvent(TestItem.WRITE_WITH_HEADER_BASED_MERGER.item, true)) }
+
+        // Write callback with header based merger
+        setWriteCallback(serverCharacteristics)
+            .merge(MtuBasedMerger(maxLength))
+            .also { _testingFeature.emit(TestEvent(TestItem.WRITE_WITH_MTU_SIZE_MERGER.item,true)) }
     }
 
     fun release() {

@@ -56,6 +56,7 @@ class ClientViewModel @Inject constructor(
                 .apply {
                     connect()
                     testWrite()
+                    testWriteWithSplitter()
                     testNotificationsWithCallback()
                     testIndicationsWithCallback()
                 }
