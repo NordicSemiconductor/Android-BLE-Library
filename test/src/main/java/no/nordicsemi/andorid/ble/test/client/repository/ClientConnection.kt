@@ -12,6 +12,8 @@ import kotlinx.coroutines.launch
 import no.nordicsemi.andorid.ble.test.client.data.TestItem
 import no.nordicsemi.andorid.ble.test.server.data.TestEvent
 import no.nordicsemi.andorid.ble.test.spec.DeviceSpecifications
+import no.nordicsemi.andorid.ble.test.spec.FlagBasedPacketSplitter
+import no.nordicsemi.andorid.ble.test.spec.HeaderBasedPacketSplitter
 import no.nordicsemi.android.ble.BleManager
 import no.nordicsemi.android.ble.ktx.suspend
 
@@ -51,7 +53,7 @@ class ClientConnection(
         }
 
         override fun initialize() {
-            requestMtu(512).enqueue()
+            requestMtu(25).enqueue()
         }
 
         override fun onServicesInvalidated() {
@@ -94,11 +96,72 @@ class ClientConnection(
     suspend fun testWrite() {
         val request = "This is write".toByteArray()
         writeCharacteristic(characteristic, request, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+            .also { _testingFeature.emit(TestEvent(TestItem.WRITE_CHARACTERISTICS.item, true)) }
+            .suspend()
+    }
+
+    suspend fun testWriteWithSplitter() {
+        val request = """
+           Lorem ipsum dolor sit amet. Ab vitae odio eos veniam exercitationem qui totam provident in 
+            earum eveniet sed suscipit libero est temporibus eius. Ut Quis deserunt sit ipsa earum cum 
+            esse tenetur id pariatur delectus vel sapiente exercitationem est harum dolore et accusantium 
+            dicta. Qui officia dolor ut provident numquam sit dolor quae sit ipsum dolores et autem rerum. 
+            Est maxime nihil aut beatae excepturi ut rerum explicabo. </p><p>Et ullam expedita cum cupiditate 
+            doloremque cum omnis incidunt sed dolores maxime sed voluptatibus quisquam. Qui recusandae 
+            ipsam qui iste quia sit deleniti mollitia. Qui totam dolorem et ipsa dolor a architecto omnis ab 
+            consectetur eveniet. Ex quae laborum id doloribus tenetur non porro dolorum et assumenda nesciunt est 
+            nihil enim eos provident officiis. Est itaque nostrum vel accusantium reiciendis nam omnis sunt ad 
+            autem omnis ut consequatur inventore. Cum consequatur consequatur et laudantium dolorem et enim odit.
+            """.toByteArray()
+
+        writeCharacteristic(characteristic, request, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
             .also {
-                scope.launch {
-                    _testingFeature.emit(TestEvent(TestItem.WRITE_CHARACTERISTICS.item, true))
-                }
+                    _testingFeature.emit(
+                        TestEvent(
+                            TestItem.WRITE_WITH_FLAG_BASED_SPLITTER.item,
+                            true
+                        )
+                    )
             }
+            .split(FlagBasedPacketSplitter())
+            .suspend()
+
+        writeCharacteristic(characteristic, request, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+            .also {
+                    _testingFeature.emit(
+                        TestEvent(
+                            TestItem.WRITE_WITH_HEADER_BASED_SPLITTER.item,
+                            true
+                        )
+                    )
+            }
+            .split(HeaderBasedPacketSplitter())
+            .suspend()
+
+        // Default split
+        val requestToSend = checkSizeOfRequest(request)
+        writeCharacteristic(characteristic, requestToSend, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+            .also {
+                _testingFeature.emit(
+                    TestEvent(
+                        TestItem.WRITE_WITH_DEFAULT_MTU_SPLITTER.item,
+                        true
+                    )
+                )
+            }
+            .split()
+            .suspend()
+
+        writeCharacteristic(characteristic, requestToSend, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+            .also {
+                _testingFeature.emit(
+                    TestEvent(
+                        TestItem.WRITE_WITH_DEFAULT_MTU_SPLITTER.item,
+                        true
+                    )
+                )
+            }
+            .split()
             .suspend()
     }
 
@@ -117,6 +180,18 @@ class ClientConnection(
         } catch (e: Exception) {
             e.printStackTrace()
         }
+    }
+
+    /**
+     * Checks if the size of the last packet is equal to the maxLength,
+     * and if it is, it adds a single space character to the end of the request.
+     * This prevents the merger function from waiting for the next packet if the last packet
+     * is the maxLength.
+     */
+    private fun checkSizeOfRequest(request: ByteArray): ByteArray {
+        val maxLength = mtu - 3
+        return if (maxLength % request.size == 0) request + " ".toByteArray()
+        else request
     }
 
     fun release() {
