@@ -28,7 +28,6 @@ class FlagBasedPacketSplitter : DataSplitter {
      * @param maxLength maximum length of the returned packet.
      * @return The packet to be sent, or null, if the whole message was already split.
      */
-
     override fun chunk(message: ByteArray, index: Int, maxLength: Int): ByteArray? {
         val availableSize = maxLength - 1
         // If full message fits in a single packet
@@ -40,7 +39,7 @@ class FlagBasedPacketSplitter : DataSplitter {
             }
         }
 
-        // First packet of a larger one?
+        // First packet of a larger message
         if (index == 0) {
             return ByteArray(maxLength).apply {
                 ByteBuffer.wrap(this)
@@ -54,7 +53,7 @@ class FlagBasedPacketSplitter : DataSplitter {
         val toBeSent = message.size - bytesSent
         if (toBeSent <= 0) return null
 
-        // Are we sensing the last packet?
+        // Last chunk of the message
         if (toBeSent <= availableSize) {
             return ByteArray(maxLength).apply {
                 ByteBuffer.wrap(this)
@@ -63,7 +62,7 @@ class FlagBasedPacketSplitter : DataSplitter {
             }
         }
 
-        // We are in the middle then!
+        // Continuation of the larger message
         return ByteArray(maxLength).apply {
             ByteBuffer.wrap(this)
                 .put(SplitterFlag.CONTINUATION.value)
