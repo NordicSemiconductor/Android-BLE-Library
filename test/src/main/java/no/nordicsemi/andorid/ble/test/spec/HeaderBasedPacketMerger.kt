@@ -11,7 +11,9 @@ class HeaderBasedPacketMerger: DataMerger {
      * A method that merges the last packet into the output message.
      * If its a fist packet, the first two bytes of the packet contain a header which includes the expected size
      * of the message to be received. The remaining bytes of the packet contain the message, which is copied to the output stream.
-     * For all subsequent packets, the message bytes are simply copied to the output stream until a null value is returned.
+     * For all subsequent packets, the message bytes are simply copied to the output stream
+     * until the size of the packet received matches the expected size of the message delivered through header file.
+     *
      * @param output     the stream for the output message, initially empty.
      * @param lastPacket the data received in the last read/notify/indicate operation.
      * @param index      an index of the packet, 0-based.

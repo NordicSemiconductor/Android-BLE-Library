@@ -9,10 +9,11 @@ class FlagBasedPacketMerger : DataMerger {
 
     /**
      * A method that merges the last packet into the output message.
-     * The first byte of the last packet contains the flag and remaining bytes contains the message.
-     * The merge method adds a packet to the buffer and returns true if the packet contains the FULL or END flag.
-     * indicating that the message is complete or that the packet is the last one in a multi-packet message.
-     * Otherwise, it returns false to indicate that more packets are expected.
+     * The first byte of the each packet contains the flag and remaining bytes contains the message.
+     * The merge method adds a packet to the output stream and returns true if the packet contains the FULL or END flag, which
+     * specifies that the message is complete. If a packet contains BEGIN or CONTINUATION flag,
+     * it indicates that the packet is the beginning or continuation of a multi-packet message and returns false.
+     *
      * @param output     the stream for the output message, initially empty.
      * @param lastPacket the data received in the last read/notify/indicate operation.
      * @param index      an index of the packet, 0-based.

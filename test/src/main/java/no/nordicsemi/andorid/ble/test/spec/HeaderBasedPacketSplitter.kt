@@ -12,8 +12,8 @@ class HeaderBasedPacketSplitter : DataSplitter {
      * of the message to be sent. The remaining packets contain the message up to the MTU size or
      * packet size (whichever is smaller).
      * For instance, if the message size is 600 and the MTU-512, the first packet will have
-     * 510 bytes of the message along with a 2 byte header,
-     * and the following packet will contain the remaining 90 bytes.
+     * 510 bytes of the message along with a 2 byte header, and the following packet will contain the remaining 90 bytes.
+     *
      * @param message   full message to be chunked.
      * @param index     index of a packet, 0-based.
      * @param maxLength maximum length of the returned packet.
