@@ -75,6 +75,7 @@ class ServerViewModel @Inject constructor(
                                 testWriteWithMerger()
                                 testNotification()
                                 testIndication()
+                                testReliableWrite()
                             }
                     }
                     .apply {

@@ -28,6 +28,8 @@ class ServerConnection(
 ) : BleManager(context) {
     private val TAG = ServerConnection::class.java.simpleName
     private var serverCharacteristics: BluetoothGattCharacteristic? = null
+    private var indicationCharacteristics: BluetoothGattCharacteristic? = null
+    private var reliableCharacteristics: BluetoothGattCharacteristic? = null
 
     private val _testingFeature: MutableSharedFlow<TestEvent> = MutableSharedFlow()
     val testingFeature = _testingFeature.asSharedFlow()
@@ -61,6 +63,8 @@ class ServerConnection(
         override fun onServerReady(server: BluetoothGattServer) {
             server.getService(DeviceSpecifications.UUID_SERVICE_DEVICE)?.let { service ->
                 serverCharacteristics = service.getCharacteristic(DeviceSpecifications.WRITE_CHARACTERISTIC)
+                indicationCharacteristics = service.getCharacteristic(DeviceSpecifications.Ind_CHARACTERISTIC)
+                reliableCharacteristics = service.getCharacteristic(DeviceSpecifications.REL_WRITE_CHARACTERISTIC)
             }
         }
 
@@ -70,6 +74,8 @@ class ServerConnection(
 
         override fun onServicesInvalidated() {
             serverCharacteristics = null
+            indicationCharacteristics = null
+            reliableCharacteristics = null
         }
     }
 
@@ -151,6 +157,12 @@ class ServerConnection(
         setWriteCallback(serverCharacteristics)
             .merge(MtuBasedMerger(maxLength))
             .also { _testingFeature.emit(TestEvent(TestItem.WRITE_WITH_MTU_SIZE_MERGER.item,true)) }
+    }
+
+    // Reliable write
+    suspend fun testReliableWrite(){
+        setWriteCallback(reliableCharacteristics)
+            .also {  _testingFeature.emit(TestCase(TestItem.RELIABLE_WRITE.item,true))  }
     }
 
     fun release() {

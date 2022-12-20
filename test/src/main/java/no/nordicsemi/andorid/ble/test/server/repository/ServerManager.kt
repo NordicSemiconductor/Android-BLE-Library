@@ -11,7 +11,7 @@ import javax.inject.Inject
 
 class ServerManager @Inject constructor(
     @ApplicationContext context: Context,
-): BleServerManager(context) {
+) : BleServerManager(context) {
     private val TAG = ServerManager::class.java.simpleName
 
     override fun log(priority: Int, message: String) {
@@ -27,21 +27,34 @@ class ServerManager @Inject constructor(
      * It returns a list of server GATT services with given UUID that will be available to the remote device
      * to use and a list of characteristics. [BleServerManager.setServerObserver] will be called once all services are done.
      */
-
     override fun initializeServer(): List<BluetoothGattService> {
         return listOf(
             service(
                 DeviceSpecifications.UUID_SERVICE_DEVICE,
                 characteristic(
+                    DeviceSpecifications.REL_WRITE_CHARACTERISTIC,
+                    BluetoothGattCharacteristic.PROPERTY_WRITE or
+                            BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS,
+                    BluetoothGattCharacteristic.PERMISSION_WRITE,
+                    description("Testing App", false),
+                    reliableWrite()
+                ),
+                characteristic(
+                    DeviceSpecifications.Ind_CHARACTERISTIC,
+                    BluetoothGattCharacteristic.PROPERTY_WRITE or
+                            BluetoothGattCharacteristic.PROPERTY_INDICATE,
+                    BluetoothGattCharacteristic.PERMISSION_WRITE,
+                    cccd(),
+                    description("Testing App", false),
+                ),
+                characteristic(
                     DeviceSpecifications.WRITE_CHARACTERISTIC,
                     BluetoothGattCharacteristic.PROPERTY_WRITE or
-                            BluetoothGattCharacteristic.PROPERTY_NOTIFY or
-                            BluetoothGattCharacteristic.PROPERTY_INDICATE,
-                    BluetoothGattCharacteristic.PERMISSION_WRITE or
-                            BluetoothGattCharacteristic.PERMISSION_READ,
+                            BluetoothGattCharacteristic.PROPERTY_NOTIFY,
+                    BluetoothGattCharacteristic.PERMISSION_WRITE,
                     cccd(),
                     description("Testing App", false)
-                )
+                ),
             )
         )
     }

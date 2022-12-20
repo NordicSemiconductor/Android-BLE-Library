@@ -59,6 +59,7 @@ class ClientViewModel @Inject constructor(
                     testWriteWithSplitter()
                     testNotificationsWithCallback()
                     testIndicationsWithCallback()
+                    testReliableWrite()
                 }
                 .apply { clientConnection = this }
         }

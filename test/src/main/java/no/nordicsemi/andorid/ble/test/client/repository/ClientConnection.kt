@@ -24,6 +24,8 @@ class ClientConnection(
 ) : BleManager(context) {
     private val TAG = ClientConnection::class.java.simpleName
     var characteristic: BluetoothGattCharacteristic? = null
+    var indicationCharacteristics: BluetoothGattCharacteristic? = null
+    var reliableCharacteristics: BluetoothGattCharacteristic? = null
 
     private val _testingFeature: MutableSharedFlow<TestEvent> = MutableSharedFlow()
     val testingFeature = _testingFeature.asSharedFlow()
@@ -46,8 +48,9 @@ class ClientConnection(
                 _testingFeature.emit(TestEvent(TestItem.SERVICE_DISCOVERY.item, true))
             }
             gatt.getService(DeviceSpecifications.UUID_SERVICE_DEVICE)?.let { service ->
-                characteristic =
-                    service.getCharacteristic(DeviceSpecifications.WRITE_CHARACTERISTIC)
+                characteristic = service.getCharacteristic(DeviceSpecifications.WRITE_CHARACTERISTIC)
+                indicationCharacteristics = service.getCharacteristic(DeviceSpecifications.Ind_CHARACTERISTIC)
+                reliableCharacteristics = service.getCharacteristic(DeviceSpecifications.REL_WRITE_CHARACTERISTIC)
             }
             return characteristic != null
         }
@@ -58,6 +61,8 @@ class ClientConnection(
 
         override fun onServicesInvalidated() {
             characteristic = null
+            indicationCharacteristics = null
+            reliableCharacteristics = null
         }
     }
 
@@ -98,6 +103,21 @@ class ClientConnection(
         writeCharacteristic(characteristic, request, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
             .also { _testingFeature.emit(TestEvent(TestItem.WRITE_CHARACTERISTICS.item, true)) }
             .suspend()
+    }
+
+    // Reliable write
+    suspend fun testReliableWrite() {
+        beginReliableWrite()
+            .add(writeCharacteristic(reliableCharacteristics, reliableRequest, BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT)
+                .split(FlagBasedPacketSplitter())
+            )
+            .done {scope.launch { _testCase.emit(TestCase(TestItem.RELIABLE_WRITE.item, true)) }}
+            .fail { _, _ ->
+                scope.launch {
+                    _testCase.emit(TestCase(TestItem.RELIABLE_WRITE.item, false))
+                }
+            }
+            .enqueue()
     }
 
     suspend fun testWriteWithSplitter() {
