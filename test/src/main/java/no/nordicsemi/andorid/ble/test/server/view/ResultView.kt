@@ -18,12 +18,12 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import no.nordicsemi.andorid.ble.test.server.data.TestEvent
+import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.android.common.theme.NordicTheme
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun ResultView(testItems: List<TestEvent>, icon: ImageVector?, iconColor: Color) {
+fun ResultView(testItems: List<TestCase>, icon: ImageVector?, iconColor: Color) {
     LazyColumn(
         contentPadding = PaddingValues(16.dp)
     ) {
@@ -66,10 +66,10 @@ fun ResultViewPreview() {
     NordicTheme {
         ResultView(
             testItems = listOf(
-                TestEvent("Test 1", true),
-                TestEvent("Test 2", true),
-                TestEvent("Test 3", false),
-                TestEvent("Test 4", false),
+                TestCase("Test 1", true),
+                TestCase("Test 2", true),
+                TestCase("Test 3", false),
+                TestCase("Test 4", false),
             ),
             icon = Icons.Default.Check,
             iconColor = Color.Green

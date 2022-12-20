@@ -12,7 +12,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import no.nordicsemi.andorid.ble.test.server.data.TestEvent
+import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.server.data.TestItem
 import no.nordicsemi.andorid.ble.test.server.repository.AdvertisingManager
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
@@ -45,9 +45,9 @@ class ServerViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 advertisingManager.startAdvertising()
-                updateTestList(TestEvent(TestItem.START_ADVERTISING.item, true))
+                updateTestList(TestCase(TestItem.START_ADVERTISING.item, true))
             } catch (exception: Exception) {
-                updateTestList(TestEvent(TestItem.START_ADVERTISING.item, false))
+                updateTestList(TestCase(TestItem.START_ADVERTISING.item, false))
                 throw Exception("Could not start server.", exception)
             }
         }
@@ -55,13 +55,7 @@ class ServerViewModel @Inject constructor(
         serverManager.setServerObserver(object : ServerObserver {
             override fun onServerReady() {
                 _serverViewState.value = _serverViewState.value.copy(
-                    testItems = updateTestList(
-                        TestEvent(
-                            TestItem.SERVER_READY.item,
-                            true
-                        )
-                    )
-                )
+                    testItems = updateTestList(TestCase(TestItem.SERVER_READY.item, true)))
             }
 
             override fun onDeviceConnectedToServer(device: BluetoothDevice) {
@@ -80,7 +74,7 @@ class ServerViewModel @Inject constructor(
                     }
                     .apply {
                         testingFeature
-                            .onEach { updateTestList(TestEvent(it.testName, it.isPassed)) }
+                            .onEach { updateTestList(TestCase(it.testName, it.isPassed)) }
                             .launchIn(viewModelScope)
                     }
                     .apply {
@@ -113,7 +107,7 @@ class ServerViewModel @Inject constructor(
 
             override fun onDeviceDisconnectedFromServer(device: BluetoothDevice) {
                 Log.d(TAG, "onDeviceDisconnectedFromServer: $device disconnected")
-                updateTestList(TestEvent(TestItem.DEVICE_DISCONNECTION.item, true))
+                updateTestList(TestCase(TestItem.DEVICE_DISCONNECTION.item, true))
             }
         })
         serverManager.open()
@@ -135,12 +129,12 @@ class ServerViewModel @Inject constructor(
         stopServer()
     }
 
-    private fun updateTestList(testEvent: TestEvent): List<TestEvent> {
+    private fun updateTestList(testEvent: TestCase): List<TestCase> {
         _serverViewState.value.testItems.find { it.testName == testEvent.testName }
             ?.let { it.isPassed == testEvent.isPassed }
             ?: run {
                 _serverViewState.value = _serverViewState.value.copy(
-                    testItems = _serverViewState.value.testItems + TestEvent(
+                    testItems = _serverViewState.value.testItems + TestCase(
                         testEvent.testName,
                         testEvent.isPassed
                     )

@@ -15,7 +15,7 @@ import kotlinx.coroutines.launch
 import no.nordicsemi.andorid.ble.test.client.data.TestItem
 import no.nordicsemi.andorid.ble.test.client.repository.ClientConnection
 import no.nordicsemi.andorid.ble.test.client.repository.ScanningManager
-import no.nordicsemi.andorid.ble.test.server.data.TestEvent
+import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.android.ble.ktx.stateAsFlow
 import javax.inject.Inject
 
@@ -36,10 +36,10 @@ class ClientViewModel @Inject constructor(
     init {
         viewModelScope.launch {
             val device = try {
-                updateTestList(TestEvent(TestItem.SCANNING_FOR_SERVER.item, true))
+                updateTestList(TestCase(TestItem.SCANNING_FOR_SERVER.item, true))
                 scanningManager.scanningForServer()
             } catch (exception: Exception) {
-                updateTestList(TestEvent(TestItem.SCANNING_FOR_SERVER.item, false))
+                updateTestList(TestCase(TestItem.SCANNING_FOR_SERVER.item, false))
                 throw Exception("Could not start scanning.", exception)
             }
             ClientConnection(context, viewModelScope, device)
@@ -47,9 +47,9 @@ class ClientViewModel @Inject constructor(
                     stateAsFlow()
                         .onEach { _clientViewState.value = _clientViewState.value.copy(state = it) }
                         .launchIn(viewModelScope)
-                    testingFeature
+                    testCase
                         .onEach {
-                            updateTestList(TestEvent(it.testName, it.isPassed))
+                            updateTestList(TestCase(it.testName, it.isPassed))
                         }
                         .launchIn(viewModelScope)
                 }
@@ -72,12 +72,12 @@ class ClientViewModel @Inject constructor(
         clientConnection = null
     }
 
-    private fun updateTestList(testEvent: TestEvent): List<TestEvent> {
+    private fun updateTestList(testEvent: TestCase): List<TestCase> {
         _clientViewState.value.testItems.find { it.testName == testEvent.testName }
             ?.let { it.isPassed == testEvent.isPassed }
             ?: run {
                 _clientViewState.value = _clientViewState.value.copy(
-                    testItems = _clientViewState.value.testItems + TestEvent(
+                    testItems = _clientViewState.value.testItems + TestCase(
                         testEvent.testName,
                         testEvent.isPassed
                     )

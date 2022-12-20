@@ -17,8 +17,7 @@ enum class TestItem(val item: String) {
     WAIT_UNTIL_INDICATION_ENABLED("Wait Until Indication Enabled"),
 }
 
-
-data class TestEvent(
+data class TestCase(
     val testName: String,
     val isPassed: Boolean
 )

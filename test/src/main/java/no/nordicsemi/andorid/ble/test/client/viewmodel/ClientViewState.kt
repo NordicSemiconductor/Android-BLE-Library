@@ -5,12 +5,12 @@ import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
-import no.nordicsemi.andorid.ble.test.server.data.TestEvent
+import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
 
 data class ClientViewState(
     val state: ConnectionState = ConnectionState.Disconnected(ConnectionState.Disconnected.Reason.UNKNOWN),
-    val testItems: List<TestEvent> = emptyList()
+    val testItems: List<TestCase> = emptyList()
 ) {
     val color = if (getIcon() == Icons.Default.Check) Color.Green
     else Color.Red

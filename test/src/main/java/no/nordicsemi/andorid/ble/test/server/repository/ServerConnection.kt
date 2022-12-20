@@ -11,7 +11,7 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-import no.nordicsemi.andorid.ble.test.server.data.TestEvent
+import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.server.data.TestItem
 import no.nordicsemi.andorid.ble.test.spec.DeviceSpecifications
 import no.nordicsemi.andorid.ble.test.spec.FlagBasedPacketMerger
@@ -31,7 +31,7 @@ class ServerConnection(
     private var indicationCharacteristics: BluetoothGattCharacteristic? = null
     private var reliableCharacteristics: BluetoothGattCharacteristic? = null
 
-    private val _testingFeature: MutableSharedFlow<TestEvent> = MutableSharedFlow()
+    private val _testingFeature: MutableSharedFlow<TestCase> = MutableSharedFlow()
     val testingFeature = _testingFeature.asSharedFlow()
 
     private var maxLength = 0
@@ -55,7 +55,7 @@ class ServerConnection(
          */
         override fun isRequiredServiceSupported(gatt: BluetoothGatt): Boolean {
             scope.launch {
-                _testingFeature.emit(TestEvent(TestItem.SERVICE_DISCOVERY.item, true))
+                _testingFeature.emit(TestCase(TestItem.SERVICE_DISCOVERY.item, true))
             }
             return true
         }
@@ -69,6 +69,8 @@ class ServerConnection(
         }
 
         override fun initialize() {
+            // Returns the current MTU (Maximum Transfer Unit). MTU indicates the maximum number of bytes that can be sent in a single write operation.
+            // Since 3 bytes are used for internal purposes, so the maximum size is MTU-3.
             maxLength = mtu - 3
         }
 
@@ -88,7 +90,7 @@ class ServerConnection(
                 .retry(4, 300)
                 .useAutoConnect(false)
                 .timeout(10_000)
-                .also { _testingFeature.emit(TestEvent(TestItem.DEVICE_CONNECTION.item, true)) }
+                .also { _testingFeature.emit(TestCase(TestItem.DEVICE_CONNECTION.item, true)) }
                 .suspend()
         } catch (e: Exception) {
             e.printStackTrace()
@@ -99,19 +101,12 @@ class ServerConnection(
         val request = "This is Indication".toByteArray()
         // Creates a request that will wait for enabling indications. If indications were
         // enabled at the time of executing the request, it will complete immediately.
-        waitUntilIndicationsEnabled(serverCharacteristics)
-            .also {
-                _testingFeature.emit(
-                    TestEvent(
-                        TestItem.WAIT_UNTIL_INDICATION_ENABLED.item,
-                        true
-                    )
-                )
-            }
+        waitUntilIndicationsEnabled(indicationCharacteristics)
+            .also { _testingFeature.emit(TestCase(TestItem.WAIT_UNTIL_INDICATION_ENABLED.item, true)) }
             .enqueue()
 
-        sendIndication(serverCharacteristics, request)
-            .also { _testingFeature.emit(TestEvent(TestItem.SEND_INDICATION.item, true)) }
+        sendIndication(indicationCharacteristics, request)
+            .also { _testingFeature.emit(TestCase(TestItem.SEND_INDICATION.item, true)) }
             .enqueue()
     }
 
@@ -120,43 +115,38 @@ class ServerConnection(
         //Creates a request that will wait for enabling notifications. If notifications were
         // enabled at the time of executing the request, it will complete immediately.
         waitUntilNotificationsEnabled(serverCharacteristics)
-            .also {
-                _testingFeature.emit(
-                    TestEvent(
-                        TestItem.WAIT_UNTIL_NOTIFICATION_ENABLED.item,
-                        true
-                    )
-                )
-            }
+            .also { _testingFeature.emit(TestCase(TestItem.WAIT_UNTIL_NOTIFICATION_ENABLED.item, true)) }
             .enqueue()
 
         // Sends the notification from the server characteristic. The notifications on this
         // characteristic must be enabled before the request is executed.
         sendNotification(serverCharacteristics, request)
-            .also { _testingFeature.emit(TestEvent(TestItem.SEND_NOTIFICATION.item, true)) }
+            .also { _testingFeature.emit(TestCase(TestItem.SEND_NOTIFICATION.item, true)) }
             .enqueue()
     }
 
+    // Write callback
     suspend fun testWrite() {
         setWriteCallback(serverCharacteristics)
-            .also { _testingFeature.emit(TestEvent(TestItem.WRITE_CALLBACK.item, true)) }
+            .also { _testingFeature.emit(TestCase(TestItem.WRITE_CALLBACK.item, true)) }
     }
 
+    // Write with different types merger functions
     suspend fun testWriteWithMerger() {
         // Write callback with flag based merger
         setWriteCallback(serverCharacteristics)
             .merge(FlagBasedPacketMerger())
-            .also { _testingFeature.emit( TestEvent( TestItem.WRITE_WITH_FLAG_BASED_MERGER.item, true )) }
+            .also { _testingFeature.emit( TestCase( TestItem.FLAG_BASED_MERGER.item, true )) }
 
         // Write callback with header based merger
         setWriteCallback(serverCharacteristics)
             .merge(HeaderBasedPacketMerger())
-            .also { _testingFeature.emit( TestEvent(TestItem.WRITE_WITH_HEADER_BASED_MERGER.item, true)) }
+            .also { _testingFeature.emit( TestCase(TestItem.HEADER_BASED_MERGER.item, true)) }
 
-        // Write callback with header based merger
+        // Write callback with mtu based merger
         setWriteCallback(serverCharacteristics)
             .merge(MtuBasedMerger(maxLength))
-            .also { _testingFeature.emit(TestEvent(TestItem.WRITE_WITH_MTU_SIZE_MERGER.item,true)) }
+            .also { _testingFeature.emit(TestCase(TestItem.MTU_SIZE_MERGER.item,true)) }
     }
 
     // Reliable write
