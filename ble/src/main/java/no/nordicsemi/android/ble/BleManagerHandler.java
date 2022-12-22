@@ -463,6 +463,49 @@ abstract class BleManagerHandler extends RequestHandler {
 	}
 
 	/**
+	 * If doing a server-only connection, use this instead of {@link BleManager#connect(BluetoothDevice)}
+	 *  inside of your onDeviceConnectedToServer handler.
+	 */
+	void attachClientConnection(BluetoothDevice clientDevice) {
+		// should either setup as server only (this method) or two way connection (connect method), not both
+		if (this.bluetoothDevice != null) {
+			log(Log.ERROR, () -> "attachClientConnection called on existing connection, call ignored");
+		} else {
+			this.bluetoothDevice = clientDevice;
+			// If using two way connection via connect(), the server attributes would be setup after discovery.
+			// Since we are opting to use server only connection, we must do this here instead.
+			initializeServerAttributes();
+			// the other path also calls this part of the callbacks
+			initialize();
+		}
+	}
+
+	private void initializeServerAttributes() {
+		if (serverManager != null) {
+			final BluetoothGattServer server = serverManager.getServer();
+			if (server != null) {
+				for (final BluetoothGattService service: server.getServices()) {
+					for (final BluetoothGattCharacteristic characteristic: service.getCharacteristics()) {
+						if (!serverManager.isShared(characteristic)) {
+							if (characteristicValues == null)
+								characteristicValues = new HashMap<>();
+							characteristicValues.put(characteristic, characteristic.getValue());
+						}
+						for (final BluetoothGattDescriptor descriptor: characteristic.getDescriptors()) {
+							if (!serverManager.isShared(descriptor)) {
+								if (descriptorValues == null)
+									descriptorValues = new HashMap<>();
+								descriptorValues.put(descriptor, descriptor.getValue());
+							}
+						}
+					}
+				}
+				onServerReady(server);
+			}
+		}
+	}
+
+	/**
 	 * Closes and releases resources.
 	 */
 	void close() {
@@ -2156,28 +2199,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					postCallback(c -> c.onServicesDiscovered(gatt.getDevice(), optionalServicesFound));
 
 					// Initialize server attributes.
-					if (serverManager != null) {
-						final BluetoothGattServer server = serverManager.getServer();
-						if (server != null) {
-							for (final BluetoothGattService service: server.getServices()) {
-								for (final BluetoothGattCharacteristic characteristic: service.getCharacteristics()) {
-									if (!serverManager.isShared(characteristic)) {
-										if (characteristicValues == null)
-											characteristicValues = new HashMap<>();
-										characteristicValues.put(characteristic, characteristic.getValue());
-									}
-									for (final BluetoothGattDescriptor descriptor: characteristic.getDescriptors()) {
-										if (!serverManager.isShared(descriptor)) {
-											if (descriptorValues == null)
-												descriptorValues = new HashMap<>();
-											descriptorValues.put(descriptor, descriptor.getValue());
-										}
-									}
-								}
-							}
-							onServerReady(server);
-						}
-					}
+					initializeServerAttributes();
 
 					// Obtain the queue of initialization requests.
 					// First, let's call the deprecated initGatt(...).
