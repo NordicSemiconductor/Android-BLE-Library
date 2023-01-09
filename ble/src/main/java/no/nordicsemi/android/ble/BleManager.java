@@ -599,6 +599,14 @@ public abstract class BleManager implements ILogger {
 	}
 
 	/**
+	 * "Server only" alternative to using connect() in onDeviceConnectedToServer.
+	 * This simply associates the connection to the passed client.
+	 */
+	public void attachClientConnection(BluetoothDevice client) {
+		requestHandler.attachClientConnection(client);
+	}
+
+	/**
 	 * Returns a request to create bond with the device. The device must be first set using
 	 * {@link #connect(BluetoothDevice)} which will try to connect to the device.
 	 * If you need to pair with a device before connecting to it you may do it without
