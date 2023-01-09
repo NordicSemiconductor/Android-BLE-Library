@@ -291,6 +291,13 @@ readCharacteristic(someCharacteristic)
 ```
 All requests are automatically enqueued and executed sequentially.
 
+## Examples
+
+#### Trivia game
+
+The [Trivia game](https://github.com/NordicSemiconductor/Android-BLE-Library/tree/main/examples/trivia) 
+is an example demonstrating client and server.
+
 #### GATT Client Example
 
 Please refer to the `examples/ble-gatt-client folder` for a project that illustrates the GATT
@@ -300,6 +307,10 @@ demands encryption as an illustration of best-practice.
 
 You can run this client on one device and a complimenting server on another (see the next section).
 
+> Note: 
+  This project is not maintained actively. It is provided as an example only and may not be
+  migrated to latest version. 
+
 #### GATT Server example
 
 Starting from version 2.2 you may now define and use the GATT server in the BLE Library.
@@ -308,6 +319,10 @@ Please refer to the `examples/ble-gatt-server folder` for a project that illustr
 server provided as a foreground service. There's a simple UI with a text field to update
 the value of a characteristic that can be read and subscribed to. This characteristic also
 demands encryption as an illustration of best-practice.
+
+> Note:
+  This project is not maintained actively. It is provided as an example only and may not be
+  migrated to latest version.
 
 #### More examples
 
