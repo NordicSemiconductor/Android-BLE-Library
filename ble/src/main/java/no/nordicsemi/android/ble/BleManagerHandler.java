@@ -87,6 +87,7 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	private final Deque<Request> taskQueue = new LinkedBlockingDeque<>();
 	private Deque<Request> initQueue;
+	private boolean initialization;
 
 	/**
 	 * A time after which receiving 133 error is considered a timeout, instead of a
@@ -541,6 +542,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			// mGattCallback.operationInProgress = false;
 			taskQueue.clear();
 			initQueue = null;
+			initialization = false;
 			bluetoothDevice = null;
 			connected = false;
 		}
@@ -1477,7 +1479,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	private void enqueueFirst(@NonNull final Request request) {
 		final RequestQueue rq = requestQueue;
 		if (rq == null) {
-			final Deque<Request> queue = initQueue != null ? initQueue : taskQueue;
+			final Deque<Request> queue = initialization && initQueue != null ? initQueue : taskQueue;
 			queue.addFirst(request);
 		} else {
 			rq.addFirst(request);
@@ -1495,7 +1497,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	@Override
 	final void enqueue(@NonNull final Request request) {
 		if (!request.enqueued) {
-			final Deque<Request> queue = initQueue != null ? initQueue : taskQueue;
+			final Deque<Request> queue = initialization && initQueue != null ? initQueue : taskQueue;
 			queue.add(request);
 			request.enqueued = true;
 		}
@@ -1506,6 +1508,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	final void cancelQueue() {
 		taskQueue.clear();
 		initQueue = null;
+		initialization = false;
 
 		final BluetoothDevice device = bluetoothDevice;
 		if (device == null)
@@ -2193,6 +2196,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					// Obtain the queue of initialization requests.
 					// First, let's call the deprecated initGatt(...).
 					operationInProgress = true;
+					initialization = true;
 					initQueue = initGatt(gatt);
 
 					final boolean deprecatedApiUsed = initQueue != null;
@@ -2243,6 +2247,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					// End
 
 					manager.initialize();
+					initialization = false;
 					nextRequest(true);
 				} else {
 					log(Log.WARN, () -> "Device is not supported");
