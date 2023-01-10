@@ -10,24 +10,24 @@ The library may be found on Maven Central repository.
 Add it to your project by adding the following dependency:
 
 ```groovy
-implementation 'no.nordicsemi.android:ble:2.6.0-alpha04'
+implementation 'no.nordicsemi.android:ble:2.6.0'
 ```
 The last version not migrated to AndroidX is 2.0.5.
 
 BLE library with Kotlin extension is available in:
 ```groovy
-implementation 'no.nordicsemi.android:ble-ktx:2.6.0-alpha04'
+implementation 'no.nordicsemi.android:ble-ktx:2.6.0'
 ```
 
 To import the BLE library with set of parsers for common Bluetooth SIG characteristics, use:
 ```groovy
-implementation 'no.nordicsemi.android:ble-common:2.6.0-alpha04'
+implementation 'no.nordicsemi.android:ble-common:2.6.0'
 ```
 For more information, read [this](BLE-COMMON.md).
 
 An extension for easier integration with `LiveData` is available after adding:
 ```groovy
-implementation 'no.nordicsemi.android:ble-livedata:2.6.0-alpha04'
+implementation 'no.nordicsemi.android:ble-livedata:2.6.0'
 ```
 This extension adds `ObservableBleManager` with `state` and `bondingState` properties, which
 notify about connection and bond state using `androidx.lifecycle.LiveData`.
@@ -153,15 +153,15 @@ setNotificationCallback(characteristic)
 <details>
 	<summary>Version 2.2</summary>
 
-1. GATT Server support. This includes setting up the local GATT server on the Android device, new 
-   requests for server operations: 
-   * *wait for read*, 
-   * *wait for write*, 
-   * *send notification*, 
+1. GATT Server support. This includes setting up the local GATT server on the Android device, new
+   requests for server operations:
+   * *wait for read*,
+   * *wait for write*,
+   * *send notification*,
    * *send indication*,
    * *set characteristic value*,
    * *set descriptor value*.
-2. New conditional requests: 
+2. New conditional requests:
    * *wait if*,
    * *wait until*.
 3. BLE operations are no longer called from the main thread.
@@ -179,7 +179,7 @@ See [Usage](USAGE.md) for more details.
 
 #### Trivia game
 
-The [Trivia game](https://github.com/NordicSemiconductor/Android-BLE-Library/tree/main/examples/trivia) 
+The [Trivia game](https://github.com/NordicSemiconductor/Android-BLE-Library/tree/main/examples/trivia)
 is an example demonstrating client and server.
 
 #### GATT Client Example
@@ -191,9 +191,9 @@ demands encryption as an illustration of best-practice.
 
 You can run this client on one device and a complimenting server on another (see the next section).
 
-> Note: 
+> Note:
   This project is not maintained actively. It is provided as an example only and may not be
-  migrated to latest version. 
+  migrated to latest version.
 
 #### GATT Server example
 
