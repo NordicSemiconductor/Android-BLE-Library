@@ -476,7 +476,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			// Since we are opting to use server only connection, we must do this here instead.
 			initializeServerAttributes();
 			// the other path also calls this part of the callbacks
-			initialize();
+			manager.initialize();
 		}
 	}
 
@@ -500,7 +500,7 @@ abstract class BleManagerHandler extends RequestHandler {
 						}
 					}
 				}
-				onServerReady(server);
+				manager.onServerReady(server);
 			}
 		}
 	}
@@ -1693,6 +1693,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	 *
 	 * @param gatt the gatt device with services discovered
 	 * @return <code>True</code> when the device has the required service.
+	 * @deprecated Use {@link BleManager#isRequiredServiceSupported(BluetoothGatt)} instead.
 	 */
 	protected abstract boolean isRequiredServiceSupported(@NonNull final BluetoothGatt gatt);
 
@@ -1702,7 +1703,9 @@ abstract class BleManagerHandler extends RequestHandler {
 	 *
 	 * @param gatt the gatt device with services discovered
 	 * @return <code>True</code> when the device has the optional service.
+	 * @deprecated Use {@link BleManager#isOptionalServiceSupported(BluetoothGatt)} instead.
 	 */
+	@Deprecated
 	protected boolean isOptionalServiceSupported(@NonNull final BluetoothGatt gatt) {
 		return false;
 	}
@@ -1733,35 +1736,12 @@ abstract class BleManagerHandler extends RequestHandler {
 	 * service when it is not supported by the connected device. Such call will trigger
 	 * {@link Request#fail(FailCallback)}.
 	 * <p>
-	 * This method is called from the main thread when the services has been discovered and
+	 * This method is called when the services has been discovered and
 	 * the device is supported (has required service).
 	 * <p>
-	 * Remember to call {@link Request#enqueue()} for each request.
-	 * <p>
-	 * A sample initialization should look like this:
-	 * <pre>
-	 * &#64;Override
-	 * protected void initialize() {
-	 *    requestMtu(MTU)
-	 *       .with((device, mtu) -> {
-	 *           ...
-	 *       })
-	 *       .enqueue();
-	 *    setNotificationCallback(characteristic)
-	 *       .with((device, data) -> {
-	 *           ...
-	 *       });
-	 *    enableNotifications(characteristic)
-	 *       .done(device -> {
-	 *           ...
-	 *       })
-	 *       .fail((device, status) -> {
-	 *           ...
-	 *       })
-	 *       .enqueue();
-	 * }
-	 * </pre>
+	 * @deprecated Use {@link BleManager#initialize()} instead.
 	 */
+	@Deprecated
 	protected void initialize() {
 		// empty initialization queue
 	}
@@ -1778,21 +1758,27 @@ abstract class BleManagerHandler extends RequestHandler {
 	 *
 	 * @param server The GATT Server instance. Use {@link BluetoothGattServer#getService(UUID)} to
 	 *               obtain service instance.
+	 * @deprecated Use {@link BleManager#onServerReady(BluetoothGattServer)} instead.
 	 */
+	@Deprecated
 	protected void onServerReady(@NonNull final BluetoothGattServer server) {
 		// empty initialization
 	}
 
 	/**
 	 * Called when the initialization queue is complete.
+	 * @deprecated Use {@link BleManager#onDeviceReady()} instead.
 	 */
+	@Deprecated
 	protected void onDeviceReady() {
 		// empty
 	}
 
 	/**
 	 * Called each time the task queue gets cleared.
+	 * @deprecated Use {@link BleManager#onManagerReady()} instead.
 	 */
+	@Deprecated
 	protected void onManagerReady() {
 		// empty
 	}
@@ -1808,6 +1794,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	 */
 	@Deprecated
 	protected void onDeviceDisconnected() {
+		// empty
 	}
 
 	/**
@@ -1817,7 +1804,9 @@ abstract class BleManagerHandler extends RequestHandler {
 	 * device has disconnected, Service Changed indication was received, or
 	 * {@link BleManager#refreshDeviceCache()} request was executed, which has invalidated cached
 	 * services.
+	 * @deprecated Use {@link BleManager#onServicesInvalidated()} instead.
 	 */
+	@Deprecated
 	protected abstract void onServicesInvalidated();
 
 	private void notifyDeviceDisconnected(@NonNull final BluetoothDevice device, final int status) {
@@ -1871,7 +1860,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		dataProviders.clear();
 		batteryLevelNotificationCallback = null;
 		batteryValue = -1;
-		onServicesInvalidated();
+		manager.onServicesInvalidated();
 		onDeviceDisconnected();
 	}
 
@@ -2188,10 +2177,10 @@ abstract class BleManagerHandler extends RequestHandler {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, () -> "Services discovered");
 				servicesDiscovered = true;
-				if (isRequiredServiceSupported(gatt)) {
+				if (manager.isRequiredServiceSupported(gatt)) {
 					log(Log.VERBOSE, () -> "Primary service found");
 					deviceNotSupported = false;
-					final boolean optionalServicesFound = isOptionalServiceSupported(gatt);
+					final boolean optionalServicesFound = manager.isOptionalServiceSupported(gatt);
 					if (optionalServicesFound)
 						log(Log.VERBOSE, () -> "Secondary service found");
 
@@ -2253,7 +2242,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					}
 					// End
 
-					initialize();
+					manager.initialize();
 					nextRequest(true);
 				} else {
 					log(Log.WARN, () -> "Device is not supported");
@@ -2287,7 +2276,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			// Forbid enqueuing more operations.
 			operationInProgress = true;
 			// Invalidate all services and characteristics
-			onServicesInvalidated();
+			manager.onServicesInvalidated();
 			onDeviceDisconnected();
 			// Clear queues, services are no longer valid.
 			taskQueue.clear();
@@ -2556,7 +2545,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					// Forbid enqueuing more operations.
 					operationInProgress = true;
 					// Invalidate all services and characteristics
-					onServicesInvalidated();
+					manager.onServicesInvalidated();
 					onDeviceDisconnected();
 					// Clear queues, services are no longer valid.
 					taskQueue.clear();
@@ -3327,7 +3316,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				// will not start new nextRequest() call.
 				operationInProgress = true;
 				ready = true;
-				onDeviceReady();
+				manager.onDeviceReady();
 				if (bluetoothDevice != null) {
 					postCallback(c -> c.onDeviceReady(bluetoothDevice));
 					postConnectionStateChange(o -> o.onDeviceReady(bluetoothDevice));
@@ -3344,7 +3333,7 @@ abstract class BleManagerHandler extends RequestHandler {
 				// No more tasks to perform
 				operationInProgress = false;
 				this.request = null;
-				onManagerReady();
+				manager.onManagerReady();
 				return;
 			}
 		}
@@ -3702,7 +3691,7 @@ abstract class BleManagerHandler extends RequestHandler {
 						final BluetoothGatt bluetoothGatt = this.bluetoothGatt;
 						if (connected && bluetoothGatt != null) {
 							// Invalidate all services and characteristics
-							onServicesInvalidated();
+							manager.onServicesInvalidated();
 							onDeviceDisconnected();
 							// And discover services again
 							serviceDiscoveryRequested = true;
