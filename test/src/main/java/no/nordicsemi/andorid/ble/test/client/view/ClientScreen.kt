@@ -32,11 +32,7 @@ fun ClientScreen() {
                 when (clientViewState.state) {
                     ConnectionState.Connecting -> ConnectingView()
                     ConnectionState.Initializing -> InitializingView()
-                    ConnectionState.Ready -> ResultView(
-                        clientViewState.testItems,
-                        clientViewState.getIcon(),
-                        clientViewState.color
-                    )
+                    ConnectionState.Ready -> ResultView(results = clientViewState.resultList)
                     is ConnectionState.Disconnected -> DisconnectedView()
                     else -> LoadingView()
                 }

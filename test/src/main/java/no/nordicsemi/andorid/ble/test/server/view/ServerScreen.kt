@@ -26,13 +26,8 @@ fun ServerScreen() {
                 is WaitingForClient ->
                     if (currentState.connectedClient == 0) {
                         WaitingForScannersView()
-                    } else {
-                        ResultView(
-                            serverViewState.testItems,
-                            serverViewState.getIcon(),
-                            serverViewState.color
-                        )
-                    }
+                    } else ResultView(results = serverViewState.resultList)
+
             }
         }
     }
