@@ -5,6 +5,7 @@ import no.nordicsemi.andorid.ble.test.client.data.ENABLE_INDICATION
 import no.nordicsemi.andorid.ble.test.client.repository.ClientConnection
 import no.nordicsemi.andorid.ble.test.client.task.TaskManager
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
+import no.nordicsemi.android.ble.ktx.suspend
 
 class TestEnableIndication : TaskManager {
 
@@ -13,7 +14,7 @@ class TestEnableIndication : TaskManager {
         scope: CoroutineScope,
         clientConnection: ClientConnection
     ) {
-        clientConnection.testEnableIndication()
+        clientConnection.testEnableIndication().suspend()
     }
 
     // Handle task completion

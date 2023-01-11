@@ -6,6 +6,7 @@ import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.server.data.indicationRequest
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
+import no.nordicsemi.android.ble.ktx.suspend
 
 class TestSendIndication : TaskManager {
 
@@ -13,7 +14,7 @@ class TestSendIndication : TaskManager {
         scope: CoroutineScope,
         serverConnection: ServerConnection
     ) {
-        serverConnection.testSendIndication(indicationRequest)
+        serverConnection.testSendIndication(indicationRequest).suspend()
     }
 
     // Handle task completion

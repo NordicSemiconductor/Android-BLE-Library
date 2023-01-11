@@ -6,6 +6,7 @@ import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.server.data.notificationRequest
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
+import no.nordicsemi.android.ble.ktx.suspend
 
 class TestSendNotification : TaskManager {
 
@@ -13,7 +14,7 @@ class TestSendNotification : TaskManager {
         scope: CoroutineScope,
         serverConnection: ServerConnection
     ) {
-        serverConnection.testSendNotification(notificationRequest)
+        serverConnection.testSendNotification(notificationRequest).suspend()
     }
 
     // Handle task completion
