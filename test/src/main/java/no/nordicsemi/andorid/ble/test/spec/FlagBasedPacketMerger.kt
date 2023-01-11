@@ -1,6 +1,6 @@
 package no.nordicsemi.andorid.ble.test.spec
 
-import no.nordicsemi.andorid.ble.test.server.data.SplitterFlag
+import no.nordicsemi.andorid.ble.test.server.data.*
 import no.nordicsemi.android.ble.data.DataMerger
 import no.nordicsemi.android.ble.data.DataStream
 
@@ -23,19 +23,19 @@ class FlagBasedPacketMerger : DataMerger {
         if (lastPacket == null)
             return false
         when(lastPacket[0]){
-            SplitterFlag.FULL.value -> {
+            FULL -> {
                 output.write(lastPacket, 1, lastPacket.size - 1)
                 return true
             }
-            SplitterFlag.BEGIN.value -> {
+            BEGIN -> {
                 output.write(lastPacket, 1, lastPacket.size - 1)
                 return false
             }
-            SplitterFlag.CONTINUATION.value -> {
+            CONTINUATION -> {
                 output.write(lastPacket, 1, lastPacket.size - 1)
                 return false
             }
-            SplitterFlag.END.value -> {
+            END -> {
                 output.write(lastPacket, 1, lastPacket.size - 1)
                 return true
             }

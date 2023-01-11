@@ -17,3 +17,8 @@ const val WAIT_UNTIL_INDICATION_ENABLED = "Wait Until Indication Enabled"
 
 val indicationRequest = "This is Indication".toByteArray()
 val notificationRequest = "This is Notification".toByteArray()
+
+const val FULL = 0b11.toByte()
+const val BEGIN = 0b00.toByte()
+const val CONTINUATION = 0b01.toByte()
+const val END = 0b10.toByte()

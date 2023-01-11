@@ -1,6 +1,6 @@
 package no.nordicsemi.andorid.ble.test.spec
 
-import no.nordicsemi.andorid.ble.test.server.data.SplitterFlag
+import no.nordicsemi.andorid.ble.test.server.data.*
 import no.nordicsemi.android.ble.data.DataSplitter
 import java.nio.ByteBuffer
 
@@ -34,7 +34,7 @@ class FlagBasedPacketSplitter : DataSplitter {
         if (message.size < availableSize) {
             return ByteArray(message.size + 1).apply {
                 ByteBuffer.wrap(this)
-                    .put(SplitterFlag.FULL.value)
+                    .put(FULL)
                     .put(message)
             }
         }
@@ -43,7 +43,7 @@ class FlagBasedPacketSplitter : DataSplitter {
         if (index == 0) {
             return ByteArray(maxLength).apply {
                 ByteBuffer.wrap(this)
-                    .put(SplitterFlag.BEGIN.value)
+                    .put(BEGIN)
                     .put(message, 0, maxLength - 1)
             }
         }
@@ -57,7 +57,7 @@ class FlagBasedPacketSplitter : DataSplitter {
         if (toBeSent <= availableSize) {
             return ByteArray(maxLength).apply {
                 ByteBuffer.wrap(this)
-                    .put(SplitterFlag.END.value)
+                    .put(END)
                     .put(message, bytesSent, toBeSent)
             }
         }
@@ -65,7 +65,7 @@ class FlagBasedPacketSplitter : DataSplitter {
         // Continuation of the larger message
         return ByteArray(maxLength).apply {
             ByteBuffer.wrap(this)
-                .put(SplitterFlag.CONTINUATION.value)
+                .put(CONTINUATION)
                 .put(message, bytesSent, availableSize)
         }
     }
