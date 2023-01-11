@@ -36,7 +36,7 @@ class ServerManager @Inject constructor(
                     BluetoothGattCharacteristic.PROPERTY_WRITE or
                             BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS,
                     BluetoothGattCharacteristic.PERMISSION_WRITE,
-                    description("Testing App", false),
+                    description("Reliable Write", false),
                     reliableWrite()
                 ),
                 characteristic(
@@ -45,7 +45,7 @@ class ServerManager @Inject constructor(
                             BluetoothGattCharacteristic.PROPERTY_INDICATE,
                     BluetoothGattCharacteristic.PERMISSION_WRITE,
                     cccd(),
-                    description("Testing App", false),
+                    description("Indication", false),
                 ),
                 characteristic(
                     DeviceSpecifications.WRITE_CHARACTERISTIC,
@@ -53,7 +53,7 @@ class ServerManager @Inject constructor(
                             BluetoothGattCharacteristic.PROPERTY_NOTIFY,
                     BluetoothGattCharacteristic.PERMISSION_WRITE,
                     cccd(),
-                    description("Testing App", false)
+                    description("Write and notification", false)
                 ),
             )
         )

@@ -3,7 +3,6 @@ package no.nordicsemi.andorid.ble.test.server.viewmodel
 import android.annotation.SuppressLint
 import android.app.Application
 import android.bluetooth.BluetoothDevice
-import android.util.Log
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -12,11 +11,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import no.nordicsemi.andorid.ble.test.server.data.DEVICE_DISCONNECTION
+import no.nordicsemi.andorid.ble.test.server.data.SERVER_READY
+import no.nordicsemi.andorid.ble.test.server.data.START_ADVERTISING
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
-import no.nordicsemi.andorid.ble.test.server.data.TestItem
 import no.nordicsemi.andorid.ble.test.server.repository.AdvertisingManager
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.repository.ServerManager
+import no.nordicsemi.andorid.ble.test.server.tasks.TaskPerformer
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.ble.ktx.stateAsFlow
 import no.nordicsemi.android.ble.observer.ServerObserver
@@ -45,9 +47,9 @@ class ServerViewModel @Inject constructor(
         viewModelScope.launch {
             try {
                 advertisingManager.startAdvertising()
-                updateTestList(TestCase(TestItem.START_ADVERTISING.item, true))
+                updateTestList(TestCase(START_ADVERTISING, true))
             } catch (exception: Exception) {
-                updateTestList(TestCase(TestItem.START_ADVERTISING.item, false))
+                updateTestList(TestCase(START_ADVERTISING, false))
                 throw Exception("Could not start server.", exception)
             }
         }
@@ -55,7 +57,8 @@ class ServerViewModel @Inject constructor(
         serverManager.setServerObserver(object : ServerObserver {
             override fun onServerReady() {
                 _serverViewState.value = _serverViewState.value.copy(
-                    testItems = updateTestList(TestCase(TestItem.SERVER_READY.item, true)))
+                    testItems = updateTestList(TestCase(SERVER_READY, true))
+                )
             }
 
             override fun onDeviceConnectedToServer(device: BluetoothDevice) {
@@ -65,15 +68,17 @@ class ServerViewModel @Inject constructor(
                         viewModelScope
                             .launch {
                                 connect()
-                                testWrite()
-                                testWriteWithMerger()
-                                testNotification()
-                                testIndication()
-                                testReliableWrite()
+                                // Start the testing tasks after server connection
+                                val taskPerformer = TaskPerformer(viewModelScope, this@apply)
+                                taskPerformer.startTasks()
+                                taskPerformer.testCases.onEach {
+                                    it.forEach { tc -> updateTestList(tc) }
+                                }
                             }
                     }
+
                     .apply {
-                        testingFeature
+                        testCases
                             .onEach { updateTestList(TestCase(it.testName, it.isPassed)) }
                             .launchIn(viewModelScope)
                     }
@@ -106,8 +111,7 @@ class ServerViewModel @Inject constructor(
             }
 
             override fun onDeviceDisconnectedFromServer(device: BluetoothDevice) {
-                Log.d(TAG, "onDeviceDisconnectedFromServer: $device disconnected")
-                updateTestList(TestCase(TestItem.DEVICE_DISCONNECTION.item, true))
+                updateTestList(TestCase(DEVICE_DISCONNECTION, true))
             }
         })
         serverManager.open()
@@ -146,7 +150,7 @@ class ServerViewModel @Inject constructor(
         _serverViewState.value.testItems.find { it.testName == testCase.testName }
             ?.let {
                 val index = _serverViewState.value.testItems.indexOf(it)
-                if(it.isPassed != testCase.isPassed)
+                if (it.isPassed != testCase.isPassed)
                     updatedTestCaseList[index] = TestCase(it.testName, testCase.isPassed)
                 _serverViewState.value = _serverViewState.value.copy(
                     testItems = updatedTestCaseList

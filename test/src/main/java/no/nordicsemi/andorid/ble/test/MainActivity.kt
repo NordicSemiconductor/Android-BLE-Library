@@ -19,7 +19,6 @@ class MainActivity : NordicActivity() {
         setContent {
             NordicTheme {
                 NavigationView(destinations = Destinations)
-
             }
         }
     }

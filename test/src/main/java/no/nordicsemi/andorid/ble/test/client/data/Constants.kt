@@ -26,3 +26,17 @@ val reliableRequest = """
     """.toByteArray()
 
 val request = "This is a write request".toByteArray()
+
+const val SCANNING_FOR_SERVER = "Scanning for Server"
+const val CONNECTED_WITH_SERVER = "Connected with Server"
+const val SERVICE_DISCOVERY = "Service Discovery"
+const val WRITE_CHARACTERISTICS = "Write Characteristics"
+const val RELIABLE_WRITE = "Begin Reliable Write"
+const val ATOMIC_REQUEST_QUEUE = "Begin Atomic Request Queue"
+const val FLAG_BASED_SPLITTER = "Write with flag based splitter"
+const val DEFAULT_MTU_SPLITTER = "Write with default mtu size splitter"
+const val HEADER_BASED_SPLITTER = "Write with header based splitter"
+const val SET_INDICATION = "Set Indication Callback"
+const val SET_NOTIFICATION = "Set Notification Callback"
+const val ENABLE_INDICATION = "Enable Indication"
+const val ENABLE_NOTIFICATION = "Enable Notification"
