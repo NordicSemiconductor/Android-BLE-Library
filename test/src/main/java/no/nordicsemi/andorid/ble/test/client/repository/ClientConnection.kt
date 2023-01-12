@@ -15,9 +15,7 @@ import no.nordicsemi.andorid.ble.test.client.data.CONNECTED_WITH_SERVER
 import no.nordicsemi.andorid.ble.test.client.data.SERVICE_DISCOVERY
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.spec.DeviceSpecifications
-import no.nordicsemi.android.ble.BleManager
-import no.nordicsemi.android.ble.ValueChangedCallback
-import no.nordicsemi.android.ble.WriteRequest
+import no.nordicsemi.android.ble.*
 import no.nordicsemi.android.ble.ktx.suspend
 
 class ClientConnection(
@@ -30,6 +28,7 @@ class ClientConnection(
     private var characteristic: BluetoothGattCharacteristic? = null
     private var indicationCharacteristics: BluetoothGattCharacteristic? = null
     private var reliableCharacteristics: BluetoothGattCharacteristic? = null
+    private var readCharacteristics: BluetoothGattCharacteristic? = null
 
     private val _testCase: MutableSharedFlow<TestCase> = MutableSharedFlow()
     val testCase = _testCase.asSharedFlow()
@@ -54,8 +53,10 @@ class ClientConnection(
                 service.getCharacteristic(DeviceSpecifications.Ind_CHARACTERISTIC)
             reliableCharacteristics =
                 service.getCharacteristic(DeviceSpecifications.REL_WRITE_CHARACTERISTIC)
+            readCharacteristics =
+                service.getCharacteristic(DeviceSpecifications.READ_CHARACTERISTIC)
         }
-        return characteristic != null && indicationCharacteristics != null && reliableCharacteristics != null
+        return characteristic != null && indicationCharacteristics != null && reliableCharacteristics != null && readCharacteristics != null
     }
 
     override fun initialize() {
@@ -66,6 +67,7 @@ class ClientConnection(
         characteristic = null
         indicationCharacteristics = null
         reliableCharacteristics = null
+        readCharacteristics = null
     }
 
     // Write Request
@@ -73,6 +75,16 @@ class ClientConnection(
         request: ByteArray,
     ): WriteRequest {
         return writeCharacteristic(characteristic, request, WRITE_TYPE_DEFAULT)
+    }
+
+    // Reliable Write Request
+    fun testReliableWrite(
+        request: ByteArray,
+    ): ReliableWriteRequest {
+        return beginReliableWrite()
+            .add(writeCharacteristic(reliableCharacteristics, request, WRITE_TYPE_DEFAULT))
+            .add(writeCharacteristic(characteristic, request, WRITE_TYPE_DEFAULT))
+
     }
 
     // Set Indication Callback
@@ -94,6 +106,10 @@ class ClientConnection(
     // Enable Notification
     fun testEnableNotification(): WriteRequest {
         return enableNotifications(characteristic)
+    }
+
+    fun testRead(): ReadRequest {
+        return readCharacteristic(readCharacteristics)
     }
 
     /**

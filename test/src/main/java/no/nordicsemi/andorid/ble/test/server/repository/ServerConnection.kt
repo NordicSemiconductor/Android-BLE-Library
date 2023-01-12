@@ -12,10 +12,7 @@ import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
 import no.nordicsemi.andorid.ble.test.server.data.*
 import no.nordicsemi.andorid.ble.test.spec.DeviceSpecifications
-import no.nordicsemi.android.ble.BleManager
-import no.nordicsemi.android.ble.ConditionalWaitRequest
-import no.nordicsemi.android.ble.ValueChangedCallback
-import no.nordicsemi.android.ble.WriteRequest
+import no.nordicsemi.android.ble.*
 import no.nordicsemi.android.ble.ktx.suspend
 
 @SuppressLint("MissingPermission")
@@ -29,6 +26,7 @@ class ServerConnection(
     private var serverCharacteristics: BluetoothGattCharacteristic? = null
     private var indicationCharacteristics: BluetoothGattCharacteristic? = null
     private var reliableCharacteristics: BluetoothGattCharacteristic? = null
+    private var readCharacteristics: BluetoothGattCharacteristic? = null
 
     private val _testCase: MutableSharedFlow<TestCase> = MutableSharedFlow()
     val testCases = _testCase.asSharedFlow()
@@ -63,6 +61,8 @@ class ServerConnection(
                 service.getCharacteristic(DeviceSpecifications.Ind_CHARACTERISTIC)
             reliableCharacteristics =
                 service.getCharacteristic(DeviceSpecifications.REL_WRITE_CHARACTERISTIC)
+            readCharacteristics =
+                service.getCharacteristic(DeviceSpecifications.READ_CHARACTERISTIC)
         }
     }
 
@@ -81,6 +81,7 @@ class ServerConnection(
         serverCharacteristics = null
         indicationCharacteristics = null
         reliableCharacteristics = null
+        readCharacteristics = null
     }
 
     /**
@@ -122,7 +123,20 @@ class ServerConnection(
 
     // Write callback
     fun testWriteCallback(): ValueChangedCallback {
+        waitForWrite(serverCharacteristics).enqueue()
         return setWriteCallback(serverCharacteristics)
+    }
+
+    // Reliable Write callback
+    fun testReliableWriteCallback() {
+        waitForWrite(reliableCharacteristics).enqueue()
+        setWriteCallback(reliableCharacteristics)
+        setWriteCallback(serverCharacteristics)
+    }
+
+    // Set characteristics for to read data
+    fun testSetCharacteristicValue(request: ByteArray): SetValueRequest {
+       return setCharacteristicValue(readCharacteristics, request)
     }
 
     /**

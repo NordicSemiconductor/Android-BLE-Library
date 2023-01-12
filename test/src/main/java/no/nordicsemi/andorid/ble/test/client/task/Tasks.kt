@@ -12,5 +12,7 @@ class Tasks{
         TestWriteWithDefaultSplitter(),
         TestWriteWithFlagBasedSplitter(),
         TestWriteWithHeaderBasedSplitter(),
+        TestReliableWrite(),
+        TestReadCharacteristics(),
     )
 }

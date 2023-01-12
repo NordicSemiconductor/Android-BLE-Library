@@ -14,9 +14,11 @@ const val SEND_NOTIFICATION = "Send Notification"
 const val WAIT_UNTIL_NOTIFICATION_ENABLED = "Wait Until Notification Enabled"
 const val SEND_INDICATION = "Send Indication"
 const val WAIT_UNTIL_INDICATION_ENABLED = "Wait Until Indication Enabled"
+const val READ = "Set Characteristics for read operation"
 
 val indicationRequest = "This is Indication".toByteArray()
 val notificationRequest = "This is Notification".toByteArray()
+val readRequest = "This is read request".toByteArray()
 
 const val FULL = 0b11.toByte()
 const val BEGIN = 0b00.toByte()

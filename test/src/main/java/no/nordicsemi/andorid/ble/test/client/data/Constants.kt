@@ -12,18 +12,8 @@ val splitterRequest = """
     nihil enim eos provident officiis. Est itaque nostrum vel accusantium reiciendis nam omnis sunt ad 
     autem omnis ut consequatur inventore. Cum consequatur consequatur et laudantium dolorem et enim odit.
     """.toByteArray()
-val reliableRequest = """
-    Lorem ipsum dolor sit amet. Qui quia nihil ad mollitia animi qui tenetur labore est amet quia sed 
-    sunt doloremque! Sit perspiciatis voluptatum sit consequuntur dicta ut odio dignissimos hic dicta 
-    labore et nihil internos non amet eveniet sed laudantium aperiam? Vel eaque odit aut labore 
-    illo eos quia voluptatibus ad mollitia necessitatibus? Et fugit dolor aut provident obcaecati qui 
-    delectus quia eum reprehenderit sunt aut facere voluptas non facere eveniet sed omnis autem. At 
-    reprehenderit optio qui consequuntur consequatur qui natus aspernatur et voluptatem cupiditate non 
-    quibusdam ipsum in recusandae aperiam At sapiente mollitia. Aut facilis quia in placeat 
-    adipisci ex quis laudantium sed repellendus aliquam? Qui incidunt dolorem et architecto temporibus 
-    in impedit praesentium. Est rerum fugiat aut nesciunt obcaecati est quos possimus est ducimus eveniet 
-    est molestiae sapiente. Et molestias minus eum aliquam obcaecati aut numquam ullam.
-    """.toByteArray()
+
+val reliableRequest = "This is reliable write request.".toByteArray()
 
 val request = "This is a write request".toByteArray()
 
@@ -40,3 +30,4 @@ const val SET_INDICATION = "Set Indication Callback"
 const val SET_NOTIFICATION = "Set Notification Callback"
 const val ENABLE_INDICATION = "Enable Indication"
 const val ENABLE_NOTIFICATION = "Enable Notification"
+const val READ = "Read Request"

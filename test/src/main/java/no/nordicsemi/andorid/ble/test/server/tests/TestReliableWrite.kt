@@ -1,26 +1,24 @@
 package no.nordicsemi.andorid.ble.test.server.tests
 
 import kotlinx.coroutines.CoroutineScope
+import no.nordicsemi.andorid.ble.test.server.data.RELIABLE_WRITE
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
-import no.nordicsemi.andorid.ble.test.server.data.WAIT_UNTIL_NOTIFICATION_ENABLED
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
-import no.nordicsemi.android.ble.ktx.suspend
 
-class TestWaitNotificationEnabled : TaskManager {
-
+class TestReliableWrite : TaskManager {
     override suspend fun start(
         scope: CoroutineScope,
         serverConnection: ServerConnection
     ) {
-        serverConnection.testNotificationEnabled().suspend()
+        serverConnection.testReliableWriteCallback()
     }
 
     override fun onTaskCompleted(): TestCase {
-        return TestCase(WAIT_UNTIL_NOTIFICATION_ENABLED, true)
+        return TestCase(RELIABLE_WRITE, true)
     }
 
     override fun onTaskFailed(): TestCase {
-        return TestCase(WAIT_UNTIL_NOTIFICATION_ENABLED, false)
+        return TestCase(RELIABLE_WRITE, false)
     }
 }

@@ -55,6 +55,14 @@ class ServerManager @Inject constructor(
                     cccd(),
                     description("Write and notification", false)
                 ),
+                characteristic(
+                    DeviceSpecifications.READ_CHARACTERISTIC,
+                    BluetoothGattCharacteristic.PROPERTY_READ or
+                            BluetoothGattCharacteristic.PROPERTY_NOTIFY,
+                    BluetoothGattCharacteristic.PERMISSION_READ,
+                    cccd(),
+                    description("Read", false)
+                ),
             )
         )
     }

@@ -12,5 +12,7 @@ class Tasks {
         TestWriteWithMtuMerger(),
         TestWriteWithFlagMerger(),
         TestWriteWithHeaderMerger(),
+        TestReliableWrite(),
+        TestReadCharacteristics(),
     )
 }
