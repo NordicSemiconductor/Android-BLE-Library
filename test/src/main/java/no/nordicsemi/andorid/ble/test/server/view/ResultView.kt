@@ -20,7 +20,6 @@ import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import no.nordicsemi.andorid.ble.test.client.viewmodel.Result
-import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.android.common.theme.NordicTheme
 
 @OptIn(ExperimentalFoundationApi::class)
@@ -62,23 +61,13 @@ fun ResultView(results: List<Result>) {
 
 @Preview
 @Composable
-fun ResultViewPreview_b() {
+fun ResultViewPreview() {
     NordicTheme {
-        val testItems = listOf(
-            TestCase("Test 1", true),
-            TestCase("Test 4", false),
-            TestCase("Test 5", true)
+        val results = listOf(
+            Result("Test 1", true, Icons.Default.Check,  Color.Green),
+            Result("Test 4", false, Icons.Default.Close, Color.Red),
+            Result("Test 5", true, Icons.Default.Check,  Color.Green)
         )
-
-        val itemWithIcons = testItems.map {
-            val (icon, color) = if (it.isPassed) {
-                Icons.Default.Check to Color.Green
-            } else {
-                Icons.Default.Close to Color.Red
-            }
-            Result(it.testName, it.isPassed, icon, color)
-        }
-
-        ResultView(results = itemWithIcons)
+        ResultView(results = results)
     }
 }
