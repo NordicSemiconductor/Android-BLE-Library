@@ -1,6 +1,5 @@
 package no.nordicsemi.andorid.ble.test.server.tests
 
-import kotlinx.coroutines.CoroutineScope
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.server.data.WRITE_CALLBACK
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
@@ -8,10 +7,7 @@ import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
 
 class TestSetWriteCallback : TaskManager {
 
-    override suspend fun start(
-        scope: CoroutineScope,
-        serverConnection: ServerConnection
-    ) {
+    override suspend fun start(serverConnection: ServerConnection) {
         serverConnection.testWriteCallback()
     }
 

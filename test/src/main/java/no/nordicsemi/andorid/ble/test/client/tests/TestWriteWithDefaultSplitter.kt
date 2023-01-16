@@ -1,6 +1,5 @@
 package no.nordicsemi.andorid.ble.test.client.tests
 
-import kotlinx.coroutines.CoroutineScope
 import no.nordicsemi.andorid.ble.test.client.data.DEFAULT_MTU_SPLITTER
 import no.nordicsemi.andorid.ble.test.client.data.splitterRequest
 import no.nordicsemi.andorid.ble.test.client.repository.ClientConnection
@@ -11,7 +10,6 @@ import no.nordicsemi.android.ble.ktx.suspend
 class TestWriteWithDefaultSplitter : TaskManager {
 
     override suspend fun start(
-        scope: CoroutineScope,
         clientConnection: ClientConnection
     ) {
         val requestToSend = clientConnection.checkSizeOfRequest(splitterRequest)

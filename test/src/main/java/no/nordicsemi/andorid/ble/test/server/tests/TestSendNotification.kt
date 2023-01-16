@@ -1,6 +1,5 @@
 package no.nordicsemi.andorid.ble.test.server.tests
 
-import kotlinx.coroutines.CoroutineScope
 import no.nordicsemi.andorid.ble.test.server.data.SEND_NOTIFICATION
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.server.data.notificationRequest
@@ -10,10 +9,7 @@ import no.nordicsemi.android.ble.ktx.suspend
 
 class TestSendNotification : TaskManager {
 
-    override suspend fun start(
-        scope: CoroutineScope,
-        serverConnection: ServerConnection
-    ) {
+    override suspend fun start(serverConnection: ServerConnection) {
         serverConnection.testSendNotification(notificationRequest).suspend()
     }
 

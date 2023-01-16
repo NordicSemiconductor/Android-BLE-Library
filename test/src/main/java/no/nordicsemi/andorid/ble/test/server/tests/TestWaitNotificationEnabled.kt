@@ -1,6 +1,5 @@
 package no.nordicsemi.andorid.ble.test.server.tests
 
-import kotlinx.coroutines.CoroutineScope
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.server.data.WAIT_UNTIL_NOTIFICATION_ENABLED
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
@@ -9,10 +8,7 @@ import no.nordicsemi.android.ble.ktx.suspend
 
 class TestWaitNotificationEnabled : TaskManager {
 
-    override suspend fun start(
-        scope: CoroutineScope,
-        serverConnection: ServerConnection
-    ) {
+    override suspend fun start(serverConnection: ServerConnection) {
         serverConnection.testNotificationEnabled().suspend()
     }
 

@@ -1,16 +1,12 @@
 package no.nordicsemi.andorid.ble.test.server.tests
 
-import kotlinx.coroutines.CoroutineScope
 import no.nordicsemi.andorid.ble.test.server.data.RELIABLE_WRITE
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
 
 class TestReliableWrite : TaskManager {
-    override suspend fun start(
-        scope: CoroutineScope,
-        serverConnection: ServerConnection
-    ) {
+    override suspend fun start(serverConnection: ServerConnection) {
         serverConnection.testReliableWriteCallback()
     }
 

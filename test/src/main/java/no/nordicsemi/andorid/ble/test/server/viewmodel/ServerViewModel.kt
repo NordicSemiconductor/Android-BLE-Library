@@ -69,7 +69,7 @@ class ServerViewModel @Inject constructor(
                             .launch {
                                 connect()
                                 // Start the testing tasks after server connection
-                                val taskPerformer = TaskPerformer(viewModelScope, this@apply)
+                                val taskPerformer = TaskPerformer(this@apply)
                                 taskPerformer.startTasks()
                                 taskPerformer.testCases.onEach {
                                     it.forEach { tc -> updateTestList(tc) }

@@ -57,7 +57,7 @@ class ClientViewModel @Inject constructor(
                 .apply {
                     connect()
                     // Start the testing tasks after client connection
-                    val taskPerformer = TaskPerformer(viewModelScope, this)
+                    val taskPerformer = TaskPerformer(this)
                     taskPerformer.startTasks()
                     taskPerformer.testCases.onEach {
                         it.forEach { tc -> updateTestList(tc) }

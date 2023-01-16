@@ -1,25 +1,21 @@
 package no.nordicsemi.andorid.ble.test.server.tests
 
-import no.nordicsemi.andorid.ble.test.server.data.FLAG_BASED_MERGER
+import no.nordicsemi.andorid.ble.test.server.data.READ_CHA
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
+import no.nordicsemi.andorid.ble.test.server.data.readRequest
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
-import no.nordicsemi.andorid.ble.test.spec.FlagBasedPacketMerger
 
-class TestWriteWithFlagMerger : TaskManager {
-
+class TestSetReadCharacteristics : TaskManager {
     override suspend fun start(serverConnection: ServerConnection) {
-        serverConnection.testWriteCallback()
-            .merge(FlagBasedPacketMerger())
+        serverConnection.testSetReadCharacteristics(readRequest)
     }
 
-    // Handle task completion
     override fun onTaskCompleted(): TestCase {
-        return TestCase(FLAG_BASED_MERGER, true)
+        return TestCase(READ_CHA, true)
     }
 
-    // Handle task failure
     override fun onTaskFailed(): TestCase {
-        return TestCase(FLAG_BASED_MERGER, false)
+        return TestCase(READ_CHA, false)
     }
 }
