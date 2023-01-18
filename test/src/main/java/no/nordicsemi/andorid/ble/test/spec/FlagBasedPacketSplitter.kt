@@ -30,44 +30,47 @@ class FlagBasedPacketSplitter : DataSplitter {
      */
     override fun chunk(message: ByteArray, index: Int, maxLength: Int): ByteArray? {
         val availableSize = maxLength - 1
-        // If full message fits in a single packet
-        if (message.size < availableSize) {
-            return ByteArray(message.size + 1).apply {
-                ByteBuffer.wrap(this)
-                    .put(FULL)
-                    .put(message)
-            }
-        }
 
-        // First packet of a larger message
         if (index == 0) {
+            // If full message fits in a single packet
+            return if (message.size < availableSize) {
+                ByteArray(message.size + 1).apply {
+                    ByteBuffer.wrap(this)
+                        .put(FULL)
+                        .put(message)
+                }
+            } else
+            // First packet of a larger message
+                ByteArray(maxLength).apply {
+                    ByteBuffer.wrap(this)
+                        .put(BEGIN)
+                        .put(message, 0, maxLength - 1)
+                }
+        } else {
+            // Find the next chunk, starting from where we finished before.
+            val bytesSent = maxLength * index
+            val toBeSent = message.size - bytesSent
+            if (toBeSent <= 0) {
+                return null
+            }
+
+            // Last chunk of the message
+            if (toBeSent <= availableSize) {
+                return ByteArray(maxLength).apply {
+                    ByteBuffer.wrap(this)
+                        .put(END)
+                        .put(message, bytesSent, toBeSent)
+                }
+            }
+
+            // Continuation of the larger message
             return ByteArray(maxLength).apply {
                 ByteBuffer.wrap(this)
-                    .put(BEGIN)
-                    .put(message, 0, maxLength - 1)
+                    .put(CONTINUATION)
+                    .put(message, bytesSent, availableSize)
             }
         }
 
-        // Find the next chunk, starting from where we finished before.
-        val bytesSent = maxLength * index
-        val toBeSent = message.size - bytesSent
-        if (toBeSent <= 0) return null
-
-        // Last chunk of the message
-        if (toBeSent <= availableSize) {
-            return ByteArray(maxLength).apply {
-                ByteBuffer.wrap(this)
-                    .put(END)
-                    .put(message, bytesSent, toBeSent)
-            }
-        }
-
-        // Continuation of the larger message
-        return ByteArray(maxLength).apply {
-            ByteBuffer.wrap(this)
-                .put(CONTINUATION)
-                .put(message, bytesSent, availableSize)
-        }
     }
 }
 

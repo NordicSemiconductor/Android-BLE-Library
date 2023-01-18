@@ -3,6 +3,7 @@ package no.nordicsemi.andorid.ble.test.spec
 import no.nordicsemi.andorid.ble.test.server.data.*
 import no.nordicsemi.android.ble.data.DataMerger
 import no.nordicsemi.android.ble.data.DataStream
+import java.nio.ByteBuffer
 
 
 class FlagBasedPacketMerger : DataMerger {
@@ -22,22 +23,32 @@ class FlagBasedPacketMerger : DataMerger {
     override fun merge(output: DataStream, lastPacket: ByteArray?, index: Int): Boolean {
         if (lastPacket == null)
             return false
-        when(lastPacket[0]){
+        val buffer = ByteBuffer.wrap(lastPacket)
+
+        when (lastPacket[0]) {
             FULL -> {
-                output.write(lastPacket, 1, lastPacket.size - 1)
-                return true
+                ByteArray(lastPacket.size - 1)
+                    .apply { buffer.get(this) }
+                    .also { output.write(it) }
+                    .let { return true }
             }
             BEGIN -> {
-                output.write(lastPacket, 1, lastPacket.size - 1)
-                return false
+                ByteArray(lastPacket.size - 1)
+                    .apply { buffer.get(this) }
+                    .also { output.write(it) }
+                    .let { return false }
             }
             CONTINUATION -> {
-                output.write(lastPacket, 1, lastPacket.size - 1)
-                return false
+                ByteArray(lastPacket.size - 1)
+                    .apply { buffer.get(this) }
+                    .also { output.write(it) }
+                    .let { return false }
             }
             END -> {
-                output.write(lastPacket, 1, lastPacket.size - 1)
-                return true
+                ByteArray(lastPacket.size - 1)
+                    .apply { buffer.get(this) }
+                    .also { output.write(it) }
+                    .let { return true }
             }
         }
         return false
