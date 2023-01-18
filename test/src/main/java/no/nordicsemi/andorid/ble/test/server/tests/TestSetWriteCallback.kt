@@ -6,7 +6,7 @@ import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
 
 class TestSetWriteCallback : TaskManager {
-
+    // Start the task
     override suspend fun start(serverConnection: ServerConnection) {
         serverConnection.testWriteCallback()
     }

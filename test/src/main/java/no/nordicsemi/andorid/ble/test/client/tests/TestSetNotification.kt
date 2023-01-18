@@ -6,7 +6,7 @@ import no.nordicsemi.andorid.ble.test.client.task.TaskManager
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
 
 class TestSetNotification : TaskManager {
-
+    // Start the task
     override suspend fun start(
         clientConnection: ClientConnection
     ) {

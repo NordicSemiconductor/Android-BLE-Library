@@ -5,15 +5,11 @@ import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.server.data.indicationRequest
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
-import no.nordicsemi.andorid.ble.test.spec.FlagBasedPacketSplitter
-import no.nordicsemi.android.ble.ktx.suspend
 
 class TestSendIndication : TaskManager {
-
+    // Start the task
     override suspend fun start(serverConnection: ServerConnection) {
         serverConnection.testSendIndication(indicationRequest)
-            .split(FlagBasedPacketSplitter())
-            .suspend()
     }
 
     // Handle task completion

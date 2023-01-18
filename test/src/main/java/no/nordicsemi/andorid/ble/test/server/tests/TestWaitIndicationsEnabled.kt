@@ -7,15 +7,17 @@ import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
 import no.nordicsemi.android.ble.ktx.suspend
 
 class TestWaitIndicationsEnabled : TaskManager {
-
+    // Start the task
     override suspend fun start(serverConnection: ServerConnection) {
         serverConnection.testWaiUntilIndicationEnabled().suspend()
     }
 
+    // Handle task completion
     override fun onTaskCompleted(): TestCase {
         return TestCase(WAIT_UNTIL_INDICATION_ENABLED, true)
     }
 
+    // Handle task failure
     override fun onTaskFailed(): TestCase {
         return TestCase(WAIT_UNTIL_INDICATION_ENABLED, false)
     }

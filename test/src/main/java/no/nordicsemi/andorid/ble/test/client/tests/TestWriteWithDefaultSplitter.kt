@@ -8,7 +8,7 @@ import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.android.ble.ktx.suspend
 
 class TestWriteWithDefaultSplitter : TaskManager {
-
+    // Start the task
     override suspend fun start(
         clientConnection: ClientConnection
     ) {

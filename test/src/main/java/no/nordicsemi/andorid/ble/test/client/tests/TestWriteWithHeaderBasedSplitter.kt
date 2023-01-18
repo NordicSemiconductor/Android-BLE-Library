@@ -9,7 +9,7 @@ import no.nordicsemi.andorid.ble.test.spec.HeaderBasedPacketSplitter
 import no.nordicsemi.android.ble.ktx.suspend
 
 class TestWriteWithHeaderBasedSplitter : TaskManager {
-
+    // Start the task
     override suspend fun start(
         clientConnection: ClientConnection
     ) {

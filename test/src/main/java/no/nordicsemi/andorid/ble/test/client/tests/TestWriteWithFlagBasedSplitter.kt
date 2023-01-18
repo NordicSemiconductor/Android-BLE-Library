@@ -9,7 +9,7 @@ import no.nordicsemi.andorid.ble.test.spec.FlagBasedPacketSplitter
 import no.nordicsemi.android.ble.ktx.suspend
 
 class TestWriteWithFlagBasedSplitter : TaskManager {
-
+    // Start the task
     override suspend fun start(
         clientConnection: ClientConnection
     ) {
