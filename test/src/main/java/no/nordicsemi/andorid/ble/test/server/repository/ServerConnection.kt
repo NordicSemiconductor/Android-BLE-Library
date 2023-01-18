@@ -151,6 +151,12 @@ class ServerConnection(
         setCharacteristicValue(readCharacteristics, request).enqueue()
     }
 
+    // Atomic write
+    fun testBeginAtomicRequestQueue(){
+        waitForWrite(serverCharacteristics).enqueue()
+        setWriteCallback(serverCharacteristics)
+    }
+
     /**
      * Returns the maximum length that can be utilized in a single write operation.
      * MTU (Maximum Transfer Unit) indicates the maximum number of bytes that can be sent in a single write operation.

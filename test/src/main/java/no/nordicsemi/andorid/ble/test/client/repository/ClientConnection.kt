@@ -135,6 +135,13 @@ class ClientConnection(
         return readCharacteristic(readCharacteristics)
     }
 
+    // Begin Atomic
+    fun testBeginAtomicRequestQueue(): RequestQueue {
+         return beginAtomicRequestQueue()
+             .add(writeCharacteristic(characteristic, "this is atomic request".toByteArray(), WRITE_TYPE_DEFAULT))
+
+    }
+
     /**
      * Connect with server.
      */

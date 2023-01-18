@@ -17,6 +17,6 @@ class Tasks{
         TestWriteWithFlagBasedSplitter(),
         TestWriteWithHeaderBasedSplitter(),
         TestReliableWrite(),
-        TestReadCharacteristics(),
+        TestBeginAtomicRequestQueue(),
     )
 }
