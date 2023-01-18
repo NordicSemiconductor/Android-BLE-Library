@@ -15,7 +15,7 @@ val splitterRequest = """
 
 val reliableRequest = "This is reliable write request.".toByteArray()
 
-val request = "This is a write request".toByteArray()
+val writeRequest = "This is a write request".toByteArray()
 
 const val SCANNING_FOR_SERVER = "Scanning for Server"
 const val CONNECTED_WITH_SERVER = "Connected with Server"
@@ -30,4 +30,8 @@ const val SET_INDICATION = "Set Indication Callback"
 const val SET_NOTIFICATION = "Set Notification Callback"
 const val ENABLE_INDICATION = "Enable Indication"
 const val ENABLE_NOTIFICATION = "Enable Notification"
-const val READ = "Read Request"
+const val READ_CHA = "Read Characteristics"
+const val WAIT_FOR_INDICATION_CALLBACK = "Wait for Indication callback"
+const val REMOVE_INDICATION_CALLBACK = "Remove Indication callback"
+const val WAIT_FOR_NOTIFICATION_CALLBACK = "Wait for Notification callback"
+const val REMOVE_NOTIFICATION_CALLBACK = "Remove Notification callback"

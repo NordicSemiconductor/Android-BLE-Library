@@ -8,11 +8,18 @@ import android.bluetooth.BluetoothGattServer
 import android.content.Context
 import android.util.Log
 import kotlinx.coroutines.CoroutineScope
-import kotlinx.coroutines.flow.*
+import kotlinx.coroutines.flow.MutableSharedFlow
+import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-import no.nordicsemi.andorid.ble.test.server.data.*
+import no.nordicsemi.andorid.ble.test.server.data.DEVICE_CONNECTION
+import no.nordicsemi.andorid.ble.test.server.data.SERVICE_DISCOVERY
+import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.spec.DeviceSpecifications
-import no.nordicsemi.android.ble.*
+import no.nordicsemi.andorid.ble.test.spec.FlagBasedPacketSplitter
+import no.nordicsemi.andorid.ble.test.spec.HeaderBasedPacketSplitter
+import no.nordicsemi.android.ble.BleManager
+import no.nordicsemi.android.ble.ConditionalWaitRequest
+import no.nordicsemi.android.ble.ValueChangedCallback
 import no.nordicsemi.android.ble.ktx.suspend
 
 @SuppressLint("MissingPermission")
@@ -101,30 +108,34 @@ class ServerConnection(
         }
     }
 
-    // Wait until indication is enable
-    fun testIndicationEnabled(): ConditionalWaitRequest<BluetoothGattCharacteristic> {
-        return waitUntilIndicationsEnabled(indicationCharacteristics)
-    }
-
-    // Wait until notification is enable
-    fun testNotificationEnabled(): ConditionalWaitRequest<BluetoothGattCharacteristic> {
-        return waitUntilNotificationsEnabled(serverCharacteristics)
-    }
-
-    // Send indication
-    fun testSendIndication(request: ByteArray): WriteRequest {
-        return sendIndication(indicationCharacteristics, request)
-    }
-
-    // Send notification
-    fun testSendNotification(request: ByteArray): WriteRequest {
-        return sendNotification(serverCharacteristics, request)
-    }
-
     // Write callback
     fun testWriteCallback(): ValueChangedCallback {
         waitForWrite(serverCharacteristics).enqueue()
         return setWriteCallback(serverCharacteristics)
+    }
+
+    // Wait until indication is enable
+    fun testWaiUntilIndicationEnabled(): ConditionalWaitRequest<BluetoothGattCharacteristic> {
+        return waitUntilIndicationsEnabled(indicationCharacteristics)
+    }
+
+    // Send indication
+    suspend fun testSendIndication(request: ByteArray) {
+        sendIndication(indicationCharacteristics, request)
+            .split(FlagBasedPacketSplitter())
+            .suspend()
+    }
+
+    // Wait until notification is enable
+    fun testWaitUntilNotificationEnabled(): ConditionalWaitRequest<BluetoothGattCharacteristic> {
+        return waitUntilNotificationsEnabled(serverCharacteristics)
+    }
+
+    // Send notification
+    suspend fun testSendNotification(request: ByteArray) {
+        sendNotification(serverCharacteristics, request)
+            .split(HeaderBasedPacketSplitter())
+            .suspend()
     }
 
     // Reliable Write callback
@@ -135,8 +146,9 @@ class ServerConnection(
     }
 
     // Set characteristics for to read data
-    fun testSetCharacteristicValue(request: ByteArray): SetValueRequest {
-       return setCharacteristicValue(readCharacteristics, request)
+    fun testSetReadCharacteristics(request: ByteArray) {
+        waitForRead(readCharacteristics).enqueue()
+        setCharacteristicValue(readCharacteristics, request).enqueue()
     }
 
     /**

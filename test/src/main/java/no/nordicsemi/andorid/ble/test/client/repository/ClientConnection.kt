@@ -15,6 +15,7 @@ import no.nordicsemi.andorid.ble.test.client.data.CONNECTED_WITH_SERVER
 import no.nordicsemi.andorid.ble.test.client.data.SERVICE_DISCOVERY
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.spec.DeviceSpecifications
+import no.nordicsemi.andorid.ble.test.spec.HeaderBasedPacketMerger
 import no.nordicsemi.android.ble.*
 import no.nordicsemi.android.ble.ktx.suspend
 
@@ -88,14 +89,9 @@ class ClientConnection(
     }
 
     // Set Indication Callback
-    fun testSetIndication(
-    ): ValueChangedCallback {
-        return setIndicationCallback(indicationCharacteristics)
-    }
-
-    // Set Notification Callback
-    fun testSetNotification(): ValueChangedCallback {
-        return setNotificationCallback(characteristic)
+    fun testSetIndication() {
+        setIndicationCallback(indicationCharacteristics)
+            .merge(HeaderBasedPacketMerger())
     }
 
     // Enable Indication
@@ -103,12 +99,39 @@ class ClientConnection(
         return enableIndications(indicationCharacteristics)
     }
 
+    // Wait for Indication
+    fun testWaitForIndication(): WaitForValueChangedRequest {
+        return waitForIndication(indicationCharacteristics)
+    }
+
+    // Remove Indication callback
+    fun testRemoveIndicationCallback(){
+        return removeIndicationCallback(indicationCharacteristics)
+    }
+
+    // Set Notification Callback
+    fun testSetNotification(){
+        setNotificationCallback(characteristic)
+            .merge(HeaderBasedPacketMerger())
+    }
+
     // Enable Notification
     fun testEnableNotification(): WriteRequest {
         return enableNotifications(characteristic)
     }
 
-    fun testRead(): ReadRequest {
+    // Wait for notification
+    fun testWaitForNotification(): WaitForValueChangedRequest {
+        return waitForNotification(characteristic)
+    }
+
+    // Remove notification callback
+    fun testRemoveNotificationCallback() {
+        return removeNotificationCallback(characteristic)
+    }
+
+    // Read Characteristics
+    fun testReadCharacteristics(): ReadRequest {
         return readCharacteristic(readCharacteristics)
     }
 

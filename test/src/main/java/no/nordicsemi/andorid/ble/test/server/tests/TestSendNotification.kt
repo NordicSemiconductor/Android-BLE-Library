@@ -5,12 +5,11 @@ import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.server.data.notificationRequest
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
-import no.nordicsemi.android.ble.ktx.suspend
 
 class TestSendNotification : TaskManager {
 
     override suspend fun start(serverConnection: ServerConnection) {
-        serverConnection.testSendNotification(notificationRequest).suspend()
+        serverConnection.testSendNotification(notificationRequest)
     }
 
     // Handle task completion

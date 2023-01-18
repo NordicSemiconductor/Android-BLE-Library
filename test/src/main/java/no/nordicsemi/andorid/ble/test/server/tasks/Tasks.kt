@@ -5,7 +5,7 @@ import no.nordicsemi.andorid.ble.test.server.tests.*
 class Tasks {
     val tasks = listOf(
         TestSetWriteCallback(),
-        TesWaitIndicationsEnabled(),
+        TestWaitIndicationsEnabled(),
         TestSendIndication(),
         TestWaitNotificationEnabled(),
         TestSendNotification(),

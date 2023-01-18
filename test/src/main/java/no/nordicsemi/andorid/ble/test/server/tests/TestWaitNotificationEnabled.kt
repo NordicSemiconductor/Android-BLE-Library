@@ -9,7 +9,7 @@ import no.nordicsemi.android.ble.ktx.suspend
 class TestWaitNotificationEnabled : TaskManager {
 
     override suspend fun start(serverConnection: ServerConnection) {
-        serverConnection.testNotificationEnabled().suspend()
+        serverConnection.testWaitUntilNotificationEnabled().suspend()
     }
 
     override fun onTaskCompleted(): TestCase {
