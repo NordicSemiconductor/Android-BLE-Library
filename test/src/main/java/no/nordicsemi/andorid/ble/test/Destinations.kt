@@ -22,5 +22,3 @@ val Destinations = listOf(
     defineDestination(ClientDestination) { ClientScreen() },
     defineDestination(ServerDestination) { ServerScreen() }
 )
-
-
