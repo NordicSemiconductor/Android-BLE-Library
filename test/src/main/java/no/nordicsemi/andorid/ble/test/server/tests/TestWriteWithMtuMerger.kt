@@ -9,8 +9,8 @@ import no.nordicsemi.andorid.ble.test.spec.MtuBasedMerger
 class TestWriteWithMtuMerger : TaskManager {
     // Start the task
     override suspend fun start(serverConnection: ServerConnection) {
-        serverConnection.testWriteCallback()
-            .merge(MtuBasedMerger(serverConnection.requestMaxLength()))
+        serverConnection.testWriteCallbackWithMerger()
+            .merge(MtuBasedMerger(maxLength = serverConnection.requestMaxLength()))
     }
 
     // Handle task completion

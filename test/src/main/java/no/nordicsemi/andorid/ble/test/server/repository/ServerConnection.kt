@@ -114,6 +114,14 @@ class ServerConnection(
         return setWriteCallback(serverCharacteristics)
     }
 
+    // Write callback for mtu size merger
+    fun testWriteCallbackWithMerger(): ValueChangedCallback {
+        waitForWrite(serverCharacteristics).enqueue()
+        return setWriteCallback(serverCharacteristics)
+                // filters packet of size 1
+            .filterPacket { data -> data != null && data.size == 1 }
+    }
+
     // Wait until indication is enable
     fun testWaiUntilIndicationEnabled(): ConditionalWaitRequest<BluetoothGattCharacteristic> {
         return waitUntilIndicationsEnabled(indicationCharacteristics)
