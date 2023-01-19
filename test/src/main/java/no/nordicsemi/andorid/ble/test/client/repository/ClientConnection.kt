@@ -11,13 +11,16 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.suspendCancellableCoroutine
 import no.nordicsemi.andorid.ble.test.client.data.CONNECTED_WITH_SERVER
 import no.nordicsemi.andorid.ble.test.client.data.SERVICE_DISCOVERY
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.spec.DeviceSpecifications
+import no.nordicsemi.andorid.ble.test.spec.FlagBasedPacketMerger
 import no.nordicsemi.andorid.ble.test.spec.HeaderBasedPacketMerger
 import no.nordicsemi.android.ble.*
 import no.nordicsemi.android.ble.ktx.suspend
+import kotlin.coroutines.resume
 
 class ClientConnection(
     context: Context,

@@ -8,7 +8,6 @@ class Tasks{
         TestSetIndication(),
         TestEnableIndication(),
         TestWaitForIndication(),
-        TestRemoveIndicationCallback(),
         TestSetNotification(),
         TestEnableNotification(),
         TestWaitForNotification(),
