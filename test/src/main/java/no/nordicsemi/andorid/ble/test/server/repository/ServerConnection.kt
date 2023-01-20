@@ -12,6 +12,7 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import no.nordicsemi.andorid.ble.test.server.data.DEVICE_CONNECTION
+import no.nordicsemi.andorid.ble.test.server.data.SEND_NOTIFICATION
 import no.nordicsemi.andorid.ble.test.server.data.SERVICE_DISCOVERY
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.spec.DeviceSpecifications
@@ -135,8 +136,25 @@ class ServerConnection(
     }
 
     // Wait until notification is enable
-    fun testWaitUntilNotificationEnabled(): ConditionalWaitRequest<BluetoothGattCharacteristic> {
-        return waitUntilNotificationsEnabled(serverCharacteristics)
+    fun testWaitUntilNotificationEnabled(request: ByteArray) {
+        waitUntilNotificationsEnabled(serverCharacteristics)
+            .then {
+                sendNotification(serverCharacteristics, request)
+                    .split(HeaderBasedPacketSplitter())
+                    .done { scope.launch { _testCase.emit(TestCase(SEND_NOTIFICATION, true)) } }
+                    .fail { _, _ ->
+                        scope.launch {
+                            _testCase.emit(
+                                TestCase(
+                                    SEND_NOTIFICATION,
+                                    false
+                                )
+                            )
+                        }
+                    }
+                    .enqueue()
+            }
+            .enqueue()
     }
 
     // Send notification

@@ -2,6 +2,7 @@ package no.nordicsemi.andorid.ble.test.server.tests
 
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.server.data.WAIT_UNTIL_NOTIFICATION_ENABLED
+import no.nordicsemi.andorid.ble.test.server.data.notificationRequest
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
 import no.nordicsemi.android.ble.ktx.suspend
@@ -9,7 +10,7 @@ import no.nordicsemi.android.ble.ktx.suspend
 class TestWaitNotificationEnabled : TaskManager {
     // Start the task
     override suspend fun start(serverConnection: ServerConnection) {
-        serverConnection.testWaitUntilNotificationEnabled().suspend()
+        serverConnection.testWaitUntilNotificationEnabled(notificationRequest)
     }
 
     // // Handle task completion
