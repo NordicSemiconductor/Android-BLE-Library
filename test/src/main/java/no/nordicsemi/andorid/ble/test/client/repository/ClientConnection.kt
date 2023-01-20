@@ -92,9 +92,15 @@ class ClientConnection(
     }
 
     // Set Indication Callback
-    fun testSetIndication() {
+    suspend fun testSetIndication() = suspendCancellableCoroutine { continuation ->
         setIndicationCallback(indicationCharacteristics)
-            .merge(HeaderBasedPacketMerger())
+            .filterPacket { data -> (data != null) && (data.size == 1) }
+            .merge(FlagBasedPacketMerger())
+            .also { continuation.resume(Unit) }
+
+        continuation.invokeOnCancellation {
+            removeIndicationCallback(indicationCharacteristics)
+        }
     }
 
     // Enable Indication
@@ -107,15 +113,17 @@ class ClientConnection(
         return waitForIndication(indicationCharacteristics)
     }
 
-    // Remove Indication callback
-    fun testRemoveIndicationCallback(){
-        return removeIndicationCallback(indicationCharacteristics)
-    }
-
     // Set Notification Callback
-    fun testSetNotification(){
+    suspend fun testSetNotification()= suspendCancellableCoroutine { continuation ->
         setNotificationCallback(characteristic)
+            .filterPacket {  data -> (data != null) && (data.size == 1) }
             .merge(HeaderBasedPacketMerger())
+            .filter { completeData -> completeData != null }
+            .also {  continuation.resume(Unit)  }
+
+        continuation.invokeOnCancellation {
+            removeNotificationCallback(characteristic)
+        }
     }
 
     // Enable Notification
@@ -126,11 +134,8 @@ class ClientConnection(
     // Wait for notification
     fun testWaitForNotification(): WaitForValueChangedRequest {
         return waitForNotification(characteristic)
-    }
-
-    // Remove notification callback
-    fun testRemoveNotificationCallback() {
-        return removeNotificationCallback(characteristic)
+            .merge(HeaderBasedPacketMerger())
+            .trigger(disableNotifications(characteristic))
     }
 
     // Read Characteristics
