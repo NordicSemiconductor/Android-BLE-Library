@@ -111,6 +111,7 @@ class ClientConnection(
     // Wait for Indication
     fun testWaitForIndication(): WaitForValueChangedRequest {
         return waitForIndication(indicationCharacteristics)
+            .trigger(disableIndications(indicationCharacteristics))
     }
 
     // Set Notification Callback
