@@ -5,7 +5,7 @@ import no.nordicsemi.android.ble.data.DataStream
 import java.nio.ByteBuffer
 
 class HeaderBasedPacketMerger: DataMerger {
-    var expectedSize = 0
+    private var expectedSize = 0
 
     /**
      * A method that merges the last packet into the output message.
