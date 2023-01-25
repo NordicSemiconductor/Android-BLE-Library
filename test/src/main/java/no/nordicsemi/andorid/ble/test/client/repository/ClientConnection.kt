@@ -73,7 +73,7 @@ class ClientConnection(
     }
 
     /**
-     * Write Request [BleManager.writeCharacteristic]. Writes the request data to the given characteristics.
+     * Writes the request data to the given characteristics [BleManager.writeCharacteristic].
      */
     fun testWrite(
         request: ByteArray,
@@ -88,7 +88,6 @@ class ClientConnection(
      * Two write requests [BleManager.setWriteCallback] have been added in this procedure and
      * when both requests are enqueued successfully, reliable write process will start automatically.
      */
-
     fun testReliableWrite(
         request: List<ByteArray>,
     ) {
