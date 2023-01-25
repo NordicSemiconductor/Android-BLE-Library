@@ -1,6 +1,9 @@
 package no.nordicsemi.andorid.ble.test.spec
 
-import no.nordicsemi.andorid.ble.test.server.data.*
+import no.nordicsemi.andorid.ble.test.server.data.BEGIN
+import no.nordicsemi.andorid.ble.test.server.data.CONTINUATION
+import no.nordicsemi.andorid.ble.test.server.data.END
+import no.nordicsemi.andorid.ble.test.server.data.FULL
 import no.nordicsemi.android.ble.data.DataSplitter
 import java.nio.ByteBuffer
 
@@ -55,22 +58,20 @@ class FlagBasedPacketSplitter : DataSplitter {
             }
 
             // Last chunk of the message
-            if (toBeSent <= availableSize) {
-                return ByteArray(maxLength).apply {
+            return if (toBeSent <= availableSize) {
+                ByteArray(toBeSent + 1).apply {
                     ByteBuffer.wrap(this)
                         .put(END)
                         .put(message, bytesSent, toBeSent)
                 }
-            }
-
+            } else
             // Continuation of the larger message
-            return ByteArray(maxLength).apply {
-                ByteBuffer.wrap(this)
-                    .put(CONTINUATION)
-                    .put(message, bytesSent, availableSize)
-            }
+                ByteArray(maxLength).apply {
+                    ByteBuffer.wrap(this)
+                        .put(CONTINUATION)
+                        .put(message, bytesSent, availableSize)
+                }
         }
-
     }
 }
 
