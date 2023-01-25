@@ -16,8 +16,6 @@ import no.nordicsemi.andorid.ble.test.client.data.CONNECTED_WITH_SERVER
 import no.nordicsemi.andorid.ble.test.client.data.SERVICE_DISCOVERY
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.spec.DeviceSpecifications
-import no.nordicsemi.andorid.ble.test.spec.FlagBasedPacketMerger
-import no.nordicsemi.andorid.ble.test.spec.HeaderBasedPacketMerger
 import no.nordicsemi.android.ble.*
 import no.nordicsemi.android.ble.ktx.suspend
 import kotlin.coroutines.resume
@@ -53,14 +51,14 @@ class ClientConnection(
         }
         gatt.getService(DeviceSpecifications.UUID_SERVICE_DEVICE)?.let { service ->
             characteristic = service.getCharacteristic(DeviceSpecifications.WRITE_CHARACTERISTIC)
-            indicationCharacteristics =
-                service.getCharacteristic(DeviceSpecifications.Ind_CHARACTERISTIC)
-            reliableCharacteristics =
-                service.getCharacteristic(DeviceSpecifications.REL_WRITE_CHARACTERISTIC)
-            readCharacteristics =
-                service.getCharacteristic(DeviceSpecifications.READ_CHARACTERISTIC)
+            indicationCharacteristics = service.getCharacteristic(DeviceSpecifications.Ind_CHARACTERISTIC)
+            reliableCharacteristics = service.getCharacteristic(DeviceSpecifications.REL_WRITE_CHARACTERISTIC)
+            readCharacteristics = service.getCharacteristic(DeviceSpecifications.READ_CHARACTERISTIC)
         }
-        return characteristic != null && indicationCharacteristics != null && reliableCharacteristics != null && readCharacteristics != null
+        return characteristic != null &&
+                indicationCharacteristics != null &&
+                reliableCharacteristics != null &&
+                readCharacteristics != null
     }
 
     override fun initialize() {
@@ -74,28 +72,38 @@ class ClientConnection(
         readCharacteristics = null
     }
 
-    // Write Request
+    /**
+     * Write Request [BleManager.writeCharacteristic]. Writes the request data to the given characteristics.
+     */
     fun testWrite(
         request: ByteArray,
     ): WriteRequest {
         return writeCharacteristic(characteristic, request, WRITE_TYPE_DEFAULT)
     }
 
-    // Reliable Write Request
-    fun testReliableWrite(
-        request: ByteArray,
-    ): ReliableWriteRequest {
-        return beginReliableWrite()
-            .add(writeCharacteristic(reliableCharacteristics, request, WRITE_TYPE_DEFAULT))
-            .add(writeCharacteristic(characteristic, request, WRITE_TYPE_DEFAULT))
+    /**
+     * Begin Reliable Write Request [BleManager.beginReliableWrite].
+     * It will validate all write operations and will cancel the Reliable Write process if the returned
+     * data does not match the data supplied. When all enqueued requests have been finished, the reliable write is automatically executed.
+     * Two write requests [BleManager.setWriteCallback] have been added in this procedure and
+     * when both requests are enqueued successfully, reliable write process will start automatically.
+     */
 
+    fun testReliableWrite(
+        request: List<ByteArray>,
+    ) {
+        beginReliableWrite()
+            .add(writeCharacteristic(reliableCharacteristics, request[0], WRITE_TYPE_DEFAULT))
+            .add(writeCharacteristic(characteristic, request[1], WRITE_TYPE_DEFAULT))
+            .enqueue()
     }
 
-    // Set Indication Callback
+    /**
+     * Sets an Indication Callback [BleManager.setIndicationCallback] to the given characteristics.
+     */
+
     suspend fun testSetIndication() = suspendCancellableCoroutine { continuation ->
         setIndicationCallback(indicationCharacteristics)
-            .filterPacket { data -> (data != null) && (data.size == 1) }
-            .merge(FlagBasedPacketMerger())
             .also { continuation.resume(Unit) }
 
         continuation.invokeOnCancellation {
@@ -103,52 +111,69 @@ class ClientConnection(
         }
     }
 
-    // Enable Indication
+    /**
+     * Enable Indication [BleManager.enableIndications]. It enables the indication for the given characteristics.
+     */
+
     fun testEnableIndication(): WriteRequest {
         return enableIndications(indicationCharacteristics)
     }
 
-    // Wait for Indication
+    /**
+     *  Wait for Indication [BleManager.waitForIndication]. It waits until the indication is sent
+     *  from the remote device. Once indication is received, it triggers [WaitForReadRequest.trigger] the
+     *  disable indication [BleManager.disableIndications] request for the given characteristics.
+     */
     fun testWaitForIndication(): WaitForValueChangedRequest {
         return waitForIndication(indicationCharacteristics)
             .trigger(disableIndications(indicationCharacteristics))
     }
 
-    // Set Notification Callback
+    /**
+     * Sets a Notification Callback [BleManager.setNotificationCallback] to the given characteristics.
+     */
     suspend fun testSetNotification()= suspendCancellableCoroutine { continuation ->
         setNotificationCallback(characteristic)
-            .filterPacket {  data -> (data != null) && (data.size == 1) }
-            .merge(HeaderBasedPacketMerger())
-            .filter { completeData -> completeData != null }
-            .also {  continuation.resume(Unit)  }
+            .also { continuation.resume(Unit) }
 
         continuation.invokeOnCancellation {
             removeNotificationCallback(characteristic)
         }
     }
 
-    // Enable Notification
+    /**
+     * Enable Notification [BleManager.enableNotifications]. It enables the notification for the given characteristics.
+     */
     fun testEnableNotification(): WriteRequest {
         return enableNotifications(characteristic)
     }
 
-    // Wait for notification
+    /**
+     *  Wait for Notification [BleManager.waitForNotification]. It waits until the notification is sent
+     *  from the remote device. Once notification is received, it triggers [WaitForReadRequest.trigger] the
+     *  disable notification for the given characteristics [BleManager.disableNotifications].
+     */
     fun testWaitForNotification(): WaitForValueChangedRequest {
         return waitForNotification(characteristic)
-            .merge(HeaderBasedPacketMerger())
             .trigger(disableNotifications(characteristic))
     }
 
-    // Read Characteristics
-    fun testReadCharacteristics(): ReadRequest {
+    /**
+     * Sends the read request to the given characteristic [BleManager.readCharacteristic].
+     */
+      fun testReadCharacteristics(): ReadRequest {
         return readCharacteristic(readCharacteristics)
     }
 
-    // Begin Atomic
-    fun testBeginAtomicRequestQueue(): RequestQueue {
-         return beginAtomicRequestQueue()
-             .add(writeCharacteristic(characteristic, "this is atomic request".toByteArray(), WRITE_TYPE_DEFAULT))
-
+    /**
+     * It initiates the atomic request queue [BleManager.beginAtomicRequestQueue] and it will execute the requests in the queue in the order.
+     * The method has two requests and they will execute together. Thus, the method is particularly useful
+     * when the user wants to execute multiple requests simultaneously and ensure they are executed together.
+     */
+    fun testBeginAtomicRequestQueue(request: ByteArray): RequestQueue {
+        return beginAtomicRequestQueue()
+            .add(readCharacteristic(readCharacteristics))
+            .before { writeCharacteristic(characteristic, request, WRITE_TYPE_DEFAULT) }
     }
 
     /**
