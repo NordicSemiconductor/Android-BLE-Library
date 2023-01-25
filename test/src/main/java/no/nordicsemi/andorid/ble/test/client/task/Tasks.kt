@@ -5,17 +5,17 @@ import no.nordicsemi.andorid.ble.test.client.tests.*
 class Tasks{
     val tasks = listOf(
         TestWrite(),
-        TestSetIndication(),
-        TestEnableIndication(),
-        TestWaitForIndication(),
         TestSetNotification(),
         TestEnableNotification(),
         TestWaitForNotification(),
-        TestRemoveNotificationCallback(),
+        TestSetIndication(),
+        TestEnableIndication(),
+        TestWaitForIndication(),
         TestWriteWithDefaultSplitter(),
         TestWriteWithFlagBasedSplitter(),
         TestWriteWithHeaderBasedSplitter(),
-        TestReliableWrite(),
+        TestReadCharacteristics(),
         TestBeginAtomicRequestQueue(),
+        TestReliableWrite(),
     )
 }

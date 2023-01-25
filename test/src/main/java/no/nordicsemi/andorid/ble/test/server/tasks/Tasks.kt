@@ -5,14 +5,15 @@ import no.nordicsemi.andorid.ble.test.server.tests.*
 class Tasks {
     val tasks = listOf(
         TestSetWriteCallback(),
-        TestWaitIndicationsEnabled(),
-        TestSendIndication(),
         TestWaitNotificationEnabled(),
         TestSendNotification(),
+        TestWaitIndicationsEnabled(),
+        TestSendIndication(),
         TestWriteWithMtuMerger(),
         TestWriteWithFlagMerger(),
         TestWriteWithHeaderMerger(),
+        TestSetReadCharacteristics(),
+        TestBeginAtomicRequestQueue(),
         TestReliableWrite(),
-        TestReadCharacteristics(),
     )
 }
