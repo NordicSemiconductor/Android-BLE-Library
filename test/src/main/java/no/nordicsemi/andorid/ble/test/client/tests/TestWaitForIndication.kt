@@ -7,9 +7,12 @@ import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.spec.FlagBasedPacketMerger
 import no.nordicsemi.android.ble.ktx.suspend
 
-class TestWaitForIndication : TaskManager{
+class TestWaitForIndication : TaskManager {
 
-    // Start the task
+    /**
+     * Waits until indication response is received and [FlagBasedPacketMerger] to
+     * efficiently merge and process the data received from the remote device.
+     */
     override suspend fun start(clientConnection: ClientConnection) {
         clientConnection.testWaitForIndication()
             .merge(FlagBasedPacketMerger())

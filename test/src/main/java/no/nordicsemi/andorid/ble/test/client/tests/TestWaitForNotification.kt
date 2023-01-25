@@ -9,7 +9,10 @@ import no.nordicsemi.android.ble.ktx.suspend
 
 class TestWaitForNotification : TaskManager {
 
-    // Start the task
+    /**
+     * Waits until notification response is received and [HeaderBasedPacketMerger] to
+     * efficiently merge and process the data received from the remote device.
+     */
     override suspend fun start(clientConnection: ClientConnection) {
         clientConnection.testWaitForNotification()
             .merge(HeaderBasedPacketMerger())

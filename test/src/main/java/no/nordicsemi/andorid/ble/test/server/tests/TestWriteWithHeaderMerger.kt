@@ -7,9 +7,13 @@ import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
 import no.nordicsemi.andorid.ble.test.spec.HeaderBasedPacketMerger
 
 class TestWriteWithHeaderMerger : TaskManager {
-    // Start the task
+
+    /**
+     * Observe the data written to the given characteristics and [HeaderBasedPacketMerger] to
+     * efficiently merge and process the data received from the remote device.
+     */
     override suspend fun start(serverConnection: ServerConnection) {
-        serverConnection.testWriteCallback()
+        serverConnection.testWriteCallbackWithHeaderBasedMerger()
             .merge(HeaderBasedPacketMerger())
     }
 

@@ -12,7 +12,8 @@ class TestWrite : TaskManager {
     override suspend fun start(
         clientConnection: ClientConnection
     ) {
-        clientConnection.testWrite(writeRequest).suspend()
+        clientConnection.testWrite(writeRequest)
+            .suspend()
     }
 
     // Handle task completion
