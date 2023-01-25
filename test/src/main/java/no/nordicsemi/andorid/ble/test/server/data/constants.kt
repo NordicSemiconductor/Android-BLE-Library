@@ -17,8 +17,10 @@ const val WAIT_UNTIL_INDICATION_ENABLED = "Wait Until Indication Enabled"
 const val READ_CHA = "Set Characteristics for read operation"
 
 val indicationRequest = "This is Indication and this is tested to be send on packet splitter".toByteArray()
-val notificationRequest = "This is Notification".toByteArray()
+val notificationRequest = "This is Notification request".toByteArray()
+val sendNotificationInThenCallback = "This is Notification request send in the then callback".toByteArray()
 val readRequest = "This is read request".toByteArray()
+val atomicRequest = "This is read characteristics in atomic request queue".toByteArray()
 
 const val FULL = 0b11.toByte()
 const val BEGIN = 0b00.toByte()
