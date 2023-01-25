@@ -113,28 +113,17 @@ class ServerConnection(
     }
 
     /**
-     * Observes the value changes on the give characteristics [BleManager.setWriteCallback] and [FlagBasedPacketMerger] to
-     * efficiently merge and process the data sent from the remote device.
-     * It also utilizes the [ValueChangedCallback.with] to monitor the size of the data and log respective messages accordingly.
+     * Observes the value changes on the give characteristics [BleManager.setWriteCallback].
      */
-    fun testWriteCallbackWithFlagBasedMerger() {
-        waitForWrite(serverCharacteristics).enqueue()
-        setWriteCallback(serverCharacteristics)
-            .merge(FlagBasedPacketMerger())
-            .with { _, data ->
-                if (data.size() < 2) Log.i(TAG, "very small data of size ${data.size()}")
-                else Log.i(TAG, "Data size: ${data.size()}")
-            }
+    fun testWriteCallbackWithFlagBasedMerger(): ValueChangedCallback {
+        return setWriteCallback(serverCharacteristics)
     }
 
     /**
-     * Implements a write callback [BleManager.setWriteCallback] and [HeaderBasedPacketMerger] to
-     * efficiently merge and process the data received from the remote device.
+     * Observes the value changes on the give characteristics [BleManager.setWriteCallback].
      */
-    fun testWriteCallbackWithHeaderBasedMerger() {
-        waitForWrite(serverCharacteristics).enqueue()
-        setWriteCallback(serverCharacteristics)
-            .merge(HeaderBasedPacketMerger())
+    fun testWriteCallbackWithHeaderBasedMerger(): ValueChangedCallback {
+        return setWriteCallback(serverCharacteristics)
     }
 
    /**
@@ -145,13 +134,10 @@ class ServerConnection(
     }
 
     /**
-     * Sends an Indication [BleManager.sendIndication] response. It utilizes the [WriteRequest.split] callback
-     * to chunk the data into multiple packets, if the data cannot be sent in a single write operation.
+     * Sends an Indication [BleManager.sendIndication] response.
     */
-    suspend fun testSendIndication(request: ByteArray) {
-        sendIndication(indicationCharacteristics, request)
-            .split(FlagBasedPacketSplitter())
-            .suspend()
+    fun testSendIndication(request: ByteArray): WriteRequest {
+        return sendIndication(indicationCharacteristics, request)
     }
 
     /**
@@ -160,7 +146,7 @@ class ServerConnection(
      * To ensure efficient data transfer, it utilizes [WriteRequest.split] to cut the data into smaller packets using [HeaderBasedPacketSplitter].
      * Finally, it employs [WriteRequest.done] to handle successful completion or [WriteRequest.fail] to handle any potential failure of the operation.
      */
-    suspend fun testWaitNotificationEnabledAndSendNotification(request: ByteArray) {
+    suspend fun testWaitNotificationEnabled(request: ByteArray) {
         waitUntilNotificationsEnabled(serverCharacteristics)
           .then {
                 sendNotification(serverCharacteristics, request)
@@ -174,25 +160,17 @@ class ServerConnection(
     }
 
     /**
-     * Sends a Notification [BleManager.sendNotification] response. It utilizes the [WriteRequest.split] callback
-     * to chunk the data into multiple packets, if the data cannot be sent in a single write operation.
+     * Sends a Notification [BleManager.sendNotification] response.
      */
-    fun testSendNotification(request: ByteArray){
-         sendNotification(serverCharacteristics, request)
-             .split(HeaderBasedPacketSplitter())
-             .enqueue()
+    fun testSendNotification(request: ByteArray): WriteRequest {
+         return sendNotification(serverCharacteristics, request)
     }
 
    /**
-    * Sets write callback [BleManager.setWriteCallback] . Combines the packets received using [MtuBasedMerger].
-    * The [ValueChangedCallback.filterPacket]  is utilized to pre-screen packets before merging, discarding any that do not meet the necessary criteria.
-    * Additionally, the [ValueChangedCallback.filter] is employed to further refine the data after merging, discarding any that do not meet the specified requirements.
+    * Sets write callback [BleManager.setWriteCallback].
     */
     fun testWriteCallbackWithMTUMerger(): ValueChangedCallback {
         return setWriteCallback(serverCharacteristics)
-            .filterPacket { data -> data != null && data.size > 2  }
-            .merge(MtuBasedMerger(maxLength = requestMaxLength()))
-            .filter { data -> data != null && data.size > 1020 }
     }
 
     /**
@@ -230,7 +208,7 @@ class ServerConnection(
      * MTU (Maximum Transfer Unit) indicates the maximum number of bytes that can be sent in a single write operation.
      * Since 3 bytes are used for internal purposes, so the maximum size is MTU-3.
      */
-    private fun requestMaxLength(): Int = maxLength
+    fun requestMaxLength(): Int = maxLength
 
     fun release() {
         cancelQueue()
