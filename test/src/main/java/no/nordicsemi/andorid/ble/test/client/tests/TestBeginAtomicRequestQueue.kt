@@ -1,6 +1,7 @@
 package no.nordicsemi.andorid.ble.test.client.tests
 
 import no.nordicsemi.andorid.ble.test.client.data.ATOMIC_REQUEST_QUEUE
+import no.nordicsemi.andorid.ble.test.client.data.atomicRequestQueue
 import no.nordicsemi.andorid.ble.test.client.repository.ClientConnection
 import no.nordicsemi.andorid.ble.test.client.task.TaskManager
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
@@ -12,7 +13,8 @@ class TestBeginAtomicRequestQueue : TaskManager {
     override suspend fun start(
         clientConnection: ClientConnection
     ) {
-        clientConnection.testBeginAtomicRequestQueue().suspend()
+        clientConnection.testBeginAtomicRequestQueue(atomicRequestQueue)
+            .suspend()
     }
 
     // Handle task completion
