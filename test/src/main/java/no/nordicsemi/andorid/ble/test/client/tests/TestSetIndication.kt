@@ -1,9 +1,9 @@
 package no.nordicsemi.andorid.ble.test.client.tests
 
-import no.nordicsemi.andorid.ble.test.client.data.SET_INDICATION
 import no.nordicsemi.andorid.ble.test.client.repository.ClientConnection
 import no.nordicsemi.andorid.ble.test.client.task.TaskManager
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
+import no.nordicsemi.andorid.ble.test.spec.Callbacks.SET_INDICATION
 
 class TestSetIndication : TaskManager {
     // Start the task

@@ -1,10 +1,10 @@
 package no.nordicsemi.andorid.ble.test.client.tests
 
-import no.nordicsemi.andorid.ble.test.client.data.DEFAULT_MTU_SPLITTER
-import no.nordicsemi.andorid.ble.test.client.data.splitterRequest
 import no.nordicsemi.andorid.ble.test.client.repository.ClientConnection
 import no.nordicsemi.andorid.ble.test.client.task.TaskManager
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
+import no.nordicsemi.andorid.ble.test.spec.Flags.DEFAULT_MTU_SPLITTER
+import no.nordicsemi.andorid.ble.test.spec.Requests.splitterRequest
 import no.nordicsemi.android.ble.WriteRequest
 import no.nordicsemi.android.ble.ktx.suspend
 

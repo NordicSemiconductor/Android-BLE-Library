@@ -12,9 +12,9 @@ import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
-import no.nordicsemi.andorid.ble.test.client.data.CONNECTED_WITH_SERVER
-import no.nordicsemi.andorid.ble.test.client.data.SERVICE_DISCOVERY
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
+import no.nordicsemi.andorid.ble.test.spec.Connections.CONNECTED_WITH_SERVER
+import no.nordicsemi.andorid.ble.test.spec.Connections.SERVICE_DISCOVERY
 import no.nordicsemi.andorid.ble.test.spec.DeviceSpecifications
 import no.nordicsemi.android.ble.*
 import no.nordicsemi.android.ble.ktx.suspend

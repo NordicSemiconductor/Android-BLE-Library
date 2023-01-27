@@ -1,9 +1,9 @@
 package no.nordicsemi.andorid.ble.test.client.tests
 
-import no.nordicsemi.andorid.ble.test.client.data.ENABLE_INDICATION
 import no.nordicsemi.andorid.ble.test.client.repository.ClientConnection
 import no.nordicsemi.andorid.ble.test.client.task.TaskManager
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
+import no.nordicsemi.andorid.ble.test.spec.Callbacks.ENABLE_INDICATION
 import no.nordicsemi.android.ble.ktx.suspend
 
 class TestEnableIndication : TaskManager {

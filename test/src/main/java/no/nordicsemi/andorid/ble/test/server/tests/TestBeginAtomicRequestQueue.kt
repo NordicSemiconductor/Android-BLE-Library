@@ -1,10 +1,10 @@
 package no.nordicsemi.andorid.ble.test.server.tests
 
-import no.nordicsemi.andorid.ble.test.client.data.ATOMIC_REQUEST_QUEUE
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
-import no.nordicsemi.andorid.ble.test.server.data.atomicRequest
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
+import no.nordicsemi.andorid.ble.test.spec.Callbacks.ATOMIC_REQUEST_QUEUE
+import no.nordicsemi.andorid.ble.test.spec.Requests.atomicRequest
 
 class TestBeginAtomicRequestQueue: TaskManager {
     // Start the task

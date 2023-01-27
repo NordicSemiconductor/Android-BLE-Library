@@ -1,9 +1,9 @@
 package no.nordicsemi.andorid.ble.test.client.tests
 
-import no.nordicsemi.andorid.ble.test.client.data.WAIT_FOR_INDICATION_CALLBACK
 import no.nordicsemi.andorid.ble.test.client.repository.ClientConnection
 import no.nordicsemi.andorid.ble.test.client.task.TaskManager
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
+import no.nordicsemi.andorid.ble.test.spec.Callbacks.WAIT_FOR_INDICATION_CALLBACK
 import no.nordicsemi.andorid.ble.test.spec.FlagBasedPacketMerger
 import no.nordicsemi.android.ble.ktx.suspend
 

@@ -1,9 +1,9 @@
 package no.nordicsemi.andorid.ble.test.server.tests
 
-import no.nordicsemi.andorid.ble.test.server.data.MTU_SIZE_MERGER
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
+import no.nordicsemi.andorid.ble.test.spec.Flags.MTU_SIZE_MERGER
 import no.nordicsemi.andorid.ble.test.spec.MtuBasedMerger
 import no.nordicsemi.android.ble.ValueChangedCallback
 

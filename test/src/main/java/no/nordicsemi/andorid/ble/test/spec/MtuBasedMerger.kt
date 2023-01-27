@@ -3,7 +3,6 @@ package no.nordicsemi.andorid.ble.test.spec
 import no.nordicsemi.android.ble.data.DataMerger
 import no.nordicsemi.android.ble.data.DataStream
 
-
 class MtuBasedMerger(private val maxLength: Int) : DataMerger {
 
     /**

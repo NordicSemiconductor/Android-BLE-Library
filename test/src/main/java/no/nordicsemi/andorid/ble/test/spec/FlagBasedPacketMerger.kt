@@ -1,10 +1,12 @@
 package no.nordicsemi.andorid.ble.test.spec
 
-import no.nordicsemi.andorid.ble.test.server.data.*
+import no.nordicsemi.andorid.ble.test.spec.Flags.BEGIN
+import no.nordicsemi.andorid.ble.test.spec.Flags.CONTINUATION
+import no.nordicsemi.andorid.ble.test.spec.Flags.END
+import no.nordicsemi.andorid.ble.test.spec.Flags.FULL
 import no.nordicsemi.android.ble.data.DataMerger
 import no.nordicsemi.android.ble.data.DataStream
 import java.nio.ByteBuffer
-
 
 class FlagBasedPacketMerger : DataMerger {
 

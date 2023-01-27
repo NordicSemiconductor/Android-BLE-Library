@@ -1,11 +1,11 @@
 package no.nordicsemi.andorid.ble.test.server.tests
 
 import android.util.Log
-import no.nordicsemi.andorid.ble.test.server.data.FLAG_BASED_MERGER
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
 import no.nordicsemi.andorid.ble.test.spec.FlagBasedPacketMerger
+import no.nordicsemi.andorid.ble.test.spec.Flags.FLAG_BASED_MERGER
 import no.nordicsemi.android.ble.ValueChangedCallback
 
 class TestWriteWithFlagMerger : TaskManager {

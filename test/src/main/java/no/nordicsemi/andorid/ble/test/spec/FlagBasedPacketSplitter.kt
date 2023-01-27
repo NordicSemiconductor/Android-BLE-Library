@@ -1,9 +1,9 @@
 package no.nordicsemi.andorid.ble.test.spec
 
-import no.nordicsemi.andorid.ble.test.server.data.BEGIN
-import no.nordicsemi.andorid.ble.test.server.data.CONTINUATION
-import no.nordicsemi.andorid.ble.test.server.data.END
-import no.nordicsemi.andorid.ble.test.server.data.FULL
+import no.nordicsemi.andorid.ble.test.spec.Flags.BEGIN
+import no.nordicsemi.andorid.ble.test.spec.Flags.CONTINUATION
+import no.nordicsemi.andorid.ble.test.spec.Flags.END
+import no.nordicsemi.andorid.ble.test.spec.Flags.FULL
 import no.nordicsemi.android.ble.data.DataSplitter
 import java.nio.ByteBuffer
 

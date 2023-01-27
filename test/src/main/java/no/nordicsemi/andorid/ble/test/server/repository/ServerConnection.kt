@@ -10,11 +10,11 @@ import android.util.Log
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
-import no.nordicsemi.andorid.ble.test.server.data.DEVICE_CONNECTION
-import no.nordicsemi.andorid.ble.test.server.data.SEND_NOTIFICATION
-import no.nordicsemi.andorid.ble.test.server.data.SERVICE_DISCOVERY
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.spec.*
+import no.nordicsemi.andorid.ble.test.spec.Callbacks.SEND_NOTIFICATION
+import no.nordicsemi.andorid.ble.test.spec.Connections.DEVICE_CONNECTION
+import no.nordicsemi.andorid.ble.test.spec.Connections.SERVICE_DISCOVERY
 import no.nordicsemi.android.ble.BleManager
 import no.nordicsemi.android.ble.ConditionalWaitRequest
 import no.nordicsemi.android.ble.ValueChangedCallback

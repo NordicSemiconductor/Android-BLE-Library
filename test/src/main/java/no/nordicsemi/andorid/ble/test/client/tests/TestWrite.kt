@@ -1,10 +1,10 @@
 package no.nordicsemi.andorid.ble.test.client.tests
 
-import no.nordicsemi.andorid.ble.test.client.data.WRITE_CHARACTERISTICS
-import no.nordicsemi.andorid.ble.test.client.data.writeRequest
 import no.nordicsemi.andorid.ble.test.client.repository.ClientConnection
 import no.nordicsemi.andorid.ble.test.client.task.TaskManager
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
+import no.nordicsemi.andorid.ble.test.spec.Callbacks.WRITE_CHARACTERISTICS
+import no.nordicsemi.andorid.ble.test.spec.Requests.writeRequest
 import no.nordicsemi.android.ble.ktx.suspend
 
 class TestWrite : TaskManager {

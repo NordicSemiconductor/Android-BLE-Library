@@ -1,10 +1,10 @@
 package no.nordicsemi.andorid.ble.test.client.tests
 
-import no.nordicsemi.andorid.ble.test.client.data.ATOMIC_REQUEST_QUEUE
-import no.nordicsemi.andorid.ble.test.client.data.atomicRequestQueue
 import no.nordicsemi.andorid.ble.test.client.repository.ClientConnection
 import no.nordicsemi.andorid.ble.test.client.task.TaskManager
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
+import no.nordicsemi.andorid.ble.test.spec.Callbacks.ATOMIC_REQUEST_QUEUE
+import no.nordicsemi.andorid.ble.test.spec.Requests.atomicRequestQueue
 import no.nordicsemi.android.ble.ktx.suspend
 
 class TestBeginAtomicRequestQueue : TaskManager {

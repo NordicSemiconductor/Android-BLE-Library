@@ -11,14 +11,14 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import no.nordicsemi.andorid.ble.test.server.data.DEVICE_DISCONNECTION
-import no.nordicsemi.andorid.ble.test.server.data.SERVER_READY
-import no.nordicsemi.andorid.ble.test.server.data.START_ADVERTISING
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.server.repository.AdvertisingManager
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.repository.ServerManager
 import no.nordicsemi.andorid.ble.test.server.tasks.TaskPerformer
+import no.nordicsemi.andorid.ble.test.spec.Connections.DEVICE_DISCONNECTION
+import no.nordicsemi.andorid.ble.test.spec.Connections.SERVER_READY
+import no.nordicsemi.andorid.ble.test.spec.Connections.START_ADVERTISING
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.ble.ktx.stateAsFlow
 import no.nordicsemi.android.ble.observer.ServerObserver

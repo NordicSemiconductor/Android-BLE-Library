@@ -1,10 +1,10 @@
 package no.nordicsemi.andorid.ble.test.server.tests
 
-import no.nordicsemi.andorid.ble.test.server.data.READ_CHA
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
-import no.nordicsemi.andorid.ble.test.server.data.readRequest
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
+import no.nordicsemi.andorid.ble.test.spec.Callbacks.READ_CHARACTERISTICS
+import no.nordicsemi.andorid.ble.test.spec.Requests.readRequest
 
 class TestSetReadCharacteristics : TaskManager {
     // Start the task
@@ -14,11 +14,11 @@ class TestSetReadCharacteristics : TaskManager {
 
     // Handle task completion
     override fun onTaskCompleted(): TestCase {
-        return TestCase(READ_CHA, true)
+        return TestCase(READ_CHARACTERISTICS, true)
     }
 
     // Handle task failure
     override fun onTaskFailed(): TestCase {
-        return TestCase(READ_CHA, false)
+        return TestCase(READ_CHARACTERISTICS, false)
     }
 }

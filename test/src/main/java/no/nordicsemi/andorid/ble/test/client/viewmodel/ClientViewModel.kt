@@ -12,11 +12,11 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import no.nordicsemi.andorid.ble.test.client.data.SCANNING_FOR_SERVER
 import no.nordicsemi.andorid.ble.test.client.repository.ClientConnection
 import no.nordicsemi.andorid.ble.test.client.repository.ScanningManager
 import no.nordicsemi.andorid.ble.test.client.task.TaskPerformer
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
+import no.nordicsemi.andorid.ble.test.spec.Connections.SCANNING_FOR_SERVER
 import no.nordicsemi.android.ble.ktx.stateAsFlow
 import javax.inject.Inject
 

@@ -1,11 +1,11 @@
 package no.nordicsemi.andorid.ble.test.server.tests
 
-import no.nordicsemi.andorid.ble.test.server.data.SEND_INDICATION
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
-import no.nordicsemi.andorid.ble.test.server.data.indicationRequest
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
+import no.nordicsemi.andorid.ble.test.spec.Callbacks.SEND_INDICATION
 import no.nordicsemi.andorid.ble.test.spec.FlagBasedPacketSplitter
+import no.nordicsemi.andorid.ble.test.spec.Requests.indicationRequest
 import no.nordicsemi.android.ble.WriteRequest
 import no.nordicsemi.android.ble.ktx.suspend
 

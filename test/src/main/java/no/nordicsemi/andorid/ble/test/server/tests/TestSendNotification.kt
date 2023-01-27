@@ -1,11 +1,11 @@
 package no.nordicsemi.andorid.ble.test.server.tests
 
-import no.nordicsemi.andorid.ble.test.server.data.SEND_NOTIFICATION
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
-import no.nordicsemi.andorid.ble.test.server.data.notificationRequest
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
+import no.nordicsemi.andorid.ble.test.spec.Callbacks.SEND_NOTIFICATION
 import no.nordicsemi.andorid.ble.test.spec.HeaderBasedPacketSplitter
+import no.nordicsemi.andorid.ble.test.spec.Requests.notificationRequest
 import no.nordicsemi.android.ble.WriteRequest
 
 class TestSendNotification : TaskManager {

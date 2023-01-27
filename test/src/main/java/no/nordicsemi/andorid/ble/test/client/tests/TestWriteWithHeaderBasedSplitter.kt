@@ -2,12 +2,12 @@ package no.nordicsemi.andorid.ble.test.client.tests
 
 import android.bluetooth.BluetoothDevice
 import android.util.Log
-import no.nordicsemi.andorid.ble.test.client.data.HEADER_BASED_SPLITTER
-import no.nordicsemi.andorid.ble.test.client.data.splitterRequest
 import no.nordicsemi.andorid.ble.test.client.repository.ClientConnection
 import no.nordicsemi.andorid.ble.test.client.task.TaskManager
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
+import no.nordicsemi.andorid.ble.test.spec.Flags.HEADER_BASED_SPLITTER
 import no.nordicsemi.andorid.ble.test.spec.HeaderBasedPacketSplitter
+import no.nordicsemi.andorid.ble.test.spec.Requests.splitterRequest
 import no.nordicsemi.android.ble.WriteRequest
 import no.nordicsemi.android.ble.callback.WriteProgressCallback
 import no.nordicsemi.android.ble.ktx.suspend
