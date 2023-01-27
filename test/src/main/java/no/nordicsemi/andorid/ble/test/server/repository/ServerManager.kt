@@ -40,7 +40,7 @@ class ServerManager @Inject constructor(
                     reliableWrite()
                 ),
                 characteristic(
-                    DeviceSpecifications.Ind_CHARACTERISTIC,
+                    DeviceSpecifications.IND_CHARACTERISTIC,
                     BluetoothGattCharacteristic.PROPERTY_WRITE or
                             BluetoothGattCharacteristic.PROPERTY_INDICATE,
                     BluetoothGattCharacteristic.PERMISSION_WRITE,

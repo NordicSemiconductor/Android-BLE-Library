@@ -51,7 +51,7 @@ class ClientConnection(
         }
         gatt.getService(DeviceSpecifications.UUID_SERVICE_DEVICE)?.let { service ->
             characteristic = service.getCharacteristic(DeviceSpecifications.WRITE_CHARACTERISTIC)
-            indicationCharacteristics = service.getCharacteristic(DeviceSpecifications.Ind_CHARACTERISTIC)
+            indicationCharacteristics = service.getCharacteristic(DeviceSpecifications.IND_CHARACTERISTIC)
             reliableCharacteristics = service.getCharacteristic(DeviceSpecifications.REL_WRITE_CHARACTERISTIC)
             readCharacteristics = service.getCharacteristic(DeviceSpecifications.READ_CHARACTERISTIC)
         }
