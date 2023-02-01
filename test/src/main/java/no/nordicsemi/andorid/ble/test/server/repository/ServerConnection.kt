@@ -60,11 +60,11 @@ class ServerConnection(
     }
 
     override fun onServerReady(server: BluetoothGattServer) {
-        server.getService(DeviceSpecifications.UUID_SERVICE_DEVICE)?.let { service ->
-            serverCharacteristics = service.getCharacteristic(DeviceSpecifications.WRITE_CHARACTERISTIC)
-            indicationCharacteristics = service.getCharacteristic(DeviceSpecifications.IND_CHARACTERISTIC)
-            reliableCharacteristics = service.getCharacteristic(DeviceSpecifications.REL_WRITE_CHARACTERISTIC)
-            readCharacteristics = service.getCharacteristic(DeviceSpecifications.READ_CHARACTERISTIC)
+        server.getService(Characteristics.UUID_SERVICE_DEVICE)?.let { service ->
+            serverCharacteristics = service.getCharacteristic(Characteristics.WRITE_CHARACTERISTIC)
+            indicationCharacteristics = service.getCharacteristic(Characteristics.IND_CHARACTERISTIC)
+            reliableCharacteristics = service.getCharacteristic(Characteristics.REL_WRITE_CHARACTERISTIC)
+            readCharacteristics = service.getCharacteristic(Characteristics.READ_CHARACTERISTIC)
         }
     }
 
@@ -179,7 +179,7 @@ class ServerConnection(
      */
     fun testBeginAtomicRequestQueue(atomicRequest: ByteArray) {
         waitForWrite(serverCharacteristics).enqueue()
-        setCharacteristicValue(readCharacteristics, atomicRequest).enqueue()
+        waitForRead(readCharacteristics, atomicRequest).enqueue()
     }
 
     /**

@@ -13,9 +13,9 @@ import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.suspendCancellableCoroutine
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
+import no.nordicsemi.andorid.ble.test.spec.Characteristics
 import no.nordicsemi.andorid.ble.test.spec.Connections.CONNECTED_WITH_SERVER
 import no.nordicsemi.andorid.ble.test.spec.Connections.SERVICE_DISCOVERY
-import no.nordicsemi.andorid.ble.test.spec.DeviceSpecifications
 import no.nordicsemi.android.ble.*
 import no.nordicsemi.android.ble.ktx.suspend
 import kotlin.coroutines.resume
@@ -49,11 +49,11 @@ class ClientConnection(
         scope.launch {
             _testCase.emit(TestCase(SERVICE_DISCOVERY, true))
         }
-        gatt.getService(DeviceSpecifications.UUID_SERVICE_DEVICE)?.let { service ->
-            characteristic = service.getCharacteristic(DeviceSpecifications.WRITE_CHARACTERISTIC)
-            indicationCharacteristics = service.getCharacteristic(DeviceSpecifications.IND_CHARACTERISTIC)
-            reliableCharacteristics = service.getCharacteristic(DeviceSpecifications.REL_WRITE_CHARACTERISTIC)
-            readCharacteristics = service.getCharacteristic(DeviceSpecifications.READ_CHARACTERISTIC)
+        gatt.getService(Characteristics.UUID_SERVICE_DEVICE)?.let { service ->
+            characteristic = service.getCharacteristic(Characteristics.WRITE_CHARACTERISTIC)
+            indicationCharacteristics = service.getCharacteristic(Characteristics.IND_CHARACTERISTIC)
+            reliableCharacteristics = service.getCharacteristic(Characteristics.REL_WRITE_CHARACTERISTIC)
+            readCharacteristics = service.getCharacteristic(Characteristics.READ_CHARACTERISTIC)
         }
         return characteristic != null &&
                 indicationCharacteristics != null &&
@@ -133,7 +133,7 @@ class ClientConnection(
      */
     suspend fun testSetNotification()= suspendCancellableCoroutine { continuation ->
         setNotificationCallback(characteristic)
-            .also { continuation.resume(Unit) }
+            .with { _, _ -> continuation.resume(Unit) }
 
         continuation.invokeOnCancellation {
             removeNotificationCallback(characteristic)

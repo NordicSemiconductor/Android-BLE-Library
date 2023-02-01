@@ -5,7 +5,7 @@ import android.bluetooth.BluetoothGattService
 import android.content.Context
 import android.util.Log
 import dagger.hilt.android.qualifiers.ApplicationContext
-import no.nordicsemi.andorid.ble.test.spec.DeviceSpecifications
+import no.nordicsemi.andorid.ble.test.spec.Characteristics
 import no.nordicsemi.android.ble.BleServerManager
 import javax.inject.Inject
 
@@ -30,9 +30,9 @@ class ServerManager @Inject constructor(
     override fun initializeServer(): List<BluetoothGattService> {
         return listOf(
             service(
-                DeviceSpecifications.UUID_SERVICE_DEVICE,
+                Characteristics.UUID_SERVICE_DEVICE,
                 characteristic(
-                    DeviceSpecifications.REL_WRITE_CHARACTERISTIC,
+                    Characteristics.REL_WRITE_CHARACTERISTIC,
                     BluetoothGattCharacteristic.PROPERTY_WRITE or
                             BluetoothGattCharacteristic.PROPERTY_EXTENDED_PROPS,
                     BluetoothGattCharacteristic.PERMISSION_WRITE,
@@ -40,7 +40,7 @@ class ServerManager @Inject constructor(
                     reliableWrite()
                 ),
                 characteristic(
-                    DeviceSpecifications.IND_CHARACTERISTIC,
+                    Characteristics.IND_CHARACTERISTIC,
                     BluetoothGattCharacteristic.PROPERTY_WRITE or
                             BluetoothGattCharacteristic.PROPERTY_INDICATE,
                     BluetoothGattCharacteristic.PERMISSION_WRITE,
@@ -48,7 +48,7 @@ class ServerManager @Inject constructor(
                     description("Indication", false),
                 ),
                 characteristic(
-                    DeviceSpecifications.WRITE_CHARACTERISTIC,
+                    Characteristics.WRITE_CHARACTERISTIC,
                     BluetoothGattCharacteristic.PROPERTY_WRITE or
                             BluetoothGattCharacteristic.PROPERTY_NOTIFY,
                     BluetoothGattCharacteristic.PERMISSION_WRITE,
@@ -56,7 +56,7 @@ class ServerManager @Inject constructor(
                     description("Write and notification", false)
                 ),
                 characteristic(
-                    DeviceSpecifications.READ_CHARACTERISTIC,
+                    Characteristics.READ_CHARACTERISTIC,
                     BluetoothGattCharacteristic.PROPERTY_READ or
                             BluetoothGattCharacteristic.PROPERTY_NOTIFY,
                     BluetoothGattCharacteristic.PERMISSION_READ,
