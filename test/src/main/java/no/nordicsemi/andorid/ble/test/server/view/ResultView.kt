@@ -19,7 +19,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
-import no.nordicsemi.andorid.ble.test.client.viewmodel.Result
+import no.nordicsemi.andorid.ble.test.server.data.Result
 import no.nordicsemi.android.common.theme.NordicTheme
 
 @OptIn(ExperimentalFoundationApi::class)

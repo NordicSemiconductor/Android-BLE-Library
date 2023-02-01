@@ -4,16 +4,9 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.vector.ImageVector
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
+import no.nordicsemi.andorid.ble.test.server.data.Result
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
-
-data class Result(
-    val name: String,
-    val isPassed: Boolean,
-    val icon: ImageVector,
-    val color: Color
-)
 
 data class ClientViewState(
     val state: ConnectionState = ConnectionState.Disconnected(ConnectionState.Disconnected.Reason.UNKNOWN),
@@ -21,7 +14,7 @@ data class ClientViewState(
 ) {
     val resultList: List<Result> = getItem(testItems)
 
-    private fun getItem(a: List<TestCase>): List<Result> = a.map {
+    private fun getItem(testCaseList: List<TestCase>): List<Result> = testCaseList.map {
         val (icon, color) = if (it.isPassed) {
             Icons.Default.Check to Color.Green
         } else {

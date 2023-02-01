@@ -4,7 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.ui.graphics.Color
-import no.nordicsemi.andorid.ble.test.client.viewmodel.Result
+import no.nordicsemi.andorid.ble.test.server.data.Result
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
 
 data class ServerViewState(
@@ -13,7 +13,7 @@ data class ServerViewState(
 ) {
     val resultList: List<Result> = getItem(testItems)
 
-    private fun getItem(a: List<TestCase>): List<Result> = a.map {
+    private fun getItem(testCaseList: List<TestCase>): List<Result> = testCaseList.map {
         val (icon, color) = if (it.isPassed) {
             Icons.Default.Check to Color.Green
         } else {
