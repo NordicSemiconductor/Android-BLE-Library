@@ -108,21 +108,6 @@ class ServerConnection(
     * Write callback [BleManager.setWriteCallback]. It waits until value change in the given characteristics is observed [BleManager.waitForWrite].
     */
     fun testWriteCallback(): ValueChangedCallback {
-        waitForWrite(serverCharacteristics).enqueue()
-        return setWriteCallback(serverCharacteristics)
-    }
-
-    /**
-     * Observes the value changes on the give characteristics [BleManager.setWriteCallback].
-     */
-    fun testWriteCallbackWithFlagBasedMerger(): ValueChangedCallback {
-        return setWriteCallback(serverCharacteristics)
-    }
-
-    /**
-     * Observes the value changes on the give characteristics [BleManager.setWriteCallback].
-     */
-    fun testWriteCallbackWithHeaderBasedMerger(): ValueChangedCallback {
         return setWriteCallback(serverCharacteristics)
     }
 
@@ -178,9 +163,6 @@ class ServerConnection(
      */
     fun testReliableWriteCallback() {
         waitForWrite(reliableCharacteristics).enqueue()
-        setWriteCallback(reliableCharacteristics)
-        waitForWrite(serverCharacteristics).enqueue()
-        setWriteCallback(serverCharacteristics)
     }
 
     /**
@@ -190,7 +172,6 @@ class ServerConnection(
      */
     fun testSetReadCharacteristics(request: ByteArray) {
         setCharacteristicValue(readCharacteristics, request).enqueue()
-        waitForRead(readCharacteristics).enqueue()
     }
 
     /**
@@ -198,9 +179,7 @@ class ServerConnection(
      */
     fun testBeginAtomicRequestQueue(atomicRequest: ByteArray) {
         waitForWrite(serverCharacteristics).enqueue()
-        setWriteCallback(serverCharacteristics)
         setCharacteristicValue(readCharacteristics, atomicRequest).enqueue()
-        waitForRead(readCharacteristics).enqueue()
     }
 
     /**

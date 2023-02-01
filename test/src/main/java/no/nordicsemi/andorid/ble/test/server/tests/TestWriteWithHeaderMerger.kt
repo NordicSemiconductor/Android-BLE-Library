@@ -13,7 +13,7 @@ class TestWriteWithHeaderMerger : TaskManager {
      * efficiently merge and process the data received from the remote device.
      */
     override suspend fun start(serverConnection: ServerConnection) {
-        serverConnection.testWriteCallbackWithHeaderBasedMerger()
+        serverConnection.testWriteCallback()
             .merge(HeaderBasedPacketMerger())
     }
 

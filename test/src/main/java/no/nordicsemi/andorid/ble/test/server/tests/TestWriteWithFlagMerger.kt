@@ -17,7 +17,7 @@ class TestWriteWithFlagMerger : TaskManager {
      * It also utilizes the [ValueChangedCallback.with] to monitor the size of the data and log respective messages accordingly.
      */
     override suspend fun start(serverConnection: ServerConnection) {
-        serverConnection.testWriteCallbackWithFlagBasedMerger()
+        serverConnection.testWriteCallback()
             .merge(FlagBasedPacketMerger())
             .with { _, data ->
                 if (data.size() < 2) Log.i(TAG, "very small data of size ${data.size()}")
