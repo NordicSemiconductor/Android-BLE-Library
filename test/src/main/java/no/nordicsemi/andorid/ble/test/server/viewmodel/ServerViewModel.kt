@@ -34,7 +34,6 @@ class ServerViewModel @Inject constructor(
     private val TAG = ServerViewModel::class.java.simpleName
     private val context = application.applicationContext
     private val client: MutableStateFlow<List<ServerConnection>> = MutableStateFlow(emptyList())
-
     private val _serverViewState: MutableStateFlow<ServerViewState> =
         MutableStateFlow(ServerViewState())
     val serverViewState = _serverViewState.asStateFlow()
@@ -71,9 +70,11 @@ class ServerViewModel @Inject constructor(
                                 // Start the testing tasks after server connection
                                 val taskPerformer = TaskPerformer(this@apply)
                                 taskPerformer.startTasks()
-                                taskPerformer.testCases.onEach {
-                                    it.forEach { tc -> updateTestList(tc) }
-                                }
+                                taskPerformer.testCases
+                                    .onEach {
+                                        it.forEach { tc -> updateTestList(tc) }
+                                    }
+                                    .launchIn(viewModelScope)
                             }
                     }
 
