@@ -55,9 +55,7 @@ class ServerViewModel @Inject constructor(
 
         serverManager.setServerObserver(object : ServerObserver {
             override fun onServerReady() {
-                _serverViewState.value = _serverViewState.value.copy(
-                    testItems = updateTestList(TestCase(SERVER_READY, true))
-                )
+                updateTestList(TestCase(SERVER_READY, true))
             }
 
             override fun onDeviceConnectedToServer(device: BluetoothDevice) {
@@ -146,26 +144,14 @@ class ServerViewModel @Inject constructor(
      * @param testCase a TestCase object to be added or updated in the testItems list.
      * @return a list of TestCase objects.
      */
-    private fun updateTestList(testCase: TestCase): List<TestCase> {
-        val updatedTestCaseList = _serverViewState.value.testItems.toMutableList()
-        _serverViewState.value.testItems.find { it.testName == testCase.testName }
-            ?.let {
-                val index = _serverViewState.value.testItems.indexOf(it)
-                if (it.isPassed != testCase.isPassed)
-                    updatedTestCaseList[index] = TestCase(it.testName, testCase.isPassed)
-                _serverViewState.value = _serverViewState.value.copy(
-                    testItems = updatedTestCaseList
-                )
-            }
-            ?: run {
-                _serverViewState.value = _serverViewState.value.copy(
-                    testItems = _serverViewState.value.testItems + TestCase(
-                        testCase.testName,
-                        testCase.isPassed
-                    )
-                )
-            }
-        return _serverViewState.value.testItems
+    private fun updateTestList(testCase: TestCase){
+        val updatedTestCaseList = _serverViewState.value.testItems.map { tc ->
+            if (tc.testName == testCase.testName) TestCase(tc.testName, testCase.isPassed)
+            else tc
+        }
+        _serverViewState.value = _serverViewState.value.copy(
+            testItems = if (updatedTestCaseList.any { it.testName == testCase.testName }) updatedTestCaseList
+            else _serverViewState.value.testItems + testCase
+        )
     }
-
 }

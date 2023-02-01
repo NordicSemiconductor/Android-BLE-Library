@@ -87,26 +87,15 @@ class ClientViewModel @Inject constructor(
      * @param testCase a TestCase object to be added or updated in the testItems list.
      * @return a list of TestCase objects.
      */
-    @SuppressLint("SuspiciousIndentation")
-    private fun updateTestList(testCase: TestCase): List<TestCase> {
-        val updatedTestCaseList = _clientViewState.value.testItems.toMutableList()
-        _clientViewState.value.testItems.find { it.testName == testCase.testName }
-            ?.let {
-                val index = _clientViewState.value.testItems.indexOf(it)
-                if(it.isPassed != testCase.isPassed)
-                    updatedTestCaseList[index] = TestCase(it.testName, testCase.isPassed)
-                    _clientViewState.value = _clientViewState.value.copy(
-                        testItems = updatedTestCaseList
-                    )
-            }
-            ?: run {
-                _clientViewState.value = _clientViewState.value.copy(
-                    testItems = _clientViewState.value.testItems + TestCase(
-                        testCase.testName,
-                        testCase.isPassed
-                    )
-                )
-            }
-        return _clientViewState.value.testItems
+    private fun updateTestList(testCase: TestCase) {
+        val updatedTestCaseList = _clientViewState.value.testItems.map { tc ->
+            if (tc.testName == testCase.testName) TestCase(tc.testName, testCase.isPassed)
+            else tc
+        }
+        _clientViewState.value = _clientViewState.value.copy(
+            testItems = if (updatedTestCaseList.any { it.testName == testCase.testName }) updatedTestCaseList
+            else _clientViewState.value.testItems + testCase
+        )
     }
+
 }
