@@ -1,12 +1,13 @@
 package no.nordicsemi.andorid.ble.test.client.viewmodel
 
 import android.annotation.SuppressLint
-import android.app.Application
+import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
-import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -25,11 +26,9 @@ import javax.inject.Inject
 @HiltViewModel
 class ClientViewModel @Inject constructor(
     private val scanningManager: ScanningManager,
-    application: Application
-) : AndroidViewModel(application) {
-    private val TAG = ClientViewModel::class.java.simpleName
+    @ApplicationContext private val context: Context
+) : ViewModel() {
     private var clientConnection: ClientConnection? = null
-    private val context = application.applicationContext
 
     private val _clientViewState: MutableStateFlow<ClientViewState> = MutableStateFlow(ClientViewState())
     val clientViewState = _clientViewState.asStateFlow()
