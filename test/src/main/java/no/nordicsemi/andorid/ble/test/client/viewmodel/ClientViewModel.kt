@@ -76,12 +76,11 @@ class ClientViewModel @Inject constructor(
 
     /**
      * This function takes a TestCase object as input and updates a list of TestCase objects.
-     * If an object with the same testName as the input testCase exists in the list,
-     * it checks if the `isPassed` field of the matched object is different from the `isPassed`
-     * field of the input `testCase`. If it is different, it updates the `isPassed` field of the
-     * matched object and updates the list. If no object with the same `testName` is found in the list,
+     * If an object with the same testName exists in the list, it checks if the `isPassed` field of
+     * the matched object is different from the `isPassed` field of the input `testCase`.
+     * If it is different, it updates the `isPassed` field of the
+     * matched object. If no object with the same `testName` is found in the list,
      * the input `testCase` object is added to the list.
-     * Finally, the updated list of TestCase objects is returned.
      *
      * @param testCase a TestCase object to be added or updated in the testItems list.
      * @return a list of TestCase objects.
