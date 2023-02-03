@@ -16,14 +16,15 @@ import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.spec.Characteristics
 import no.nordicsemi.andorid.ble.test.spec.Connections.CONNECTED_WITH_SERVER
 import no.nordicsemi.andorid.ble.test.spec.Connections.SERVICE_DISCOVERY
+import no.nordicsemi.andorid.ble.test.spec.Requests
 import no.nordicsemi.android.ble.*
 import no.nordicsemi.android.ble.ktx.suspend
+import javax.inject.Inject
 import kotlin.coroutines.resume
 
-class ClientConnection(
+class ClientConnection @Inject constructor(
     context: Context,
     private val scope: CoroutineScope,
-    private val device: BluetoothDevice,
 ) : BleManager(context) {
     private val TAG = ClientConnection::class.java.simpleName
 
@@ -178,7 +179,7 @@ class ClientConnection(
     /**
      * Connect with server.
      */
-    suspend fun connect() {
+    suspend fun connectDevice(device: BluetoothDevice) {
         try {
             connect(device)
                 .retry(4, 300)

@@ -20,12 +20,12 @@ import no.nordicsemi.android.ble.ConditionalWaitRequest
 import no.nordicsemi.android.ble.ValueChangedCallback
 import no.nordicsemi.android.ble.WriteRequest
 import no.nordicsemi.android.ble.ktx.suspend
+import javax.inject.Inject
 
 @SuppressLint("MissingPermission")
-class ServerConnection(
+class ServerConnection @Inject constructor(
     context: Context,
     private val scope: CoroutineScope,
-    private val device: BluetoothDevice,
 ) : BleManager(context) {
     private val TAG = ServerConnection::class.java.simpleName
 
@@ -90,7 +90,7 @@ class ServerConnection(
     /**
      * Connects to the client.
      */
-    suspend fun connect() {
+    suspend fun connectDevice(device: BluetoothDevice) {
         try {
             connect(device)
                 .retry(4, 300)

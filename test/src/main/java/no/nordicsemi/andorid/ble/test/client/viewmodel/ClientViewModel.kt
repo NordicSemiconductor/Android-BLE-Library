@@ -42,7 +42,7 @@ class ClientViewModel @Inject constructor(
                 updateTestList(TestCase(SCANNING_FOR_SERVER, false))
                 throw Exception("Could not start scanning.", exception)
             }
-            ClientConnection(context, viewModelScope, device)
+            ClientConnection(context, viewModelScope)
                 .apply {
                     stateAsFlow()
                         .onEach { _clientViewState.value = _clientViewState.value.copy(state = it) }
@@ -54,7 +54,7 @@ class ClientViewModel @Inject constructor(
                         .launchIn(viewModelScope)
                 }
                 .apply {
-                    connect()
+                    connectDevice(device)
                     // Start the testing tasks after client connection
                     val taskPerformer = TaskPerformer(this)
                     taskPerformer.startTasks()
