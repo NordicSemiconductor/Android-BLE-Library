@@ -10,7 +10,7 @@ import android.os.ParcelUuid
 import android.util.Log
 import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
-import no.nordicsemi.andorid.ble.test.spec.DeviceSpecifications.Companion.UUID_SERVICE_DEVICE
+import no.nordicsemi.andorid.ble.test.spec.Characteristics.UUID_SERVICE_DEVICE
 import javax.inject.Inject
 import kotlin.coroutines.resumeWithException
 

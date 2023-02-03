@@ -15,7 +15,7 @@ class TestWriteWithMtuMerger : TaskManager {
      * Additionally, the [ValueChangedCallback.filter] is employed to further refine the data after merging, discarding any that do not meet the specified requirements.
      */
     override suspend fun start(serverConnection: ServerConnection) {
-        serverConnection.testWriteCallbackWithMTUMerger()
+        serverConnection.testWriteCallback()
             .filterPacket { data -> data != null && data.size > 2 }
             .merge(MtuBasedMerger(maxLength = serverConnection.requestMaxLength()))
             .filter { data -> data != null && data.size > 1020 }

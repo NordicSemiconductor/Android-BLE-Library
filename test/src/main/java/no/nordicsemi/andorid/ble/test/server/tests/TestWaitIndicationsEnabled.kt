@@ -4,12 +4,12 @@ import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
 import no.nordicsemi.andorid.ble.test.spec.Callbacks.WAIT_UNTIL_INDICATION_ENABLED
-import no.nordicsemi.android.ble.ktx.suspend
+import no.nordicsemi.andorid.ble.test.spec.Requests
 
 class TestWaitIndicationsEnabled : TaskManager {
     // Start the task
     override suspend fun start(serverConnection: ServerConnection) {
-        serverConnection.testWaiUntilIndicationEnabled().suspend()
+        serverConnection.testWaiUntilIndicationEnabled(Requests.readRequestInTrigger)
     }
 
     // Handle task completion

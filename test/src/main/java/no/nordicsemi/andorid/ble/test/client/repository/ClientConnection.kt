@@ -11,16 +11,13 @@ import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
 import kotlinx.coroutines.launch
-import kotlinx.coroutines.suspendCancellableCoroutine
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.spec.Characteristics
 import no.nordicsemi.andorid.ble.test.spec.Connections.CONNECTED_WITH_SERVER
 import no.nordicsemi.andorid.ble.test.spec.Connections.SERVICE_DISCOVERY
-import no.nordicsemi.andorid.ble.test.spec.Requests
 import no.nordicsemi.android.ble.*
 import no.nordicsemi.android.ble.ktx.suspend
 import javax.inject.Inject
-import kotlin.coroutines.resume
 
 class ClientConnection @Inject constructor(
     context: Context,
@@ -86,29 +83,14 @@ class ClientConnection @Inject constructor(
      * Begin Reliable Write Request [BleManager.beginReliableWrite].
      * It will validate all write operations and will cancel the Reliable Write process if the returned
      * data does not match the data supplied. When all enqueued requests have been finished, the reliable write is automatically executed.
-     * Two write requests [BleManager.setWriteCallback] have been added in this procedure and
+     * Two requests [BleManager.setWriteCallback], [BleManager.readCharacteristic] have been added and
      * when both requests are enqueued successfully, reliable write process will start automatically.
      */
-    fun testReliableWrite(
-        request: List<ByteArray>,
-    ) {
+    fun testReliableWrite(reliableRequest: ByteArray) {
         beginReliableWrite()
-            .add(writeCharacteristic(reliableCharacteristics, request[0], WRITE_TYPE_DEFAULT))
-            .add(writeCharacteristic(characteristic, request[1], WRITE_TYPE_DEFAULT))
+            .add(writeCharacteristic(reliableCharacteristics, reliableRequest, WRITE_TYPE_DEFAULT))
+            .add(readCharacteristic(readCharacteristics))
             .enqueue()
-    }
-
-    /**
-     * Sets an Indication Callback [BleManager.setIndicationCallback] to the given characteristics.
-     */
-
-    suspend fun testSetIndication() = suspendCancellableCoroutine { continuation ->
-        setIndicationCallback(indicationCharacteristics)
-            .also { continuation.resume(Unit) }
-
-        continuation.invokeOnCancellation {
-            removeIndicationCallback(indicationCharacteristics)
-        }
     }
 
     /**
@@ -121,24 +103,14 @@ class ClientConnection @Inject constructor(
 
     /**
      *  Wait for Indication [BleManager.waitForIndication]. It waits until the indication is sent
-     *  from the remote device. Once indication is received, it triggers [WaitForReadRequest.trigger] the
+     *  from the remote device. Once indication is received, then [WaitForReadRequest.then] it will
      *  disable indication [BleManager.disableIndications] request for the given characteristics.
+     *  The trigger [WaitForReadRequest.trigger] will sends the read request to the given characteristics.
      */
     fun testWaitForIndication(): WaitForValueChangedRequest {
         return waitForIndication(indicationCharacteristics)
-            .trigger(disableIndications(indicationCharacteristics))
-    }
-
-    /**
-     * Sets a Notification Callback [BleManager.setNotificationCallback] to the given characteristics.
-     */
-    suspend fun testSetNotification()= suspendCancellableCoroutine { continuation ->
-        setNotificationCallback(characteristic)
-            .with { _, _ -> continuation.resume(Unit) }
-
-        continuation.invokeOnCancellation {
-            removeNotificationCallback(characteristic)
-        }
+            .then { disableIndications(indicationCharacteristics) }
+            .trigger(readCharacteristic(readCharacteristics))
     }
 
     /**
@@ -150,12 +122,12 @@ class ClientConnection @Inject constructor(
 
     /**
      *  Wait for Notification [BleManager.waitForNotification]. It waits until the notification is sent
-     *  from the remote device. Once notification is received, it triggers [WaitForReadRequest.trigger] the
-     *  disable notification for the given characteristics [BleManager.disableNotifications].
+     *  from the remote device. Once notification is received, then [WaitForReadRequest.then] it will
+     *  disable notification [BleManager.disableNotifications] request for the given characteristics.
      */
     fun testWaitForNotification(): WaitForValueChangedRequest {
         return waitForNotification(characteristic)
-            .trigger(disableNotifications(characteristic))
+            .then { disableNotifications(characteristic)}
     }
 
     /**
@@ -167,7 +139,7 @@ class ClientConnection @Inject constructor(
 
     /**
      * It initiates the atomic request queue [BleManager.beginAtomicRequestQueue] and it will execute the requests in the queue in the order.
-     * The method has two requests and they will execute together. Thus, the method is particularly useful
+     * The method has two requests and they will execute together. The method is particularly useful
      * when the user wants to execute multiple requests simultaneously and ensure they are executed together.
      */
     fun testBeginAtomicRequestQueue(request: ByteArray): RequestQueue {

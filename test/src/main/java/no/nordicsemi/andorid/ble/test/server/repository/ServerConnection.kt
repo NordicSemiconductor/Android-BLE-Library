@@ -16,7 +16,6 @@ import no.nordicsemi.andorid.ble.test.spec.Callbacks.SEND_NOTIFICATION
 import no.nordicsemi.andorid.ble.test.spec.Connections.DEVICE_CONNECTION
 import no.nordicsemi.andorid.ble.test.spec.Connections.SERVICE_DISCOVERY
 import no.nordicsemi.android.ble.BleManager
-import no.nordicsemi.android.ble.ConditionalWaitRequest
 import no.nordicsemi.android.ble.ValueChangedCallback
 import no.nordicsemi.android.ble.WriteRequest
 import no.nordicsemi.android.ble.ktx.suspend
@@ -105,7 +104,7 @@ class ServerConnection @Inject constructor(
     }
 
    /**
-    * Write callback [BleManager.setWriteCallback]. It waits until value change in the given characteristics is observed [BleManager.waitForWrite].
+    * Write callback [BleManager.setWriteCallback].
     */
     fun testWriteCallback(): ValueChangedCallback {
         return setWriteCallback(serverCharacteristics)
@@ -114,8 +113,9 @@ class ServerConnection @Inject constructor(
    /**
     * Waits until the Indication is enabled by the remote device [BleManager.waitUntilIndicationsEnabled].
     */
-    fun testWaiUntilIndicationEnabled(): ConditionalWaitRequest<BluetoothGattCharacteristic> {
-        return waitUntilIndicationsEnabled(indicationCharacteristics)
+    fun testWaiUntilIndicationEnabled(readRequestInTrigger: ByteArray) {
+       waitUntilIndicationsEnabled(indicationCharacteristics).enqueue()
+       setCharacteristicValue(readCharacteristics, readRequestInTrigger).enqueue()
     }
 
     /**
@@ -151,24 +151,16 @@ class ServerConnection @Inject constructor(
          return sendNotification(serverCharacteristics, request)
     }
 
-   /**
-    * Sets write callback [BleManager.setWriteCallback].
-    */
-    fun testWriteCallbackWithMTUMerger(): ValueChangedCallback {
-        return setWriteCallback(serverCharacteristics)
-    }
-
     /**
      * Handles values changes in the [BleManager.beginReliableWrite] procedure initiated by the remote device.
      */
-    fun testReliableWriteCallback() {
-        waitForWrite(reliableCharacteristics).enqueue()
+    fun testReliableWriteCallback(secondReliableRequest: ByteArray) {
+        setWriteCallback(reliableCharacteristics)
+        waitForRead(readCharacteristics, secondReliableRequest).enqueue()
     }
 
     /**
      * Facilitates the transfer of data by setting the specified data to the readable characteristic using [BleManager.setCharacteristicValue].
-     * To ensure that the remote device has received the read data, it employs [BleManager.waitForRead],
-     * which waits for the remote device to receive the readable data before proceeding.
      */
     fun testSetReadCharacteristics(request: ByteArray) {
         setCharacteristicValue(readCharacteristics, request).enqueue()

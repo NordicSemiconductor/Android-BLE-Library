@@ -4,11 +4,12 @@ import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
 import no.nordicsemi.andorid.ble.test.spec.Callbacks.RELIABLE_WRITE
+import no.nordicsemi.andorid.ble.test.spec.Requests
 
 class TestReliableWrite : TaskManager {
     // Start the task
     override suspend fun start(serverConnection: ServerConnection) {
-        serverConnection.testReliableWriteCallback()
+        serverConnection.testReliableWriteCallback(Requests.secondReliableRequest)
     }
 
     // Handle task completion

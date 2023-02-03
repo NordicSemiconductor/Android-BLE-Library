@@ -22,6 +22,7 @@ object  Requests {
     val notificationRequest = "This is Notification request".toByteArray()
     val sendNotificationInThenCallback = "This is Notification request send in the then callback".toByteArray()
     val readRequest = "This is read request".toByteArray()
+    val readRequestInTrigger =  "This is read request initiated in the trigger callback".toByteArray()
 }
 
 object Flags {
@@ -45,13 +46,11 @@ object Callbacks {
     const val ATOMIC_REQUEST_QUEUE = "Begin Atomic Request Queue"
     const val WRITE_CALLBACK = "Write Callback"
 
-    const val SET_INDICATION = "Set Indication Callback"
     const val ENABLE_INDICATION = "Enable Indication"
     const val WAIT_FOR_INDICATION_CALLBACK = "Wait for Indication callback"
     const val WAIT_UNTIL_INDICATION_ENABLED = "Wait Until Indication Enabled"
     const val SEND_INDICATION = "Send Indication"
 
-    const val SET_NOTIFICATION = "Set Notification Callback"
     const val ENABLE_NOTIFICATION = "Enable Notification"
     const val WAIT_FOR_NOTIFICATION_CALLBACK = "Wait for Notification callback"
     const val WAIT_UNTIL_NOTIFICATION_ENABLED = "Wait Until Notification Enabled"
