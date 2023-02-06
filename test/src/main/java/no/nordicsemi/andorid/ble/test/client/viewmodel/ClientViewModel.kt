@@ -1,13 +1,11 @@
 package no.nordicsemi.andorid.ble.test.client.viewmodel
 
 import android.annotation.SuppressLint
-import android.content.Context
 import android.os.Build
 import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -26,10 +24,9 @@ import javax.inject.Inject
 @HiltViewModel
 class ClientViewModel @Inject constructor(
     private val scanningManager: ScanningManager,
-    @ApplicationContext private val context: Context
+    private val clientConnection: ClientConnection,
+    private val taskPerformer: TaskPerformer,
 ) : ViewModel() {
-    private var clientConnection: ClientConnection? = null
-
     private val _clientViewState: MutableStateFlow<ClientViewState> = MutableStateFlow(ClientViewState())
     val clientViewState = _clientViewState.asStateFlow()
 
@@ -42,7 +39,7 @@ class ClientViewModel @Inject constructor(
                 updateTestList(TestCase(SCANNING_FOR_SERVER, false))
                 throw Exception("Could not start scanning.", exception)
             }
-            ClientConnection(context, viewModelScope)
+            clientConnection
                 .apply {
                     stateAsFlow()
                         .onEach { _clientViewState.value = _clientViewState.value.copy(state = it) }
@@ -55,8 +52,7 @@ class ClientViewModel @Inject constructor(
                 }
                 .apply {
                     connectDevice(device)
-                    // Start the testing tasks after client connection
-                    val taskPerformer = TaskPerformer(this)
+                    // Start testing tasks after client connection
                     taskPerformer.startTasks()
                     taskPerformer.testCases
                         .onEach {
@@ -64,14 +60,12 @@ class ClientViewModel @Inject constructor(
                         }
                         .launchIn(viewModelScope)
                 }
-                .apply { clientConnection = this }
         }
     }
 
     override fun onCleared() {
         super.onCleared()
-        clientConnection?.release()
-        clientConnection = null
+        clientConnection.release()
     }
 
     /**

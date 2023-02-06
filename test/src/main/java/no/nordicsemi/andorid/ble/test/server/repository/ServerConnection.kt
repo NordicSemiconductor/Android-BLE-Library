@@ -7,6 +7,8 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattServer
 import android.content.Context
 import android.util.Log
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.*
 import kotlinx.coroutines.launch
@@ -21,9 +23,10 @@ import no.nordicsemi.android.ble.WriteRequest
 import no.nordicsemi.android.ble.ktx.suspend
 import javax.inject.Inject
 
+@ViewModelScoped
 @SuppressLint("MissingPermission")
 class ServerConnection @Inject constructor(
-    context: Context,
+    @ApplicationContext context: Context,
     private val scope: CoroutineScope,
 ) : BleManager(context) {
     private val TAG = ServerConnection::class.java.simpleName

@@ -1,22 +1,26 @@
 package no.nordicsemi.andorid.ble.test.client.task
 
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.flow.MutableStateFlow
-import no.nordicsemi.andorid.ble.test.client.repository.ClientConnection
+import kotlinx.coroutines.flow.asStateFlow
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
+import javax.inject.Inject
 
-class TaskPerformer(
-    private val clientConnection: ClientConnection
+@ViewModelScoped
+class TaskPerformer @Inject constructor(
+    clientTask: ClientTask,
 ) {
-    val testCases = MutableStateFlow<List<TestCase>>(emptyList())
-    private val tasks = Tasks().tasks
+    private val _testCases = MutableStateFlow<List<TestCase>>(emptyList())
+    val testCases = _testCases.asStateFlow()
+    private val tasks = clientTask.tasks
 
     suspend fun startTasks() {
         tasks.forEach {
             try {
-                it.start(clientConnection)
-                testCases.value = testCases.value + listOf(it.onTaskCompleted())
+                it.start()
+                _testCases.value = _testCases.value + listOf(TestCase(it.taskName(), true))
             } catch (e: Exception) {
-                testCases.value = testCases.value + listOf(it.onTaskFailed())
+                _testCases.value = _testCases.value + listOf(TestCase(it.taskName(), false))
             }
         }
     }

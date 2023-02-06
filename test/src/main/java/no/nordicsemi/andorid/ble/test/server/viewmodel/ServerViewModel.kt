@@ -2,11 +2,9 @@ package no.nordicsemi.andorid.ble.test.server.viewmodel
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
-import android.content.Context
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
-import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
@@ -30,7 +28,8 @@ import javax.inject.Inject
 class ServerViewModel @Inject constructor(
     private val advertisingManager: AdvertisingManager,
     private val serverManager: ServerManager,
-    @ApplicationContext private val context: Context
+    private val serverConnection: ServerConnection,
+    private val taskPerformer: TaskPerformer,
 ) : ViewModel() {
     private val client: MutableStateFlow<List<ServerConnection>> = MutableStateFlow(emptyList())
     private val _serverViewState: MutableStateFlow<ServerViewState> =
@@ -58,14 +57,13 @@ class ServerViewModel @Inject constructor(
             }
 
             override fun onDeviceConnectedToServer(device: BluetoothDevice) {
-                ServerConnection(context, viewModelScope)
+                serverConnection
                     .apply {
                         useServer(serverManager)
                         viewModelScope
                             .launch {
                                 connectDevice(device)
                                 // Start the testing tasks after server connection
-                                val taskPerformer = TaskPerformer(this@apply)
                                 taskPerformer.startTasks()
                                 taskPerformer.testCases
                                     .onEach {

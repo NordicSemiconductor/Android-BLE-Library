@@ -1,26 +1,20 @@
 package no.nordicsemi.andorid.ble.test.client.tests
 
 import no.nordicsemi.andorid.ble.test.client.repository.ClientConnection
-import no.nordicsemi.andorid.ble.test.client.task.TaskManager
-import no.nordicsemi.andorid.ble.test.server.data.TestCase
+import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
 import no.nordicsemi.andorid.ble.test.spec.Callbacks.RELIABLE_WRITE
 import no.nordicsemi.andorid.ble.test.spec.Requests
 
-class TestReliableWrite : TaskManager {
+class TestReliableWrite(
+    private val clientConnection: ClientConnection
+) : TaskManager {
     // Start the task
-    override suspend fun start(
-        clientConnection: ClientConnection
-    ) {
+    override suspend fun start() {
         clientConnection.testReliableWrite(Requests.reliableRequest)
     }
 
-    // Handle task completion
-    override fun onTaskCompleted(): TestCase {
-        return TestCase(RELIABLE_WRITE, true)
-    }
-
-    // Handle task failure
-    override fun onTaskFailed(): TestCase {
-        return TestCase(RELIABLE_WRITE, false)
+    // Return task name
+    override fun taskName(): String {
+        return RELIABLE_WRITE
     }
 }

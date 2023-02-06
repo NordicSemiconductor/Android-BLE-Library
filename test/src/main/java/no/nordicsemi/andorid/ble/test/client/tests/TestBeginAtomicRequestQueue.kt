@@ -1,29 +1,24 @@
 package no.nordicsemi.andorid.ble.test.client.tests
 
 import no.nordicsemi.andorid.ble.test.client.repository.ClientConnection
-import no.nordicsemi.andorid.ble.test.client.task.TaskManager
-import no.nordicsemi.andorid.ble.test.server.data.TestCase
+import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
 import no.nordicsemi.andorid.ble.test.spec.Callbacks.ATOMIC_REQUEST_QUEUE
 import no.nordicsemi.andorid.ble.test.spec.Requests.atomicRequestQueue
 import no.nordicsemi.android.ble.ktx.suspend
 
-class TestBeginAtomicRequestQueue : TaskManager {
+class TestBeginAtomicRequestQueue(
+    private val clientConnection: ClientConnection
+) : TaskManager {
 
     // Start the task
-    override suspend fun start(
-        clientConnection: ClientConnection
-    ) {
+    override suspend fun start() {
         clientConnection.testBeginAtomicRequestQueue(atomicRequestQueue)
             .suspend()
     }
 
-    // Handle task completion
-    override fun onTaskCompleted(): TestCase {
-        return TestCase(ATOMIC_REQUEST_QUEUE, true)
+    // Return task name
+    override fun taskName(): String {
+        return ATOMIC_REQUEST_QUEUE
     }
 
-    // Handle task failure
-    override fun onTaskFailed(): TestCase {
-        return TestCase(ATOMIC_REQUEST_QUEUE, false)
-    }
 }

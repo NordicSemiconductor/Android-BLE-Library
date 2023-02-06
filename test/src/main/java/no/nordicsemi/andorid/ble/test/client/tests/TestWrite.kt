@@ -1,28 +1,22 @@
 package no.nordicsemi.andorid.ble.test.client.tests
 
 import no.nordicsemi.andorid.ble.test.client.repository.ClientConnection
-import no.nordicsemi.andorid.ble.test.client.task.TaskManager
-import no.nordicsemi.andorid.ble.test.server.data.TestCase
+import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
 import no.nordicsemi.andorid.ble.test.spec.Callbacks.WRITE_CHARACTERISTICS
 import no.nordicsemi.andorid.ble.test.spec.Requests.writeRequest
 import no.nordicsemi.android.ble.ktx.suspend
 
-class TestWrite : TaskManager {
+class TestWrite(
+    private val clientConnection: ClientConnection
+) : TaskManager {
     // Start the task
-    override suspend fun start(
-        clientConnection: ClientConnection
-    ) {
+    override suspend fun start() {
         clientConnection.testWrite(writeRequest)
             .suspend()
     }
 
-    // Handle task completion
-    override fun onTaskCompleted(): TestCase {
-        return TestCase(WRITE_CHARACTERISTICS, true)
-    }
-
-    // Handle task failure
-    override fun onTaskFailed(): TestCase {
-        return TestCase(WRITE_CHARACTERISTICS, false)
+    // Return task name
+    override fun taskName(): String {
+        return WRITE_CHARACTERISTICS
     }
 }

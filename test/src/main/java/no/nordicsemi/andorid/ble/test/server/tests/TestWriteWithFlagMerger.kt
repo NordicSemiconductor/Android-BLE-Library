@@ -1,14 +1,15 @@
 package no.nordicsemi.andorid.ble.test.server.tests
 
 import android.util.Log
-import no.nordicsemi.andorid.ble.test.server.data.TestCase
-import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
+import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.spec.FlagBasedPacketMerger
 import no.nordicsemi.andorid.ble.test.spec.Flags.FLAG_BASED_MERGER
 import no.nordicsemi.android.ble.ValueChangedCallback
 
-class TestWriteWithFlagMerger : TaskManager {
+class TestWriteWithFlagMerger(
+    private val serverConnection: ServerConnection,
+) : TaskManager {
     private val TAG = "WithCallBack"
 
     /**
@@ -16,7 +17,7 @@ class TestWriteWithFlagMerger : TaskManager {
      * efficiently merge and process the data sent from the remote device.
      * It also utilizes the [ValueChangedCallback.with] to monitor the size of the data and log respective messages accordingly.
      */
-    override suspend fun start(serverConnection: ServerConnection) {
+    override suspend fun start() {
         serverConnection.testWriteCallback()
             .merge(FlagBasedPacketMerger())
             .with { _, data ->
@@ -25,13 +26,7 @@ class TestWriteWithFlagMerger : TaskManager {
             }
     }
 
-    // Handle task completion
-    override fun onTaskCompleted(): TestCase {
-        return TestCase(FLAG_BASED_MERGER, true)
-    }
-
-    // Handle task failure
-    override fun onTaskFailed(): TestCase {
-        return TestCase(FLAG_BASED_MERGER, false)
+    override fun taskName(): String {
+        return FLAG_BASED_MERGER
     }
 }

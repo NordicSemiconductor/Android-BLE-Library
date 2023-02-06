@@ -1,24 +1,19 @@
 package no.nordicsemi.andorid.ble.test.server.tests
 
-import no.nordicsemi.andorid.ble.test.server.data.TestCase
-import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
+import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.spec.Callbacks.READ_CHARACTERISTICS
 import no.nordicsemi.andorid.ble.test.spec.Requests.readRequest
 
-class TestSetReadCharacteristics : TaskManager {
+class TestSetReadCharacteristics(
+    private val serverConnection: ServerConnection,
+) : TaskManager {
     // Start the task
-    override suspend fun start(serverConnection: ServerConnection) {
+    override suspend fun start() {
         serverConnection.testSetReadCharacteristics(readRequest)
     }
 
-    // Handle task completion
-    override fun onTaskCompleted(): TestCase {
-        return TestCase(READ_CHARACTERISTICS, true)
-    }
-
-    // Handle task failure
-    override fun onTaskFailed(): TestCase {
-        return TestCase(READ_CHARACTERISTICS, false)
+    override fun taskName(): String {
+        return READ_CHARACTERISTICS
     }
 }
