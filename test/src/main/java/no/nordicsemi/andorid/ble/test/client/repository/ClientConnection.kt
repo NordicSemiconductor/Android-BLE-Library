@@ -7,6 +7,8 @@ import android.bluetooth.BluetoothGattCharacteristic
 import android.bluetooth.BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT
 import android.content.Context
 import android.util.Log
+import dagger.hilt.android.qualifiers.ApplicationContext
+import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.flow.MutableSharedFlow
 import kotlinx.coroutines.flow.asSharedFlow
@@ -19,8 +21,9 @@ import no.nordicsemi.android.ble.*
 import no.nordicsemi.android.ble.ktx.suspend
 import javax.inject.Inject
 
+@ViewModelScoped
 class ClientConnection @Inject constructor(
-    context: Context,
+    @ApplicationContext context: Context,
     private val scope: CoroutineScope,
 ) : BleManager(context) {
     private val TAG = ClientConnection::class.java.simpleName
