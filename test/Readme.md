@@ -45,7 +45,7 @@ Similarly, different value changed callbacks such as with, filter, filterPacket,
 
 ## Requirements
 The application depends on the Android BLE Library. 
-* It needs two Android 4.3 or newer are required in which one acts as a server and another as a client. 
+* It requires two Android 4.3 or newer devices, one acting as a server and the other as a client. 
 ### Required Permissions
 On Android 6 - 11, the app requests for Location Permission and Location services 
 to provide accurate Bluetooth LE scan and advertisement results.
