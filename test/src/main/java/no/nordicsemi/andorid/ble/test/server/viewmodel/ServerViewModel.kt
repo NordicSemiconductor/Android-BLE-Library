@@ -130,24 +130,18 @@ class ServerViewModel @Inject constructor(
     }
 
     /**
-     * This function takes a TestCase object as input and updates a list of TestCase objects.
-     * If an object with the same testName exists in the list,  it checks if the `isPassed` field of
-     * the matched object is different from the `isPassed` field of the input `testCase`.
-     * If it is different, it updates the `isPassed` field of the
-     * matched object. If no object with the same `testName` is found in the list,
-     * the input `testCase` object is added to the list.
+     * It accepts as input a TestCase object and updates a list of TestCase objects.
+     * The list of TestCase objects is first converted into a HashMap, with each TestCase being mapped to its testName.
+     * The required TestCase is then changed in the map based on whether or not the item exists in the map.
+     * The map is converted back into a list of TestCase objects, which are then set as the _serverViewState's new testItems.
      *
      * @param testCase a TestCase object to be added or updated in the testItems list.
-     * @return a list of TestCase objects.
      */
-    private fun updateTestList(testCase: TestCase){
-        val updatedTestCaseList = _serverViewState.value.testItems.map { tc ->
-            if (tc.testName == testCase.testName) TestCase(tc.testName, testCase.isPassed)
-            else tc
-        }
-        _serverViewState.value = _serverViewState.value.copy(
-            testItems = if (updatedTestCaseList.any { it.testName == testCase.testName }) updatedTestCaseList
-            else _serverViewState.value.testItems + testCase
-        )
+    private fun updateTestList(testCase: TestCase) {
+        val testCaseMap =
+            _serverViewState.value.testItems.associateBy { it.testName }.toMutableMap()
+        testCaseMap[testCase.testName] = testCase
+        _serverViewState.value =
+            _serverViewState.value.copy(testItems = testCaseMap.values.toList())
     }
 }
