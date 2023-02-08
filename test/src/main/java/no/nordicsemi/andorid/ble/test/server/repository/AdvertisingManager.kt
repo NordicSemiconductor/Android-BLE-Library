@@ -8,14 +8,13 @@ import android.bluetooth.le.AdvertiseSettings
 import android.bluetooth.le.BluetoothLeAdvertiser
 import android.os.ParcelUuid
 import android.util.Log
-import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
 import no.nordicsemi.andorid.ble.test.spec.Characteristics.UUID_SERVICE_DEVICE
 import javax.inject.Inject
+import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 @SuppressLint("MissingPermission")
-@OptIn(ExperimentalCoroutinesApi::class)
 class AdvertisingManager @Inject constructor(
     private val bluetoothAdapter: BluetoothAdapter,
 ) {
@@ -31,7 +30,7 @@ class AdvertisingManager @Inject constructor(
 
             override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
                 Log.d(TAG, "onStartSuccess: Started Advertising ")
-                continuation.resume(Unit) { }
+                continuation.resume(Unit)
             }
 
             override fun onStartFailure(errorCode: Int) {

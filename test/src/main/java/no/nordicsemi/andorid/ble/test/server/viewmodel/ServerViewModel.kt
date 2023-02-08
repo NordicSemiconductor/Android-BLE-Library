@@ -47,7 +47,8 @@ class ServerViewModel @Inject constructor(
                 updateTestList(TestCase(START_ADVERTISING, true))
             } catch (exception: Exception) {
                 updateTestList(TestCase(START_ADVERTISING, false))
-                throw Exception("Could not start server.", exception)
+                exception.printStackTrace()
+                return@launch
             }
         }
 
@@ -63,6 +64,7 @@ class ServerViewModel @Inject constructor(
                         viewModelScope
                             .launch {
                                 connectDevice(device)
+                                stopAdvertising()
                                 // Start the testing tasks after server connection
                                 taskPerformer.startTasks()
                                 taskPerformer.testCases

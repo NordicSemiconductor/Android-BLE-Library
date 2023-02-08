@@ -37,7 +37,8 @@ class ClientViewModel @Inject constructor(
                 scanningManager.scanningForServer()
             } catch (exception: Exception) {
                 updateTestList(TestCase(SCANNING_FOR_SERVER, false))
-                throw Exception("Could not start scanning.", exception)
+                exception.printStackTrace()
+                return@launch
             }
             clientConnection
                 .apply {
