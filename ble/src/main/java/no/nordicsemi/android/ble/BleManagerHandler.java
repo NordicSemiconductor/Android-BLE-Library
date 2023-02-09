@@ -3115,8 +3115,7 @@ abstract class BleManagerHandler extends RequestHandler {
 							final int mtu) {
 		log(Log.INFO, () -> "[Server] MTU changed to: " + mtu);
 		BleManagerHandler.this.mtu = mtu;
-		checkCondition();
-		nextRequest(false);
+		nextRequest(checkCondition());
 	}
 
 	private void notifyNotificationSent(@NonNull final BluetoothDevice device) {
