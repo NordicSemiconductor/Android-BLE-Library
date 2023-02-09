@@ -13,7 +13,7 @@ import no.nordicsemi.android.common.theme.view.NordicAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun StartScreen(
+fun HomeScreen(
     onAdvertiseNavigation: () -> Unit,
     onScanNavigation: () -> Unit,
 ) {

@@ -1,8 +1,6 @@
 package no.nordicsemi.andorid.ble.test.client.viewmodel
 
 import android.annotation.SuppressLint
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -20,7 +18,6 @@ import no.nordicsemi.android.ble.ktx.stateAsFlow
 import javax.inject.Inject
 
 @SuppressLint("StaticFieldLeak")
-@RequiresApi(Build.VERSION_CODES.O)
 @HiltViewModel
 class ClientViewModel @Inject constructor(
     private val scanningManager: ScanningManager,

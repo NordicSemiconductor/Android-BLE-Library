@@ -1,7 +1,5 @@
 package no.nordicsemi.andorid.ble.test.client.view
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
@@ -23,7 +21,6 @@ import no.nordicsemi.android.common.theme.view.NordicAppBar
     ExperimentalMaterial3Api::class,
     ExperimentalLifecycleComposeApi::class
 )
-@RequiresApi(Build.VERSION_CODES.O)
 @Composable
 fun ClientScreen() {
     Column {

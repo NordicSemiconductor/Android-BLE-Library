@@ -38,7 +38,6 @@ class ServerConnection @Inject constructor(
 
     private val _testCase: MutableSharedFlow<TestCase> = MutableSharedFlow()
     val testCases = _testCase.asSharedFlow()
-    private var maxLength = 0
 
     override fun log(priority: Int, message: String) {
         Log.println(priority, TAG, message)
@@ -71,14 +70,9 @@ class ServerConnection @Inject constructor(
     }
 
     override fun initialize() {
-        requestMtu(512).enqueue()
-        // Waits until the mtu size exceeds 23. When the mtu size increases, it assigns the (mtu - 3) to the maxLength.
-        waitUntil {
-            return@waitUntil if (mtu > 23) {
-                maxLength = mtu - 3
-                true
-            } else false
-        }.enqueue()
+        // Waits until the mtu size exceeds 23.
+        waitUntil { mtu > 23 }
+            .enqueue()
 
     }
 
@@ -182,7 +176,7 @@ class ServerConnection @Inject constructor(
      * MTU (Maximum Transfer Unit) indicates the maximum number of bytes that can be sent in a single write operation.
      * Since 3 bytes are used for internal purposes, so the maximum size is MTU-3.
      */
-    fun requestMaxLength(): Int = maxLength
+    fun requestMaxLength(): Int = mtu - 3
 
     fun release() {
         cancelQueue()

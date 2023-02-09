@@ -1,7 +1,5 @@
 package no.nordicsemi.andorid.ble.test
 
-import android.os.Build
-import androidx.annotation.RequiresApi
 import androidx.hilt.navigation.compose.hiltViewModel
 import no.nordicsemi.andorid.ble.test.client.view.ClientScreen
 import no.nordicsemi.andorid.ble.test.server.view.ServerScreen
@@ -13,11 +11,10 @@ val StartDestination = createSimpleDestination("start")
 val ClientDestination = createSimpleDestination("client-destination")
 val ServerDestination = createSimpleDestination("server-destination")
 
-@RequiresApi(Build.VERSION_CODES.O)
 val Destinations = listOf(
     defineDestination(StartDestination) {
         val viewModel: SimpleNavigationViewModel = hiltViewModel()
-        StartScreen(
+        HomeScreen(
             onAdvertiseNavigation = { viewModel.navigateTo(ServerDestination) },
             onScanNavigation = { viewModel.navigateTo(ClientDestination) }
         )
