@@ -11,7 +11,7 @@ object  Requests {
     ipsam qui iste quia sit deleniti mollitia. Qui totam dolorem et ipsa dolor a architecto omnis ab
     consectetur eveniet. Ex quae laborum id doloribus tenetur non porro dolorum et assumenda nesciunt est
     nihil enim eos provident officiis. Est itaque nostrum vel accusantium reiciendis nam omnis sunt ad
-    autem omnis ut consequatur inventore. Cum consequatur Cum consequatur Cum consequatur consequatur Cum Cumm it is.this is it
+    autem omnis ut consequatur inventore.
     """.toByteArray()
     val reliableRequest = "This is reliable write request.".toByteArray()
     val secondReliableRequest = "This is second reliable write request".toByteArray()

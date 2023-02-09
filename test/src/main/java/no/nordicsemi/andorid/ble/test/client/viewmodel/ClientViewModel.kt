@@ -13,7 +13,7 @@ import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import no.nordicsemi.andorid.ble.test.client.repository.ClientConnection
 import no.nordicsemi.andorid.ble.test.client.repository.ScanningManager
-import no.nordicsemi.andorid.ble.test.client.task.TaskPerformer
+import no.nordicsemi.andorid.ble.test.client.task.ClientTaskPerformer
 import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.spec.Connections.SCANNING_FOR_SERVER
 import no.nordicsemi.android.ble.ktx.stateAsFlow
@@ -25,7 +25,7 @@ import javax.inject.Inject
 class ClientViewModel @Inject constructor(
     private val scanningManager: ScanningManager,
     private val clientConnection: ClientConnection,
-    private val taskPerformer: TaskPerformer,
+    private val clientTaskPerformer: ClientTaskPerformer,
 ) : ViewModel() {
     private val _clientViewState: MutableStateFlow<ClientViewState> = MutableStateFlow(ClientViewState())
     val clientViewState = _clientViewState.asStateFlow()
@@ -54,8 +54,8 @@ class ClientViewModel @Inject constructor(
                 .apply {
                     connectDevice(device)
                     // Start testing tasks after client connection
-                    taskPerformer.startTasks()
-                    taskPerformer.testCases
+                    clientTaskPerformer.startTasks()
+                    clientTaskPerformer.testCases
                         .onEach {
                             it.forEach { tc -> updateTestList(tc) }
                         }

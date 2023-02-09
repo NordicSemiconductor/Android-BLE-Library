@@ -1,4 +1,4 @@
-package no.nordicsemi.andorid.ble.test.server.tasks
+package no.nordicsemi.andorid.ble.test.client.task
 
 import dagger.hilt.android.scopes.ViewModelScoped
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -7,12 +7,12 @@ import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import javax.inject.Inject
 
 @ViewModelScoped
-class TaskPerformer @Inject constructor(
-    serverTask: ServerTask,
+class ClientTaskPerformer @Inject constructor(
+    clientTask: ClientTask,
 ) {
-    private val _testCases = MutableStateFlow(emptyList<TestCase>())
+    private val _testCases = MutableStateFlow<List<TestCase>>(emptyList())
     val testCases = _testCases.asStateFlow()
-    private val tasks = serverTask.tasks
+    private val tasks = clientTask.tasks
 
     suspend fun startTasks() {
         tasks.forEach {

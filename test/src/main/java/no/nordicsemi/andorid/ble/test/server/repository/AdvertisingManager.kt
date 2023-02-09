@@ -7,7 +7,6 @@ import android.bluetooth.le.AdvertiseData
 import android.bluetooth.le.AdvertiseSettings
 import android.bluetooth.le.BluetoothLeAdvertiser
 import android.os.ParcelUuid
-import android.util.Log
 import kotlinx.coroutines.suspendCancellableCoroutine
 import no.nordicsemi.andorid.ble.test.spec.Characteristics.UUID_SERVICE_DEVICE
 import javax.inject.Inject
@@ -18,7 +17,6 @@ import kotlin.coroutines.resumeWithException
 class AdvertisingManager @Inject constructor(
     private val bluetoothAdapter: BluetoothAdapter,
 ) {
-    private val TAG = AdvertisingManager::class.java.simpleName
     private var advertisingCallback: AdvertiseCallback? = null
     private val bluetoothLeAdvertiser: BluetoothLeAdvertiser by lazy {
         bluetoothAdapter.bluetoothLeAdvertiser
@@ -29,7 +27,6 @@ class AdvertisingManager @Inject constructor(
         advertisingCallback = object : AdvertiseCallback() {
 
             override fun onStartSuccess(settingsInEffect: AdvertiseSettings) {
-                Log.d(TAG, "onStartSuccess: Started Advertising ")
                 continuation.resume(Unit)
             }
 

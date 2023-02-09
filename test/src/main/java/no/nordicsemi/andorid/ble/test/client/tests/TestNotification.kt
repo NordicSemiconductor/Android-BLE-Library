@@ -20,7 +20,6 @@ class TestNotification(
             .suspend()
     }
 
-    // Handle task completion
     // Return task name
     override fun taskName(): String {
         val indications = listOf(

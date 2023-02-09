@@ -14,7 +14,7 @@ import no.nordicsemi.andorid.ble.test.server.data.TestCase
 import no.nordicsemi.andorid.ble.test.server.repository.AdvertisingManager
 import no.nordicsemi.andorid.ble.test.server.repository.ServerConnection
 import no.nordicsemi.andorid.ble.test.server.repository.ServerManager
-import no.nordicsemi.andorid.ble.test.server.tasks.TaskPerformer
+import no.nordicsemi.andorid.ble.test.server.tasks.ServerTaskPerformer
 import no.nordicsemi.andorid.ble.test.spec.Connections.DEVICE_DISCONNECTION
 import no.nordicsemi.andorid.ble.test.spec.Connections.SERVER_READY
 import no.nordicsemi.andorid.ble.test.spec.Connections.START_ADVERTISING
@@ -29,7 +29,7 @@ class ServerViewModel @Inject constructor(
     private val advertisingManager: AdvertisingManager,
     private val serverManager: ServerManager,
     private val serverConnection: ServerConnection,
-    private val taskPerformer: TaskPerformer,
+    private val serverTaskPerformer: ServerTaskPerformer,
 ) : ViewModel() {
     private val client: MutableStateFlow<List<ServerConnection>> = MutableStateFlow(emptyList())
     private val _serverViewState: MutableStateFlow<ServerViewState> =
@@ -66,8 +66,8 @@ class ServerViewModel @Inject constructor(
                                 connectDevice(device)
                                 stopAdvertising()
                                 // Start the testing tasks after server connection
-                                taskPerformer.startTasks()
-                                taskPerformer.testCases
+                                serverTaskPerformer.startTasks()
+                                serverTaskPerformer.testCases
                                     .onEach {
                                         it.forEach { tc -> updateTestList(tc) }
                                     }
