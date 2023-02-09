@@ -9,13 +9,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import no.nordicsemi.android.common.navigation.DestinationId
 import no.nordicsemi.android.common.theme.view.NordicAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StartScreen(
-    onNavigation: (DestinationId<Unit, *>) -> Unit,
+    onAdvertiseNavigation: () -> Unit,
+    onScanNavigation: () -> Unit,
 ) {
     Column {
         NordicAppBar(text = stringResource(id = R.string.welcome_message))
@@ -31,10 +31,10 @@ fun StartScreen(
                 verticalAlignment = Alignment.CenterVertically,
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
-                Button(onClick = { onNavigation(ServerDestination) }) {
+                Button(onClick = onAdvertiseNavigation) {
                     Text(text = stringResource(id = R.string.advertise))
                 }
-                Button(onClick = { onNavigation(ClientDestination) }) {
+                Button(onClick = onScanNavigation) {
                     Text(text = stringResource(id = R.string.scanning))
                 }
             }

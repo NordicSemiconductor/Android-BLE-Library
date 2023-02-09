@@ -17,7 +17,10 @@ val ServerDestination = createSimpleDestination("server-destination")
 val Destinations = listOf(
     defineDestination(StartDestination) {
         val viewModel: SimpleNavigationViewModel = hiltViewModel()
-        StartScreen(onNavigation = { viewModel.navigateTo(it) })
+        StartScreen(
+            onAdvertiseNavigation = { viewModel.navigateTo(ServerDestination) },
+            onScanNavigation = { viewModel.navigateTo(ClientDestination) }
+        )
     },
     defineDestination(ClientDestination) { ClientScreen() },
     defineDestination(ServerDestination) { ServerScreen() }
