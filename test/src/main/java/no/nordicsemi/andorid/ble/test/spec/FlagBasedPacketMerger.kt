@@ -27,27 +27,27 @@ class FlagBasedPacketMerger : DataMerger {
             return false
         val buffer = ByteBuffer.wrap(lastPacket)
 
-        when (lastPacket[0]) {
+        when (buffer.get()) {
             FULL -> {
-                ByteArray(lastPacket.size - 1)
+                ByteArray(buffer.remaining())
                     .apply { buffer.get(this) }
                     .also { output.write(it) }
                     .let { return true }
             }
             BEGIN -> {
-                ByteArray(lastPacket.size - 1)
+                ByteArray(buffer.remaining())
                     .apply { buffer.get(this) }
                     .also { output.write(it) }
                     .let { return false }
             }
             CONTINUATION -> {
-                ByteArray(lastPacket.size - 1)
+                ByteArray(buffer.remaining())
                     .apply { buffer.get(this) }
                     .also { output.write(it) }
                     .let { return false }
             }
             END -> {
-                ByteArray(lastPacket.size - 1)
+                ByteArray(buffer.remaining())
                     .apply { buffer.get(this) }
                     .also { output.write(it) }
                     .let { return true }

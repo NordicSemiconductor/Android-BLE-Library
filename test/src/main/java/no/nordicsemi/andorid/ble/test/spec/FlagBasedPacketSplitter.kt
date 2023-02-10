@@ -51,7 +51,7 @@ class FlagBasedPacketSplitter : DataSplitter {
                 }
         } else {
             // Find the next chunk, starting from where we finished before.
-            val bytesSent = maxLength * index
+            val bytesSent = (maxLength - 1) * index
             val toBeSent = message.size - bytesSent
             if (toBeSent <= 0) {
                 return null
