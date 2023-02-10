@@ -30,8 +30,9 @@ fun ServerScreen() {
                 is WaitingForClient ->
                     if (currentState.connectedClient == 0) {
                         WaitingForScannersView()
-                    } else ResultView(results = serverViewState.resultList)
-
+                    } else {
+                        ResultView(results = serverViewState.resultList)
+                    }
             }
         }
     }
