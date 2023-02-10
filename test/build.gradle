@@ -68,4 +68,7 @@ dependencies {
     kapt 'com.google.dagger:hilt-compiler:2.44.2'
     implementation 'androidx.hilt:hilt-navigation-compose:1.0.0'
     kapt 'androidx.hilt:hilt-compiler:1.0.0'
+
+    // Test
+    testImplementation 'junit:junit:4.13.2'
 }
