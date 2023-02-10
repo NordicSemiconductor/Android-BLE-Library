@@ -2,7 +2,6 @@ package no.nordicsemi.andorid.ble.test.server.view
 
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.lazy.LazyColumn
@@ -16,18 +15,18 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import no.nordicsemi.andorid.ble.test.R
 import no.nordicsemi.andorid.ble.test.server.data.Result
 import no.nordicsemi.android.common.theme.NordicTheme
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun ResultView(results: List<Result>) {
-    LazyColumn(
-        contentPadding = PaddingValues(16.dp)
-    ) {
+    LazyColumn {
         stickyHeader {
             Surface(shadowElevation = 4.dp) {
                 Row(
@@ -35,10 +34,10 @@ fun ResultView(results: List<Result>) {
                     modifier = Modifier.padding(16.dp),
                 ) {
                     Text(
-                        text = "Features",
+                        text = stringResource(id = R.string.features),
                         modifier = Modifier.weight(1f)
                     )
-                    Text(text = "Pass/Fail")
+                    Text(text = stringResource(id = R.string.pass_or_fail))
                 }
             }
         }
@@ -54,7 +53,6 @@ fun ResultView(results: List<Result>) {
                     tint = items.color,
                 )
             }
-
         }
     }
 }

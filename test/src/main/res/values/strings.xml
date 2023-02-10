@@ -9,9 +9,12 @@
     <string name="scanner">Scanner</string>
 
     <string name="ready">Ready</string>
-    <string name="initializing">Initializing</string>
+    <string name="initializing">Initializing…</string>
     <string name="connected">Connected</string>
-    <string name="connecting">Connecting</string>
+    <string name="connecting">Connecting…</string>
     <string name="disconnected">Disconnected</string>
     <string name="waiting_for_scanner">Waiting for scanning device…</string>
+
+    <string name="features"> Features</string>
+    <string name="pass_or_fail"> Pass/Fail</string>
 </resources>
