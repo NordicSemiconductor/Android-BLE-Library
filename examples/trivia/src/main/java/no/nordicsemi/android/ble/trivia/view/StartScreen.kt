@@ -9,15 +9,14 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
-import no.nordicsemi.android.ble.trivia.MainActivity
 import no.nordicsemi.android.ble.trivia.R
-import no.nordicsemi.android.common.navigation.DestinationId
 import no.nordicsemi.android.common.theme.view.NordicAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun StartScreen(
-    onNavigation: (DestinationId<Unit, *>) -> Unit,
+    onServerNavigation: () -> Unit,
+    onClientNavigation: () -> Unit,
 ) {
     Column {
         NordicAppBar(
@@ -39,12 +38,12 @@ fun StartScreen(
                 horizontalArrangement = Arrangement.spacedBy(16.dp),
             ) {
                 Button(
-                    onClick = { onNavigation(MainActivity.Server) }
+                    onClick = onServerNavigation
                 ) {
                     Text(text = stringResource(id = R.string.start_game))
                 }
                 Button(
-                    onClick = { onNavigation(MainActivity.Client) }
+                    onClick = onClientNavigation
                 ) {
                     Text(text = stringResource(id = R.string.join_game))
                 }
