@@ -6,6 +6,7 @@ import java.nio.ByteBuffer
 
 class HeaderBasedPacketMerger: DataMerger {
     private var expectedSize = 0
+    private var receivedDataSize = 0
 
     /**
      * A method that merges the last packet into the output message.
@@ -24,12 +25,13 @@ class HeaderBasedPacketMerger: DataMerger {
             return false
 
         val buffer = ByteBuffer.wrap(lastPacket)
+        receivedDataSize += buffer.remaining()
+
         if (index == 0) {
             expectedSize = buffer.short.toInt()
         }
-
-        if (buffer.remaining() == expectedSize) {
-            ByteArray(expectedSize)
+        if ((receivedDataSize-2) == expectedSize) {
+            ByteArray(buffer.remaining())
                 .apply { buffer.get(this) }
                 .also { output.write(it) }
                 .let { return true }
