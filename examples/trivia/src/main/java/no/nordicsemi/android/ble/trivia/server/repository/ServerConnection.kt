@@ -46,10 +46,6 @@ class ServerConnection(
         return Log.VERBOSE
     }
 
-    override fun getGattCallback(): BleManagerGattCallback = ClientGattCallback()
-
-    private inner class ClientGattCallback: BleManagerGattCallback() {
-
         override fun isRequiredServiceSupported(gatt: BluetoothGatt): Boolean {
             return true
         }
@@ -79,7 +75,6 @@ class ServerConnection(
         override fun onServicesInvalidated() {
             serverCharacteristic = null
         }
-    }
 
     /**
      * Connects to the server.
