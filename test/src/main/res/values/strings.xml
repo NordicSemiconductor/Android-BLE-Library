@@ -1,0 +1,20 @@
+<resources>
+    <string name="app_name">Test App</string>
+    <string name="welcome_message">Welcome</string>
+    <string name="select_one">Please select one option</string>
+
+    <string name="advertise">Advertise</string>
+    <string name="scanning">Scan</string>
+    <string name="advertiser">Advertiser</string>
+    <string name="scanner">Scanner</string>
+
+    <string name="ready">Ready</string>
+    <string name="initializing">Initializing…</string>
+    <string name="connected">Connected</string>
+    <string name="connecting">Connecting…</string>
+    <string name="disconnected">Disconnected</string>
+    <string name="waiting_for_scanner">Waiting for scanning device…</string>
+
+    <string name="features"> Features</string>
+    <string name="pass_or_fail"> Pass/Fail</string>
+</resources>
