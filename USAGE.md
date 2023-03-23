@@ -138,7 +138,7 @@ writeCharacteristic(someCharacteristic, someData, BluetoothGattCharacteristic.WR
     // .split() with no parameters uses the default MTU splitter.
     // Kotlin projects can use .splitWithProgressAsFlow(customSplitter) to get the progress as Flow.
     .before(device -> { /* called when the request is about to be executed */ })
-    .with(device, data -> { /* called when the request has been executed */ })
+    .with( (device, data) -> { /* called when the request has been executed */ })
     .done(device -> { /* called when the request has completed successfully */ })
     .fail(device, status -> { /* called when the request has failed */ })
     .invalid({ /* called when the request was invalid, i.e. the target device or given characteristic was null */ })
@@ -157,7 +157,7 @@ readCharacteristic(someCharacteristic)
     // Complete, merged packets can also be filtered.
     .filterPacket(packetFilter)
     // [...]
-    .with(device, data -> { /* called when the data have been received */ })
+    .with( (device, data) -> { /* called when the data have been received */ })
     // [...]
     // Once again, remember to enqueue each request!
     .enqueue()
