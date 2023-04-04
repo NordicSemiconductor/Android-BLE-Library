@@ -1,6 +1,6 @@
 buildscript {
     // https://kotlinlang.org/docs/releases.html#release-details
-    ext.kotlin_version = '1.7.20'
+    ext.kotlin_version = '1.8.10'
     // https://plugins.gradle.org/plugin/io.github.gradle-nexus.publish-plugin
     ext.gradle_nexus_publish_plugin = '1.1.0'
 
@@ -10,11 +10,11 @@ buildscript {
         maven { url "https://plugins.gradle.org/m2/" }
     }
     dependencies {
-        classpath 'com.android.tools.build:gradle:7.3.1'
+        classpath 'com.android.tools.build:gradle:7.4.2'
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
-        classpath "com.google.dagger:hilt-android-gradle-plugin:2.44.2"
+        classpath "com.google.dagger:hilt-android-gradle-plugin:2.45"
         classpath "io.github.gradle-nexus:publish-plugin:$gradle_nexus_publish_plugin"
-        classpath "com.squareup.wire:wire-gradle-plugin:4.4.3"
+        classpath "com.squareup.wire:wire-gradle-plugin:4.5.2"
     }
 }
 

@@ -18,13 +18,18 @@ android {
             consumerProguardFiles 'ble-livedata-proguard-rules.pro'
         }
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
 }
 
 dependencies {
     api project(':ble')
 
     // https://developer.android.com/jetpack/androidx/releases/lifecycle
-    api 'androidx.lifecycle:lifecycle-livedata:2.5.1'
+    api 'androidx.lifecycle:lifecycle-livedata:2.6.1'
 }
 
 // === Maven Central configuration ===

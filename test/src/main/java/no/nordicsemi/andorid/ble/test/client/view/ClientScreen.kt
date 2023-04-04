@@ -6,7 +6,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
 import androidx.hilt.navigation.compose.hiltViewModel
-import androidx.lifecycle.compose.ExperimentalLifecycleComposeApi
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import no.nordicsemi.andorid.ble.test.R
 import no.nordicsemi.andorid.ble.test.client.viewmodel.ClientViewModel
@@ -17,10 +16,7 @@ import no.nordicsemi.android.common.permission.RequireBluetooth
 import no.nordicsemi.android.common.permission.RequireLocation
 import no.nordicsemi.android.common.theme.view.NordicAppBar
 
-@OptIn(
-    ExperimentalMaterial3Api::class,
-    ExperimentalLifecycleComposeApi::class
-)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClientScreen() {
     Column {

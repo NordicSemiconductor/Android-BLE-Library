@@ -17,10 +17,15 @@ android {
             consumerProguardFiles 'ble-proguard-rules.pro'
         }
     }
+
+    compileOptions {
+        sourceCompatibility JavaVersion.VERSION_11
+        targetCompatibility JavaVersion.VERSION_11
+    }
 }
 
 dependencies {
-    api 'androidx.annotation:annotation:1.5.0'
+    api 'androidx.annotation:annotation:1.6.0'
 
     testImplementation 'junit:junit:4.13.2'
 }
