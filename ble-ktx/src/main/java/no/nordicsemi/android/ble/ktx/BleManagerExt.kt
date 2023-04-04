@@ -4,8 +4,9 @@ package no.nordicsemi.android.ble.ktx
 
 import android.annotation.SuppressLint
 import android.bluetooth.BluetoothDevice
-import kotlinx.coroutines.flow.MutableStateFlow
-import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.channels.BufferOverflow
+import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.MutableSharedFlow
 import no.nordicsemi.android.ble.BleManager
 import no.nordicsemi.android.ble.ktx.state.BondState
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
@@ -39,13 +40,13 @@ val BleManager.bondingState: BondState
     }
 
 /**
- * Returns the connection state as hot state flow.
+ * Returns the connection state as hot flow.
  * Multiple calls for this method return the same object.
  * If a different connection observer was set using [BleManager.setConnectionObserver], this
  * method will throw [IllegalStateException].
  * @since 2.3.0
  */
-fun BleManager.stateAsFlow(): StateFlow<ConnectionState> = with(connectionObserver) {
+fun BleManager.stateAsFlow(): Flow<ConnectionState> = with(connectionObserver) {
     when (this) {
         null -> ConnectionObserverFlow(state).apply { connectionObserver = this }.flow
         is ConnectionObserverFlow -> flow
@@ -54,13 +55,13 @@ fun BleManager.stateAsFlow(): StateFlow<ConnectionState> = with(connectionObserv
 }
 
 /**
- * Returns the bonding state as hot state flow.
+ * Returns the bonding state as hot flow.
  * Multiple calls for this method return the same object.
  * If a different bond state observer was set using [BleManager.setBondingObserver], this
  * method will throw [IllegalStateException].
  * @since 2.3.0
  */
-fun BleManager.bondingStateAsFlow(): StateFlow<BondState> = with(bondingObserver) {
+fun BleManager.bondingStateAsFlow(): Flow<BondState> = with(bondingObserver) {
     when (this) {
         null -> BondStateObserverFlow(bondingState).apply { bondingObserver = this }.flow
         is BondStateObserverFlow -> flow
@@ -71,7 +72,11 @@ fun BleManager.bondingStateAsFlow(): StateFlow<BondState> = with(bondingObserver
 // ------------------------------------ Implementation ------------------------------------
 
 private class ConnectionObserverFlow(value: ConnectionState): ConnectionObserver {
-    val flow: MutableStateFlow<ConnectionState> = MutableStateFlow(value)
+    val flow = MutableSharedFlow<ConnectionState>(
+        replay = 1,
+        extraBufferCapacity = 2,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    ).apply { tryEmit(value) }
 
     override fun onDeviceConnecting(device: BluetoothDevice) {
         flow.tryEmit(ConnectionState.Connecting)
@@ -99,7 +104,11 @@ private class ConnectionObserverFlow(value: ConnectionState): ConnectionObserver
 }
 
 private class BondStateObserverFlow(value: BondState): BondingObserver {
-    val flow: MutableStateFlow<BondState> = MutableStateFlow(value)
+    val flow = MutableSharedFlow<BondState>(
+        replay = 1,
+        extraBufferCapacity = 2,
+        onBufferOverflow = BufferOverflow.DROP_OLDEST
+    ).apply { tryEmit(value) }
 
     override fun onBondingRequired(device: BluetoothDevice) {
         flow.tryEmit(BondState.Bonding)
