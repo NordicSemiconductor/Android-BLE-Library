@@ -1003,7 +1003,8 @@ abstract class BleManagerHandler extends RequestHandler {
 				log(Log.DEBUG, () -> "[Server] gattServer.notifyCharacteristicChanged(" + serverCharacteristic.getUuid() +
 						", confirm=" + confirm +
 						", value=" + ParserUtils.parseDebug(data) + ")");
-				return serverManager.getServer().notifyCharacteristicChanged(bluetoothDevice, serverCharacteristic, confirm, data) == BluetoothStatusCodes.SUCCESS;
+				return serverManager.getServer().notifyCharacteristicChanged(bluetoothDevice, serverCharacteristic, confirm, data != null ? data : new byte[0])
+						== BluetoothStatusCodes.SUCCESS;
 			} else {
 				log(Log.DEBUG, () -> "[Server] characteristic.setValue(" + ParserUtils.parseDebug(data) + ")");
 				serverCharacteristic.setValue(data);
@@ -1019,6 +1020,8 @@ abstract class BleManagerHandler extends RequestHandler {
 				}
 			}
 			return result;
+		} else {
+			post(() -> notifyNotificationsDisabled(bluetoothDevice));
 		}
 		// Otherwise, assume the data was sent. The remote side has not registered for them.
 		nextRequest(true);
@@ -3136,6 +3139,21 @@ abstract class BleManagerHandler extends RequestHandler {
 			} else {
 				wr.notifySuccess(device);
 			}
+		}
+	}
+
+	private void notifyNotificationsDisabled(@NonNull final BluetoothDevice device) {
+		if (request instanceof WriteRequest) {
+			final WriteRequest wr = (WriteRequest) request;
+			switch (wr.type) {
+				case NOTIFY:
+					log(Log.WARN, () -> "[Server] Notifications disabled");
+					break;
+				case INDICATE:
+					log(Log.WARN, () -> "[Server] Indications disabled");
+					break;
+			}
+			wr.notifyFail(device, FailCallback.REASON_NOT_ENABLED);
 		}
 	}
 
