@@ -1021,7 +1021,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			}
 			return result;
 		} else {
-			post(() -> notifyNotificationsDisabled(bluetoothDevice));
+			notifyNotificationsDisabled(bluetoothDevice);
 		}
 		// Otherwise, assume the data was sent. The remote side has not registered for them.
 		nextRequest(true);
