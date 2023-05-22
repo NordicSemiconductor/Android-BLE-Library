@@ -438,7 +438,7 @@ abstract class BleManagerHandler extends RequestHandler {
 						}
 					}
 					// No need to repeat the request.
-					return;
+					break;
 			}
 			nextRequest(true);
 		}
