@@ -4,12 +4,11 @@ plugins {
 
 android {
     namespace 'no.nordicsemi.android.ble.common'
-
-    compileSdkVersion 33
+    compileSdk 34
 
     defaultConfig {
         minSdkVersion 18
-        targetSdkVersion 33
+        targetSdk 34
     }
 
     buildTypes {
@@ -19,9 +18,16 @@ android {
         }
     }
 
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 }
 
@@ -41,4 +47,8 @@ if (rootProject.file('gradle/publish-module.gradle').exists()) {
         POM_PACKAGING = 'aar'
     }
     apply from: rootProject.file('gradle/publish-module.gradle')
+}
+
+afterEvaluate {
+    generateMetadataFileForReleasePublication.dependsOn androidSourcesJar
 }

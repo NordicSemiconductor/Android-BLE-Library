@@ -22,19 +22,33 @@
 
 package no.nordicsemi.android.ble.ble_gatt_server
 
+import android.Manifest
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
+import android.content.pm.PackageManager
+import android.os.Build
 import android.os.Bundle
 import android.os.IBinder
 import android.text.Editable
 import android.text.TextWatcher
 import android.widget.EditText
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 
 class MainActivity : AppCompatActivity() {
 
     private var gattServiceConn: GattServiceConn? = null
+
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { states ->
+        if (states[Manifest.permission.BLUETOOTH_ADVERTISE] == true) {
+            startForegroundService(Intent(this, GattService::class.java))
+        } else {
+            finish()
+        }
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -53,7 +67,18 @@ class MainActivity : AppCompatActivity() {
 
         // Startup our Bluetooth GATT service explicitly so it continues to run even if
         // this activity is not in focus
-        startForegroundService(Intent(this, GattService::class.java))
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.S) {
+            if (checkSelfPermission(Manifest.permission.BLUETOOTH_ADVERTISE) == PackageManager.PERMISSION_GRANTED) {
+                startForegroundService(Intent(this, GattService::class.java))
+            } else {
+                requestPermissionLauncher.launch(arrayOf(
+                    Manifest.permission.BLUETOOTH_ADVERTISE,
+                    Manifest.permission.BLUETOOTH_CONNECT,
+                ))
+            }
+        } else {
+            startForegroundService(Intent(this, GattService::class.java))
+        }
     }
 
     override fun onStart() {

@@ -21,7 +21,7 @@ import no.nordicsemi.android.ble.trivia.server.view.BottomNavigationView
 import no.nordicsemi.android.ble.trivia.server.view.StartGameView
 import no.nordicsemi.android.ble.trivia.server.view.WaitingForClientsView
 import no.nordicsemi.android.ble.trivia.server.viewmodel.ServerViewModel
-import no.nordicsemi.android.common.permission.RequireBluetooth
+import no.nordicsemi.android.common.permissions.ble.RequireBluetooth
 import no.nordicsemi.android.common.theme.view.NordicAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)

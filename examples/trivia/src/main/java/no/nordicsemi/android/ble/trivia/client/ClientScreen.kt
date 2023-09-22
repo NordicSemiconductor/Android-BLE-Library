@@ -16,7 +16,7 @@ import no.nordicsemi.android.ble.trivia.client.data.toViewState
 import no.nordicsemi.android.ble.trivia.client.view.*
 import no.nordicsemi.android.ble.trivia.server.view.ResultView
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
-import no.nordicsemi.android.common.permission.RequireBluetooth
+import no.nordicsemi.android.common.permissions.ble.RequireBluetooth
 import no.nordicsemi.android.common.theme.view.NordicAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)

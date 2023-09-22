@@ -22,12 +22,15 @@
 
 package no.nordicsemi.android.ble.ble_gatt_client
 
+import android.Manifest
 import android.content.ComponentName
 import android.content.Intent
 import android.content.ServiceConnection
+import android.content.pm.PackageManager
 import android.os.*
 import androidx.appcompat.app.AppCompatActivity
 import android.widget.TextView
+import androidx.activity.result.contract.ActivityResultContracts
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.Channel
@@ -45,6 +48,17 @@ class MainActivity : AppCompatActivity() {
 
     private val myCharacteristicValueChangeNotifications = Channel<String>()
 
+    private val requestPermissionLauncher = registerForActivityResult(
+        ActivityResultContracts.RequestMultiplePermissions()
+    ) { states ->
+        if (states[Manifest.permission.BLUETOOTH_CONNECT] == true ||
+            states[Manifest.permission.ACCESS_FINE_LOCATION] == true) {
+            startForegroundService(Intent(this, GattService::class.java))
+        } else {
+            finish()
+        }
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -61,9 +75,27 @@ class MainActivity : AppCompatActivity() {
             }
         }
 
-        // Startup our Bluetooth GATT service explicitly so it continues to run even if
-        // this activity is not in focus
-        startForegroundService(Intent(this, GattService::class.java))
+        val permissions = when (Build.VERSION.SDK_INT) {
+            // Before API 31, we need to request the ACCESS_FINE_LOCATION permission in
+            // order to scan for Bluetooth LE devices.
+            in Build.VERSION_CODES.JELLY_BEAN_MR2 .. Build.VERSION_CODES.R -> arrayOf(
+                Manifest.permission.ACCESS_FINE_LOCATION
+            )
+            // Starting from API 31 it's enough to request for Bluetooth permissions,
+            // as the BLUETOOTH_SCAN permission was declared with "neverForLocation" flag.
+            else -> arrayOf(
+                Manifest.permission.BLUETOOTH_CONNECT,
+                Manifest.permission.BLUETOOTH_SCAN,
+            )
+        }
+        // The service of type "connectedDevice" can only be started if the app has the
+        // BLUETOOTH_CONNECT permission granted.
+        if (checkSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED ||
+            checkSelfPermission(Manifest.permission.ACCESS_FINE_LOCATION) == PackageManager.PERMISSION_GRANTED) {
+            startForegroundService(Intent(this, GattService::class.java))
+        } else {
+            requestPermissionLauncher.launch(permissions)
+        }
     }
 
     override fun onStart() {

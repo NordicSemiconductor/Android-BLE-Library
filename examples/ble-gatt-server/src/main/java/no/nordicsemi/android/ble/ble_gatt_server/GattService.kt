@@ -178,7 +178,7 @@ class GattService : Service() {
             MyServiceProfile.MY_CHARACTERISTIC_UUID,
             // Properties:
             BluetoothGattCharacteristic.PROPERTY_READ
-                   or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
+                  or BluetoothGattCharacteristic.PROPERTY_NOTIFY,
             // Permissions:
             BluetoothGattCharacteristic.PERMISSION_READ_ENCRYPTED_MITM,
             // Descriptors:
@@ -186,7 +186,7 @@ class GattService : Service() {
             // Instead, let's define CCCD with custom permissions:
             descriptor(CLIENT_CHARACTERISTIC_CONFIG_DESCRIPTOR_UUID,
                 BluetoothGattDescriptor.PERMISSION_READ_ENCRYPTED_MITM
-                        or BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED_MITM, byteArrayOf(0, 0)),
+                       or BluetoothGattDescriptor.PERMISSION_WRITE_ENCRYPTED_MITM, byteArrayOf(0, 0)),
             description("A characteristic to be read", false) // descriptors
         )
         private val myGattService = service(
@@ -202,7 +202,6 @@ class GattService : Service() {
 
         override fun setMyCharacteristicValue(value: String) {
             val bytes = value.toByteArray(StandardCharsets.UTF_8)
-            myGattCharacteristic.value = bytes
             serverConnections.values.forEach { serverConnection ->
                 serverConnection.sendNotificationForMyGattCharacteristic(bytes)
             }
@@ -248,8 +247,6 @@ class GattService : Service() {
          */
         inner class ServerConnection : BleManager(context) {
 
-            private var gattCallback: GattCallback? = null
-
             fun sendNotificationForMyGattCharacteristic(value: ByteArray) {
                 sendNotification(myGattCharacteristic, value).enqueue()
             }
@@ -258,22 +255,14 @@ class GattService : Service() {
                 this@ServerManager.log(priority, message)
             }
 
-            override fun getGattCallback(): BleManagerGattCallback {
-                gattCallback = GattCallback()
-                return gattCallback!!
+            // There are no services that we need from the connecting device, but
+            // if there were, we could specify them here.
+            override fun isRequiredServiceSupported(gatt: BluetoothGatt): Boolean {
+                return true
             }
 
-            private inner class GattCallback() : BleManagerGattCallback() {
-
-                // There are no services that we need from the connecting device, but
-                // if there were, we could specify them here.
-                override fun isRequiredServiceSupported(gatt: BluetoothGatt): Boolean {
-                    return true
-                }
-
-                override fun onServicesInvalidated() {
-                    // This is the place to nullify characteristics obtained above.
-                }
+            override fun onServicesInvalidated() {
+                // This is the place to nullify characteristics obtained above.
             }
         }
     }
