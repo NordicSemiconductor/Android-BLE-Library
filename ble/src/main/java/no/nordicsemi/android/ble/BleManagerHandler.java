@@ -1701,6 +1701,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	 * @return <code>True</code> when the device has the required service.
 	 * @deprecated Use {@link BleManager#isRequiredServiceSupported(BluetoothGatt)} instead.
 	 */
+	@Deprecated
 	protected abstract boolean isRequiredServiceSupported(@NonNull final BluetoothGatt gatt);
 
 	/**
