@@ -4,12 +4,11 @@ plugins {
 
 android {
     namespace 'no.nordicsemi.android.ble.livedata'
-
-    compileSdkVersion 33
+    compileSdk 34
 
     defaultConfig {
         minSdkVersion 18
-        targetSdkVersion 33
+        targetSdk 34
     }
 
     buildTypes {
@@ -19,9 +18,16 @@ android {
         }
     }
 
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 }
 
@@ -29,7 +35,7 @@ dependencies {
     api project(':ble')
 
     // https://developer.android.com/jetpack/androidx/releases/lifecycle
-    api 'androidx.lifecycle:lifecycle-livedata:2.6.1'
+    api 'androidx.lifecycle:lifecycle-livedata:2.6.2'
 }
 
 // === Maven Central configuration ===
@@ -42,4 +48,8 @@ if (rootProject.file('gradle/publish-module.gradle').exists()) {
         POM_PACKAGING = 'aar'
     }
     apply from: rootProject.file('gradle/publish-module.gradle')
+}
+
+afterEvaluate {
+    generateMetadataFileForReleasePublication.dependsOn androidSourcesJar
 }

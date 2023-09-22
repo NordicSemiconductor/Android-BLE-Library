@@ -33,12 +33,12 @@ import android.content.IntentFilter
 import android.os.*
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.channels.SendChannel
 import kotlinx.coroutines.launch
 import no.nordicsemi.android.ble.BleManager
-import no.nordicsemi.android.ble.ValueChangedCallback
 import java.util.*
 
 
@@ -65,7 +65,8 @@ class GattService : Service() {
 
     private val defaultScope = CoroutineScope(Dispatchers.Default)
 
-    private lateinit var bluetoothObserver: BroadcastReceiver
+    private lateinit var stateChangedObserver: BroadcastReceiver
+    private lateinit var bondStateObserver: BroadcastReceiver
 
     private var myCharacteristicChangedChannel: SendChannel<String>? = null
 
@@ -86,7 +87,7 @@ class GattService : Service() {
         notificationService.createNotificationChannel(notificationChannel)
 
         val notification = NotificationCompat.Builder(this, GattService::class.java.simpleName)
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.drawable.ic_launcher_foreground)
                 .setContentTitle(resources.getString(R.string.gatt_service_name))
                 .setContentText(resources.getString(R.string.gatt_service_running_notification))
                 .setAutoCancel(true)
@@ -95,44 +96,41 @@ class GattService : Service() {
 
         // Observe OS state changes in BLE
 
-        bluetoothObserver = object : BroadcastReceiver() {
+        stateChangedObserver = object : BroadcastReceiver() {
             override fun onReceive(context: Context?, intent: Intent?) {
-                when (intent?.action) {
-                    BluetoothAdapter.ACTION_STATE_CHANGED -> {
-                        val bluetoothState = intent.getIntExtra(
-                                BluetoothAdapter.EXTRA_STATE,
-                                -1
-                        )
-                        when (bluetoothState) {
-                            BluetoothAdapter.STATE_ON -> enableBleServices()
-                            BluetoothAdapter.STATE_OFF -> disableBleServices()
-                        }
-                    }
-                    BluetoothDevice.ACTION_BOND_STATE_CHANGED -> {
-                        val device =
-                                intent.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
-                        Log.d(TAG, "Bond state changed for device ${device?.address}: ${device?.bondState}")
-                        when (device?.bondState) {
-                            BluetoothDevice.BOND_BONDED -> addDevice(device)
-                            BluetoothDevice.BOND_NONE -> removeDevice(device)
-                        }
-                    }
-
+                val bluetoothState = intent!!.getIntExtra(
+                    BluetoothAdapter.EXTRA_STATE,
+                    -1
+                )
+                when (bluetoothState) {
+                    BluetoothAdapter.STATE_ON -> enableBleServices()
+                    BluetoothAdapter.STATE_OFF -> disableBleServices()
                 }
             }
         }
-        registerReceiver(bluetoothObserver, IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
-        registerReceiver(bluetoothObserver, IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED))
+        bondStateObserver = object : BroadcastReceiver() {
+            override fun onReceive(context: Context?, intent: Intent?) {
+                val device =
+                    intent!!.getParcelableExtra<BluetoothDevice>(BluetoothDevice.EXTRA_DEVICE)
+                Log.d(TAG, "Bond state changed for device ${device?.address}: ${device?.bondState}")
+                when (device?.bondState) {
+                    BluetoothDevice.BOND_BONDED -> addDevice(device)
+                    BluetoothDevice.BOND_NONE -> removeDevice(device)
+                }
+            }
+        }
+        ContextCompat.registerReceiver(this, stateChangedObserver, IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED), ContextCompat.RECEIVER_EXPORTED)
+        ContextCompat.registerReceiver(this, bondStateObserver, IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED), ContextCompat.RECEIVER_EXPORTED)
 
         // Startup BLE if we have it
-
         val bluetoothManager = getSystemService(Context.BLUETOOTH_SERVICE) as BluetoothManager
         if (bluetoothManager.adapter?.isEnabled == true) enableBleServices()
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        unregisterReceiver(bluetoothObserver)
+        unregisterReceiver(stateChangedObserver)
+        unregisterReceiver(bondStateObserver)
         disableBleServices()
     }
 
@@ -204,7 +202,7 @@ class GattService : Service() {
     }
 
     private inner class ClientManager : BleManager(this@GattService) {
-        override fun getGattCallback(): BleManagerGattCallback = GattCallback()
+        private var myCharacteristic: BluetoothGattCharacteristic? = null
 
         override fun log(priority: Int, message: String) {
             if (BuildConfig.DEBUG || priority == Log.ERROR) {
@@ -212,45 +210,40 @@ class GattService : Service() {
             }
         }
 
-        private inner class GattCallback : BleManagerGattCallback() {
+        override fun isRequiredServiceSupported(gatt: BluetoothGatt): Boolean {
+            val service = gatt.getService(MyServiceProfile.MY_SERVICE_UUID)
+            myCharacteristic =
+                    service?.getCharacteristic(MyServiceProfile.MY_CHARACTERISTIC_UUID)
+            val myCharacteristicProperties = myCharacteristic?.properties ?: 0
+            return (myCharacteristicProperties and BluetoothGattCharacteristic.PROPERTY_READ != 0) &&
+                   (myCharacteristicProperties and BluetoothGattCharacteristic.PROPERTY_NOTIFY != 0)
+        }
 
-            private var myCharacteristic: BluetoothGattCharacteristic? = null
-
-            override fun isRequiredServiceSupported(gatt: BluetoothGatt): Boolean {
-                val service = gatt.getService(MyServiceProfile.MY_SERVICE_UUID)
-                myCharacteristic =
-                        service?.getCharacteristic(MyServiceProfile.MY_CHARACTERISTIC_UUID)
-                val myCharacteristicProperties = myCharacteristic?.properties ?: 0
-                return (myCharacteristicProperties and BluetoothGattCharacteristic.PROPERTY_READ != 0) &&
-                       (myCharacteristicProperties and BluetoothGattCharacteristic.PROPERTY_NOTIFY != 0)
-            }
-
-            override fun initialize() {
-                setNotificationCallback(myCharacteristic).with { _, data ->
-                    if (data.value != null) {
-                        val value = String(data.value!!, Charsets.UTF_8)
-                        defaultScope.launch {
-                            myCharacteristicChangedChannel?.send(value)
-                        }
+        override fun initialize() {
+            setNotificationCallback(myCharacteristic).with { _, data ->
+                if (data.value != null) {
+                    val value = String(data.value!!, Charsets.UTF_8)
+                    defaultScope.launch {
+                        myCharacteristicChangedChannel?.send(value)
                     }
                 }
+            }
 
-                beginAtomicRequestQueue()
-                        .add(enableNotifications(myCharacteristic)
-                                .fail { _: BluetoothDevice?, status: Int ->
-                                    log(Log.ERROR, "Could not subscribe: $status")
-                                    disconnect().enqueue()
-                                }
-                        )
-                        .done {
-                            log(Log.INFO, "Target initialized")
+            beginAtomicRequestQueue()
+                .add(enableNotifications(myCharacteristic)
+                        .fail { _: BluetoothDevice, status: Int ->
+                            log(Log.ERROR, "Could not subscribe: $status")
+                            disconnect().enqueue()
                         }
-                        .enqueue()
-            }
+                )
+                .done {
+                    log(Log.INFO, "Target initialized")
+                }
+                .enqueue()
+        }
 
-            override fun onServicesInvalidated() {
-                myCharacteristic = null
-            }
+        override fun onServicesInvalidated() {
+            myCharacteristic = null
         }
     }
 

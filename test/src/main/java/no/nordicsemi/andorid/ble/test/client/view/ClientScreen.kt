@@ -12,8 +12,8 @@ import no.nordicsemi.andorid.ble.test.client.viewmodel.ClientViewModel
 import no.nordicsemi.andorid.ble.test.server.view.LoadingView
 import no.nordicsemi.andorid.ble.test.server.view.ResultView
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
-import no.nordicsemi.android.common.permission.RequireBluetooth
-import no.nordicsemi.android.common.permission.RequireLocation
+import no.nordicsemi.android.common.permissions.ble.RequireBluetooth
+import no.nordicsemi.android.common.permissions.ble.RequireLocation
 import no.nordicsemi.android.common.theme.view.NordicAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)

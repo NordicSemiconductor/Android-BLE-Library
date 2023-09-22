@@ -10,7 +10,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import no.nordicsemi.andorid.ble.test.R
 import no.nordicsemi.andorid.ble.test.server.viewmodel.ServerViewModel
 import no.nordicsemi.andorid.ble.test.server.viewmodel.WaitingForClient
-import no.nordicsemi.android.common.permission.RequireBluetooth
+import no.nordicsemi.android.common.permissions.ble.RequireBluetooth
 import no.nordicsemi.android.common.theme.view.NordicAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)

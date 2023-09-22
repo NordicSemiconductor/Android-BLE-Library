@@ -5,12 +5,11 @@ plugins {
 
 android {
     namespace 'no.nordicsemi.android.ble.ktx'
-
-    compileSdkVersion 33
+    compileSdk 34
 
     defaultConfig {
         minSdkVersion 18
-        targetSdkVersion 33
+        targetSdk 34
     }
 
     buildTypes {
@@ -20,19 +19,26 @@ android {
         }
     }
 
+    publishing {
+        singleVariant('release') {
+            withSourcesJar()
+            withJavadocJar()
+        }
+    }
+
     compileOptions {
-        sourceCompatibility JavaVersion.VERSION_11
-        targetCompatibility JavaVersion.VERSION_11
+        sourceCompatibility JavaVersion.VERSION_17
+        targetCompatibility JavaVersion.VERSION_17
     }
 
     kotlinOptions {
-        jvmTarget = "11"
+        jvmTarget = JavaVersion.VERSION_17.toString()
     }
 }
 
 dependencies {
     api project(':ble')
-    api 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.6.4'
+    api 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.7.3'
 }
 
 // === Maven Central configuration ===
@@ -45,4 +51,8 @@ if (rootProject.file('gradle/publish-module.gradle').exists()) {
         POM_PACKAGING = 'aar'
     }
     apply from: rootProject.file('gradle/publish-module.gradle')
+}
+
+afterEvaluate {
+    generateMetadataFileForReleasePublication.dependsOn androidSourcesJar
 }
