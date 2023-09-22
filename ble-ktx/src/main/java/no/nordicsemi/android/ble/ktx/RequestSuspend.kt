@@ -87,7 +87,7 @@ suspend inline fun <reified T: WriteResponse> WriteRequest.suspendForResponse():
 		.before { d -> device = d }
 		.suspend()
 		.let {
-			T::class.java.newInstance().apply { onDataSent(device!!, it) }
+			T::class.java.getDeclaredConstructor().newInstance().apply { onDataSent(device!!, it) }
 		}
 }
 
@@ -134,7 +134,7 @@ suspend inline fun <reified T: ReadResponse> ReadRequest.suspendForResponse(): T
 		.before { d -> device = d }
 		.suspend()
 		.let {
-			T::class.java.newInstance().apply { onDataReceived(device!!, it) }
+			T::class.java.getDeclaredConstructor().newInstance().apply { onDataReceived(device!!, it) }
 		}
 }
 
@@ -275,7 +275,7 @@ suspend inline fun <reified T: ReadResponse> WaitForValueChangedRequest.suspendF
 		.before { d -> device = d }
 		.suspend()
 		.let {
-			T::class.java.newInstance().apply { onDataReceived(device!!, it) }
+			T::class.java.getDeclaredConstructor().newInstance().apply { onDataReceived(device!!, it) }
 		}
 }
 
@@ -362,7 +362,7 @@ suspend inline fun <reified T: WriteResponse> WaitForReadRequest.suspendForRespo
 		.before { d -> device = d }
 		.suspend()
 		.let {
-			T::class.java.newInstance().apply { onDataSent(device!!, it) }
+			T::class.java.getDeclaredConstructor().newInstance().apply { onDataSent(device!!, it) }
 		}
 }
 
