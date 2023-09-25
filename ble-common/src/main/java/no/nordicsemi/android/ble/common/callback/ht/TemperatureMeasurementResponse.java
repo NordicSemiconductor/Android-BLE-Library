@@ -52,8 +52,8 @@ import no.nordicsemi.android.ble.exception.RequestFailedException;
  * }
  * </pre>
  * </p>
+ * @noinspection unused
  */
-@SuppressWarnings("unused")
 public final class TemperatureMeasurementResponse extends TemperatureMeasurementDataCallback implements Parcelable {
 	private float temperature;
 	private int unit;
@@ -104,7 +104,6 @@ public final class TemperatureMeasurementResponse extends TemperatureMeasurement
 	}
 
 	// Parcelable
-	@SuppressWarnings("ConstantConditions")
 	private TemperatureMeasurementResponse(final Parcel in) {
 		super(in);
 		temperature = in.readFloat();
@@ -123,7 +122,7 @@ public final class TemperatureMeasurementResponse extends TemperatureMeasurement
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		dest.writeFloat(temperature);
 		dest.writeInt(unit);
@@ -141,7 +140,7 @@ public final class TemperatureMeasurementResponse extends TemperatureMeasurement
 		}
 	}
 
-	public static final Creator<TemperatureMeasurementResponse> CREATOR = new Creator<TemperatureMeasurementResponse>() {
+	public static final Creator<TemperatureMeasurementResponse> CREATOR = new Creator<>() {
 		@Override
 		public TemperatureMeasurementResponse createFromParcel(final Parcel in) {
 			return new TemperatureMeasurementResponse(in);

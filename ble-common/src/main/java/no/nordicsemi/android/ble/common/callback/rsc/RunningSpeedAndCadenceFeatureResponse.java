@@ -81,7 +81,7 @@ public class RunningSpeedAndCadenceFeatureResponse extends RunningSpeedAndCadenc
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		if (features == null) {
 			dest.writeByte((byte) 0);
@@ -91,7 +91,7 @@ public class RunningSpeedAndCadenceFeatureResponse extends RunningSpeedAndCadenc
 		}
 	}
 
-	public static final Creator<RunningSpeedAndCadenceFeatureResponse> CREATOR = new Creator<RunningSpeedAndCadenceFeatureResponse>() {
+	public static final Creator<RunningSpeedAndCadenceFeatureResponse> CREATOR = new Creator<>() {
 		@Override
 		public RunningSpeedAndCadenceFeatureResponse createFromParcel(final Parcel in) {
 			return new RunningSpeedAndCadenceFeatureResponse(in);

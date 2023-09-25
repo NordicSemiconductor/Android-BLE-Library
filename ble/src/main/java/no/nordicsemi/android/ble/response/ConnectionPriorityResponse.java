@@ -135,7 +135,7 @@ public class ConnectionPriorityResponse implements ConnectionParametersUpdatedCa
 		return 0;
 	}
 
-	public static final Creator<ConnectionPriorityResponse> CREATOR = new Creator<ConnectionPriorityResponse>() {
+	public static final Creator<ConnectionPriorityResponse> CREATOR = new Creator<>() {
 		@Override
 		public ConnectionPriorityResponse createFromParcel(final Parcel in) {
 			return new ConnectionPriorityResponse(in);

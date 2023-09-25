@@ -48,14 +48,14 @@ public interface DSTOffsetCallback {
 
 		@Nullable
 		public static DSTOffset from(final int value) {
-			switch (value) {
-				case 0: return STANDARD_TIME;
-				case 2: return HALF_AN_HOUR_DAYLIGHT_TIME;
-				case 4: return DAYLIGHT_TIME;
-				case 8: return DOUBLE_DAYLIGHT_TIME;
-				case 255: return UNKNOWN;
-				default: return null;
-			}
+			return switch (value) {
+				case 0 -> STANDARD_TIME;
+				case 2 -> HALF_AN_HOUR_DAYLIGHT_TIME;
+				case 4 -> DAYLIGHT_TIME;
+				case 8 -> DOUBLE_DAYLIGHT_TIME;
+				case 255 -> UNKNOWN;
+				default -> null;
+			};
 		}
 	}
 

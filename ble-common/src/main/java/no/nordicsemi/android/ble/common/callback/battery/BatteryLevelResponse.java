@@ -78,12 +78,12 @@ public final class BatteryLevelResponse extends BatteryLevelDataCallback impleme
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		dest.writeInt(mBatteryLevel);
 	}
 
-	public static final Creator<BatteryLevelResponse> CREATOR = new Creator<BatteryLevelResponse>() {
+	public static final Creator<BatteryLevelResponse> CREATOR = new Creator<>() {
 		@Override
 		public BatteryLevelResponse createFromParcel(final Parcel in) {
 			return new BatteryLevelResponse(in);

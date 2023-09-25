@@ -33,7 +33,7 @@ import no.nordicsemi.android.ble.data.Data;
 
 import static org.junit.Assert.*;
 
-@SuppressWarnings("ConstantConditions")
+/** @noinspection DataFlowIssue*/
 public class BodySensorLocationDataCallbackTest {
 	private boolean success;
 	private int sensorLocation;
@@ -56,6 +56,7 @@ public class BodySensorLocationDataCallbackTest {
 		assertEquals(BodySensorLocationCallback.SENSOR_LOCATION_EAR_LOBE, sensorLocation);
 	}
 
+	/** @noinspection DataFlowIssue*/
 	@Test
 	public void onInvalidDataReceived() {
 		success = false;

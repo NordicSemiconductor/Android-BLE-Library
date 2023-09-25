@@ -243,8 +243,8 @@ public class Data implements Parcelable {
 		if (mValue == null || offset > mValue.length)
 			return null;
 		final byte[] strBytes = new byte[mValue.length - offset];
-		for (int i = 0; i != (mValue.length - offset); ++i)
-			strBytes[i] = mValue[offset+i];
+		if (mValue.length - offset >= 0)
+			System.arraycopy(mValue, offset, strBytes, 0, mValue.length - offset);
 		return new String(strBytes);
 	}
 
@@ -305,87 +305,66 @@ public class Data implements Parcelable {
 							   @IntRange(from = 0) final int offset) {
 		if ((offset + getTypeLen(formatType)) > size()) return null;
 
-		switch (formatType) {
-			case FORMAT_UINT8:
-				return unsignedByteToInt(mValue[offset]);
+		return switch (formatType) {
+			case FORMAT_UINT8 -> unsignedByteToInt(mValue[offset]);
+			case FORMAT_UINT16_LE -> unsignedBytesToInt(mValue[offset], mValue[offset + 1]);
+			case FORMAT_UINT16_BE -> unsignedBytesToInt(mValue[offset + 1], mValue[offset]);
+			case FORMAT_UINT24_LE -> unsignedBytesToInt(
+					mValue[offset],
+					mValue[offset + 1],
+					mValue[offset + 2],
+					(byte) 0
+			);
+			case FORMAT_UINT24_BE -> unsignedBytesToInt(
+					mValue[offset + 2],
+					mValue[offset + 1],
+					mValue[offset],
+					(byte) 0
+			);
+			case FORMAT_UINT32_LE -> unsignedBytesToInt(
+					mValue[offset],
+					mValue[offset + 1],
+					mValue[offset + 2],
+					mValue[offset + 3]
+			);
+			case FORMAT_UINT32_BE -> unsignedBytesToInt(
+					mValue[offset + 3],
+					mValue[offset + 2],
+					mValue[offset + 1],
+					mValue[offset]
+			);
+			case FORMAT_SINT8 -> unsignedToSigned(unsignedByteToInt(mValue[offset]), 8);
+			case FORMAT_SINT16_LE -> unsignedToSigned(unsignedBytesToInt(mValue[offset],
+					mValue[offset + 1]), 16);
+			case FORMAT_SINT16_BE -> unsignedToSigned(unsignedBytesToInt(mValue[offset + 1],
+					mValue[offset]), 16);
+			case FORMAT_SINT24_LE -> unsignedToSigned(unsignedBytesToInt(
+					mValue[offset],
+					mValue[offset + 1],
+					mValue[offset + 2],
+					(byte) 0
+			), 24);
+			case FORMAT_SINT24_BE -> unsignedToSigned(unsignedBytesToInt(
+					(byte) 0,
+					mValue[offset + 2],
+					mValue[offset + 1],
+					mValue[offset]
+			), 24);
+			case FORMAT_SINT32_LE -> unsignedToSigned(unsignedBytesToInt(
+					mValue[offset],
+					mValue[offset + 1],
+					mValue[offset + 2],
+					mValue[offset + 3]
+			), 32);
+			case FORMAT_SINT32_BE -> unsignedToSigned(unsignedBytesToInt(
+					mValue[offset + 3],
+					mValue[offset + 2],
+					mValue[offset + 1],
+					mValue[offset]
+			), 32);
+			default -> null;
+		};
 
-			case FORMAT_UINT16_LE:
-				return unsignedBytesToInt(mValue[offset], mValue[offset + 1]);
-			case FORMAT_UINT16_BE:
-				return unsignedBytesToInt(mValue[offset + 1], mValue[offset]);
-
-			case FORMAT_UINT24_LE:
-				return unsignedBytesToInt(
-						mValue[offset],
-						mValue[offset + 1],
-						mValue[offset + 2],
-						(byte) 0
-				);
-			case FORMAT_UINT24_BE:
-				return unsignedBytesToInt(
-						mValue[offset + 2],
-						mValue[offset + 1],
-						mValue[offset],
-						(byte) 0
-				);
-
-			case FORMAT_UINT32_LE:
-				return unsignedBytesToInt(
-						mValue[offset],
-						mValue[offset + 1],
-						mValue[offset + 2],
-						mValue[offset + 3]
-				);
-			case FORMAT_UINT32_BE:
-				return unsignedBytesToInt(
-						mValue[offset + 3],
-						mValue[offset + 2],
-						mValue[offset + 1],
-						mValue[offset]
-				);
-
-			case FORMAT_SINT8:
-				return unsignedToSigned(unsignedByteToInt(mValue[offset]), 8);
-
-			case FORMAT_SINT16_LE:
-				return unsignedToSigned(unsignedBytesToInt(mValue[offset],
-						mValue[offset + 1]), 16);
-			case FORMAT_SINT16_BE:
-				return unsignedToSigned(unsignedBytesToInt(mValue[offset + 1],
-						mValue[offset]), 16);
-
-			case FORMAT_SINT24_LE:
-				return unsignedToSigned(unsignedBytesToInt(
-						mValue[offset],
-						mValue[offset + 1],
-						mValue[offset + 2],
-						(byte) 0
-				), 24);
-			case FORMAT_SINT24_BE:
-				return unsignedToSigned(unsignedBytesToInt(
-						(byte) 0,
-						mValue[offset + 2],
-						mValue[offset + 1],
-						mValue[offset]
-				), 24);
-
-			case FORMAT_SINT32_LE:
-				return unsignedToSigned(unsignedBytesToInt(
-						mValue[offset],
-						mValue[offset + 1],
-						mValue[offset + 2],
-						mValue[offset + 3]
-				), 32);
-			case FORMAT_SINT32_BE:
-				return unsignedToSigned(unsignedBytesToInt(
-						mValue[offset + 3],
-						mValue[offset + 2],
-						mValue[offset + 1],
-						mValue[offset]
-				), 32);
-		}
-
-		return null;
 	}
 
 	/**
@@ -406,39 +385,34 @@ public class Data implements Parcelable {
 							 @IntRange(from = 0) final int offset) {
 		if ((offset + getTypeLen(formatType)) > size()) return null;
 
-		switch (formatType) {
-			case FORMAT_UINT32_LE:
-				return unsignedBytesToLong(
-						mValue[offset],
-						mValue[offset + 1],
-						mValue[offset + 2],
-						mValue[offset + 3]
-				);
-			case FORMAT_UINT32_BE:
-				return unsignedBytesToLong(
-						mValue[offset + 3],
-						mValue[offset + 2],
-						mValue[offset + 1],
-						mValue[offset]
-				);
+		return switch (formatType) {
+			case FORMAT_UINT32_LE -> unsignedBytesToLong(
+					mValue[offset],
+					mValue[offset + 1],
+					mValue[offset + 2],
+					mValue[offset + 3]
+			);
+			case FORMAT_UINT32_BE -> unsignedBytesToLong(
+					mValue[offset + 3],
+					mValue[offset + 2],
+					mValue[offset + 1],
+					mValue[offset]
+			);
+			case FORMAT_SINT32_LE -> unsignedToSigned(unsignedBytesToLong(
+					mValue[offset],
+					mValue[offset + 1],
+					mValue[offset + 2],
+					mValue[offset + 3]
+			), 32);
+			case FORMAT_SINT32_BE -> unsignedToSigned(unsignedBytesToLong(
+					mValue[offset + 3],
+					mValue[offset + 2],
+					mValue[offset + 1],
+					mValue[offset]
+			), 32);
+			default -> null;
+		};
 
-			case FORMAT_SINT32_LE:
-				return unsignedToSigned(unsignedBytesToLong(
-						mValue[offset],
-						mValue[offset + 1],
-						mValue[offset + 2],
-						mValue[offset + 3]
-				), 32);
-			case FORMAT_SINT32_BE:
-				return unsignedToSigned(unsignedBytesToLong(
-						mValue[offset + 3],
-						mValue[offset + 2],
-						mValue[offset + 1],
-						mValue[offset]
-				), 32);
-		}
-
-		return null;
 	}
 
 	/**
@@ -454,19 +428,18 @@ public class Data implements Parcelable {
 		if ((offset + getTypeLen(formatType)) > size()) return null;
 
 		switch (formatType) {
-			case FORMAT_SFLOAT:
+			case FORMAT_SFLOAT -> {
 				if (mValue[offset + 1] == 0x07 && mValue[offset] == (byte) 0xFE)
 					return Float.POSITIVE_INFINITY;
 				if ((mValue[offset + 1] == 0x07 && mValue[offset] == (byte) 0xFF) ||
-					(mValue[offset + 1] == 0x08 && mValue[offset] == 0x00) ||
-					(mValue[offset + 1] == 0x08 && mValue[offset] == 0x01))
+						(mValue[offset + 1] == 0x08 && mValue[offset] == 0x00) ||
+						(mValue[offset + 1] == 0x08 && mValue[offset] == 0x01))
 					return Float.NaN;
 				if (mValue[offset + 1] == 0x08 && mValue[offset] == 0x02)
 					return Float.NEGATIVE_INFINITY;
-
 				return bytesToFloat(mValue[offset], mValue[offset + 1]);
-
-			case FORMAT_FLOAT:
+			}
+			case FORMAT_FLOAT -> {
 				if (mValue[offset + 3] == 0x00) {
 					if (mValue[offset + 2] == 0x7F && mValue[offset + 1] == (byte) 0xFF) {
 						if (mValue[offset] == (byte) 0xFE)
@@ -480,9 +453,9 @@ public class Data implements Parcelable {
 							return Float.NEGATIVE_INFINITY;
 					}
 				}
-
 				return bytesToFloat(mValue[offset], mValue[offset + 1],
 						mValue[offset + 2], mValue[offset + 3]);
+			}
 		}
 
 		return null;
@@ -590,7 +563,7 @@ public class Data implements Parcelable {
 		return 0;
 	}
 
-	public static final Creator<Data> CREATOR = new Creator<Data>() {
+	public static final Creator<Data> CREATOR = new Creator<>() {
 		@Override
 		public Data createFromParcel(final Parcel in) {
 			return new Data(in);

@@ -35,7 +35,6 @@ import no.nordicsemi.android.ble.data.Data;
  * Data callback that parses 1-byte value into a Time Zone offset.
  * If the value received is shorter than 1 byte the
  * {@link #onInvalidDataReceived(BluetoothDevice, Data)} callback will be called.
- * See: https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.time_zone.xml
  */
 @SuppressWarnings("WeakerAccess")
 public abstract class TimeZoneDataCallback extends ProfileReadResponse implements TimeZoneCallback {

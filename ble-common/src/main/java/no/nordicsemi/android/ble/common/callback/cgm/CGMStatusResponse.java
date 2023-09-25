@@ -117,7 +117,7 @@ public final class CGMStatusResponse extends CGMStatusDataCallback implements CR
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		dest.writeInt(timeOffset);
 		if (status == null) {
@@ -132,7 +132,7 @@ public final class CGMStatusResponse extends CGMStatusDataCallback implements CR
 		dest.writeByte((byte) (crcValid ? 1 : 0));
 	}
 
-	public static final Creator<CGMStatusResponse> CREATOR = new Creator<CGMStatusResponse>() {
+	public static final Creator<CGMStatusResponse> CREATOR = new Creator<>() {
 		@Override
 		public CGMStatusResponse createFromParcel(final Parcel in) {
 			return new CGMStatusResponse(in);

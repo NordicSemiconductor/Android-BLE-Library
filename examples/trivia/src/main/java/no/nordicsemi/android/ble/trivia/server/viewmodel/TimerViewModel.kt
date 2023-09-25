@@ -1,7 +1,10 @@
 package no.nordicsemi.android.ble.trivia.server.viewmodel
 
-import androidx.lifecycle.ViewModel
+import android.app.Application
+import android.content.Context
+import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
+import dagger.hilt.android.qualifiers.ApplicationContext
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -13,7 +16,9 @@ object Timer {
     const val TOTAL_TIME = 20_000L
 }
 
-open class TimerViewModel: ViewModel() {
+open class TimerViewModel(
+    @ApplicationContext application: Context
+): AndroidViewModel(application = application as Application) {
 
     private val _ticks = MutableStateFlow(Timer.TOTAL_TIME)
     val ticks = _ticks.asStateFlow()

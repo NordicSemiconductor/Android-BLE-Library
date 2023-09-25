@@ -34,9 +34,7 @@ import no.nordicsemi.android.ble.data.Data;
  * Record Access Control Point callback that parses received data.
  * If the value does match characteristic specification the
  * {@link #onInvalidDataReceived(BluetoothDevice, Data)} callback will be called.
- * See: https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.record_access_control_point.xml
  */
-@SuppressWarnings({"ConstantConditions", "WeakerAccess"})
 public abstract class RecordAccessControlPointDataCallback extends ProfileReadResponse implements RecordAccessControlPointCallback {
 	private final static int OP_CODE_NUMBER_OF_STORED_RECORDS_RESPONSE = 5;
 	private final static int OP_CODE_RESPONSE_CODE = 6;
@@ -52,6 +50,7 @@ public abstract class RecordAccessControlPointDataCallback extends ProfileReadRe
 		super(in);
 	}
 
+	/** @noinspection DataFlowIssue*/
 	@Override
 	public void onDataReceived(@NonNull final BluetoothDevice device, @NonNull final Data data) {
 		super.onDataReceived(device, data);
@@ -74,29 +73,23 @@ public abstract class RecordAccessControlPointDataCallback extends ProfileReadRe
 		}
 
 		switch (opCode) {
-			case OP_CODE_NUMBER_OF_STORED_RECORDS_RESPONSE: {
+			case OP_CODE_NUMBER_OF_STORED_RECORDS_RESPONSE -> {
 				// Field size is defined per service
 				int numberOfRecords;
 
 				switch (data.size() - 2) {
-					case 1:
-						numberOfRecords = data.getIntValue(Data.FORMAT_UINT8, 2);
-						break;
-					case 2:
-						numberOfRecords = data.getIntValue(Data.FORMAT_UINT16_LE, 2);
-						break;
-					case 4:
-						numberOfRecords = data.getIntValue(Data.FORMAT_UINT32_LE, 2);
-						break;
-					default:
+					case 1 -> numberOfRecords = data.getIntValue(Data.FORMAT_UINT8, 2);
+					case 2 -> numberOfRecords = data.getIntValue(Data.FORMAT_UINT16_LE, 2);
+					case 4 -> numberOfRecords = data.getIntValue(Data.FORMAT_UINT32_LE, 2);
+					default -> {
 						// Other field sizes are not supported
 						onInvalidDataReceived(device, data);
 						return;
+					}
 				}
 				onNumberOfRecordsReceived(device, numberOfRecords);
-				break;
 			}
-			case OP_CODE_RESPONSE_CODE: {
+			case OP_CODE_RESPONSE_CODE -> {
 				if (data.size() != 4) {
 					onInvalidDataReceived(device, data);
 					return;
@@ -111,7 +104,6 @@ public abstract class RecordAccessControlPointDataCallback extends ProfileReadRe
 				} else {
 					onRecordAccessOperationError(device, requestCode, responseCode);
 				}
-				break;
 			}
 		}
 	}

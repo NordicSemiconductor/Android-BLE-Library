@@ -32,7 +32,7 @@ import no.nordicsemi.android.ble.data.Data;
 
 import static org.junit.Assert.assertEquals;
 
-@SuppressWarnings("ConstantConditions")
+/** @noinspection DataFlowIssue*/
 public class BatteryLevelDataCallbackTest {
 
 	@Test

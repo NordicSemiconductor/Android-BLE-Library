@@ -207,7 +207,7 @@ public final class GlucoseMeasurementContextResponse extends GlucoseMeasurementC
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		dest.writeInt(sequenceNumber);
 		if (carbohydrateAmount == null) {
@@ -248,7 +248,7 @@ public final class GlucoseMeasurementContextResponse extends GlucoseMeasurementC
 		}
 	}
 
-	public static final Creator<GlucoseMeasurementContextResponse> CREATOR = new Creator<GlucoseMeasurementContextResponse>() {
+	public static final Creator<GlucoseMeasurementContextResponse> CREATOR = new Creator<>() {
 		@Override
 		public GlucoseMeasurementContextResponse createFromParcel(final Parcel in) {
 			return new GlucoseMeasurementContextResponse(in);

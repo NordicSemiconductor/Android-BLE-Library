@@ -27,18 +27,19 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ServerViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @ApplicationContext context: Context,
     private val advertiser: AdvertisingManager,
     private val serverManager: ServerManager,
     private val questionRepository: QuestionRepository,
-) : TimerViewModel() {
-    val TAG = ServerViewModel::class.java.simpleName
+) : TimerViewModel(context) {
+    private val TAG: String = ServerViewModel::class.java.simpleName
+
     private val _serverState: MutableStateFlow<ServerViewState> =
         MutableStateFlow(ServerViewState())
     val serverViewState = _serverState.asStateFlow()
     private var clients: MutableStateFlow<List<ServerConnection>> = MutableStateFlow(emptyList())
     private var questionSaved: Questions? = null
-    var questionIndex = 0
+    private var questionIndex = 0
     private val totalQuestions = questionSaved?.questions?.size ?: 10
     private val mapNameWithDevice: MutableStateFlow<List<Name>> = MutableStateFlow(emptyList())
 
@@ -125,7 +126,7 @@ class ServerViewModel @Inject constructor(
             }
 
             override fun onDeviceConnectedToServer(device: BluetoothDevice) {
-                ServerConnection(context, viewModelScope, device)
+                ServerConnection(getApplication(), viewModelScope, device)
                     .apply {
                         stateAsFlow()
                             .onEach { connectionState ->

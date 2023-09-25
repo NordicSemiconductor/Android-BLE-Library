@@ -58,12 +58,12 @@ public final class AlertLevelResponse extends AlertLevelDataCallback implements 
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		dest.writeInt(level);
 	}
 
-	public static final Creator<AlertLevelResponse> CREATOR = new Creator<AlertLevelResponse>() {
+	public static final Creator<AlertLevelResponse> CREATOR = new Creator<>() {
 		@Override
 		public AlertLevelResponse createFromParcel(final Parcel in) {
 			return new AlertLevelResponse(in);

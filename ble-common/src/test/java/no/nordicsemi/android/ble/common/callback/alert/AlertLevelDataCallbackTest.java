@@ -12,6 +12,7 @@ import no.nordicsemi.android.ble.data.Data;
 
 import static org.junit.Assert.*;
 
+/** @noinspection DataFlowIssue*/
 public class AlertLevelDataCallbackTest {
 
 	@Test

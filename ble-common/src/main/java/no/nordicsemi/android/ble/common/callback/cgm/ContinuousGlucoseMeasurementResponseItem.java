@@ -5,6 +5,7 @@ import android.os.Parcelable;
 import androidx.annotation.Nullable;
 import no.nordicsemi.android.ble.common.profile.cgm.CGMTypes;
 
+/** @noinspection unused*/
 public class ContinuousGlucoseMeasurementResponseItem implements Parcelable {
     private float glucoseConcentration;
     @Nullable
@@ -57,15 +58,15 @@ public class ContinuousGlucoseMeasurementResponseItem implements Parcelable {
         this.glucoseConcentration = glucoseConcentration;
     }
 
-    public void setTrend(Float trend) {
+    public void setTrend(@Nullable Float trend) {
         this.trend = trend;
     }
 
-    public void setQuality(Float quality) {
+    public void setQuality(@Nullable Float quality) {
         this.quality = quality;
     }
 
-    public void setStatus(CGMTypes.CGMStatus status) {
+    public void setStatus(@Nullable CGMTypes.CGMStatus status) {
         this.status = status;
     }
 
@@ -127,7 +128,7 @@ public class ContinuousGlucoseMeasurementResponseItem implements Parcelable {
         dest.writeInt(timeOffset);
     }
 
-    public static final Creator<ContinuousGlucoseMeasurementResponseItem> CREATOR = new Creator<ContinuousGlucoseMeasurementResponseItem>() {
+    public static final Creator<ContinuousGlucoseMeasurementResponseItem> CREATOR = new Creator<>() {
         @Override
         public ContinuousGlucoseMeasurementResponseItem createFromParcel(final Parcel in) {
             return new ContinuousGlucoseMeasurementResponseItem(in);

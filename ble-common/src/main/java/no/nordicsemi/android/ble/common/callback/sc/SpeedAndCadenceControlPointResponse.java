@@ -112,7 +112,7 @@ public final class SpeedAndCadenceControlPointResponse extends SpeedAndCadenceCo
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		dest.writeByte((byte) (operationCompleted ? 1 : 0));
 		dest.writeInt(requestCode);
@@ -120,7 +120,7 @@ public final class SpeedAndCadenceControlPointResponse extends SpeedAndCadenceCo
 		dest.writeIntArray(locations);
 	}
 
-	public static final Creator<SpeedAndCadenceControlPointResponse> CREATOR = new Creator<SpeedAndCadenceControlPointResponse>() {
+	public static final Creator<SpeedAndCadenceControlPointResponse> CREATOR = new Creator<>() {
 		@Override
 		public SpeedAndCadenceControlPointResponse createFromParcel(final Parcel in) {
 			return new SpeedAndCadenceControlPointResponse(in);

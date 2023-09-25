@@ -73,12 +73,12 @@ public final class TemperatureTypeResponse extends TemperatureTypeDataCallback i
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		dest.writeInt(type);
 	}
 
-	public static final Creator<TemperatureTypeResponse> CREATOR = new Creator<TemperatureTypeResponse>() {
+	public static final Creator<TemperatureTypeResponse> CREATOR = new Creator<>() {
 		@Override
 		public TemperatureTypeResponse createFromParcel(final Parcel in) {
 			return new TemperatureTypeResponse(in);

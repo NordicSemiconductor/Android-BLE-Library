@@ -73,12 +73,12 @@ public final class BodySensorLocationResponse extends BodySensorLocationDataCall
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		dest.writeInt(sensorLocation);
 	}
 
-	public static final Creator<BodySensorLocationResponse> CREATOR = new Creator<BodySensorLocationResponse>() {
+	public static final Creator<BodySensorLocationResponse> CREATOR = new Creator<>() {
 		@Override
 		public BodySensorLocationResponse createFromParcel(final Parcel in) {
 			return new BodySensorLocationResponse(in);

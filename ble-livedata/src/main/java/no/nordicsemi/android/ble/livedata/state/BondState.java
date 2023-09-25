@@ -3,6 +3,7 @@ package no.nordicsemi.android.ble.livedata.state;
 import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 
+/** @noinspection unused*/
 public class BondState {
 
 	public enum State {
@@ -13,7 +14,7 @@ public class BondState {
 
 	public static final class NotBonded extends BondState {
 		@RestrictTo(RestrictTo.Scope.LIBRARY)
-		public static NotBonded INSTANCE = new NotBonded();
+		public static final NotBonded INSTANCE = new NotBonded();
 		private NotBonded() {
 			super(State.NOT_BONDED);
 		}
@@ -21,7 +22,7 @@ public class BondState {
 
 	public static final class Bonding extends BondState {
 		@RestrictTo(RestrictTo.Scope.LIBRARY)
-		public static Bonding INSTANCE = new Bonding();
+		public static final Bonding INSTANCE = new Bonding();
 		private Bonding() {
 			super(State.BONDING);
 		}
@@ -29,7 +30,7 @@ public class BondState {
 
 	public static final class Bonded extends BondState {
 		@RestrictTo(RestrictTo.Scope.LIBRARY)
-		public static Bonded INSTANCE = new Bonded();
+		public static final Bonded INSTANCE = new Bonded();
 		private Bonded() {
 			super(State.BONDED);
 		}

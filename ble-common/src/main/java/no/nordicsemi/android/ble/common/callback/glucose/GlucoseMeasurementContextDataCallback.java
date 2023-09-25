@@ -35,9 +35,7 @@ import no.nordicsemi.android.ble.data.Data;
  * If the value received do not match required syntax
  * {@link #onInvalidDataReceived(BluetoothDevice, Data)} callback will be called.
  * will be called.
- * See: https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.glucose_measurement_context.xml
  */
-@SuppressWarnings({"ConstantConditions", "WeakerAccess"})
 public abstract class GlucoseMeasurementContextDataCallback extends ProfileReadResponse implements GlucoseMeasurementContextCallback {
 
 	public GlucoseMeasurementContextDataCallback() {
@@ -48,6 +46,7 @@ public abstract class GlucoseMeasurementContextDataCallback extends ProfileReadR
 		super(in);
 	}
 
+	/** @noinspection DataFlowIssue*/
 	@Override
 	public void onDataReceived(@NonNull final BluetoothDevice device, @NonNull final Data data) {
 		super.onDataReceived(device, data);

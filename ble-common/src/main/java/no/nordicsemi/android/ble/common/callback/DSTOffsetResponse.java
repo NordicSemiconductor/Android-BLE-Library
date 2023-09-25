@@ -77,7 +77,7 @@ public final class DSTOffsetResponse extends DSTOffsetDataCallback implements Pa
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		if (offset == null) {
 			dest.writeByte((byte) 0);
@@ -87,7 +87,7 @@ public final class DSTOffsetResponse extends DSTOffsetDataCallback implements Pa
 		}
 	}
 
-	public static final Creator<DSTOffsetResponse> CREATOR = new Creator<DSTOffsetResponse>() {
+	public static final Creator<DSTOffsetResponse> CREATOR = new Creator<>() {
 		@Override
 		public DSTOffsetResponse createFromParcel(final Parcel in) {
 			return new DSTOffsetResponse(in);

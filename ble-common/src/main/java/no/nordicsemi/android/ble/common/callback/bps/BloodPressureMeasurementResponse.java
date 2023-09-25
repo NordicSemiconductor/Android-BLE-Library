@@ -160,7 +160,7 @@ public final class BloodPressureMeasurementResponse extends BloodPressureMeasure
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		dest.writeFloat(systolic);
 		dest.writeFloat(diastolic);
@@ -192,7 +192,7 @@ public final class BloodPressureMeasurementResponse extends BloodPressureMeasure
 		}
 	}
 
-	public static final Creator<BloodPressureMeasurementResponse> CREATOR = new Creator<BloodPressureMeasurementResponse>() {
+	public static final Creator<BloodPressureMeasurementResponse> CREATOR = new Creator<>() {
 		@Override
 		public BloodPressureMeasurementResponse createFromParcel(final Parcel in) {
 			return new BloodPressureMeasurementResponse(in);

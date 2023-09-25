@@ -9,7 +9,7 @@ import androidx.annotation.NonNull;
  * When migrating from BLE Manager 2.1.1 to 2.2.0, the BleManager is no longer a template class.
  * Callbacks need to be passed in other way, e.g. using LiveData, RxJava or with a callback,
  * but the BleManager will not hold the callbacks reference.
- *
+ * <p>
  * To make the migration easier, this class behaves the same way as the old BleManager.
  * Replace the base class of your manager to LegacyBleManager.
  * @param <E> the callbacks interface.

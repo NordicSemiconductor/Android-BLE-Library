@@ -34,7 +34,7 @@ import no.nordicsemi.android.ble.data.Data;
 import static org.junit.Assert.assertSame;
 import static org.junit.Assert.assertTrue;
 
-@SuppressWarnings("ConstantConditions")
+/** @noinspection DataFlowIssue*/
 public class DSTOffsetDataCallbackTest {
 	private DSTOffsetCallback.DSTOffset result;
 	private boolean success;

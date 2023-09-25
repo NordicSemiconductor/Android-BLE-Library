@@ -126,7 +126,7 @@ public final class HeartRateMeasurementResponse extends HeartRateMeasurementData
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		dest.writeInt(heartRate);
 		dest.writeByte((byte) (contactDetected == null ? 0 : contactDetected ? 1 : 2));
@@ -144,7 +144,7 @@ public final class HeartRateMeasurementResponse extends HeartRateMeasurementData
 		}
 	}
 
-	public static final Creator<HeartRateMeasurementResponse> CREATOR = new Creator<HeartRateMeasurementResponse>() {
+	public static final Creator<HeartRateMeasurementResponse> CREATOR = new Creator<>() {
 		@Override
 		public HeartRateMeasurementResponse createFromParcel(final Parcel in) {
 			return new HeartRateMeasurementResponse(in);

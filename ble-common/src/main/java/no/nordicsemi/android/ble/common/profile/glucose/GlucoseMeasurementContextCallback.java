@@ -50,24 +50,16 @@ public interface GlucoseMeasurementContextCallback {
 		}
 
 		public static Carbohydrate from(final int code) {
-			switch (code) {
-				case 1:
-					return BREAKFAST;
-				case 2:
-					return LUNCH;
-				case 3:
-					return DINNER;
-				case 4:
-					return SNACK;
-				case 5:
-					return DRINK;
-				case 6:
-					return SUPPER;
-				case 7:
-					return BRUNCH;
-				default:
-					return RESERVED;
-			}
+			return switch (code) {
+				case 1 -> BREAKFAST;
+				case 2 -> LUNCH;
+				case 3 -> DINNER;
+				case 4 -> SNACK;
+				case 5 -> DRINK;
+				case 6 -> SUPPER;
+				case 7 -> BRUNCH;
+				default -> RESERVED;
+			};
 		}
 	}
 
@@ -86,20 +78,14 @@ public interface GlucoseMeasurementContextCallback {
 		}
 
 		public static Meal from(final int code) {
-			switch (code) {
-				case 1:
-					return PREPRANDIAL;
-				case 2:
-					return POSTPRANDIAL;
-				case 3:
-					return FASTING;
-				case 4:
-					return CASUAL;
-				case 5:
-					return BEDTIME;
-				default:
-					return RESERVED;
-			}
+			return switch (code) {
+				case 1 -> PREPRANDIAL;
+				case 2 -> POSTPRANDIAL;
+				case 3 -> FASTING;
+				case 4 -> CASUAL;
+				case 5 -> BEDTIME;
+				default -> RESERVED;
+			};
 		}
 	}
 
@@ -117,18 +103,13 @@ public interface GlucoseMeasurementContextCallback {
 		}
 
 		public static Tester from(final int code) {
-			switch (code) {
-				case 1:
-					return SELF;
-				case 2:
-					return HEALTH_CARE_PROFESSIONAL;
-				case 3:
-					return LAB_TEST;
-				case 15:
-					return NOT_AVAILABLE;
-				default:
-					return RESERVED;
-			}
+			return switch (code) {
+				case 1 -> SELF;
+				case 2 -> HEALTH_CARE_PROFESSIONAL;
+				case 3 -> LAB_TEST;
+				case 15 -> NOT_AVAILABLE;
+				default -> RESERVED;
+			};
 		}
 	}
 
@@ -148,22 +129,15 @@ public interface GlucoseMeasurementContextCallback {
 		}
 
 		public static Health from(final int code) {
-			switch (code) {
-				case 1:
-					return MINOR_HEALTH_ISSUES;
-				case 2:
-					return MAJOR_HEALTH_ISSUES;
-				case 3:
-					return DURING_MENSES;
-				case 4:
-					return UNDER_STRESS;
-				case 5:
-					return NO_HEALTH_ISSUES;
-				case 15:
-					return NOT_AVAILABLE;
-				default:
-					return RESERVED;
-			}
+			return switch (code) {
+				case 1 -> MINOR_HEALTH_ISSUES;
+				case 2 -> MAJOR_HEALTH_ISSUES;
+				case 3 -> DURING_MENSES;
+				case 4 -> UNDER_STRESS;
+				case 5 -> NO_HEALTH_ISSUES;
+				case 15 -> NOT_AVAILABLE;
+				default -> RESERVED;
+			};
 		}
 	}
 
@@ -182,20 +156,14 @@ public interface GlucoseMeasurementContextCallback {
 		}
 
 		public static Medication from(final int code) {
-			switch (code) {
-				case 1:
-					return RAPID_ACTING_INSULIN;
-				case 2:
-					return SHORT_ACTING_INSULIN;
-				case 3:
-					return INTERMEDIATE_ACTING_INSULIN;
-				case 4:
-					return LONG_ACTING_INSULIN;
-				case 5:
-					return PRE_MIXED_INSULIN;
-				default:
-					return RESERVED;
-			}
+			return switch (code) {
+				case 1 -> RAPID_ACTING_INSULIN;
+				case 2 -> SHORT_ACTING_INSULIN;
+				case 3 -> INTERMEDIATE_ACTING_INSULIN;
+				case 4 -> LONG_ACTING_INSULIN;
+				case 5 -> PRE_MIXED_INSULIN;
+				default -> RESERVED;
+			};
 		}
 	}
 

@@ -35,9 +35,7 @@ import no.nordicsemi.android.ble.data.Data;
  * Data callback that parses 1-byte value into a {@link DSTOffset}.
  * If the value received is shorter than 1 byte the
  * {@link #onInvalidDataReceived(BluetoothDevice, Data)} callback will be called.
- * See: https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.dst_offset.xml
  */
-@SuppressWarnings({"ConstantConditions", "WeakerAccess"})
 public abstract class DSTOffsetDataCallback extends ProfileReadResponse implements DSTOffsetCallback {
 
 	public DSTOffsetDataCallback() {
@@ -66,6 +64,7 @@ public abstract class DSTOffsetDataCallback extends ProfileReadResponse implemen
 	 * @param data input data.
 	 * @param offset offset to read DST Offset from.
 	 * @return DSTOffset field or null.
+	 * @noinspection DataFlowIssue
 	 */
 	@Nullable
 	public static DSTOffset readDSTOffset(@NonNull final Data data, final int offset) {

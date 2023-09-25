@@ -38,7 +38,7 @@ import no.nordicsemi.android.ble.callback.SuccessCallback;
  * This queue performs the operations using Reliable Write, also known as Queued Write, procedure.
  * Before the first operation is executed, the Reliable Write procedure is started. Then, all
  * operations are executed one by one.
- *
+ * <p>
  * Cancellation will cause the Reliable Write procedure to be aborted and all operations shall be
  * discarded on the device side.
  *

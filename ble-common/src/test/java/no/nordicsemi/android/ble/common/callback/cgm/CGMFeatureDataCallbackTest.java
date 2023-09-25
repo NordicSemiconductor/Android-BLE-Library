@@ -36,7 +36,6 @@ import static org.junit.Assert.assertFalse;
 import static org.junit.Assert.assertNotNull;
 import static org.junit.Assert.assertTrue;
 
-@SuppressWarnings("ConstantConditions")
 public class CGMFeatureDataCallbackTest {
 	private boolean called;
 
@@ -85,6 +84,7 @@ public class CGMFeatureDataCallbackTest {
 		assertTrue(data.setValue(0x16, Data.FORMAT_UINT8, 3));
 		assertTrue(data.setValue(0xC18A, Data.FORMAT_UINT16_LE, 4));
 		called = false;
+		//noinspection DataFlowIssue
 		callback.onDataReceived(null, data);
 		assertTrue(called);
 	}
@@ -134,6 +134,7 @@ public class CGMFeatureDataCallbackTest {
 		data.setValue(0x16, Data.FORMAT_UINT8, 3);
 		data.setValue(0xFFFF, Data.FORMAT_UINT16_LE, 4);
 		called = false;
+		//noinspection DataFlowIssue
 		callback.onDataReceived(null, data);
 		assertTrue(called);
 	}
@@ -162,6 +163,7 @@ public class CGMFeatureDataCallbackTest {
 		assertTrue(data.setValue(0x16, Data.FORMAT_UINT8, 3));
 		assertTrue(data.setValue(0xBEAF, Data.FORMAT_UINT16_LE, 4));
 		called = false;
+		//noinspection DataFlowIssue
 		callback.onDataReceived(null, data);
 		assertTrue(called);
 	}
@@ -189,6 +191,7 @@ public class CGMFeatureDataCallbackTest {
 		assertTrue(data.setValue(0b11001111001101110, Data.FORMAT_UINT24_LE, 0));
 		assertTrue(data.setValue(0x16, Data.FORMAT_UINT8, 3));
 		called = false;
+		//noinspection DataFlowIssue
 		callback.onDataReceived(null, data);
 		assertTrue(called);
 	}
@@ -217,6 +220,7 @@ public class CGMFeatureDataCallbackTest {
 		assertTrue(data.setValue(0x16, Data.FORMAT_UINT8, 3));
 		assertTrue(data.setValue(0xBEAF, Data.FORMAT_UINT16_LE, 4));
 		called = false;
+		//noinspection DataFlowIssue
 		callback.onDataReceived(null, data);
 		assertTrue(called);
 	}
