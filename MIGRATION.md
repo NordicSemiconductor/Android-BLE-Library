@@ -20,37 +20,37 @@ having this be a default. As of AGP 3.2 there is no reason not to do this
 
 1. Replace `initGatt(BluetoothGatt)` with `initialize()`:
 
-Old code:
-```java
-@Override
-protected Deque<Request> initGatt(final BluetoothGatt gatt) {
-  final LinkedList<Request> requests = new LinkedList<>();
-  requests.add(Request.newEnableNotificationsRequest(characteristic));
-  return requests;
-}
-```
-New code:
-```java
-@Override
-protected void initialize() {
-  setNotificationCallback(characteristic)
-    .with(new DataReceivedCallback() {
-      @Override
-      public void onDataReceived(@NonNull final BluetoothDevice device, @NonNull final Data data) {
-        ...
-      }
-    });
-  enableNotifications(characteristic)
-    .enqueue();
-}
-```
-
-See changes in [Android nRF Toolbox](https://github.com/NordicSemiconductor/Android-nRF-Toolbox/) 
-and [Android nRF Blinky](https://github.com/NordicSemiconductor/Android-nRF-Blinky/) for more examples.
-
-Remember to call `.enqueue()` method for initialization requests!
-
-Connect's completion callback is called after the initialization is done (without or with errors).
+   Old code:
+   ```java
+   @Override
+   protected Deque<Request> initGatt(final BluetoothGatt gatt) {
+     final LinkedList<Request> requests = new LinkedList<>();
+     requests.add(Request.newEnableNotificationsRequest(characteristic));
+     return requests;
+   }
+   ```
+   New code:
+   ```java
+   @Override
+   protected void initialize() {
+     setNotificationCallback(characteristic)
+       .with(new DataReceivedCallback() {
+         @Override
+         public void onDataReceived(@NonNull final BluetoothDevice device, @NonNull final Data data) {
+           ...
+         }
+       });
+     enableNotifications(characteristic)
+       .enqueue();
+   }
+   ```
+   
+   See changes in [Android nRF Toolbox](https://github.com/NordicSemiconductor/Android-nRF-Toolbox/) 
+   and [Android nRF Blinky](https://github.com/NordicSemiconductor/Android-nRF-Blinky/) for more examples.
+   
+   Remember to call `.enqueue()` method for initialization requests!
+   
+   `ConnectRequest`'s completion callback is called after the initialization is done (without or with errors).
 
 2. Move your callback implementation from `BleManagerGattCallback` to request callbacks.
 3. To split logic from parsing, we recommend to extend `DataReceivedCallback` interface in a class 
@@ -84,34 +84,34 @@ It has all the parsers implemented. If your profile isn't there, we are happy to
 
 1. To make quick transition from 2.1 to 2.2, change the base class of your `BleManager` implementation
    to `LegacyBleManager` and make sure you return an object (not *null*) from `getGattCallback()`:
+      
+   ```java
+   class MyBleManager extends LegacyBleManager<MyBleManagerCallbacks> {
    
-```java
-class MyBleManager extends LegacyBleManager<MyBleManagerCallbacks> {
-
-    // [...]
-
-    @NonNull
-    @Override
-    protected BleManagerGattCallback getGattCallback() {
-        // Before 2.2 it was allowed to return a class property here, but properties are initiated
-        // after the constructor, so they would still be null here. Instead, create a new object:
-        return new MyBleManagerGattCallback();
-    }
-
-    // [...]
-
-}
-```
+       // [...]
+   
+       @NonNull
+       @Override
+       protected BleManagerGattCallback getGattCallback() {
+           // Before 2.2 it was allowed to return a class property here, but properties are initiated
+           // after the constructor, so they would still be null here. Instead, create a new object:
+           return new MyBleManagerGattCallback();
+       }
+   
+       // [...]
+   
+   }
+   ```
 
 #### Proper migration
 
 1. Remove the type parameter from your `BleManager` implementation class:
 
-```java
-class MyBleManager extends BleManager {
-    // [...]
-}
-```  
+   ```java
+   class MyBleManager extends BleManager {
+       // [...]
+   }
+   ```  
 
 2. Replace `setGattCallbacks(callbacks)` with `setConnectionObserver(observer)` and optionally
    `setBondingObserver(observer)`. If you are using `androidx.lifecycle.LiveData`, consider using
@@ -133,3 +133,8 @@ class MyBleManager extends BleManager {
    As `BleManager` is no longer a generic type, you'll have to implement this logic on your own.
    E.g., nRF Blinky is exposing LED and Button state using `LiveData`, which are available for the
    Activity through `ViewModel`.
+
+## Changes in version 2.7
+
+1. The Android BLE Library 2.7 was migrated to Java 17 due to minimum Java version in current 
+   version of Android Studio.

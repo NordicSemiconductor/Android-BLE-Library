@@ -38,26 +38,26 @@ notify about connection and bond state using `androidx.lifecycle.LiveData`.
 Clone this project and add it to your project:
 
 1. In *settings.gradle* file add the following lines:
-```groovy
-if (file('../Android-BLE-Library').exists()) {
-    includeBuild('../Android-BLE-Library')
-}
-```
+    ```groovy
+    if (file('../Android-BLE-Library').exists()) {
+        includeBuild('../Android-BLE-Library')
+    }
+    ```
 2. Sync project and build it.
 
-The library uses Java 1.8 features. If you're using Android Studio below 4.2, make sure your
-*build.gradle* includes the following configuration:
+   The library uses Java 1.18 features. If you're using Android Studio below Giraffe, make sure your
+   *build.gradle* includes the following configuration:
 
-```groovy
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-    // For Kotlin projects additionally:
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-```
+   ```groovy
+       compileOptions {
+           sourceCompatibility JavaVersion.VERSION_1_17
+           targetCompatibility JavaVersion.VERSION_1_17
+       }
+       // For Kotlin projects additionally:
+       kotlinOptions {
+           jvmTarget = "1.17"
+       }
+    ```
 </details>
 
 ## Features
@@ -92,6 +92,13 @@ The library uses Java 1.8 features. If you're using Android Studio below 4.2, ma
 
 See [Releases](https://github.com/NordicSemiconductor/Android-BLE-Library/releases) for details.
 Below is short summary:
+
+<details>
+	<summary>Version 2.7</summary>
+
+1. Library has been migrated to Java 17 due to minimum supported version in Android Studio Giraffe.
+
+</details>
 
 <details>
 	<summary>Version 2.6</summary>
@@ -140,14 +147,14 @@ Below is short summary:
 4. Support for new `onServicesChanged()` callback, added in API 31 (Android 12).
 5. Option to cancel pending Bluetooth LE connection using `ConnectRequest.cancelPendingConnection()`.
 
-When using coroutines, use `.suspend()` method in `Request`, instead of `enqueue()` or `await()`.
+    When using coroutines, use `.suspend()` method in `Request`, instead of `enqueue()` or `await()`.
 
-To register to notifications and indications (or incoming write requests for server) use
-```kotlin
-setNotificationCallback(characteristic)
-   .merge(JsonMerger()) // Example of how to use JsonMerger, optional
-   .asFlow()
-```
+    To register to notifications and indications (or incoming write requests for server) use
+    ```kotlin
+    setNotificationCallback(characteristic)
+       .merge(JsonMerger()) // Example of how to use JsonMerger, optional
+       .asFlow()
+    ```
 </details>
 
 <details>
