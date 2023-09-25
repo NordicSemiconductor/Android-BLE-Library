@@ -9,8 +9,8 @@
     <string name="join_game">Join Game</string>
 
     <string name="looking_for_clients">Looking for clients…</string>
-    <string name="initializing">Initializing Server…</string>
-    <string name="scanning_for_server">Scanning for Server…</string>
+    <string name="initializing">Waiting for server…</string>
+    <string name="connecting">Connecting…</string>
     <string name="connected">Connected</string>
     <string name="disconnected">Disconnected</string>
 

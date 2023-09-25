@@ -19,7 +19,7 @@ fun ConnectingView() {
             .padding(32.dp),
     ) {
         Text(
-            text = stringResource(id = R.string.scanning_for_server),
+            text = stringResource(id = R.string.connecting),
             modifier = Modifier.padding(16.dp)
         )
     }
