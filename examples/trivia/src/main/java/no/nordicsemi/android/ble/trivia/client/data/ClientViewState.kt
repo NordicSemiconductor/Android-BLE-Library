@@ -36,7 +36,7 @@ data class ClientViewState(
 ) {
     val isTimerRunning: Boolean = ticks?.let { it > 0 } == true
 
-    val isDuplicate: Boolean = isError?.isDuplicateName ?: false
+    private val isDuplicate: Boolean = isError?.isDuplicateName ?: false
 
     private val isEmptyName: Boolean = isError?.isEmptyName ?: false
     val openDialog: Boolean = isError?.isError() ?: true

@@ -513,6 +513,7 @@ public abstract class BleServerManager implements ILogger {
 	 *                    for details.
 	 * @param descriptors The optional list of descriptors.
 	 * @return The characteristic.
+	 * @noinspection SameParameterValue
 	 */
 	@NonNull
 	protected final BluetoothGattCharacteristic sharedCharacteristic(@NonNull final UUID uuid,

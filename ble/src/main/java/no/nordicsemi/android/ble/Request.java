@@ -156,7 +156,7 @@ public abstract class Request {
 	/**
 	 * Sets the handler that will be used to invoke callbacks. By default, the handler set in
 	 * {@link BleManager} will be used.
-	 *
+	 * <p>
 	 * If set to null, the callbacks will be invoked immediately on the BLE looper.
 	 *
 	 * @param handler The handler to invoke callbacks for this request.

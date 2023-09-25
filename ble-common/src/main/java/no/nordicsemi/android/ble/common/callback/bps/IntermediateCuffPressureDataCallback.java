@@ -37,9 +37,7 @@ import no.nordicsemi.android.ble.data.Data;
  * Data callback that parses value into Intermediate Cuff Pressure data.
  * If the value received do not match required syntax
  * {@link #onInvalidDataReceived(BluetoothDevice, Data)} callback will be called.
- * See: https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.intermediate_cuff_pressure.xml
  */
-@SuppressWarnings({"ConstantConditions", "WeakerAccess"})
 public abstract class IntermediateCuffPressureDataCallback extends ProfileReadResponse implements IntermediateCuffPressureCallback {
 
 	public IntermediateCuffPressureDataCallback() {
@@ -50,6 +48,7 @@ public abstract class IntermediateCuffPressureDataCallback extends ProfileReadRe
 		super(in);
 	}
 
+	/** @noinspection DataFlowIssue*/
 	@Override
 	public void onDataReceived(@NonNull final BluetoothDevice device, @NonNull final Data data) {
 		super.onDataReceived(device, data);

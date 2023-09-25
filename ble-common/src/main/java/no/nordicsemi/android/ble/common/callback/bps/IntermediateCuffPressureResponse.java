@@ -148,7 +148,7 @@ public final class IntermediateCuffPressureResponse extends IntermediateCuffPres
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		dest.writeFloat(cuffPressure);
 		dest.writeInt(unit);
@@ -178,7 +178,7 @@ public final class IntermediateCuffPressureResponse extends IntermediateCuffPres
 		}
 	}
 
-	public static final Parcelable.Creator<IntermediateCuffPressureResponse> CREATOR = new Parcelable.Creator<IntermediateCuffPressureResponse>() {
+	public static final Parcelable.Creator<IntermediateCuffPressureResponse> CREATOR = new Parcelable.Creator<>() {
 		@Override
 		public IntermediateCuffPressureResponse createFromParcel(final Parcel in) {
 			return new IntermediateCuffPressureResponse(in);

@@ -76,7 +76,7 @@ public class RssiResult implements RssiCallback, Parcelable {
 		return 0;
 	}
 
-	public static final Creator<RssiResult> CREATOR = new Creator<RssiResult>() {
+	public static final Creator<RssiResult> CREATOR = new Creator<>() {
 		@Override
 		public RssiResult createFromParcel(final Parcel in) {
 			return new RssiResult(in);

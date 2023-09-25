@@ -105,14 +105,14 @@ public final class CGMSessionRunTimeResponse extends CGMSessionRunTimeDataCallba
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		dest.writeInt(sessionRunTime);
 		dest.writeByte((byte) (secured ? 1 : 0));
 		dest.writeByte((byte) (crcValid ? 1 : 0));
 	}
 
-	public static final Creator<CGMSessionRunTimeResponse> CREATOR = new Creator<CGMSessionRunTimeResponse>() {
+	public static final Creator<CGMSessionRunTimeResponse> CREATOR = new Creator<>() {
 		@Override
 		public CGMSessionRunTimeResponse createFromParcel(final Parcel in) {
 			return new CGMSessionRunTimeResponse(in);

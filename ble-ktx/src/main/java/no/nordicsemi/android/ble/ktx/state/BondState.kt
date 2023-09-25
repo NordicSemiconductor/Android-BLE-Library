@@ -4,13 +4,13 @@ package no.nordicsemi.android.ble.ktx.state
 sealed class BondState {
 
     /** The device was not connected or is not bonded. */
-    object NotBonded: BondState()
+    data object NotBonded: BondState()
 
     /** Bonding has started. */
-    object Bonding: BondState()
+    data object Bonding: BondState()
 
     /** The device is bonded. */
-    object Bonded: BondState()
+    data object Bonded: BondState()
 
     /** Whether bonding was established. */
     val isBonded: Boolean

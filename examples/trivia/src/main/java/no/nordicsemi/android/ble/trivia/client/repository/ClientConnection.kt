@@ -31,7 +31,7 @@ class ClientConnection(
     private val device: BluetoothDevice,
 ) : BleManager(context) {
     private val TAG = ClientConnection::class.java.simpleName
-    var characteristic: BluetoothGattCharacteristic? = null
+    private var characteristic: BluetoothGattCharacteristic? = null
 
     private val _userJoined = MutableSharedFlow<Players>()
     val userJoined = _userJoined.asSharedFlow()

@@ -5,19 +5,20 @@ import no.nordicsemi.android.ble.BleManager
 import no.nordicsemi.android.ble.ktx.state.ConnectionState.Disconnected.Reason
 import no.nordicsemi.android.ble.observer.ConnectionObserver
 
+@Suppress("unused")
 sealed class ConnectionState {
 
     /** A connection to the device was initiated. */
-    object Connecting: ConnectionState()
+    data object Connecting: ConnectionState()
 
     /** The device has connected and begun service discovery and initialization. */
-    object Initializing: ConnectionState()
+    data object Initializing: ConnectionState()
 
     /** The initialization is complete, and the device is ready to use. */
-    object Ready: ConnectionState()
+    data object Ready: ConnectionState()
 
     /** The disconnection was initiated. */
-    object Disconnecting: ConnectionState()
+    data object Disconnecting: ConnectionState()
 
     /** The device disconnected or failed to connect. */
     data class Disconnected(val reason: Reason): ConnectionState() {

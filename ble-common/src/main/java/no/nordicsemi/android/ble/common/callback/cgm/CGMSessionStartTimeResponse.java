@@ -106,7 +106,7 @@ public final class CGMSessionStartTimeResponse extends CGMSessionStartTimeDataCa
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		if (startTime == null) {
 			dest.writeByte((byte) 0);
@@ -118,7 +118,7 @@ public final class CGMSessionStartTimeResponse extends CGMSessionStartTimeDataCa
 		dest.writeByte((byte) (crcValid ? 1 : 0));
 	}
 
-	public static final Creator<CGMSessionStartTimeResponse> CREATOR = new Creator<CGMSessionStartTimeResponse>() {
+	public static final Creator<CGMSessionStartTimeResponse> CREATOR = new Creator<>() {
 		@Override
 		public CGMSessionStartTimeResponse createFromParcel(final Parcel in) {
 			return new CGMSessionStartTimeResponse(in);

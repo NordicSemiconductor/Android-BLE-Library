@@ -42,7 +42,7 @@ public final class CRC16 {
 	 * Calculates CRC CCITT (Kermit) over given range of bytes from the block of data.
 	 * It is using the 0x1021 polynomial and 0x0000 initial value.
 	 * <p>
-	 * See: http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.kermit
+	 * See: <a href="http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.kermit">crc.cat.kermit</a>
 	 *
 	 * @param data   The input data block for computation.
 	 * @param offset Offset from where the range starts.
@@ -57,8 +57,8 @@ public final class CRC16 {
 	 * Calculates CRC CCITT-FALSE over given range of bytes from the block of data.
 	 * It is using the 0x1021 polynomial and 0xFFFF initial value.
 	 * <p>
-	 * See: http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.crc-16-ccitt-false
-	 * See: http://srecord.sourceforge.net/crc16-ccitt.html
+	 * See: <a href="http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.crc-16-ccitt-false">crc-16-ccitt-false</a>
+	 * See: <a href="http://srecord.sourceforge.net/crc16-ccitt.html">crc16-ccitt</a>
 	 *
 	 * @param data   The input data block for computation.
 	 * @param offset Offset from where the range starts.
@@ -86,9 +86,8 @@ public final class CRC16 {
 	 * <p>
 	 * This method is used in Bluetooth LE CGMS service E2E-CRC calculation.
 	 * <p>
-	 * See: http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.crc-16-mcrf4xx<br>
-	 * See: http://ww1.microchip.com/downloads/en/AppNotes/00752a.pdf<br>
-	 * See: https://www.bluetooth.com/specifications/gatt -> CGMS (1.0.1)
+	 * See: <a href="http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.crc-16-mcrf4xx">crc.cat.crc-16-mcrf4xx</a><br>
+	 * See: <a href="https://www.bluetooth.com/specifications/specs/">Bluetooth Specifications</a> -> CGMS (1.0.1)
 	 *
 	 * @param data   The input data block for computation.
 	 * @param offset Offset from where the range starts.
@@ -103,8 +102,8 @@ public final class CRC16 {
 	 * Calculates CRC AUG-CCITT over given range of bytes from the block of data.
 	 * It is using the 0x1021 polynomial and 0x1D0F initial value.
 	 * <p>
-	 * See: http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.crc-16-aug-ccitt
-	 * See: http://srecord.sourceforge.net/crc16-ccitt.html
+	 * See: <a href="http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.crc-16-aug-ccitt">crc-16-aug-ccitt</a>
+	 * See: <a href="http://srecord.sourceforge.net/crc16-ccitt.html">crc16-ccitt</a>
 	 *
 	 * @param data   The input data block for computation.
 	 * @param offset Offset from where the range starts.
@@ -121,7 +120,7 @@ public final class CRC16 {
 	 * <p>
 	 * Input data and output CRC are reversed.
 	 * <p>
-	 * See: http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.crc-16-arc
+	 * See: <a href="http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.crc-16-arc">crc-16-arc</a>
 	 *
 	 * @param data   The input data block for computation.
 	 * @param offset Offset from where the range starts.
@@ -138,7 +137,7 @@ public final class CRC16 {
 	 * <p>
 	 * Input data and output CRC are reversed.
 	 * <p>
-	 * See: http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.crc-16-maxim
+	 * See: <a href="http://reveng.sourceforge.net/crc-catalogue/16.htm#crc.cat.crc-16-maxim">crc-16-maxim</a>
 	 *
 	 * @param data   The input data block for computation.
 	 * @param offset Offset from where the range starts.
@@ -152,8 +151,8 @@ public final class CRC16 {
 	/**
 	 * Calculates the CRC over given range of bytes from the block of data with given polynomial and initial value.
 	 * This method may also reverse input bytes and reverse output CRC.
-	 *
-	 * See: http://www.zorc.breitbandkatze.de/crc.html
+	 * <p>
+	 * See: <a href="http://www.zorc.breitbandkatze.de/crc.html">CRC Calculator</a>
 	 *
 	 * @param poly   Polynomial used to calculate the CRC16.
 	 * @param init   Initial value to feed the buffer.

@@ -123,8 +123,7 @@ public class RequestQueue extends TimeoutableRequest {
 	 */
 	@NonNull
 	public RequestQueue add(@NonNull final Operation operation) {
-		if (operation instanceof Request) {
-			final Request request = (Request) operation;
+		if (operation instanceof final Request request) {
 			// Validate
 			if (request.enqueued)
 				throw new IllegalStateException("Request already enqueued");

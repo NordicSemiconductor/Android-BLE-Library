@@ -1,6 +1,5 @@
 package no.nordicsemi.andorid.ble.test.client.tests
 
-import android.bluetooth.BluetoothDevice
 import android.util.Log
 import no.nordicsemi.andorid.ble.test.client.repository.ClientConnection
 import no.nordicsemi.andorid.ble.test.server.tasks.TaskManager
@@ -24,15 +23,13 @@ class TestWriteWithHeaderBasedSplitter(
     override suspend fun start() {
         clientConnection.testWrite(splitterRequest)
             .split(
-                HeaderBasedPacketSplitter(), object : WriteProgressCallback {
-                    override fun onPacketSent(
-                        device: BluetoothDevice,
-                        data: ByteArray?,
-                        index: Int
-                    ) {
-                        Log.i(TAG, "onPacketSent: Packet size ${data?.size} and index $index ")
-                    }
-                })
+                HeaderBasedPacketSplitter()
+            ) { _, data, index ->
+                Log.i(
+                    TAG,
+                    "onPacketSent: Packet size ${data?.size} and index $index "
+                )
+            }
             .suspend()
     }
 

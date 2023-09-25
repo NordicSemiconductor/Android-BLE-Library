@@ -37,9 +37,7 @@ import no.nordicsemi.android.ble.data.Data;
  * Data callback that parses 7-byte value into a Calendar instance.
  * If the value received is shorter than 7 bytes the
  * {@link #onInvalidDataReceived(BluetoothDevice, Data)} callback will be called.
- * See: https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.date_time.xml
  */
-@SuppressWarnings({"ConstantConditions", "WeakerAccess"})
 public abstract class DateTimeDataCallback extends ProfileReadResponse implements DateTimeCallback {
 
 	public DateTimeDataCallback() {
@@ -74,6 +72,7 @@ public abstract class DateTimeDataCallback extends ProfileReadResponse implement
 	 * @param data input data (7 bytes required).
 	 * @param offset offset to read from.
 	 * @return Calendar object or null.
+	 * @noinspection DataFlowIssue
 	 */
 	@Nullable
 	public static Calendar readDateTime(@NonNull final Data data, final int offset) {

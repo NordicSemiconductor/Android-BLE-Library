@@ -35,9 +35,7 @@ import no.nordicsemi.android.ble.data.Data;
  * If the value received do not match required syntax
  * {@link #onInvalidDataReceived(BluetoothDevice, Data)} callback will be called.
  * will be called.
- * See: https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.sc_control_point.xml
  */
-@SuppressWarnings({"WeakerAccess", "ConstantConditions"})
 public abstract class SpeedAndCadenceControlPointDataCallback extends ProfileReadResponse implements SpeedAndCadenceControlPointCallback {
 	private final static int SC_OP_CODE_RESPONSE_CODE = 16;
 	private final static int SC_RESPONSE_SUCCESS = 1;
@@ -50,6 +48,7 @@ public abstract class SpeedAndCadenceControlPointDataCallback extends ProfileRea
 		super(in);
 	}
 
+	/** @noinspection DataFlowIssue*/
 	@Override
 	public void onDataReceived(@NonNull final BluetoothDevice device, @NonNull final Data data) {
 		super.onDataReceived(device, data);
@@ -73,20 +72,15 @@ public abstract class SpeedAndCadenceControlPointDataCallback extends ProfileRea
 			return;
 		}
 
-		switch (requestCode) {
-			case SC_OP_CODE_REQUEST_SUPPORTED_SENSOR_LOCATIONS: {
-				final int size = data.size() - 3;
-				final int[] locations = new int[size];
-				for (int i = 0; i < size; ++i) {
-					locations[i] = data.getIntValue(Data.FORMAT_UINT8, 3 + i);
-				}
-				onSupportedSensorLocationsReceived(device, locations);
-				break;
+		if (requestCode == SC_OP_CODE_REQUEST_SUPPORTED_SENSOR_LOCATIONS) {
+			final int size = data.size() - 3;
+			final int[] locations = new int[size];
+			for (int i = 0; i < size; ++i) {
+				locations[i] = data.getIntValue(Data.FORMAT_UINT8, 3 + i);
 			}
-			default: {
-				onSCOperationCompleted(device, requestCode);
-				break;
-			}
+			onSupportedSensorLocationsReceived(device, locations);
+		} else {
+			onSCOperationCompleted(device, requestCode);
 		}
 	}
 }

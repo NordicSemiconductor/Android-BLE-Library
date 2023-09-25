@@ -20,9 +20,9 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ClientViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @ApplicationContext context: Context,
     private val scannerRepository: ScannerRepository,
-) : TimerViewModel() {
+) : TimerViewModel(context) {
     private var clientManager: ClientConnection? = null
     private val _clientState: MutableStateFlow<ClientViewState> =
         MutableStateFlow(ClientViewState())

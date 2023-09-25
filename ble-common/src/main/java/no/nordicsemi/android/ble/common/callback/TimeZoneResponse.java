@@ -88,13 +88,13 @@ public final class TimeZoneResponse extends TimeZoneDataCallback implements Parc
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		dest.writeInt(timeZoneOffset);
 		dest.writeByte((byte) (timeZoneOffsetKnown ? 1 : 0));
 	}
 
-	public static final Creator<TimeZoneResponse> CREATOR = new Creator<TimeZoneResponse>() {
+	public static final Creator<TimeZoneResponse> CREATOR = new Creator<>() {
 		@Override
 		public TimeZoneResponse createFromParcel(final Parcel in) {
 			return new TimeZoneResponse(in);

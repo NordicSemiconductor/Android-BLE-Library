@@ -33,7 +33,7 @@ import no.nordicsemi.android.ble.data.Data;
 
 import static org.junit.Assert.*;
 
-@SuppressWarnings("ConstantConditions")
+/** @noinspection DataFlowIssue*/
 public class GlucoseFeatureDataCallbackTest {
 	private boolean success;
 	private boolean invalidData;

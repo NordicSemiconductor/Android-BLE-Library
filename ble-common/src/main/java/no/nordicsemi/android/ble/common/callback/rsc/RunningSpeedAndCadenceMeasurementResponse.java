@@ -142,7 +142,7 @@ public final class RunningSpeedAndCadenceMeasurementResponse extends RunningSpee
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		dest.writeByte((byte) (running ? 1 : 0));
 		dest.writeFloat(instantaneousSpeed);
@@ -166,7 +166,7 @@ public final class RunningSpeedAndCadenceMeasurementResponse extends RunningSpee
 		return 0;
 	}
 
-	public static final Creator<RunningSpeedAndCadenceMeasurementResponse> CREATOR = new Creator<RunningSpeedAndCadenceMeasurementResponse>() {
+	public static final Creator<RunningSpeedAndCadenceMeasurementResponse> CREATOR = new Creator<>() {
 		@Override
 		public RunningSpeedAndCadenceMeasurementResponse createFromParcel(final Parcel in) {
 			return new RunningSpeedAndCadenceMeasurementResponse(in);

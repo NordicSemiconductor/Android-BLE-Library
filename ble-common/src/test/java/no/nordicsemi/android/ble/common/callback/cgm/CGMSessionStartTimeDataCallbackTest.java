@@ -34,7 +34,7 @@ import no.nordicsemi.android.ble.data.Data;
 
 import static org.junit.Assert.*;
 
-@SuppressWarnings("ConstantConditions")
+/** @noinspection DataFlowIssue*/
 public class CGMSessionStartTimeDataCallbackTest {
 	private boolean success;
 	private boolean invalidData;
@@ -64,6 +64,7 @@ public class CGMSessionStartTimeDataCallbackTest {
 	@Test
 	public void onContinuousGlucoseMonitorSessionStartTimeReceived() {
 		final Data data = new Data(new byte[] {(byte) 0xE2, 0x07, 4, 24, 13, 8, 24, 8, 4, (byte) 0xE0, (byte) 0xC2 });
+		//noinspection DataFlowIssue
 		callback.onDataReceived(null, data);
 		assertTrue(success);
 		assertTrue(verified);
