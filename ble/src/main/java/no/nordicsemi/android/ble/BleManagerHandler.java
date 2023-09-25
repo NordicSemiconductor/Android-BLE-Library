@@ -625,6 +625,9 @@ abstract class BleManagerHandler extends RequestHandler {
 					try {
 						log(Log.DEBUG, () -> "wait(200)");
 						Thread.sleep(200); // Is 200 ms enough?
+						// If the connection was
+						if (bluetoothGatt != null || connectRequest.finished)
+							return true;
 					} catch (final InterruptedException e) {
 						// Ignore
 					}
@@ -1576,7 +1579,7 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	@Override
 	public void postDelayed(@NonNull final Runnable r, final long delayMillis) {
-		handler.postDelayed(r, delayMillis);
+		new Handler().postDelayed(r, delayMillis);
 	}
 
 	@Override
