@@ -1576,7 +1576,7 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	@Override
 	public void postDelayed(@NonNull final Runnable r, final long delayMillis) {
-		handler.postDelayed(r, delayMillis);
+		new Handler().postDelayed(r, delayMillis);
 	}
 
 	@Override
