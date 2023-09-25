@@ -625,8 +625,8 @@ abstract class BleManagerHandler extends RequestHandler {
 					try {
 						log(Log.DEBUG, () -> "wait(200)");
 						Thread.sleep(200); // Is 200 ms enough?
-						// If the connection was
-						if (bluetoothGatt != null || connectRequest.finished)
+						// If the connection was closed or cancelled during this 200 ms, assume success.
+						if (bluetoothGatt != null || (connectRequest != null && connectRequest.finished))
 							return true;
 					} catch (final InterruptedException e) {
 						// Ignore
@@ -1060,9 +1060,14 @@ abstract class BleManagerHandler extends RequestHandler {
 		if ((properties & BluetoothGattCharacteristic.PROPERTY_READ) == 0)
 			return false;
 
-		log(Log.VERBOSE, () -> "Reading characteristic " + characteristic.getUuid());
-		log(Log.DEBUG, () -> "gatt.readCharacteristic(" + characteristic.getUuid() + ")");
-		return gatt.readCharacteristic(characteristic);
+		try {
+			log(Log.VERBOSE, () -> "Reading characteristic " + characteristic.getUuid());
+			log(Log.DEBUG, () -> "gatt.readCharacteristic(" + characteristic.getUuid() + ")");
+			return gatt.readCharacteristic(characteristic);
+		} catch (final SecurityException e) {
+			log(Log.ERROR, e::getLocalizedMessage);
+			return false;
+		}
 	}
 
 	private boolean internalWriteCharacteristic(
@@ -1080,25 +1085,30 @@ abstract class BleManagerHandler extends RequestHandler {
 				BluetoothGattCharacteristic.PROPERTY_WRITE_NO_RESPONSE)) == 0)
 			return false;
 
-		final byte[] notNullData = data != null ? data : new byte[] {};
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-			log(Log.VERBOSE, () ->
-					"Writing characteristic " + characteristic.getUuid() +
-							" (" + ParserUtils.writeTypeToString(writeType) + ")");
-			log(Log.DEBUG, () -> "gatt.writeCharacteristic(" + characteristic.getUuid() +
-					", value=" + ParserUtils.parseDebug(notNullData) +
-					", " + ParserUtils.writeTypeToString(writeType) + ")");
-			return gatt.writeCharacteristic(characteristic, notNullData, writeType) == BluetoothStatusCodes.SUCCESS;
-		} else {
-			log(Log.VERBOSE, () ->
-					"Writing characteristic " + characteristic.getUuid() +
-							" (" + ParserUtils.writeTypeToString(writeType) + ")");
-			log(Log.DEBUG, () -> "characteristic.setValue(" + ParserUtils.parseDebug(notNullData) + ")");
-			characteristic.setValue(notNullData);
-			log(Log.DEBUG, () -> "characteristic.setWriteType(" + ParserUtils.writeTypeToString(writeType) + ")");
-			characteristic.setWriteType(writeType);
-			log(Log.DEBUG, () -> "gatt.writeCharacteristic(" + characteristic.getUuid() + ")");
-			return gatt.writeCharacteristic(characteristic);
+		try {
+			final byte[] notNullData = data != null ? data : new byte[] {};
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+				log(Log.VERBOSE, () ->
+						"Writing characteristic " + characteristic.getUuid() +
+								" (" + ParserUtils.writeTypeToString(writeType) + ")");
+				log(Log.DEBUG, () -> "gatt.writeCharacteristic(" + characteristic.getUuid() +
+						", value=" + ParserUtils.parseDebug(notNullData) +
+						", " + ParserUtils.writeTypeToString(writeType) + ")");
+				return gatt.writeCharacteristic(characteristic, notNullData, writeType) == BluetoothStatusCodes.SUCCESS;
+			} else {
+				log(Log.VERBOSE, () ->
+						"Writing characteristic " + characteristic.getUuid() +
+								" (" + ParserUtils.writeTypeToString(writeType) + ")");
+				log(Log.DEBUG, () -> "characteristic.setValue(" + ParserUtils.parseDebug(notNullData) + ")");
+				characteristic.setValue(notNullData);
+				log(Log.DEBUG, () -> "characteristic.setWriteType(" + ParserUtils.writeTypeToString(writeType) + ")");
+				characteristic.setWriteType(writeType);
+				log(Log.DEBUG, () -> "gatt.writeCharacteristic(" + characteristic.getUuid() + ")");
+				return gatt.writeCharacteristic(characteristic);
+			}
+		} catch (final SecurityException e) {
+			log(Log.ERROR, e::getLocalizedMessage);
+			return false;
 		}
 	}
 
@@ -1107,9 +1117,14 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (gatt == null || descriptor == null || !connected)
 			return false;
 
-		log(Log.VERBOSE, () -> "Reading descriptor " + descriptor.getUuid());
-		log(Log.DEBUG, () -> "gatt.readDescriptor(" + descriptor.getUuid() + ")");
-		return gatt.readDescriptor(descriptor);
+		try {
+			log(Log.VERBOSE, () -> "Reading descriptor " + descriptor.getUuid());
+			log(Log.DEBUG, () -> "gatt.readDescriptor(" + descriptor.getUuid() + ")");
+			return gatt.readDescriptor(descriptor);
+		} catch (final SecurityException e) {
+			log(Log.ERROR, e::getLocalizedMessage);
+			return false;
+		}
 	}
 
 	private boolean internalWriteDescriptor(
@@ -1120,21 +1135,26 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (gatt == null || descriptor == null || !connected)
 			return false;
 
-		final byte[] notNullData = data != null ? data : new byte[] {};
-		log(Log.VERBOSE, () -> "Writing descriptor " + descriptor.getUuid());
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-			log(Log.DEBUG, () -> "gatt.writeDescriptor(" + descriptor.getUuid() +
-					", value=" + ParserUtils.parseDebug(notNullData) + ")");
-			return gatt.writeDescriptor(descriptor, notNullData) == BluetoothStatusCodes.SUCCESS;
-		} else {
-			log(Log.DEBUG, () -> "descriptor.setValue(" + descriptor.getUuid() + ")");
-			descriptor.setValue(notNullData);
-			log(Log.DEBUG, () -> "gatt.writeDescriptor(" + descriptor.getUuid() + ")");
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-				return internalWriteDescriptorWorkaround(descriptor);
+		try {
+			final byte[] notNullData = data != null ? data : new byte[] {};
+			log(Log.VERBOSE, () -> "Writing descriptor " + descriptor.getUuid());
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+				log(Log.DEBUG, () -> "gatt.writeDescriptor(" + descriptor.getUuid() +
+						", value=" + ParserUtils.parseDebug(notNullData) + ")");
+				return gatt.writeDescriptor(descriptor, notNullData) == BluetoothStatusCodes.SUCCESS;
 			} else {
-				return gatt.writeDescriptor(descriptor);
+				log(Log.DEBUG, () -> "descriptor.setValue(" + descriptor.getUuid() + ")");
+				descriptor.setValue(notNullData);
+				log(Log.DEBUG, () -> "gatt.writeDescriptor(" + descriptor.getUuid() + ")");
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+					return internalWriteDescriptorWorkaround(descriptor);
+				} else {
+					return gatt.writeDescriptor(descriptor);
+				}
 			}
+		} catch (final SecurityException e) {
+			log(Log.ERROR, e::getLocalizedMessage);
+			return false;
 		}
 	}
 
