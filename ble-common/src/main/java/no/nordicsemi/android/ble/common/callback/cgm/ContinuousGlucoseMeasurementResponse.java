@@ -97,7 +97,7 @@ public final class ContinuousGlucoseMeasurementResponse extends ContinuousGlucos
 	}
 
 	@Override
-	public void writeToParcel(@NonNull @NonNull final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 
 		dest.writeList(items);

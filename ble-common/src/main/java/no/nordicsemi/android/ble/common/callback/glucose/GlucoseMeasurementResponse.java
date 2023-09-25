@@ -172,7 +172,7 @@ public final class GlucoseMeasurementResponse extends GlucoseMeasurementDataCall
 	}
 
 	@Override
-	public void writeToParcel(@NonNull @NonNull final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		dest.writeInt(sequenceNumber);
 		if (time == null) {
