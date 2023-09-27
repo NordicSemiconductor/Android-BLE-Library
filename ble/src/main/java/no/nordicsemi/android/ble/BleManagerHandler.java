@@ -348,15 +348,13 @@ abstract class BleManagerHandler extends RequestHandler {
 						// despite the fail bonding process.
 						// See: https://github.com/NordicSemiconductor/Android-BLE-Library/issues/335
 						if (!servicesDiscovered && !serviceDiscoveryRequested) {
-							post(() -> {
-								final BluetoothGatt bluetoothGatt = BleManagerHandler.this.bluetoothGatt;
-								if (!servicesDiscovered && !serviceDiscoveryRequested && bluetoothGatt != null) {
-									serviceDiscoveryRequested = true;
-									log(Log.VERBOSE, () -> "Discovering services...");
-									log(Log.DEBUG, () -> "gatt.discoverServices()");
-									bluetoothGatt.discoverServices();
-								}
-							});
+							final BluetoothGatt bluetoothGatt = BleManagerHandler.this.bluetoothGatt;
+							if (bluetoothGatt != null) {
+								serviceDiscoveryRequested = true;
+								log(Log.VERBOSE, () -> "Discovering services...");
+								log(Log.DEBUG, () -> "gatt.discoverServices()");
+								bluetoothGatt.discoverServices();
+							}
 							return;
 						}
 					} else if (previousBondState == BluetoothDevice.BOND_BONDED) {
@@ -401,15 +399,13 @@ abstract class BleManagerHandler extends RequestHandler {
 					// If the device started to pair just after the connection was
 					// established the services were not discovered.
 					if (!servicesDiscovered && !serviceDiscoveryRequested) {
-						post(() -> {
-							final BluetoothGatt bluetoothGatt = BleManagerHandler.this.bluetoothGatt;
-							if (!servicesDiscovered && !serviceDiscoveryRequested && bluetoothGatt != null) {
-								serviceDiscoveryRequested = true;
-								log(Log.VERBOSE, () -> "Discovering services...");
-								log(Log.DEBUG, () -> "gatt.discoverServices()");
-								bluetoothGatt.discoverServices();
-							}
-						});
+						final BluetoothGatt bluetoothGatt = BleManagerHandler.this.bluetoothGatt;
+						if (bluetoothGatt != null) {
+							serviceDiscoveryRequested = true;
+							log(Log.VERBOSE, () -> "Discovering services...");
+							log(Log.DEBUG, () -> "gatt.discoverServices()");
+							bluetoothGatt.discoverServices();
+						}
 						return;
 					}
 					// On older Android versions, after executing a command on secured attribute
@@ -1015,10 +1011,8 @@ abstract class BleManagerHandler extends RequestHandler {
 
 				// The onNotificationSent callback is not called before Android Lollipop.
 				if (result && Build.VERSION.SDK_INT < Build.VERSION_CODES.LOLLIPOP) {
-					post(() -> {
-						notifyNotificationSent(bluetoothDevice);
-						nextRequest(true);
-					});
+					notifyNotificationSent(bluetoothDevice);
+					nextRequest(true);
 				}
 			}
 			return result;
