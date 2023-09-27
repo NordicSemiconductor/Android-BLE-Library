@@ -6,7 +6,7 @@ import no.nordicsemi.android.ble.trivia.server.data.DisplayAnswer
 import no.nordicsemi.android.ble.trivia.server.data.Players
 import no.nordicsemi.android.ble.trivia.server.data.Results
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
-import no.nordicsemi.android.ble.trivia.server.data.Error
+import no.nordicsemi.android.ble.trivia.server.data.NameResult
 
 /**
  * It holds the data to be used in the client screen.
@@ -30,16 +30,18 @@ data class ClientViewState(
     val userJoined: Players? = null,
     val isGameOver: Boolean? = null,
     val result: Results? = null,
-    val error: Error? = null,
+    val nameResult: NameResult? = null,
+    val error: String? = null,
     val isUserTyping: Boolean = false,
     val userRequestedPlayersNameDialog: Boolean = true
 ) {
     val isTimerRunning: Boolean = ticks?.let { it > 0 } == true
 
-    private val isDuplicate: Boolean = error?.isDuplicateName ?: false
-    private val isEmptyName: Boolean = error?.isEmptyName ?: false
+    private val isDuplicate: Boolean = nameResult?.isDuplicateName ?: false
+    private val isEmptyName: Boolean = nameResult?.isEmptyName ?: false
 
-    val openDialog: Boolean = error?.isError() ?: true
+    // Open the name dialog if name wasn't set, or an invalid name was reported.
+    val openDialog: Boolean = nameResult?.isInvalid() ?: true
     val playersNameIsDuplicate: Boolean = isDuplicate && !isUserTyping && userRequestedPlayersNameDialog
     val playersNameIsError: Boolean = (isDuplicate || isEmptyName) && !isUserTyping
 }

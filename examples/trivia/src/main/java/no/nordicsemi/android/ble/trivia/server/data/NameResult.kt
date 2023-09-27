@@ -1,9 +1,9 @@
 package no.nordicsemi.android.ble.trivia.server.data
 
-data class Error(
+data class NameResult(
     val isEmptyName: Boolean,
     val isDuplicateName: Boolean,
 ) {
-    fun isError() = isDuplicateName || isEmptyName
+    fun isInvalid() = isDuplicateName || isEmptyName
 }
 

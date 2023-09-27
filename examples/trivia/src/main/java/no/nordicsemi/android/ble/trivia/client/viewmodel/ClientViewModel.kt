@@ -34,7 +34,7 @@ class ClientViewModel @Inject constructor(
     init {
         val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
             Log.e("ClientViewModel", "Error", throwable)
-            _clientState.value = _clientState.value.copy(state = ConnectionState.Error(throwable.message))
+            _clientState.value = _clientState.value.copy(error = throwable.message)
         }
         viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
             val device = scannerRepository.searchForServer()
@@ -45,7 +45,7 @@ class ClientViewModel @Inject constructor(
                         .onEach { _clientState.value = _clientState.value.copy(state = it) }
                         .launchIn(viewModelScope)
                     error
-                        .onEach { _clientState.value = _clientState.value.copy(error = it) }
+                        .onEach { _clientState.value = _clientState.value.copy(nameResult = it) }
                         .launchIn(viewModelScope)
                      userJoined
                         .onEach { _clientState.value = _clientState.value.copy(userJoined = it) }
@@ -107,7 +107,7 @@ class ClientViewModel @Inject constructor(
     }
 
     fun sendName(playersName: String) {
-        _clientState.value = _clientState.value.copy(isUserTyping = false, error = null)
+        _clientState.value = _clientState.value.copy(isUserTyping = false, nameResult = null)
         viewModelScope.launch(Dispatchers.IO) {
             clientManager?.sendPlayersName(playersName)
         }

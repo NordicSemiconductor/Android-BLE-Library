@@ -39,57 +39,61 @@ fun ClientScreen(
             RequireLocation {
                 val clientViewModel: ClientViewModel = hiltViewModel()
                 val clientViewState by clientViewModel.clientState.collectAsState()
-                val ticks by clientViewModel.ticks.collectAsState()
 
-                when (val state = clientViewState.state) {
-                    ConnectionState.Initializing -> InitializingView()
-                    ConnectionState.Connecting -> ConnectingView()
-                    is ConnectionState.Disconnected -> DisconnectedView()
-                    is ConnectionState.Error -> ErrorView(state.message)
-                    ConnectionState.Ready -> {
-                        when (clientViewState.isGameOver) {
-                            true -> clientViewState.result?.result?.let { result ->
-                                ResultView(
-                                    result = result
-                                )
-                            }
+                clientViewState.error?.let { message ->
+                    ErrorView(message)
+                } ?: run {
+                    val ticks by clientViewModel.ticks.collectAsState()
 
-                            else -> {
-                                clientViewState.question?.let {
-                                    QuestionContentView(
-                                        question = clientViewState.question?.question,
-                                        answers = clientViewState.toViewState(),
-                                        ticks = ticks,
-                                        modifier = Modifier.fillMaxWidth(),
-                                        onAnswerSelected = { answerChosen ->
-                                            clientViewModel.sendAnswer(answerChosen)
-                                        }
+                    when (clientViewState.state) {
+                        ConnectionState.Initializing -> InitializingView()
+                        ConnectionState.Connecting -> ConnectingView()
+                        is ConnectionState.Disconnected -> DisconnectedView()
+                        ConnectionState.Ready -> {
+                            when (clientViewState.isGameOver) {
+                                true -> clientViewState.result?.result?.let { result ->
+                                    ResultView(
+                                        result = result
                                     )
-                                } ?: run {
-                                    if (clientViewState.openDialog) {
-                                        PlayersNameDialog(
-                                            playersName = playersName,
-                                            isDuplicate = clientViewState.playersNameIsDuplicate,
-                                            isError = clientViewState.playersNameIsError,
-                                            onDismiss = {
-                                                clientViewModel.dismissPlayersNameDialog()
-                                            },
-                                            onNameSet = {
-                                                playersName = it
-                                                clientViewModel.onUserTyping()
-                                            },
-                                            onSendClick = {
-                                                playersName = playersName.trim()
-                                                clientViewModel.sendName(playersName)
+                                }
+
+                                else -> {
+                                    clientViewState.question?.let {
+                                        QuestionContentView(
+                                            question = clientViewState.question?.question,
+                                            answers = clientViewState.toViewState(),
+                                            ticks = ticks,
+                                            modifier = Modifier.fillMaxWidth(),
+                                            onAnswerSelected = { answerChosen ->
+                                                clientViewModel.sendAnswer(answerChosen)
                                             }
                                         )
-                                    } else clientViewState.userJoined?.let { ConnectedView(it.player) }
+                                    } ?: run {
+                                        if (clientViewState.openDialog) {
+                                            PlayersNameDialog(
+                                                playersName = playersName,
+                                                isDuplicate = clientViewState.playersNameIsDuplicate,
+                                                isError = clientViewState.playersNameIsError,
+                                                onDismiss = {
+                                                    clientViewModel.dismissPlayersNameDialog()
+                                                },
+                                                onNameSet = {
+                                                    playersName = it
+                                                    clientViewModel.onUserTyping()
+                                                },
+                                                onSendClick = {
+                                                    playersName = playersName.trim()
+                                                    clientViewModel.sendName(playersName)
+                                                }
+                                            )
+                                        } else clientViewState.userJoined?.let { ConnectedView(it.player) }
+                                    }
                                 }
                             }
                         }
-                    }
 
-                    else -> LoadingView()
+                        else -> LoadingView()
+                    }
                 }
             }
         }
