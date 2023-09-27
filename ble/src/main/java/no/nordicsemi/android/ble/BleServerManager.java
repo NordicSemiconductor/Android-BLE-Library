@@ -698,11 +698,11 @@ public abstract class BleServerManager implements ILogger {
 
 		@Override
 		public void onConnectionStateChange(@NonNull final BluetoothDevice device, final int status, final int newState) {
-			if (status == BluetoothGatt.GATT_SUCCESS && newState == BluetoothGatt.STATE_CONNECTED) {
+			if (newState == BluetoothGatt.STATE_CONNECTED) {
 				log(Log.INFO, "[Server] " + device.getAddress() + " is now connected");
 				if (serverObserver != null)
 					serverObserver.onDeviceConnectedToServer(device);
-			} else {
+			} else if (newState == BluetoothGatt.STATE_DISCONNECTED) {
 				if (status == BluetoothGatt.GATT_SUCCESS) {
 					log(Log.INFO, "[Server] " + device.getAddress() + " is disconnected");
 				} else {
