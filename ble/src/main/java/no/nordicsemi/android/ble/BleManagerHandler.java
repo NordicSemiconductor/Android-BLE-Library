@@ -36,6 +36,8 @@ import java.util.Deque;
 import java.util.HashMap;
 import java.util.LinkedList;
 import java.util.Map;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.UUID;
 import java.util.concurrent.LinkedBlockingDeque;
 
@@ -1600,7 +1602,12 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	@Override
 	public void postDelayed(@NonNull final Runnable r, final long delayMillis) {
-		new Handler().postDelayed(r, delayMillis);
+		new Timer().schedule(new TimerTask() {
+			@Override
+			public void run() {
+				r.run();
+			}
+		}, delayMillis);
 	}
 
 	@Override
