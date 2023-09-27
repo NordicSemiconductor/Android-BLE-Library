@@ -724,7 +724,8 @@ public abstract class BleManager implements ILogger {
 	}
 
 	/**
-	 * "Server only" alternative to using connect() in onDeviceConnectedToServer.
+	 * "Server only" alternative to using {@link #connect(BluetoothDevice)} in
+	 * {@link no.nordicsemi.android.ble.observer.ServerObserver#onDeviceConnectedToServer(BluetoothDevice) onDeviceConnectedToServer}.
 	 * This simply associates the connection to the passed client.
 	 */
 	public void attachClientConnection(BluetoothDevice client) {

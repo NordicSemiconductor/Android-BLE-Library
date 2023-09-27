@@ -461,7 +461,8 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	/**
 	 * If doing a server-only connection, use this instead of {@link BleManager#connect(BluetoothDevice)}
-	 *  inside of your onDeviceConnectedToServer handler.
+	 *  inside of your {@link no.nordicsemi.android.ble.observer.ServerObserver#onDeviceConnectedToServer(BluetoothDevice)}
+	 *  handler.
 	 */
 	void attachClientConnection(BluetoothDevice clientDevice) {
 		// should either setup as server only (this method) or two way connection (connect method), not both
