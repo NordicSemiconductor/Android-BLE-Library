@@ -463,6 +463,12 @@ abstract class BleManagerHandler extends RequestHandler {
 	 *  handler.
 	 */
 	void attachClientConnection(BluetoothDevice clientDevice) {
+		final BleServerManager serverManager = this.serverManager;
+		if (serverManager == null) {
+			log(Log.ERROR, () -> "Server not bound to the manager");
+			return;
+		}
+
 		// should either setup as server only (this method) or two way connection (connect method), not both
 		if (this.bluetoothDevice != null) {
 			log(Log.ERROR, () -> "attachClientConnection called on existing connection, call ignored");
@@ -477,6 +483,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	}
 
 	private void initializeServerAttributes() {
+		final BleServerManager serverManager = this.serverManager;
 		if (serverManager != null) {
 			final BluetoothGattServer server = serverManager.getServer();
 			if (server != null) {
