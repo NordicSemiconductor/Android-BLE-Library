@@ -13,6 +13,7 @@
     <string name="connecting">Connecting…</string>
     <string name="connected">Connected</string>
     <string name="disconnected">Disconnected</string>
+    <string name="unknown_error">Unknown error</string>
 
     <string name="ask_players_name">Enter player\'s name</string>
     <string name="empty_name_error">Name cannot be empty</string>

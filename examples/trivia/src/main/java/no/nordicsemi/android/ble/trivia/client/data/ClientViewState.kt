@@ -30,19 +30,18 @@ data class ClientViewState(
     val userJoined: Players? = null,
     val isGameOver: Boolean? = null,
     val result: Results? = null,
-    val isError: Error? = null,
+    val error: Error? = null,
     val isUserTyping: Boolean = false,
     val userRequestedPlayersNameDialog: Boolean = true
 ) {
     val isTimerRunning: Boolean = ticks?.let { it > 0 } == true
 
-    private val isDuplicate: Boolean = isError?.isDuplicateName ?: false
+    private val isDuplicate: Boolean = error?.isDuplicateName ?: false
+    private val isEmptyName: Boolean = error?.isEmptyName ?: false
 
-    private val isEmptyName: Boolean = isError?.isEmptyName ?: false
-    val openDialog: Boolean = isError?.isError() ?: true
+    val openDialog: Boolean = error?.isError() ?: true
     val playersNameIsDuplicate: Boolean = isDuplicate && !isUserTyping && userRequestedPlayersNameDialog
     val playersNameIsError: Boolean = (isDuplicate || isEmptyName) && !isUserTyping
-
 }
 
 fun ClientViewState.toViewState(): List<DisplayAnswer> {

@@ -6,6 +6,7 @@ import android.util.Log
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -147,7 +148,7 @@ class ServerViewModel @Inject constructor(
                                                     state = WaitingForPlayers(clients.value.size)
                                                 )
                                             }
-                                            else -> Log.d(TAG, "Device Disconnected: $device disconnected from the server.")
+                                            else -> Log.d(TAG, "${device.address} disconnected from the server.")
                                         }
                                     }
                                     else -> {}
@@ -171,14 +172,17 @@ class ServerViewModel @Inject constructor(
                     }
                     .apply {
                         useServer(serverManager)
-                        viewModelScope.launch(Dispatchers.IO) {
+                        val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+                            Log.e("ServerViewModel", "Error", throwable)
+                        }
+                        viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
                             connect()
                         }
                     }
             }
 
             override fun onDeviceDisconnectedFromServer(device: BluetoothDevice) {
-                Log.w(TAG, "Device Disconnected: $device disconnected from the server.")
+                Log.w(TAG, "${device.address} disconnected from the server.")
                 removePlayer(device)
             }
         })
@@ -190,14 +194,17 @@ class ServerViewModel @Inject constructor(
      */
     private fun removePlayer(device: BluetoothDevice) {
         if (_serverState.value.userJoined.isNotEmpty()) {
-            val disconnectedPlayer = mapName(device.address)!!
-            val oldState = _serverState.value
-            _serverState.value =
-                oldState.copy(userJoined = oldState.userJoined - Player(disconnectedPlayer))
-            // Checks and removes the corresponding player's name if it is not removed from the list.
-            val player = _serverState.value.result.find { it.name == disconnectedPlayer }
-            when {
-                player?.name?.isNotEmpty() == true -> {
+            mapName(device.address)?.let { disconnectedPlayer ->
+                mapNameWithDevice.value -= Name(
+                    name = disconnectedPlayer,
+                    deviceAddress = device.address
+                )
+                val oldState = _serverState.value
+                _serverState.value =
+                    oldState.copy(userJoined = oldState.userJoined - Player(disconnectedPlayer))
+                // Checks and removes the corresponding player's name if it is not removed from the list.
+                val player = _serverState.value.result.find { it.name == disconnectedPlayer }
+                if (player?.name?.isNotEmpty() == true) {
                     _serverState.value = _serverState.value.copy(
                         result = _serverState.value.result - Result(
                             player.name,

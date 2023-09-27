@@ -22,7 +22,7 @@ class Request : ReadResponse() {
     var answerId: Int? = null
     var isGameOver: Boolean? = null
     var result: Results? = null
-    var isError: Error? = null
+    var error: Error? = null
 
     override fun onDataReceived(device: BluetoothDevice, data: Data) {
         val bytes = data.value!!
@@ -33,7 +33,7 @@ class Request : ReadResponse() {
             OpCodeProto.RESPONSE -> { answerId = request.answerId }
             OpCodeProto.GAME_OVER -> { isGameOver = request.isGameOver }
             OpCodeProto.RESULT -> { result = request.results?.toResults() }
-            OpCodeProto.ERROR -> { isError = Error(
+            OpCodeProto.ERROR -> { error = Error(
                 isEmptyName = request.isEmptyName,
                 isDuplicateName = request.isDuplicateName,
             ) }

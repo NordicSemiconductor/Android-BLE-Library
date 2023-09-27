@@ -17,6 +17,7 @@ import no.nordicsemi.android.ble.trivia.client.view.*
 import no.nordicsemi.android.ble.trivia.server.view.ResultView
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.common.permissions.ble.RequireBluetooth
+import no.nordicsemi.android.common.permissions.ble.RequireLocation
 import no.nordicsemi.android.common.theme.view.NordicAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -35,52 +36,61 @@ fun ClientScreen(
         )
 
         RequireBluetooth {
-            val clientViewModel: ClientViewModel = hiltViewModel()
-            val clientViewState by clientViewModel.clientState.collectAsState()
-            val ticks by clientViewModel.ticks.collectAsState()
+            RequireLocation {
+                val clientViewModel: ClientViewModel = hiltViewModel()
+                val clientViewState by clientViewModel.clientState.collectAsState()
+                val ticks by clientViewModel.ticks.collectAsState()
 
-            when (clientViewState.state) {
-                ConnectionState.Initializing -> { InitializingView() }
-                ConnectionState.Connecting -> { ConnectingView() }
-                is ConnectionState.Disconnected -> { DisconnectedView() }
-                ConnectionState.Ready -> {
-                    when (clientViewState.isGameOver) {
-                        true -> clientViewState.result?.result?.let { result -> ResultView(result = result) }
-                        else -> {
-                            clientViewState.question?.let {
-                                QuestionContentView(
-                                    question = clientViewState.question?.question,
-                                    answers = clientViewState.toViewState(),
-                                    ticks = ticks,
-                                    modifier = Modifier.fillMaxWidth(),
-                                    onAnswerSelected = { answerChosen ->
-                                        clientViewModel.sendAnswer(answerChosen)
-                                    }
+                when (val state = clientViewState.state) {
+                    ConnectionState.Initializing -> InitializingView()
+                    ConnectionState.Connecting -> ConnectingView()
+                    is ConnectionState.Disconnected -> DisconnectedView()
+                    is ConnectionState.Error -> ErrorView(state.message)
+                    ConnectionState.Ready -> {
+                        when (clientViewState.isGameOver) {
+                            true -> clientViewState.result?.result?.let { result ->
+                                ResultView(
+                                    result = result
                                 )
-                            } ?: run {
-                                if (clientViewState.openDialog) {
-                                    PlayersNameDialog(
-                                        playersName = playersName,
-                                        isDuplicate = clientViewState.playersNameIsDuplicate,
-                                        isError = clientViewState.playersNameIsError,
-                                        onDismiss = {
-                                            clientViewModel.dismissPlayersNameDialog()
-                                                    },
-                                        onNameSet = {
-                                            playersName = it
-                                            clientViewModel.onUserTyping()
-                                        },
-                                        onSendClick = {
-                                            playersName = playersName.trim()
-                                            clientViewModel.sendName(playersName)
+                            }
+
+                            else -> {
+                                clientViewState.question?.let {
+                                    QuestionContentView(
+                                        question = clientViewState.question?.question,
+                                        answers = clientViewState.toViewState(),
+                                        ticks = ticks,
+                                        modifier = Modifier.fillMaxWidth(),
+                                        onAnswerSelected = { answerChosen ->
+                                            clientViewModel.sendAnswer(answerChosen)
                                         }
                                     )
-                                } else clientViewState.userJoined?.let { ConnectedView(it.player) }
+                                } ?: run {
+                                    if (clientViewState.openDialog) {
+                                        PlayersNameDialog(
+                                            playersName = playersName,
+                                            isDuplicate = clientViewState.playersNameIsDuplicate,
+                                            isError = clientViewState.playersNameIsError,
+                                            onDismiss = {
+                                                clientViewModel.dismissPlayersNameDialog()
+                                            },
+                                            onNameSet = {
+                                                playersName = it
+                                                clientViewModel.onUserTyping()
+                                            },
+                                            onSendClick = {
+                                                playersName = playersName.trim()
+                                                clientViewModel.sendName(playersName)
+                                            }
+                                        )
+                                    } else clientViewState.userJoined?.let { ConnectedView(it.player) }
+                                }
                             }
                         }
                     }
+
+                    else -> LoadingView()
                 }
-                else -> LoadingView()
             }
         }
     }

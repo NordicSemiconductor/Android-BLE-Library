@@ -43,8 +43,8 @@ class ClientConnection(
     val isGameOver = _isGameOver.asSharedFlow()
     private val _result = MutableSharedFlow<Results>()
     val result = _result.asSharedFlow()
-    private val _isError = MutableSharedFlow<Error>()
-    val isError = _isError.asSharedFlow()
+    private val _error = MutableSharedFlow<Error>()
+    val error = _error.asSharedFlow()
 
     override fun log(priority: Int, message: String) {
         Log.println(priority, TAG, message)
@@ -74,7 +74,7 @@ class ClientConnection(
                 .merge(PacketMerger())
                 .asResponseFlow<Request>()
                 .onEach {
-                    it.isError?.let { isError -> _isError.emit(isError) }
+                    it.error?.let { isError -> _error.emit(isError) }
                     it.userJoined?.let { userJoined -> _userJoined.emit(userJoined) }
                     it.question?.let { question -> _question.emit(question) }
                     it.answerId?.let { answer -> _answer.emit(answer) }
