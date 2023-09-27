@@ -168,6 +168,7 @@ public abstract class BleServerManager implements ILogger {
 	 * After calling this method, the server will not disconnect after few seconds.
 	 * @param device The device to connect.
 	 * @param autoConnect Should the device automatically reconnect after it was disconnected.
+	 * @noinspection SameParameterValue
 	 */
 	final void useConnection(@NonNull final BluetoothDevice device, final boolean autoConnect) {
 		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
