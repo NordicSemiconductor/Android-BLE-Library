@@ -261,11 +261,7 @@ abstract class BleManagerHandler extends RequestHandler {
 						operationInProgress = true;
 						taskQueue.clear();
 						initQueue = null;
-						// Reset the state, so that the callbacks below see the correct state.
-						final boolean wasConnected = connected;
-						connected = false;
 						ready = false;
-						connectionState = BluetoothGatt.STATE_DISCONNECTED;
 
 						final BluetoothDevice device = bluetoothDevice;
 						if (device != null) {
@@ -292,9 +288,10 @@ abstract class BleManagerHandler extends RequestHandler {
 						operationInProgress = false;
 						// This will call close()
 						if (device != null) {
-							connected = wasConnected;
 							notifyDeviceDisconnected(device, ConnectionObserver.REASON_TERMINATE_LOCAL_HOST);
 						}
+						connected = false;
+						connectionState = BluetoothGatt.STATE_DISCONNECTED;
 					} else {
 						// Calling close() will prevent the STATE_OFF event from being logged
 						// (this receiver will be unregistered). But it doesn't matter.
@@ -474,9 +471,12 @@ abstract class BleManagerHandler extends RequestHandler {
 			log(Log.ERROR, () -> "attachClientConnection called on existing connection, call ignored");
 		} else {
 			this.bluetoothDevice = clientDevice;
+			this.connectionState = BluetoothProfile.STATE_CONNECTED;
+			this.connected = true;
 			// If using two way connection via connect(), the server attributes would be setup after discovery.
 			// Since we are opting to use server only connection, we must do this here instead.
 			initializeServerAttributes();
+			serverManager.useConnection(clientDevice, false);
 			// the other path also calls this part of the callbacks
 			manager.initialize();
 		}
@@ -716,6 +716,13 @@ abstract class BleManagerHandler extends RequestHandler {
 		userDisconnected = true;
 		initialConnection = false;
 		ready = false;
+
+		final BleServerManager serverManager = this.serverManager;
+		if (serverManager != null && bluetoothDevice != null) {
+			log(Log.VERBOSE, () -> "Cancelling server connection...");
+			log(Log.DEBUG, () -> "server.cancelConnection(device)");
+			serverManager.cancelConnection(bluetoothDevice);
+		}
 
 		final BluetoothGatt gatt = bluetoothGatt;
 		if (gatt != null) {
@@ -1835,7 +1842,10 @@ abstract class BleManagerHandler extends RequestHandler {
 	@Deprecated
 	protected abstract void onServicesInvalidated();
 
-	private void notifyDeviceDisconnected(@NonNull final BluetoothDevice device, final int status) {
+	void notifyDeviceDisconnected(@NonNull final BluetoothDevice device, final int status) {
+		if (connectionState == BluetoothProfile.STATE_DISCONNECTED)
+			return;
+
 		final boolean wasConnected = connected;
 		connected = false;
 		ready = false;

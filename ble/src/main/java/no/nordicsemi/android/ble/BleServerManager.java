@@ -1,5 +1,6 @@
 package no.nordicsemi.android.ble;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothGatt;
@@ -10,6 +11,7 @@ import android.bluetooth.BluetoothGattServerCallback;
 import android.bluetooth.BluetoothGattService;
 import android.bluetooth.BluetoothManager;
 import android.content.Context;
+import android.content.pm.PackageManager;
 import android.os.Build;
 import android.util.Log;
 
@@ -160,6 +162,32 @@ public abstract class BleServerManager implements ILogger {
 	 */
 	final void removeManager(@NonNull final BleManager manager) {
 		managers.remove(manager);
+	}
+
+	/**
+	 * After calling this method, the server will not disconnect after few seconds.
+	 * @param device The device to connect.
+	 * @param autoConnect Should the device automatically reconnect after it was disconnected.
+	 */
+	final void useConnection(@NonNull final BluetoothDevice device, final boolean autoConnect) {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+				context.checkCallingOrSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+			server.connect(device, autoConnect);
+		}
+	}
+
+	/**
+	 * Cancels server connection.
+	 * <p>
+	 * As we're not calling {@link BluetoothGattServer#connect(BluetoothDevice, boolean)}, cancelling
+	 * the connection should not be required. On the other hand, perhaps we should call connect(..).
+	 * @param device The device to cancel connection to.
+	 */
+	final void cancelConnection(@NonNull final BluetoothDevice device) {
+		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+				context.checkCallingOrSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+			server.cancelConnection(device);
+		}
 	}
 
 	final boolean isShared(@NonNull final BluetoothGattCharacteristic characteristic) {
@@ -707,6 +735,10 @@ public abstract class BleServerManager implements ILogger {
 					log(Log.INFO, "[Server] " + device.getAddress() + " is disconnected");
 				} else {
 					log(Log.WARN, "[Server] " + device.getAddress() + " has disconnected connected with status: " + status);
+				}
+				final BleManagerHandler handler = getRequestHandler(device);
+				if (handler != null) {
+					handler.notifyDeviceDisconnected(device, status);
 				}
 				if (serverObserver != null)
 					serverObserver.onDeviceDisconnectedFromServer(device);
