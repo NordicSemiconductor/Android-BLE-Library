@@ -187,10 +187,11 @@ public class ValueChangedCallback {
 				}
 			});
 		} else {
+			final int currentCount = count;
 			handler.post(() -> {
 				if (progressCallback != null) {
 					try {
-						progressCallback.onPacketReceived(device, value, count);
+						progressCallback.onPacketReceived(device, value, currentCount);
 					} catch (final Throwable t) {
 						Log.e(TAG, "Exception in Progress callback", t);
 					}
