@@ -4,6 +4,19 @@
 
 An Android library that solves a lot of Android's Bluetooth Low Energy problems.
 
+> **Warning**
+>
+> This library is getting replaced by our new [Kotlin BLE Library](https://github.com/NordicSemiconductor/Kotlin-BLE-Library).
+>
+> The new library offers the following improvements over this one:
+>  * 100% Kotlin code
+>  * Scanning for Bluetooth LE devices (scan results as `Flow`)
+>  * Support for Bluetooth LE advertising
+>  * Support for mocking BLE devices (easy testing)
+>  * All BLE operations use `suspend` modifier or `Flow`s
+>
+> Read more on project's Readme file.
+
 ## Importing
 
 The library may be found on Maven Central repository.
