@@ -272,10 +272,12 @@ public final class WriteRequest extends SimpleValueRequest<DataSentCallback> imp
 	 * @return True, if the data received are equal to data sent.
 	 */
 	boolean notifyPacketSent(@NonNull final BluetoothDevice device, @Nullable final byte[] data) {
+		final int currentCount = count;
+		final byte[] currentChunk = this.currentChunk;
 		handler.post(() -> {
 			if (progressCallback != null) {
 				try {
-					progressCallback.onPacketSent(device, currentChunk, count);
+					progressCallback.onPacketSent(device, currentChunk, currentCount);
 				} catch (final Throwable t) {
 					Log.e(TAG, "Exception in Progress callback", t);
 				}
