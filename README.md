@@ -4,30 +4,43 @@
 
 An Android library that solves a lot of Android's Bluetooth Low Energy problems.
 
+> **Warning**
+>
+> This library is getting replaced by our new [Kotlin BLE Library](https://github.com/NordicSemiconductor/Kotlin-BLE-Library).
+>
+> The new library offers the following improvements over this one:
+>  * 100% Kotlin code
+>  * Scanning for Bluetooth LE devices (scan results as `Flow`)
+>  * Support for Bluetooth LE advertising
+>  * Support for mocking BLE devices (easy testing)
+>  * All BLE operations use `suspend` modifier or `Flow`s
+>
+> Read more on project's Readme file.
+
 ## Importing
 
 The library may be found on Maven Central repository.
 Add it to your project by adding the following dependency:
 
 ```groovy
-implementation 'no.nordicsemi.android:ble:2.6.1'
+implementation 'no.nordicsemi.android:ble:2.7.0'
 ```
 The last version not migrated to AndroidX is 2.0.5.
 
 BLE library with Kotlin extension is available in:
 ```groovy
-implementation 'no.nordicsemi.android:ble-ktx:2.6.1'
+implementation 'no.nordicsemi.android:ble-ktx:2.7.0'
 ```
 
 To import the BLE library with set of parsers for common Bluetooth SIG characteristics, use:
 ```groovy
-implementation 'no.nordicsemi.android:ble-common:2.6.1'
+implementation 'no.nordicsemi.android:ble-common:2.7.0'
 ```
 For more information, read [this](BLE-COMMON.md).
 
 An extension for easier integration with `LiveData` is available after adding:
 ```groovy
-implementation 'no.nordicsemi.android:ble-livedata:2.6.1'
+implementation 'no.nordicsemi.android:ble-livedata:2.7.0'
 ```
 This extension adds `ObservableBleManager` with `state` and `bondingState` properties, which
 notify about connection and bond state using `androidx.lifecycle.LiveData`.
@@ -45,18 +58,18 @@ Clone this project and add it to your project:
     ```
 2. Sync project and build it.
 
-    The library uses Java 1.8 features. If you're using Android Studio below 4.2, make sure your
-    *build.gradle* includes the following configuration:
-    
-    ```groovy
-        compileOptions {
-            sourceCompatibility JavaVersion.VERSION_1_8
-            targetCompatibility JavaVersion.VERSION_1_8
-        }
-        // For Kotlin projects additionally:
-        kotlinOptions {
-            jvmTarget = "1.8"
-        }
+   The library uses Java 1.18 features. If you're using Android Studio below Giraffe, make sure your
+   *build.gradle* includes the following configuration:
+
+   ```groovy
+       compileOptions {
+           sourceCompatibility JavaVersion.VERSION_1_17
+           targetCompatibility JavaVersion.VERSION_1_17
+       }
+       // For Kotlin projects additionally:
+       kotlinOptions {
+           jvmTarget = "1.17"
+       }
     ```
 </details>
 
@@ -147,14 +160,14 @@ Below is short summary:
 4. Support for new `onServicesChanged()` callback, added in API 31 (Android 12).
 5. Option to cancel pending Bluetooth LE connection using `ConnectRequest.cancelPendingConnection()`.
 
-When using coroutines, use `.suspend()` method in `Request`, instead of `enqueue()` or `await()`.
+    When using coroutines, use `.suspend()` method in `Request`, instead of `enqueue()` or `await()`.
 
-To register to notifications and indications (or incoming write requests for server) use
-```kotlin
-setNotificationCallback(characteristic)
-   .merge(JsonMerger()) // Example of how to use JsonMerger, optional
-   .asFlow()
-```
+    To register to notifications and indications (or incoming write requests for server) use
+    ```kotlin
+    setNotificationCallback(characteristic)
+       .merge(JsonMerger()) // Example of how to use JsonMerger, optional
+       .asFlow()
+    ```
 </details>
 
 <details>
