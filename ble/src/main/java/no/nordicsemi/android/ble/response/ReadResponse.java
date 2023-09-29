@@ -79,7 +79,7 @@ public class ReadResponse implements DataReceivedCallback, Parcelable {
 		return 0;
 	}
 
-	public static final Creator<ReadResponse> CREATOR = new Creator<ReadResponse>() {
+	public static final Creator<ReadResponse> CREATOR = new Creator<>() {
 		@Override
 		public ReadResponse createFromParcel(final Parcel in) {
 			return new ReadResponse(in);

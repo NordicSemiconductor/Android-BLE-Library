@@ -35,9 +35,7 @@ import no.nordicsemi.android.ble.data.Data;
  * If the value received do not match required syntax
  * {@link #onInvalidDataReceived(BluetoothDevice, Data)} callback will be called.
  * will be called.
- * See: https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.body_sensor_location.xml
  */
-@SuppressWarnings({"WeakerAccess", "ConstantConditions"})
 public abstract class BodySensorLocationDataCallback extends ProfileReadResponse implements BodySensorLocationCallback {
 
 	public BodySensorLocationDataCallback() {
@@ -57,6 +55,7 @@ public abstract class BodySensorLocationDataCallback extends ProfileReadResponse
 			return;
 		}
 
+		//noinspection DataFlowIssue
 		final int sensorLocation = data.getIntValue(Data.FORMAT_UINT8, 0);
 		onBodySensorLocationReceived(device, sensorLocation);
 	}

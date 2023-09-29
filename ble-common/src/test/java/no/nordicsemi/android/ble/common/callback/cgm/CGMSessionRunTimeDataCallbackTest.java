@@ -33,7 +33,6 @@ import no.nordicsemi.android.ble.data.MutableData;
 
 import static org.junit.Assert.*;
 
-@SuppressWarnings("ConstantConditions")
 public class CGMSessionRunTimeDataCallbackTest {
 	private boolean called;
 
@@ -62,6 +61,7 @@ public class CGMSessionRunTimeDataCallbackTest {
 		assertTrue(data.setValue(2, Data.FORMAT_UINT16_LE, 0));
 		assertTrue(data.setValue(0xC308, Data.FORMAT_UINT16_LE, 2));
 		called = false;
+		//noinspection DataFlowIssue
 		callback.onDataReceived(null, data);
 		assertTrue(called);
 	}
@@ -89,6 +89,7 @@ public class CGMSessionRunTimeDataCallbackTest {
 		};
 		final Data data = new Data(new byte[] { 2, 0 });
 		called = false;
+		//noinspection DataFlowIssue
 		callback.onDataReceived(null, data);
 		assertTrue(called);
 	}
@@ -116,6 +117,7 @@ public class CGMSessionRunTimeDataCallbackTest {
 		assertTrue(data.setValue(2, Data.FORMAT_UINT16_LE, 0));
 		assertTrue(data.setValue(0xC309, Data.FORMAT_UINT16_LE, 2));
 		called = false;
+		//noinspection DataFlowIssue
 		callback.onDataReceived(null, data);
 		assertTrue(called);
 	}
@@ -142,6 +144,7 @@ public class CGMSessionRunTimeDataCallbackTest {
 		assertTrue(data.setValue(2, Data.FORMAT_UINT16_LE, 0));
 		assertTrue(data.setValue(1, Data.FORMAT_UINT8, 2));
 		called = false;
+		//noinspection DataFlowIssue
 		callback.onDataReceived(null, data);
 		assertTrue(called);
 	}

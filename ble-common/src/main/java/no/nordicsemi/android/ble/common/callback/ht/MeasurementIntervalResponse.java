@@ -79,12 +79,12 @@ public final class MeasurementIntervalResponse extends MeasurementIntervalDataCa
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		dest.writeInt(interval);
 	}
 
-	public static final Creator<MeasurementIntervalResponse> CREATOR = new Creator<MeasurementIntervalResponse>() {
+	public static final Creator<MeasurementIntervalResponse> CREATOR = new Creator<>() {
 		@Override
 		public MeasurementIntervalResponse createFromParcel(final Parcel in) {
 			return new MeasurementIntervalResponse(in);

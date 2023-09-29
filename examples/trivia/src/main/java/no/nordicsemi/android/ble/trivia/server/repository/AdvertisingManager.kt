@@ -23,7 +23,7 @@ class AdvertisingManager @Inject constructor(
         bluetoothAdapter.bluetoothLeAdvertiser
             ?: throw NullPointerException("Bluetooth not initialized")
     }
-    var advertisingCallback: AdvertiseCallback? = null
+    private var advertisingCallback: AdvertiseCallback? = null
 
     @OptIn(ExperimentalCoroutinesApi::class)
     suspend fun startAdvertising() = suspendCancellableCoroutine { continuation ->

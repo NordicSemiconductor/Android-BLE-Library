@@ -31,13 +31,14 @@ fun TimerView(
         horizontalArrangement = Arrangement.Center,
         verticalAlignment = Alignment.CenterVertically
     ) {
-        var progress by remember { mutableStateOf(1f) }
+        var progress by remember { mutableFloatStateOf(1f) }
         val progressAnimation by animateFloatAsState(
             targetValue = progress,
             animationSpec = if (progress == 1f) snap(0) else tween(
                 durationMillis = duration.toInt(),
                 easing = LinearEasing
             ),
+            label = "Timer",
             finishedListener = { if (progress == 1f) progress = 0f }
         )
         CircularProgressIndicator(

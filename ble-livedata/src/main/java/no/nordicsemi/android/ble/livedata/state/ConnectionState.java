@@ -4,6 +4,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.RestrictTo;
 import no.nordicsemi.android.ble.annotation.DisconnectionReason;
 
+/** @noinspection unused*/
 public class ConnectionState {
 
 	public enum State {
@@ -16,7 +17,7 @@ public class ConnectionState {
 
 	public static final class Connecting extends ConnectionState {
 		@RestrictTo(RestrictTo.Scope.LIBRARY)
-		public static Connecting INSTANCE = new Connecting();
+		public static final Connecting INSTANCE = new Connecting();
 		private Connecting() {
 			super(State.CONNECTING);
 		}
@@ -24,7 +25,7 @@ public class ConnectionState {
 
 	public static final class Initializing extends ConnectionState {
 		@RestrictTo(RestrictTo.Scope.LIBRARY)
-		public static Initializing INSTANCE = new Initializing();
+		public static final Initializing INSTANCE = new Initializing();
 		private Initializing() {
 			super(State.INITIALIZING);
 		}
@@ -32,7 +33,7 @@ public class ConnectionState {
 
 	public static final class Ready extends ConnectionState {
 		@RestrictTo(RestrictTo.Scope.LIBRARY)
-		public static Ready INSTANCE = new Ready();
+		public static final Ready INSTANCE = new Ready();
 		private Ready() {
 			super(State.READY);
 		}
@@ -40,7 +41,7 @@ public class ConnectionState {
 
 	public static final class Disconnecting extends ConnectionState {
 		@RestrictTo(RestrictTo.Scope.LIBRARY)
-		public static Disconnecting INSTANCE = new Disconnecting();
+		public static final Disconnecting INSTANCE = new Disconnecting();
 		private Disconnecting() {
 			super(State.DISCONNECTING);
 		}

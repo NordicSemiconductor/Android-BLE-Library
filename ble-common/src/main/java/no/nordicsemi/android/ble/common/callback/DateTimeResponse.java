@@ -80,7 +80,7 @@ public final class DateTimeResponse extends DateTimeDataCallback implements Parc
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		if (calendar == null) {
 			dest.writeByte((byte) 0);
@@ -90,7 +90,7 @@ public final class DateTimeResponse extends DateTimeDataCallback implements Parc
 		}
 	}
 
-	public static final Creator<DateTimeResponse> CREATOR = new Creator<DateTimeResponse>() {
+	public static final Creator<DateTimeResponse> CREATOR = new Creator<>() {
 		@Override
 		public DateTimeResponse createFromParcel(final Parcel in) {
 			return new DateTimeResponse(in);

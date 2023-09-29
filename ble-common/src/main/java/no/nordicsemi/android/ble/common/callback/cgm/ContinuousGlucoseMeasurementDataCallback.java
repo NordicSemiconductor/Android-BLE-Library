@@ -38,9 +38,7 @@ import no.nordicsemi.android.ble.data.Data;
  * If the device supports E2E CRC validation and the CRC is not valid, the
  * {@link #onContinuousGlucoseMeasurementReceivedWithCrcError(BluetoothDevice, Data)}
  * will be called.
- * See: https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.cgm_measurement.xml
  */
-@SuppressWarnings({"ConstantConditions", "WeakerAccess"})
 public abstract class ContinuousGlucoseMeasurementDataCallback extends ProfileReadResponse implements ContinuousGlucoseMeasurementCallback {
 
 	public ContinuousGlucoseMeasurementDataCallback() {
@@ -51,6 +49,7 @@ public abstract class ContinuousGlucoseMeasurementDataCallback extends ProfileRe
 		super(in);
 	}
 
+	/** @noinspection DataFlowIssue*/
 	@Override
 	public void onDataReceived(@NonNull final BluetoothDevice device, @NonNull final Data data) {
 		super.onDataReceived(device, data);

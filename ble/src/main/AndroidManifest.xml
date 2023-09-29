@@ -3,9 +3,10 @@
 
 	<uses-permission android:name="android.permission.BLUETOOTH" android:maxSdkVersion="30" />
 
-	<!--
-	  Since API 31 (Android 12) apps need to request BLUETOOTH_CONNECT runtime permission.
-	  This is not in scope of this library.
-	-->
+    <!--
+      Since API 31 (Android 12) apps need to request BLUETOOTH_CONNECT runtime permission.
+      This is not in scope of this library.
+    -->
+    <uses-permission android:name="android.permission.BLUETOOTH_CONNECT" />
 
 </manifest>

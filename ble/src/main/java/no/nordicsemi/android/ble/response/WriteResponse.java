@@ -78,7 +78,7 @@ public class WriteResponse implements DataSentCallback, Parcelable {
 		return 0;
 	}
 
-	public static final Creator<WriteResponse> CREATOR = new Creator<WriteResponse>() {
+	public static final Creator<WriteResponse> CREATOR = new Creator<>() {
 		@Override
 		public WriteResponse createFromParcel(final Parcel in) {
 			return new WriteResponse(in);

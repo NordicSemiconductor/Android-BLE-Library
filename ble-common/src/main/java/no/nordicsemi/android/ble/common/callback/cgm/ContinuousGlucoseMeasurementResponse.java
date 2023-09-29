@@ -25,13 +25,11 @@ package no.nordicsemi.android.ble.common.callback.cgm;
 import android.bluetooth.BluetoothDevice;
 import android.os.Parcel;
 import android.os.Parcelable;
+
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 
-import java.lang.reflect.Array;
 import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.Collections;
 
 import no.nordicsemi.android.ble.data.Data;
 import no.nordicsemi.android.ble.exception.InvalidDataException;
@@ -58,7 +56,7 @@ import no.nordicsemi.android.ble.exception.RequestFailedException;
  */
 @SuppressWarnings("unused")
 public final class ContinuousGlucoseMeasurementResponse extends ContinuousGlucoseMeasurementDataCallback implements CRCSecuredResponse, Parcelable {
-	private ArrayList<ContinuousGlucoseMeasurementResponseItem> items = new ArrayList<>();
+	private final ArrayList<ContinuousGlucoseMeasurementResponseItem> items = new ArrayList<>();
 	private boolean secured;
 	private boolean crcValid;
 
@@ -99,7 +97,7 @@ public final class ContinuousGlucoseMeasurementResponse extends ContinuousGlucos
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 
 		dest.writeList(items);
@@ -107,7 +105,7 @@ public final class ContinuousGlucoseMeasurementResponse extends ContinuousGlucos
 		dest.writeByte((byte) (crcValid ? 1 : 0));
 	}
 
-	public static final Creator<ContinuousGlucoseMeasurementResponse> CREATOR = new Creator<ContinuousGlucoseMeasurementResponse>() {
+	public static final Creator<ContinuousGlucoseMeasurementResponse> CREATOR = new Creator<>() {
 		@Override
 		public ContinuousGlucoseMeasurementResponse createFromParcel(final Parcel in) {
 			return new ContinuousGlucoseMeasurementResponse(in);

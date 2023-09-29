@@ -15,7 +15,7 @@ import no.nordicsemi.android.ble.BleManager
 import no.nordicsemi.android.ble.trivia.client.data.Request
 import no.nordicsemi.android.ble.trivia.proto.OpCodeProto
 import no.nordicsemi.android.ble.trivia.proto.RequestProto
-import no.nordicsemi.android.ble.trivia.server.data.Error
+import no.nordicsemi.android.ble.trivia.server.data.NameResult
 import no.nordicsemi.android.ble.trivia.server.data.Players
 import no.nordicsemi.android.ble.trivia.server.data.Results
 import no.nordicsemi.android.ble.trivia.server.repository.Question
@@ -31,7 +31,7 @@ class ClientConnection(
     private val device: BluetoothDevice,
 ) : BleManager(context) {
     private val TAG = ClientConnection::class.java.simpleName
-    var characteristic: BluetoothGattCharacteristic? = null
+    private var characteristic: BluetoothGattCharacteristic? = null
 
     private val _userJoined = MutableSharedFlow<Players>()
     val userJoined = _userJoined.asSharedFlow()
@@ -43,8 +43,8 @@ class ClientConnection(
     val isGameOver = _isGameOver.asSharedFlow()
     private val _result = MutableSharedFlow<Results>()
     val result = _result.asSharedFlow()
-    private val _isError = MutableSharedFlow<Error>()
-    val isError = _isError.asSharedFlow()
+    private val _nameResult = MutableSharedFlow<NameResult>()
+    val error = _nameResult.asSharedFlow()
 
     override fun log(priority: Int, message: String) {
         Log.println(priority, TAG, message)
@@ -74,7 +74,7 @@ class ClientConnection(
                 .merge(PacketMerger())
                 .asResponseFlow<Request>()
                 .onEach {
-                    it.isError?.let { isError -> _isError.emit(isError) }
+                    it.nameResult?.let { error -> _nameResult.emit(error) }
                     it.userJoined?.let { userJoined -> _userJoined.emit(userJoined) }
                     it.question?.let { question -> _question.emit(question) }
                     it.answerId?.let { answer -> _answer.emit(answer) }

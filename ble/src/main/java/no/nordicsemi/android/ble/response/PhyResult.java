@@ -87,7 +87,7 @@ public class PhyResult implements PhyCallback, Parcelable {
 		return 0;
 	}
 
-	public static final Creator<PhyResult> CREATOR = new Creator<PhyResult>() {
+	public static final Creator<PhyResult> CREATOR = new Creator<>() {
 		@Override
 		public PhyResult createFromParcel(final Parcel in) {
 			return new PhyResult(in);

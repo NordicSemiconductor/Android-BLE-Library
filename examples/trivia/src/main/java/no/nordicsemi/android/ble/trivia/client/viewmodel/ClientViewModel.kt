@@ -1,15 +1,18 @@
 package no.nordicsemi.android.ble.trivia.client.viewmodel
 
 import android.content.Context
+import android.util.Log
 import androidx.lifecycle.viewModelScope
 import dagger.hilt.android.lifecycle.HiltViewModel
 import dagger.hilt.android.qualifiers.ApplicationContext
+import kotlinx.coroutines.CoroutineExceptionHandler
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
+import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.ble.trivia.client.data.ClientViewState
 import no.nordicsemi.android.ble.trivia.client.repository.ClientConnection
 import no.nordicsemi.android.ble.trivia.client.repository.ScannerRepository
@@ -20,16 +23,20 @@ import javax.inject.Inject
 
 @HiltViewModel
 class ClientViewModel @Inject constructor(
-    @ApplicationContext private val context: Context,
+    @ApplicationContext context: Context,
     private val scannerRepository: ScannerRepository,
-) : TimerViewModel() {
+) : TimerViewModel(context) {
     private var clientManager: ClientConnection? = null
     private val _clientState: MutableStateFlow<ClientViewState> =
         MutableStateFlow(ClientViewState())
     val clientState = _clientState.asStateFlow()
 
     init {
-        viewModelScope.launch(Dispatchers.IO) {
+        val exceptionHandler = CoroutineExceptionHandler { _, throwable ->
+            Log.e("ClientViewModel", "Error", throwable)
+            _clientState.value = _clientState.value.copy(error = throwable.message)
+        }
+        viewModelScope.launch(Dispatchers.IO + exceptionHandler) {
             val device = scannerRepository.searchForServer()
 
             ClientConnection(context, viewModelScope, device)
@@ -37,8 +44,8 @@ class ClientViewModel @Inject constructor(
                     stateAsFlow()
                         .onEach { _clientState.value = _clientState.value.copy(state = it) }
                         .launchIn(viewModelScope)
-                    isError
-                        .onEach { _clientState.value = _clientState.value.copy(isError = it) }
+                    error
+                        .onEach { _clientState.value = _clientState.value.copy(nameResult = it) }
                         .launchIn(viewModelScope)
                      userJoined
                         .onEach { _clientState.value = _clientState.value.copy(userJoined = it) }
@@ -100,7 +107,7 @@ class ClientViewModel @Inject constructor(
     }
 
     fun sendName(playersName: String) {
-        _clientState.value = _clientState.value.copy(isUserTyping = false, isError = null)
+        _clientState.value = _clientState.value.copy(isUserTyping = false, nameResult = null)
         viewModelScope.launch(Dispatchers.IO) {
             clientManager?.sendPlayersName(playersName)
         }

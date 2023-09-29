@@ -200,7 +200,7 @@ public final class CyclingSpeedAndCadenceMeasurementResponse extends CyclingSpee
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		dest.writeLong(wheelRevolutions);
 		dest.writeLong(crankRevolutions);
@@ -208,7 +208,7 @@ public final class CyclingSpeedAndCadenceMeasurementResponse extends CyclingSpee
 		dest.writeInt(lastCrankEventTime);
 	}
 
-	public static final Creator<CyclingSpeedAndCadenceMeasurementResponse> CREATOR = new Creator<CyclingSpeedAndCadenceMeasurementResponse>() {
+	public static final Creator<CyclingSpeedAndCadenceMeasurementResponse> CREATOR = new Creator<>() {
 		@Override
 		public CyclingSpeedAndCadenceMeasurementResponse createFromParcel(final Parcel in) {
 			return new CyclingSpeedAndCadenceMeasurementResponse(in);

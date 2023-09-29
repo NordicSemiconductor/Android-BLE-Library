@@ -262,7 +262,7 @@ public final class CGMSpecificOpsControlPointResponse extends CGMSpecificOpsCont
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		dest.writeByte((byte) (operationCompleted ? 1 : 0));
 		dest.writeByte((byte) (secured ? 1 : 0));
@@ -285,7 +285,7 @@ public final class CGMSpecificOpsControlPointResponse extends CGMSpecificOpsCont
 		dest.writeFloat(alertLevel);
 	}
 
-	public static final Creator<CGMSpecificOpsControlPointResponse> CREATOR = new Creator<CGMSpecificOpsControlPointResponse>() {
+	public static final Creator<CGMSpecificOpsControlPointResponse> CREATOR = new Creator<>() {
 		@Override
 		public CGMSpecificOpsControlPointResponse createFromParcel(final Parcel in) {
 			return new CGMSpecificOpsControlPointResponse(in);

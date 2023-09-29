@@ -36,7 +36,7 @@ import no.nordicsemi.android.ble.data.MutableData;
 
 import static org.junit.Assert.*;
 
-@SuppressWarnings("ConstantConditions")
+/** @noinspection DataFlowIssue*/
 public class BloodPressureMeasurementDataCallbackTest {
 
 	@Test

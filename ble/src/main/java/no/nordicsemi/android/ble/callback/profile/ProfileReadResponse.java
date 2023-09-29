@@ -69,12 +69,12 @@ public class ProfileReadResponse extends ReadResponse implements ProfileDataCall
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		dest.writeByte((byte) (valid ? 1 : 0));
 	}
 
-	public static final Creator<ProfileReadResponse> CREATOR = new Creator<ProfileReadResponse>() {
+	public static final Creator<ProfileReadResponse> CREATOR = new Creator<>() {
 		@Override
 		public ProfileReadResponse createFromParcel(final Parcel in) {
 			return new ProfileReadResponse(in);

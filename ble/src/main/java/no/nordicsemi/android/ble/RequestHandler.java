@@ -8,7 +8,7 @@ abstract class RequestHandler implements CallbackHandler {
 	/**
 	 * Enqueues the given request at the end of the the init or task queue, depending
 	 * on whether the initialization is in progress, or not.
-	 *
+	 * <p>
 	 * This method will automatically try to execute the next request (not necessarily the
 	 * enqueued one).
 	 *

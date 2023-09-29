@@ -14,7 +14,6 @@ import no.nordicsemi.android.ble.trivia.R
 import no.nordicsemi.android.common.theme.NordicTheme
 
 @Composable
-@OptIn(ExperimentalMaterial3Api::class)
 fun PlayersNameDialog(
     playersName: String,
     isDuplicate: Boolean,

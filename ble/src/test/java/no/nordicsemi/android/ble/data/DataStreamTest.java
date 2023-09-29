@@ -27,6 +27,8 @@ import org.junit.Test;
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
 
+import java.util.Objects;
+
 public class DataStreamTest {
 
 	@Test
@@ -61,12 +63,11 @@ public class DataStreamTest {
 		assertEquals(7, stream.size());
 	}
 
-	@SuppressWarnings("ConstantConditions")
 	@Test
 	public void toData() {
 		final DataStream stream = new DataStream();
 		stream.write(new byte[] { 0, 1, 2, 3, 4, 5, 6});
 		final Data data = stream.toData();
-		assertEquals(0x100, data.getIntValue(Data.FORMAT_UINT16_LE, 0).intValue());
+		assertEquals(0x100, Objects.requireNonNull(data.getIntValue(Data.FORMAT_UINT16_LE, 0)).intValue());
 	}
 }

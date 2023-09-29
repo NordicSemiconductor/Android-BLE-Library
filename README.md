@@ -10,24 +10,24 @@ The library may be found on Maven Central repository.
 Add it to your project by adding the following dependency:
 
 ```groovy
-implementation 'no.nordicsemi.android:ble:2.6.0'
+implementation 'no.nordicsemi.android:ble:2.6.1'
 ```
 The last version not migrated to AndroidX is 2.0.5.
 
 BLE library with Kotlin extension is available in:
 ```groovy
-implementation 'no.nordicsemi.android:ble-ktx:2.6.0'
+implementation 'no.nordicsemi.android:ble-ktx:2.6.1'
 ```
 
 To import the BLE library with set of parsers for common Bluetooth SIG characteristics, use:
 ```groovy
-implementation 'no.nordicsemi.android:ble-common:2.6.0'
+implementation 'no.nordicsemi.android:ble-common:2.6.1'
 ```
 For more information, read [this](BLE-COMMON.md).
 
 An extension for easier integration with `LiveData` is available after adding:
 ```groovy
-implementation 'no.nordicsemi.android:ble-livedata:2.6.0'
+implementation 'no.nordicsemi.android:ble-livedata:2.6.1'
 ```
 This extension adds `ObservableBleManager` with `state` and `bondingState` properties, which
 notify about connection and bond state using `androidx.lifecycle.LiveData`.
@@ -38,26 +38,26 @@ notify about connection and bond state using `androidx.lifecycle.LiveData`.
 Clone this project and add it to your project:
 
 1. In *settings.gradle* file add the following lines:
-```groovy
-if (file('../Android-BLE-Library').exists()) {
-    includeBuild('../Android-BLE-Library')
-}
-```
+    ```groovy
+    if (file('../Android-BLE-Library').exists()) {
+        includeBuild('../Android-BLE-Library')
+    }
+    ```
 2. Sync project and build it.
 
-The library uses Java 1.8 features. If you're using Android Studio below 4.2, make sure your
-*build.gradle* includes the following configuration:
-
-```groovy
-    compileOptions {
-        sourceCompatibility JavaVersion.VERSION_1_8
-        targetCompatibility JavaVersion.VERSION_1_8
-    }
-    // For Kotlin projects additionally:
-    kotlinOptions {
-        jvmTarget = "1.8"
-    }
-```
+    The library uses Java 1.8 features. If you're using Android Studio below 4.2, make sure your
+    *build.gradle* includes the following configuration:
+    
+    ```groovy
+        compileOptions {
+            sourceCompatibility JavaVersion.VERSION_1_8
+            targetCompatibility JavaVersion.VERSION_1_8
+        }
+        // For Kotlin projects additionally:
+        kotlinOptions {
+            jvmTarget = "1.8"
+        }
+    ```
 </details>
 
 ## Features
@@ -92,6 +92,13 @@ The library uses Java 1.8 features. If you're using Android Studio below 4.2, ma
 
 See [Releases](https://github.com/NordicSemiconductor/Android-BLE-Library/releases) for details.
 Below is short summary:
+
+<details>
+	<summary>Version 2.7</summary>
+
+1. Library has been migrated to Java 17 due to minimum supported version in Android Studio Giraffe.
+
+</details>
 
 <details>
 	<summary>Version 2.6</summary>

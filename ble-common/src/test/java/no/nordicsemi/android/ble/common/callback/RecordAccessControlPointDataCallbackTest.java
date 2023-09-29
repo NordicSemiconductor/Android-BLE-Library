@@ -33,7 +33,7 @@ import no.nordicsemi.android.ble.data.Data;
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
-@SuppressWarnings("ConstantConditions")
+/** @noinspection DataFlowIssue*/
 public class RecordAccessControlPointDataCallbackTest {
 	private boolean success;
 	private boolean successNoRecords;

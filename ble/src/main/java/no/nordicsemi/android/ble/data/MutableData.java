@@ -200,25 +200,24 @@ public class MutableData extends Data {
 		if (len > mValue.length) return false;
 
 		switch (formatType) {
-			case FORMAT_SFLOAT:
+			case FORMAT_SFLOAT -> {
 				mantissa = intToSignedBits(mantissa, 12);
 				exponent = intToSignedBits(exponent, 4);
 				mValue[offset++] = (byte) (mantissa & 0xFF);
 				mValue[offset] = (byte) ((mantissa >> 8) & 0x0F);
 				mValue[offset] += (byte) ((exponent & 0x0F) << 4);
-				break;
-
-			case FORMAT_FLOAT:
+			}
+			case FORMAT_FLOAT -> {
 				mantissa = intToSignedBits(mantissa, 24);
 				exponent = intToSignedBits(exponent, 8);
 				mValue[offset++] = (byte) (mantissa & 0xFF);
 				mValue[offset++] = (byte) ((mantissa >> 8) & 0xFF);
 				mValue[offset++] = (byte) ((mantissa >> 16) & 0xFF);
 				mValue[offset] += (byte) (exponent & 0xFF);
-				break;
-
-			default:
+			}
+			default -> {
 				return false;
+			}
 		}
 
 		return true;
@@ -281,22 +280,21 @@ public class MutableData extends Data {
 		if (len > mValue.length) return false;
 
 		switch (formatType) {
-			case FORMAT_SFLOAT:
+			case FORMAT_SFLOAT -> {
 				final int sfloatAsInt = sfloatToInt(value);
 				mValue[offset++] = (byte) (sfloatAsInt & 0xFF);
 				mValue[offset] = (byte) ((sfloatAsInt >> 8) & 0xFF);
-				break;
-
-			case FORMAT_FLOAT:
+			}
+			case FORMAT_FLOAT -> {
 				final int floatAsInt = floatToInt(value);
 				mValue[offset++] = (byte) (floatAsInt & 0xFF);
 				mValue[offset++] = (byte) ((floatAsInt >> 8) & 0xFF);
 				mValue[offset++] = (byte) ((floatAsInt >> 16) & 0xFF);
 				mValue[offset] += (byte) ((floatAsInt >> 24) & 0xFF);
-				break;
-
-			default:
+			}
+			default -> {
 				return false;
+			}
 		}
 
 		return true;

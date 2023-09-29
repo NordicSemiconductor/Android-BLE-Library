@@ -39,9 +39,7 @@ import no.nordicsemi.android.ble.data.Data;
  * If the device supports E2E CRC validation and the CRC is not valid, the
  * {@link #onCGMSpecificOpsResponseReceivedWithCrcError(BluetoothDevice, Data)}
  * will be called.
- * See: https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.cgm_specific_ops_control_point.xml
  */
-@SuppressWarnings({"ConstantConditions", "UnnecessaryReturnStatement", "WeakerAccess"})
 public abstract class CGMSpecificOpsControlPointDataCallback extends ProfileReadResponse implements CGMSpecificOpsControlPointCallback {
 	private final static int OP_CODE_COMMUNICATION_INTERVAL_RESPONSE = 3;
 	private final static int OP_CODE_CALIBRATION_VALUE_RESPONSE = 6;
@@ -62,6 +60,7 @@ public abstract class CGMSpecificOpsControlPointDataCallback extends ProfileRead
 		super(in);
 	}
 
+	/** @noinspection DataFlowIssue*/
 	@Override
 	public void onDataReceived(@NonNull final BluetoothDevice device, @NonNull final Data data) {
 		super.onDataReceived(device, data);
@@ -77,30 +76,27 @@ public abstract class CGMSpecificOpsControlPointDataCallback extends ProfileRead
 		// Estimate the expected operand size based on the Op Code
 		int expectedOperandSize;
 		switch (opCode) {
-			case OP_CODE_COMMUNICATION_INTERVAL_RESPONSE:
+			case OP_CODE_COMMUNICATION_INTERVAL_RESPONSE ->
 				// UINT8
-				expectedOperandSize = 1;
-				break;
-			case OP_CODE_CALIBRATION_VALUE_RESPONSE:
+					expectedOperandSize = 1;
+			case OP_CODE_CALIBRATION_VALUE_RESPONSE ->
 				// Calibration Value
-				expectedOperandSize = 10;
-				break;
-			case OP_CODE_PATIENT_HIGH_ALERT_LEVEL_RESPONSE:
-			case OP_CODE_PATIENT_LOW_ALERT_LEVEL_RESPONSE:
-			case OP_CODE_HYPO_ALERT_LEVEL_RESPONSE:
-			case OP_CODE_HYPER_ALERT_LEVEL_RESPONSE:
-			case OP_CODE_RATE_OF_DECREASE_ALERT_LEVEL_RESPONSE:
-			case OP_CODE_RATE_OF_INCREASE_ALERT_LEVEL_RESPONSE:
+					expectedOperandSize = 10;
+			case OP_CODE_PATIENT_HIGH_ALERT_LEVEL_RESPONSE,
+				 OP_CODE_PATIENT_LOW_ALERT_LEVEL_RESPONSE,
+				 OP_CODE_HYPO_ALERT_LEVEL_RESPONSE,
+				 OP_CODE_HYPER_ALERT_LEVEL_RESPONSE,
+				 OP_CODE_RATE_OF_DECREASE_ALERT_LEVEL_RESPONSE,
+				 OP_CODE_RATE_OF_INCREASE_ALERT_LEVEL_RESPONSE ->
 				// SFLOAT
-				expectedOperandSize = 2;
-				break;
-			case OP_CODE_RESPONSE_CODE:
+					expectedOperandSize = 2;
+			case OP_CODE_RESPONSE_CODE ->
 				// Request Op Code (UINT8), Response Code Value (UINT8)
-				expectedOperandSize = 2;
-				break;
-			default:
+					expectedOperandSize = 2;
+			default -> {
 				onInvalidDataReceived(device, data);
 				return;
+			}
 		}
 
 		// Verify packet length
@@ -121,16 +117,16 @@ public abstract class CGMSpecificOpsControlPointDataCallback extends ProfileRead
 		}
 
 		switch (opCode) {
-			case OP_CODE_COMMUNICATION_INTERVAL_RESPONSE:
+			case OP_CODE_COMMUNICATION_INTERVAL_RESPONSE -> {
 				final int interval = data.getIntValue(Data.FORMAT_UINT8, 1);
 				onContinuousGlucoseCommunicationIntervalReceived(device, interval, crcPresent);
 				return;
-			case OP_CODE_CALIBRATION_VALUE_RESPONSE:
+			}
+			case OP_CODE_CALIBRATION_VALUE_RESPONSE -> {
 				final float glucoseConcentrationOfCalibration = data.getFloatValue(Data.FORMAT_SFLOAT, 1);
 				final int calibrationTime = data.getIntValue(Data.FORMAT_UINT16_LE, 3);
 				final int calibrationTypeAndSampleLocation = data.getIntValue(Data.FORMAT_UINT8, 5);
-				@SuppressLint("WrongConstant")
-				final int calibrationType = calibrationTypeAndSampleLocation & 0x0F;
+				@SuppressLint("WrongConstant") final int calibrationType = calibrationTypeAndSampleLocation & 0x0F;
 				final int calibrationSampleLocation = calibrationTypeAndSampleLocation >> 4;
 				final int nextCalibrationTime = data.getIntValue(Data.FORMAT_UINT16_LE, 6);
 				final int calibrationDataRecordNumber = data.getIntValue(Data.FORMAT_UINT16_LE, 8);
@@ -139,7 +135,8 @@ public abstract class CGMSpecificOpsControlPointDataCallback extends ProfileRead
 						calibrationTime, nextCalibrationTime, calibrationType, calibrationSampleLocation,
 						calibrationDataRecordNumber, new CGMCalibrationStatus(calibrationStatus), crcPresent);
 				return;
-			case OP_CODE_RESPONSE_CODE:
+			}
+			case OP_CODE_RESPONSE_CODE -> {
 				final int requestCode = data.getIntValue(Data.FORMAT_UINT8, 1); // ignore
 				final int responseCode = data.getIntValue(Data.FORMAT_UINT8, 2);
 				if (responseCode == CGM_RESPONSE_SUCCESS) {
@@ -148,29 +145,24 @@ public abstract class CGMSpecificOpsControlPointDataCallback extends ProfileRead
 					onCGMSpecificOpsOperationError(device, requestCode, responseCode, crcPresent);
 				}
 				return;
+			}
 		}
 
 		// Read SFLOAT value
 		final float value = data.getFloatValue(Data.FORMAT_SFLOAT, 1);
 		switch (opCode) {
-			case OP_CODE_PATIENT_HIGH_ALERT_LEVEL_RESPONSE:
-				onContinuousGlucosePatientHighAlertReceived(device, value, crcPresent);
-				return;
-			case OP_CODE_PATIENT_LOW_ALERT_LEVEL_RESPONSE:
-				onContinuousGlucosePatientLowAlertReceived(device, value, crcPresent);
-				return;
-			case OP_CODE_HYPO_ALERT_LEVEL_RESPONSE:
-				onContinuousGlucoseHypoAlertReceived(device, value, crcPresent);
-				return;
-			case OP_CODE_HYPER_ALERT_LEVEL_RESPONSE:
-				onContinuousGlucoseHyperAlertReceived(device, value, crcPresent);
-				return;
-			case OP_CODE_RATE_OF_DECREASE_ALERT_LEVEL_RESPONSE:
-				onContinuousGlucoseRateOfDecreaseAlertReceived(device, value, crcPresent);
-				return;
-			case OP_CODE_RATE_OF_INCREASE_ALERT_LEVEL_RESPONSE:
-				onContinuousGlucoseRateOfIncreaseAlertReceived(device, value, crcPresent);
-				return;
+			case OP_CODE_PATIENT_HIGH_ALERT_LEVEL_RESPONSE ->
+					onContinuousGlucosePatientHighAlertReceived(device, value, crcPresent);
+			case OP_CODE_PATIENT_LOW_ALERT_LEVEL_RESPONSE ->
+					onContinuousGlucosePatientLowAlertReceived(device, value, crcPresent);
+			case OP_CODE_HYPO_ALERT_LEVEL_RESPONSE ->
+					onContinuousGlucoseHypoAlertReceived(device, value, crcPresent);
+			case OP_CODE_HYPER_ALERT_LEVEL_RESPONSE ->
+					onContinuousGlucoseHyperAlertReceived(device, value, crcPresent);
+			case OP_CODE_RATE_OF_DECREASE_ALERT_LEVEL_RESPONSE ->
+					onContinuousGlucoseRateOfDecreaseAlertReceived(device, value, crcPresent);
+			case OP_CODE_RATE_OF_INCREASE_ALERT_LEVEL_RESPONSE ->
+					onContinuousGlucoseRateOfIncreaseAlertReceived(device, value, crcPresent);
 		}
 	}
 }

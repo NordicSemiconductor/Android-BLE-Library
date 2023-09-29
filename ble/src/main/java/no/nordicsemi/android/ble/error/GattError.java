@@ -89,28 +89,18 @@ public class GattError {
 	 * @return The error name as stated in the links in {@link GattError} documentation.
 	 */
 	public static String parseConnectionError(final int error) {
-		switch (error) {
-			case GATT_SUCCESS:
-				return "SUCCESS";
-			case GATT_CONN_L2C_FAILURE:
-				return "GATT CONN L2C FAILURE";
-			case GATT_CONN_TIMEOUT:
-				return "GATT CONN TIMEOUT";
-			case GATT_CONN_TERMINATE_PEER_USER:
-				return "GATT CONN TERMINATE PEER USER";
-			case GATT_CONN_TERMINATE_LOCAL_HOST:
-				return "GATT CONN TERMINATE LOCAL HOST";
-			case GATT_CONN_FAIL_ESTABLISH:
-				return "GATT CONN FAIL ESTABLISH";
-			case GATT_CONN_LMP_TIMEOUT:
-				return "GATT CONN LMP TIMEOUT";
-			case GATT_CONN_CANCEL:
-				return "GATT CONN CANCEL ";
-			case GATT_ERROR:
-				return "GATT ERROR"; // Device not reachable
-			default:
-				return "UNKNOWN (" + error + ")";
-		}
+		return switch (error) {
+			case GATT_SUCCESS -> "SUCCESS";
+			case GATT_CONN_L2C_FAILURE -> "GATT CONN L2C FAILURE";
+			case GATT_CONN_TIMEOUT -> "GATT CONN TIMEOUT";
+			case GATT_CONN_TERMINATE_PEER_USER -> "GATT CONN TERMINATE PEER USER";
+			case GATT_CONN_TERMINATE_LOCAL_HOST -> "GATT CONN TERMINATE LOCAL HOST";
+			case GATT_CONN_FAIL_ESTABLISH -> "GATT CONN FAIL ESTABLISH";
+			case GATT_CONN_LMP_TIMEOUT -> "GATT CONN LMP TIMEOUT";
+			case GATT_CONN_CANCEL -> "GATT CONN CANCEL ";
+			case GATT_ERROR -> "GATT ERROR"; // Device not reachable
+			default -> "UNKNOWN (" + error + ")";
+		};
 	}
 
 	/**
@@ -121,89 +111,48 @@ public class GattError {
 	 * @return The error name as stated in the links in {@link GattError} documentation.
 	 */
 	public static String parse(final int error) {
-		switch (error) {
-			case GATT_INVALID_HANDLE:
-				return "GATT INVALID HANDLE";
-			case GATT_READ_NOT_PERMIT:
-				return "GATT READ NOT PERMIT";
-			case GATT_WRITE_NOT_PERMIT:
-				return "GATT WRITE NOT PERMIT";
-			case GATT_INVALID_PDU:
-				return "GATT INVALID PDU";
-			case GATT_INSUF_AUTHENTICATION:
-				return "GATT INSUF AUTHENTICATION";
-			case GATT_REQ_NOT_SUPPORTED:
-				return "GATT REQ NOT SUPPORTED";
-			case GATT_INVALID_OFFSET:
-				return "GATT INVALID OFFSET";
-			case GATT_INSUF_AUTHORIZATION:
-				return "GATT INSUF AUTHORIZATION";
-			case GATT_PREPARE_Q_FULL:
-				return "GATT PREPARE Q FULL";
-			case GATT_NOT_FOUND:
-				return "GATT NOT FOUND";
-			case GATT_NOT_LONG:
-				return "GATT NOT LONG";
-			case GATT_INSUF_KEY_SIZE:
-				return "GATT INSUF KEY SIZE";
-			case GATT_INVALID_ATTR_LEN:
-				return "GATT INVALID ATTR LEN";
-			case GATT_ERR_UNLIKELY:
-				return "GATT ERR UNLIKELY";
-			case GATT_INSUF_ENCRYPTION:
-				return "GATT INSUF ENCRYPTION";
-			case GATT_UNSUPPORT_GRP_TYPE:
-				return "GATT UNSUPPORT GRP TYPE";
-			case GATT_INSUF_RESOURCE:
-				return "GATT INSUF RESOURCE";
-			case GATT_CONN_LMP_TIMEOUT:
-				return "GATT CONN LMP TIMEOUT";
-			case GATT_CONTROLLER_BUSY:
-				return "GATT CONTROLLER BUSY";
-			case GATT_UNACCEPT_CONN_INTERVAL:
-				return "GATT UNACCEPT CONN INTERVAL";
-			case GATT_ILLEGAL_PARAMETER:
-				return "GATT ILLEGAL PARAMETER";
-			case GATT_NO_RESOURCES:
-				return "GATT NO RESOURCES";
-			case GATT_INTERNAL_ERROR:
-				return "GATT INTERNAL ERROR";
-			case GATT_WRONG_STATE:
-				return "GATT WRONG STATE";
-			case GATT_DB_FULL:
-				return "GATT DB FULL";
-			case GATT_BUSY:
-				return "GATT BUSY";
-			case GATT_ERROR:
-				return "GATT ERROR";
-			case GATT_CMD_STARTED:
-				return "GATT CMD STARTED";
-			case GATT_PENDING:
-				return "GATT PENDING";
-			case GATT_AUTH_FAIL:
-				return "GATT AUTH FAIL";
-			case GATT_MORE:
-				return "GATT MORE";
-			case GATT_INVALID_CFG:
-				return "GATT INVALID CFG";
-			case GATT_SERVICE_STARTED:
-				return "GATT SERVICE STARTED";
-			case GATT_ENCRYPTED_NO_MITM:
-				return "GATT ENCRYPTED NO MITM";
-			case GATT_NOT_ENCRYPTED:
-				return "GATT NOT ENCRYPTED";
-			case GATT_CONGESTED:
-				return "GATT CONGESTED";
-			case GATT_CCCD_CFG_ERROR:
-				return "GATT CCCD CFG ERROR";
-			case GATT_PROCEDURE_IN_PROGRESS:
-				return "GATT PROCEDURE IN PROGRESS";
-			case GATT_VALUE_OUT_OF_RANGE:
-				return "GATT VALUE OUT OF RANGE";
-			case TOO_MANY_OPEN_CONNECTIONS:
-				return "TOO MANY OPEN CONNECTIONS";
-			default:
-				return "UNKNOWN (" + error + ")";
-		}
+		return switch (error) {
+			case GATT_INVALID_HANDLE -> "GATT INVALID HANDLE";
+			case GATT_READ_NOT_PERMIT -> "GATT READ NOT PERMIT";
+			case GATT_WRITE_NOT_PERMIT -> "GATT WRITE NOT PERMIT";
+			case GATT_INVALID_PDU -> "GATT INVALID PDU";
+			case GATT_INSUF_AUTHENTICATION -> "GATT INSUF AUTHENTICATION";
+			case GATT_REQ_NOT_SUPPORTED -> "GATT REQ NOT SUPPORTED";
+			case GATT_INVALID_OFFSET -> "GATT INVALID OFFSET";
+			case GATT_INSUF_AUTHORIZATION -> "GATT INSUF AUTHORIZATION";
+			case GATT_PREPARE_Q_FULL -> "GATT PREPARE Q FULL";
+			case GATT_NOT_FOUND -> "GATT NOT FOUND";
+			case GATT_NOT_LONG -> "GATT NOT LONG";
+			case GATT_INSUF_KEY_SIZE -> "GATT INSUF KEY SIZE";
+			case GATT_INVALID_ATTR_LEN -> "GATT INVALID ATTR LEN";
+			case GATT_ERR_UNLIKELY -> "GATT ERR UNLIKELY";
+			case GATT_INSUF_ENCRYPTION -> "GATT INSUF ENCRYPTION";
+			case GATT_UNSUPPORT_GRP_TYPE -> "GATT UNSUPPORT GRP TYPE";
+			case GATT_INSUF_RESOURCE -> "GATT INSUF RESOURCE";
+			case GATT_CONN_LMP_TIMEOUT -> "GATT CONN LMP TIMEOUT";
+			case GATT_CONTROLLER_BUSY -> "GATT CONTROLLER BUSY";
+			case GATT_UNACCEPT_CONN_INTERVAL -> "GATT UNACCEPT CONN INTERVAL";
+			case GATT_ILLEGAL_PARAMETER -> "GATT ILLEGAL PARAMETER";
+			case GATT_NO_RESOURCES -> "GATT NO RESOURCES";
+			case GATT_INTERNAL_ERROR -> "GATT INTERNAL ERROR";
+			case GATT_WRONG_STATE -> "GATT WRONG STATE";
+			case GATT_DB_FULL -> "GATT DB FULL";
+			case GATT_BUSY -> "GATT BUSY";
+			case GATT_ERROR -> "GATT ERROR";
+			case GATT_CMD_STARTED -> "GATT CMD STARTED";
+			case GATT_PENDING -> "GATT PENDING";
+			case GATT_AUTH_FAIL -> "GATT AUTH FAIL";
+			case GATT_MORE -> "GATT MORE";
+			case GATT_INVALID_CFG -> "GATT INVALID CFG";
+			case GATT_SERVICE_STARTED -> "GATT SERVICE STARTED";
+			case GATT_ENCRYPTED_NO_MITM -> "GATT ENCRYPTED NO MITM";
+			case GATT_NOT_ENCRYPTED -> "GATT NOT ENCRYPTED";
+			case GATT_CONGESTED -> "GATT CONGESTED";
+			case GATT_CCCD_CFG_ERROR -> "GATT CCCD CFG ERROR";
+			case GATT_PROCEDURE_IN_PROGRESS -> "GATT PROCEDURE IN PROGRESS";
+			case GATT_VALUE_OUT_OF_RANGE -> "GATT VALUE OUT OF RANGE";
+			case TOO_MANY_OPEN_CONNECTIONS -> "TOO MANY OPEN CONNECTIONS";
+			default -> "UNKNOWN (" + error + ")";
+		};
 	}
 }

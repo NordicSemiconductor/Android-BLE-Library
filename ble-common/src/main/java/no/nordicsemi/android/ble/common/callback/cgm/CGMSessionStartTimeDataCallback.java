@@ -46,9 +46,7 @@ import no.nordicsemi.android.ble.data.Data;
  * If the device supports E2E CRC validation and the CRC is not valid, the
  * {@link #onContinuousGlucoseMonitorSessionStartTimeReceivedWithCrcError(BluetoothDevice, Data)}
  * will be called.
- * See: https://www.bluetooth.com/specifications/gatt/viewer?attributeXmlFile=org.bluetooth.characteristic.cgm_session_start_time.xml
  */
-@SuppressWarnings({"ConstantConditions", "WeakerAccess"})
 public abstract class CGMSessionStartTimeDataCallback extends ProfileReadResponse implements CGMSessionStartTimeCallback {
 
 	public CGMSessionStartTimeDataCallback() {
@@ -59,6 +57,7 @@ public abstract class CGMSessionStartTimeDataCallback extends ProfileReadRespons
 		super(in);
 	}
 
+	/** @noinspection DataFlowIssue*/
 	@Override
 	public void onDataReceived(@NonNull final BluetoothDevice device, @NonNull final Data data) {
 		super.onDataReceived(device, data);

@@ -155,7 +155,7 @@ public final class RecordAccessControlPointResponse extends RecordAccessControlP
 	}
 
 	@Override
-	public void writeToParcel(final Parcel dest, final int flags) {
+	public void writeToParcel(@NonNull final Parcel dest, final int flags) {
 		super.writeToParcel(dest, flags);
 		dest.writeByte((byte) (operationCompleted ? 1 : 0));
 		dest.writeByte((byte) (recordsFound ? 1 : 0));
@@ -164,7 +164,7 @@ public final class RecordAccessControlPointResponse extends RecordAccessControlP
 		dest.writeInt(requestCode);
 	}
 
-	public static final Creator<RecordAccessControlPointResponse> CREATOR = new Creator<RecordAccessControlPointResponse>() {
+	public static final Creator<RecordAccessControlPointResponse> CREATOR = new Creator<>() {
 		@Override
 		public RecordAccessControlPointResponse createFromParcel(final Parcel in) {
 			return new RecordAccessControlPointResponse(in);

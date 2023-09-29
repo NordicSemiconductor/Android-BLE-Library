@@ -88,52 +88,36 @@ public class ParserUtils {
 
 	@NonNull
 	public static String pairingVariantToString(@PairingVariant final int variant) {
-		switch (variant) {
-			case PAIRING_VARIANT_PIN:
-				return "PAIRING_VARIANT_PIN";
-			case PAIRING_VARIANT_PASSKEY:
-				return "PAIRING_VARIANT_PASSKEY";
-			case PAIRING_VARIANT_PASSKEY_CONFIRMATION:
-				return "PAIRING_VARIANT_PASSKEY_CONFIRMATION";
-			case PAIRING_VARIANT_CONSENT:
-				return "PAIRING_VARIANT_CONSENT";
-			case PAIRING_VARIANT_DISPLAY_PASSKEY:
-				return "PAIRING_VARIANT_DISPLAY_PASSKEY";
-			case PAIRING_VARIANT_DISPLAY_PIN:
-				return "PAIRING_VARIANT_DISPLAY_PIN";
-			case PAIRING_VARIANT_OOB_CONSENT:
-				return "PAIRING_VARIANT_OOB_CONSENT";
-			default:
-				return "UNKNOWN (" + variant + ")";
-		}
+		return switch (variant) {
+			case PAIRING_VARIANT_PIN -> "PAIRING_VARIANT_PIN";
+			case PAIRING_VARIANT_PASSKEY -> "PAIRING_VARIANT_PASSKEY";
+			case PAIRING_VARIANT_PASSKEY_CONFIRMATION -> "PAIRING_VARIANT_PASSKEY_CONFIRMATION";
+			case PAIRING_VARIANT_CONSENT -> "PAIRING_VARIANT_CONSENT";
+			case PAIRING_VARIANT_DISPLAY_PASSKEY -> "PAIRING_VARIANT_DISPLAY_PASSKEY";
+			case PAIRING_VARIANT_DISPLAY_PIN -> "PAIRING_VARIANT_DISPLAY_PIN";
+			case PAIRING_VARIANT_OOB_CONSENT -> "PAIRING_VARIANT_OOB_CONSENT";
+			default -> "UNKNOWN (" + variant + ")";
+		};
 	}
 
 	@NonNull
 	public static String bondStateToString(@BondState final int state) {
-		switch (state) {
-			case BluetoothDevice.BOND_NONE:
-				return "BOND_NONE";
-			case BluetoothDevice.BOND_BONDING:
-				return "BOND_BONDING";
-			case BluetoothDevice.BOND_BONDED:
-				return "BOND_BONDED";
-			default:
-				return "UNKNOWN (" + state + ")";
-		}
+		return switch (state) {
+			case BluetoothDevice.BOND_NONE -> "BOND_NONE";
+			case BluetoothDevice.BOND_BONDING -> "BOND_BONDING";
+			case BluetoothDevice.BOND_BONDED -> "BOND_BONDED";
+			default -> "UNKNOWN (" + state + ")";
+		};
 	}
 
 	@NonNull
 	public static String writeTypeToString(@WriteType final int type) {
-		switch (type) {
-			case BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT:
-				return "WRITE REQUEST";
-			case BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE:
-				return "WRITE COMMAND";
-			case BluetoothGattCharacteristic.WRITE_TYPE_SIGNED:
-				return "WRITE SIGNED";
-			default:
-				return "UNKNOWN (" + type + ")";
-		}
+		return switch (type) {
+			case BluetoothGattCharacteristic.WRITE_TYPE_DEFAULT -> "WRITE REQUEST";
+			case BluetoothGattCharacteristic.WRITE_TYPE_NO_RESPONSE -> "WRITE COMMAND";
+			case BluetoothGattCharacteristic.WRITE_TYPE_SIGNED -> "WRITE SIGNED";
+			default -> "UNKNOWN (" + type + ")";
+		};
 	}
 
 	/**
@@ -144,18 +128,13 @@ public class ParserUtils {
 	 */
 	@NonNull
 	public static String stateToString(@ConnectionState final int state) {
-		switch (state) {
-			case BluetoothProfile.STATE_CONNECTED:
-				return "CONNECTED";
-			case BluetoothProfile.STATE_CONNECTING:
-				return "CONNECTING";
-			case BluetoothProfile.STATE_DISCONNECTING:
-				return "DISCONNECTING";
-			case BluetoothProfile.STATE_DISCONNECTED:
-				return "DISCONNECTED";
-			default:
-				return "UNKNOWN (" + state + ")";
-		}
+		return switch (state) {
+			case BluetoothProfile.STATE_CONNECTED -> "CONNECTED";
+			case BluetoothProfile.STATE_CONNECTING -> "CONNECTING";
+			case BluetoothProfile.STATE_DISCONNECTING -> "DISCONNECTING";
+			case BluetoothProfile.STATE_DISCONNECTED -> "DISCONNECTED";
+			default -> "UNKNOWN (" + state + ")";
+		};
 	}
 
 	/**
@@ -166,52 +145,36 @@ public class ParserUtils {
 	 */
 	@NonNull
 	public static String phyToString(@PhyValue final int phy) {
-		switch (phy) {
-			case PhyCallback.PHY_LE_1M:
-				return "LE 1M";
-			case PhyCallback.PHY_LE_2M:
-				return "LE 2M";
-			case PhyCallback.PHY_LE_CODED:
-				return "LE Coded";
-			default:
-				return "UNKNOWN (" + phy + ")";
-		}
+		return switch (phy) {
+			case PhyCallback.PHY_LE_1M -> "LE 1M";
+			case PhyCallback.PHY_LE_2M -> "LE 2M";
+			case PhyCallback.PHY_LE_CODED -> "LE Coded";
+			default -> "UNKNOWN (" + phy + ")";
+		};
 	}
 
 	@NonNull
 	public static String phyMaskToString(@PhyMask final int mask) {
-		switch (mask) {
-			case PhyRequest.PHY_LE_1M_MASK:
-				return "LE 1M";
-			case PhyRequest.PHY_LE_2M_MASK:
-				return "LE 2M";
-			case PhyRequest.PHY_LE_CODED_MASK:
-				return "LE Coded";
-			case PhyRequest.PHY_LE_1M_MASK | PhyRequest.PHY_LE_2M_MASK:
-				return "LE 1M or LE 2M";
-			case PhyRequest.PHY_LE_1M_MASK | PhyRequest.PHY_LE_CODED_MASK:
-				return "LE 1M or LE Coded";
-			case PhyRequest.PHY_LE_2M_MASK | PhyRequest.PHY_LE_CODED_MASK:
-				return "LE 2M or LE Coded";
+		return switch (mask) {
+			case PhyRequest.PHY_LE_1M_MASK -> "LE 1M";
+			case PhyRequest.PHY_LE_2M_MASK -> "LE 2M";
+			case PhyRequest.PHY_LE_CODED_MASK -> "LE Coded";
+			case PhyRequest.PHY_LE_1M_MASK | PhyRequest.PHY_LE_2M_MASK -> "LE 1M or LE 2M";
+			case PhyRequest.PHY_LE_1M_MASK | PhyRequest.PHY_LE_CODED_MASK -> "LE 1M or LE Coded";
+			case PhyRequest.PHY_LE_2M_MASK | PhyRequest.PHY_LE_CODED_MASK -> "LE 2M or LE Coded";
 			case PhyRequest.PHY_LE_1M_MASK | PhyRequest.PHY_LE_2M_MASK
-					| PhyRequest.PHY_LE_CODED_MASK:
-				return "LE 1M, LE 2M or LE Coded";
-			default:
-				return "UNKNOWN (" + mask + ")";
-		}
+					| PhyRequest.PHY_LE_CODED_MASK -> "LE 1M, LE 2M or LE Coded";
+			default -> "UNKNOWN (" + mask + ")";
+		};
 	}
 
 	@NonNull
 	public static String phyCodedOptionToString(@PhyOption final int option) {
-		switch (option) {
-			case PhyRequest.PHY_OPTION_NO_PREFERRED:
-				return "No preferred";
-			case PhyRequest.PHY_OPTION_S2:
-				return "S2";
-			case PhyRequest.PHY_OPTION_S8:
-				return "S8";
-			default:
-				return "UNKNOWN (" + option + ")";
-		}
+		return switch (option) {
+			case PhyRequest.PHY_OPTION_NO_PREFERRED -> "No preferred";
+			case PhyRequest.PHY_OPTION_S2 -> "S2";
+			case PhyRequest.PHY_OPTION_S8 -> "S8";
+			default -> "UNKNOWN (" + option + ")";
+		};
 	}
 }

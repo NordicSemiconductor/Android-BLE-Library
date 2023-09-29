@@ -416,7 +416,7 @@ public abstract class BleManager implements ILogger {
 
 	/**
 	 * This method returns the GATT callback used by the manager.
-	 *
+	 * <p>
 	 * Since version 2.6 this method is private. The manager just can implement all inner methods
 	 * directly, without additional object.
 	 *
@@ -724,7 +724,8 @@ public abstract class BleManager implements ILogger {
 	}
 
 	/**
-	 * "Server only" alternative to using connect() in onDeviceConnectedToServer.
+	 * "Server only" alternative to using {@link #connect(BluetoothDevice)} in
+	 * {@link no.nordicsemi.android.ble.observer.ServerObserver#onDeviceConnectedToServer(BluetoothDevice) onDeviceConnectedToServer}.
 	 * This simply associates the connection to the passed client.
 	 */
 	public void attachClientConnection(BluetoothDevice client) {
@@ -815,6 +816,7 @@ public abstract class BleManager implements ILogger {
 	 *
 	 * @return The request.
 	 * @since 2.2.3
+	 * @noinspection MismatchedJavadocCode
 	 */
 	@RequiresPermission(Manifest.permission.BLUETOOTH_ADMIN)
 	protected Request ensureBond() {
@@ -2054,7 +2056,7 @@ public abstract class BleManager implements ILogger {
 
 	/**
 	 * Sets connection priority listener.
-	 *
+	 * <p>
 	 * This method is only available from Android Oreo, which has added hidden
 	 * <a href="https://cs.android.com/android/_/android/platform/packages/modules/Bluetooth/+/b651de2c347368d04dd313f61f719c2f5ae1b92e">onConnectionUpdated</a>
 	 * callback to {@link BluetoothGattCallback}.

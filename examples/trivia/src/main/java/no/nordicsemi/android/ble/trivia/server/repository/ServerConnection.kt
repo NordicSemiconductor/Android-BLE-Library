@@ -30,7 +30,7 @@ class ServerConnection(
     private val scope: CoroutineScope,
     private val device: BluetoothDevice,
 ): BleManager(context) {
-    var serverCharacteristic: BluetoothGattCharacteristic? = null
+    private var serverCharacteristic: BluetoothGattCharacteristic? = null
     private val TAG = ServerConnection::class.java.simpleName
 
     private val _playersName = MutableSharedFlow<String>()

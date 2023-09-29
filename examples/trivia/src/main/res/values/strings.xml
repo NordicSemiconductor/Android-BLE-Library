@@ -9,10 +9,11 @@
     <string name="join_game">Join Game</string>
 
     <string name="looking_for_clients">Looking for clients…</string>
-    <string name="initializing">Initializing Server…</string>
-    <string name="scanning_for_server">Scanning for Server…</string>
+    <string name="initializing">Waiting for server…</string>
+    <string name="connecting">Connecting…</string>
     <string name="connected">Connected</string>
     <string name="disconnected">Disconnected</string>
+    <string name="unknown_error">Unknown error</string>
 
     <string name="ask_players_name">Enter player\'s name</string>
     <string name="empty_name_error">Name cannot be empty</string>

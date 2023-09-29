@@ -35,6 +35,7 @@ public interface FailCallback {
 	int REASON_TIMEOUT = -5;
 	int REASON_VALIDATION = -6;
 	int REASON_CANCELLED = -7;
+	int REASON_NOT_ENABLED = -8;
 	int REASON_BLUETOOTH_DISABLED = -100;
 
 	/**
@@ -46,7 +47,7 @@ public interface FailCallback {
 	 *               {@link #REASON_DEVICE_DISCONNECTED}, {@link #REASON_TIMEOUT},
 	 *               {@link #REASON_DEVICE_NOT_SUPPORTED} (only for Connect request),
 	 *               {@link #REASON_BLUETOOTH_DISABLED}, {@link #REASON_NULL_ATTRIBUTE},
-	 *               {@link #REASON_VALIDATION}, {@link #REASON_CANCELLED}
+	 *               {@link #REASON_VALIDATION}, {@link #REASON_CANCELLED}, {@link #REASON_NOT_ENABLED}
 	 *               or {@link #REASON_REQUEST_FAILED} (for other reason).
 	 */
 	void onRequestFailed(@NonNull final BluetoothDevice device, final int status);

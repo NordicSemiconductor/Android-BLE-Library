@@ -27,11 +27,10 @@ import android.bluetooth.BluetoothGattCallback;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
-import no.nordicsemi.android.ble.callback.BeforeCallback;
+
+import no.nordicsemi.android.ble.callback.FailCallback;
 import no.nordicsemi.android.ble.observer.BondingObserver;
 import no.nordicsemi.android.ble.observer.ConnectionObserver;
-import no.nordicsemi.android.ble.callback.FailCallback;
-import no.nordicsemi.android.ble.callback.SuccessCallback;
 
 /**
  * The BleManagerCallbacks should be overridden in your app and all the 'high level' callbacks

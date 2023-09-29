@@ -81,7 +81,7 @@ public class MtuResult implements MtuCallback, Parcelable {
 		return 0;
 	}
 
-	public static final Creator<MtuResult> CREATOR = new Creator<MtuResult>() {
+	public static final Creator<MtuResult> CREATOR = new Creator<>() {
 		@Override
 		public MtuResult createFromParcel(final Parcel in) {
 			return new MtuResult(in);

@@ -187,7 +187,7 @@ public final class CGMSpecificOpsControlPointData implements CGMTypes {
 		return appendCrc(data, secure);
 	}
 
-	@SuppressWarnings("ConstantConditions")
+	/** @noinspection DataFlowIssue*/
 	private static Data appendCrc(final MutableData data, final boolean secure) {
 		if (secure) {
 			final int length = data.size() - 2;
