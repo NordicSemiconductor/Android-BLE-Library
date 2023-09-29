@@ -513,6 +513,8 @@ abstract class BleManagerHandler extends RequestHandler {
 			// the receiver must have been not registered or unregistered before.
 		}
 		synchronized (LOCK) {
+			final boolean wasConnected = connected;
+			final BluetoothDevice oldBluetoothDevice = bluetoothDevice;
 			if (bluetoothGatt != null) {
 				if (manager.shouldClearCacheWhenDisconnected()) {
 					if (internalRefreshDeviceCache()) {
@@ -540,6 +542,13 @@ abstract class BleManagerHandler extends RequestHandler {
 			initialization = false;
 			bluetoothDevice = null;
 			connected = false;
+			connectionState = BluetoothProfile.STATE_DISCONNECTED;
+			mtu = 23;
+			interval = latency = timeout = 0;
+			if (wasConnected && oldBluetoothDevice != null) {
+				postCallback(c -> c.onDeviceDisconnected(oldBluetoothDevice));
+				postConnectionStateChange(o -> o.onDeviceDisconnected(oldBluetoothDevice, ConnectionObserver.REASON_SUCCESS));
+			}
 		}
 	}
 
@@ -1842,6 +1851,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (!wasConnected) {
 			log(Log.WARN, () -> "Connection attempt timed out");
 			close();
+			// Close will not notify the observer as the device was not connected.
 			postCallback(c -> c.onDeviceDisconnected(device));
 			postConnectionStateChange(o -> o.onDeviceFailedToConnect(device, status));
 			// ConnectRequest was already notified
@@ -2124,12 +2134,18 @@ abstract class BleManagerHandler extends RequestHandler {
 					final boolean wasConnected = connected;
 					final boolean notSupported = deviceNotSupported;
 					// ...because the next method sets them to false.
-					notifyDeviceDisconnected(gatt.getDevice(), // this may call close()
-							timeout ?
-								ConnectionObserver.REASON_TIMEOUT :
-									notSupported ?
-										ConnectionObserver.REASON_NOT_SUPPORTED :
-										mapDisconnectStatusToReason(status));
+
+					// notifyDeviceDisconnected(...) may call close()
+					if (timeout) {
+						notifyDeviceDisconnected(gatt.getDevice(), ConnectionObserver.REASON_TIMEOUT);
+					} else if (notSupported) {
+						notifyDeviceDisconnected(gatt.getDevice(), ConnectionObserver.REASON_NOT_SUPPORTED);
+					} else if (request != null && request.type == Request.Type.DISCONNECT) {
+						notifyDeviceDisconnected(gatt.getDevice(), ConnectionObserver.REASON_SUCCESS);
+					} else {
+						// Note, that even if the status is SUCCESS, the reported reason won't be success.
+						notifyDeviceDisconnected(gatt.getDevice(), mapDisconnectStatusToReason(status));
+					}
 
 					// Signal the current request, if any.
 					if (request != null) {
@@ -2809,12 +2825,15 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	private int mapDisconnectStatusToReason(final int status) {
 		return switch (status) {
-			case GattError.GATT_SUCCESS -> ConnectionObserver.REASON_SUCCESS;
 			case GattError.GATT_CONN_TERMINATE_LOCAL_HOST ->
 					ConnectionObserver.REASON_TERMINATE_LOCAL_HOST;
 			case GattError.GATT_CONN_TERMINATE_PEER_USER ->
 					ConnectionObserver.REASON_TERMINATE_PEER_USER;
-			case GattError.GATT_CONN_TIMEOUT -> ConnectionObserver.REASON_TIMEOUT;
+			// When a remote device disconnects, some phones return the TIMEOUT error, while other
+			// just SUCCESS. Anyway, in both cases the device has not been disconnected by the
+			// user, so the reason should be the TIMEOUT.
+			case GattError.GATT_CONN_TIMEOUT, GattError.GATT_SUCCESS ->
+					ConnectionObserver.REASON_TIMEOUT;
 			default -> ConnectionObserver.REASON_UNKNOWN;
 		};
 	}
