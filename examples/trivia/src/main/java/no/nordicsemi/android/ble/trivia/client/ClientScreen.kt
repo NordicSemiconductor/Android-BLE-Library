@@ -45,10 +45,10 @@ fun ClientScreen(
                 } ?: run {
                     val ticks by clientViewModel.ticks.collectAsState()
 
-                    when (clientViewState.state) {
+                    when (val state = clientViewState.state) {
                         ConnectionState.Initializing -> InitializingView()
                         ConnectionState.Connecting -> ConnectingView()
-                        is ConnectionState.Disconnected -> DisconnectedView()
+                        is ConnectionState.Disconnected -> DisconnectedView(state.reason)
                         ConnectionState.Ready -> {
                             when (clientViewState.isGameOver) {
                                 true -> clientViewState.result?.result?.let { result ->
