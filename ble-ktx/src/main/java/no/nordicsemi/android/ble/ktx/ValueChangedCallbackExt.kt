@@ -49,7 +49,7 @@ inline fun <reified T: ReadResponse> ValueChangedCallback.asResponseFlow(): Flow
     // Make sure the callbacks are called without unnecessary delay.
     setHandler(null)
     with { device, data ->
-        trySend(T::class.java.newInstance().apply { onDataReceived(device, data) })
+        trySend(T::class.java.getDeclaredConstructor().newInstance().apply { onDataReceived(device, data) })
     }
     awaitClose {
         // There's no way to unregister the callback from here.
@@ -74,7 +74,7 @@ inline fun <reified T: ProfileReadResponse> ValueChangedCallback.asValidResponse
     // Make sure the callbacks are called without unnecessary delay.
     setHandler(null)
     with { device, data ->
-        T::class.java.newInstance()
+        T::class.java.getDeclaredConstructor().newInstance()
             .apply { onDataReceived(device, data) }
             .takeIf { it.isValid }
             ?.let { trySend(it) }
