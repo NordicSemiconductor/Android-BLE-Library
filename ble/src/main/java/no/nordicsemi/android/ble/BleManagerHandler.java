@@ -2119,6 +2119,10 @@ abstract class BleManagerHandler extends RequestHandler {
 				}
 			} else {
 				if (newState == BluetoothProfile.STATE_DISCONNECTED) {
+					final Request r = BleManagerHandler.this.request;
+					final ConnectRequest cr = connectRequest;
+					final AwaitingRequest<?> ar = awaitingRequest;
+
 					final long now = SystemClock.elapsedRealtime();
 					final boolean canTimeout = connectionTime > 0;
 					final boolean timeout = canTimeout && now > connectionTime + CONNECTION_TIMEOUT_THRESHOLD;
@@ -2130,12 +2134,12 @@ abstract class BleManagerHandler extends RequestHandler {
 
 					// In case of a connection error, retry if required.
 					if (status != BluetoothGatt.GATT_SUCCESS && canTimeout && !timeout
-							&& connectRequest != null && connectRequest.canRetry()) {
-						final int delay = connectRequest.getRetryDelay();
+							&& cr != null && cr.canRetry()) {
+						final int delay = cr.getRetryDelay();
 						if (delay > 0)
 							log(Log.DEBUG, () -> "wait(" + delay + ")");
 						postDelayed(() -> {
-							internalConnect(gatt.getDevice(), connectRequest);
+							internalConnect(gatt.getDevice(), cr);
 							// If ConnectRequest was cancelled during wait(200) in internalConnect(),
 							// the gatt will be null, but the state is still CONNECTING.
 							// We need to notify observers about cancellation.
@@ -2150,10 +2154,10 @@ abstract class BleManagerHandler extends RequestHandler {
 						return;
 					}
 
-					if (connectRequest != null && connectRequest.shouldAutoConnect() && initialConnection
+					if (cr != null && cr.shouldAutoConnect() && initialConnection
 							&& gatt.getDevice().getBondState() == BluetoothDevice.BOND_BONDED) {
 						log(Log.DEBUG, () -> "autoConnect = false called failed; retrying with autoConnect = true");
-						post(() -> internalConnect(gatt.getDevice(), connectRequest));
+						post(() -> internalConnect(gatt.getDevice(), cr));
 						return;
 					}
 
@@ -2172,7 +2176,7 @@ abstract class BleManagerHandler extends RequestHandler {
 						notifyDeviceDisconnected(gatt.getDevice(), ConnectionObserver.REASON_TIMEOUT);
 					} else if (notSupported) {
 						notifyDeviceDisconnected(gatt.getDevice(), ConnectionObserver.REASON_NOT_SUPPORTED);
-					} else if (request != null && request.type == Request.Type.DISCONNECT) {
+					} else if (r != null && r.type == Request.Type.DISCONNECT) {
 						notifyDeviceDisconnected(gatt.getDevice(), ConnectionObserver.REASON_SUCCESS);
 					} else {
 						// Note, that even if the status is SUCCESS, the reported reason won't be success.
@@ -2180,24 +2184,24 @@ abstract class BleManagerHandler extends RequestHandler {
 					}
 
 					// Signal the current request, if any.
-					if (request != null) {
-						if (request.type != Request.Type.DISCONNECT && request.type != Request.Type.REMOVE_BOND) {
+					if (r != null) {
+						if (r.type != Request.Type.DISCONNECT && r.type != Request.Type.REMOVE_BOND) {
 							// The CONNECT request is notified below.
 							// The DISCONNECT request is notified below in
 							// notifyDeviceDisconnected(BluetoothDevice).
 							// The REMOVE_BOND request will be notified when the bond state changes
 							// to BOND_NONE in the broadcast received on the top of this file.
-							request.notifyFail(gatt.getDevice(),
+							r.notifyFail(gatt.getDevice(),
 									status == BluetoothGatt.GATT_SUCCESS ?
 											FailCallback.REASON_DEVICE_DISCONNECTED : status);
 							request = null;
 						}
 					}
-					if (awaitingRequest != null) {
-						awaitingRequest.notifyFail(gatt.getDevice(), FailCallback.REASON_DEVICE_DISCONNECTED);
+					if (ar != null) {
+						ar.notifyFail(gatt.getDevice(), FailCallback.REASON_DEVICE_DISCONNECTED);
 						awaitingRequest = null;
 					}
-					if (connectRequest != null) {
+					if (cr != null) {
 						int reason;
 						if (notSupported)
 							reason = FailCallback.REASON_DEVICE_NOT_SUPPORTED;
@@ -2207,7 +2211,7 @@ abstract class BleManagerHandler extends RequestHandler {
 							reason = FailCallback.REASON_TIMEOUT;
 						else
 							reason = status;
-						connectRequest.notifyFail(gatt.getDevice(), reason);
+						cr.notifyFail(gatt.getDevice(), reason);
 						connectRequest = null;
 					}
 
