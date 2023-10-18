@@ -1856,6 +1856,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			return;
 
 		final boolean wasConnected = connected;
+		final boolean hadDiscoveredServices = servicesDiscovered;
 		connected = false;
 		ready = false;
 		servicesDiscovered = false;
@@ -1906,7 +1907,9 @@ abstract class BleManagerHandler extends RequestHandler {
 		dataProviders.clear();
 		batteryLevelNotificationCallback = null;
 		batteryValue = -1;
-		manager.onServicesInvalidated();
+		if (hadDiscoveredServices) {
+			manager.onServicesInvalidated();
+		}
 		onDeviceDisconnected();
 	}
 
