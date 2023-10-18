@@ -82,7 +82,7 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	private final Object LOCK = new Object();
 	private BluetoothDevice bluetoothDevice;
-	private BluetoothGatt bluetoothGatt;
+	/* package */ BluetoothGatt bluetoothGatt;
 	private BleManager manager;
 	private BleServerManager serverManager;
 	private Handler handler;
