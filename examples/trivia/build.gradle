@@ -70,7 +70,7 @@ dependencies {
 
     // Text, color, Surface
     implementation "androidx.compose.material3:material3"
-    implementation 'androidx.activity:activity-compose:1.7.2'
+    implementation 'androidx.activity:activity-compose:1.8.0'
     implementation "androidx.compose.runtime:runtime-livedata"
 
     // To show Preview
