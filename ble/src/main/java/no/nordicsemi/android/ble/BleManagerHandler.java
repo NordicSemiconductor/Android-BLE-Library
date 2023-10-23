@@ -653,7 +653,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					log(Log.VERBOSE, () -> "Connecting...");
 					postCallback(c -> c.onDeviceConnecting(device));
 					postConnectionStateChange(o -> o.onDeviceConnecting(device));
-					if(Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
                         int preferredPhy = PhyRequest.PHY_LE_1M_MASK;
                         if(connectRequest != null) {
                             preferredPhy = connectRequest.getPreferredPhy();
@@ -663,8 +663,7 @@ abstract class BleManagerHandler extends RequestHandler {
                                 "gatt = device.connectGatt(autoConnect = true, TRANSPORT_LE, "
                                         + ParserUtils.phyMaskToString(finalPreferredPhy) + ")");
                         bluetoothGatt = device.connectGatt(context, true, gattCallback,
-                                BluetoothDevice.TRANSPORT_LE, finalPreferredPhy, handler);
-
+                                BluetoothDevice.TRANSPORT_LE, preferredPhy, handler);
 					} else {
 						// Instead, the gatt.connect() method will be used to reconnect to the same device.
 						// This method forces autoConnect = true (except on Android 14) even if the gatt was
