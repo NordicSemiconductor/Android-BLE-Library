@@ -647,17 +647,30 @@ abstract class BleManagerHandler extends RequestHandler {
 						// Ignore
 					}
 				} else {
-					// Instead, the gatt.connect() method will be used to reconnect to the same device.
-					// This method forces autoConnect = true even if the gatt was created with this
-					// flag set to false.
 					initialConnection = false;
 					connectionTime = 0L; // no timeout possible when autoConnect used
 					connectionState = BluetoothGatt.STATE_CONNECTING;
 					log(Log.VERBOSE, () -> "Connecting...");
 					postCallback(c -> c.onDeviceConnecting(device));
 					postConnectionStateChange(o -> o.onDeviceConnecting(device));
-					log(Log.DEBUG, () -> "gatt.connect()");
-					bluetoothGatt.connect();
+					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+                        int preferredPhy = PhyRequest.PHY_LE_1M_MASK;
+                        if(connectRequest != null) {
+                            preferredPhy = connectRequest.getPreferredPhy();
+                        }
+                        final int finalPreferredPhy = preferredPhy;
+                        log(Log.DEBUG, () ->
+                                "gatt = device.connectGatt(autoConnect = true, TRANSPORT_LE, "
+                                        + ParserUtils.phyMaskToString(finalPreferredPhy) + ")");
+                        bluetoothGatt = device.connectGatt(context, true, gattCallback,
+                                BluetoothDevice.TRANSPORT_LE, preferredPhy, handler);
+					} else {
+						// Instead, the gatt.connect() method will be used to reconnect to the same device.
+						// This method forces autoConnect = true (except on Android 14) even if the gatt was
+                        // created with this flag set to false.
+						log(Log.DEBUG, () -> "gatt.connect()");
+						bluetoothGatt.connect();
+					}
 					return true;
 				}
 			} else {
