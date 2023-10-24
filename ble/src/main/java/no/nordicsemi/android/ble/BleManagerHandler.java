@@ -327,8 +327,8 @@ abstract class BleManagerHandler extends RequestHandler {
 
 			log(Log.DEBUG, () ->
 					"[Broadcast] Action received: " + BluetoothDevice.ACTION_BOND_STATE_CHANGED +
-					    ", bond state changed to: " + ParserUtils.bondStateToString(bondState) +
-					    " (" + bondState + ")");
+						", bond state changed to: " + ParserUtils.bondStateToString(bondState) +
+						" (" + bondState + ")");
 
 			switch (bondState) {
 				case BluetoothDevice.BOND_NONE -> {
@@ -654,20 +654,20 @@ abstract class BleManagerHandler extends RequestHandler {
 					postCallback(c -> c.onDeviceConnecting(device));
 					postConnectionStateChange(o -> o.onDeviceConnecting(device));
 					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-                        int preferredPhy = PhyRequest.PHY_LE_1M_MASK;
-                        if(connectRequest != null) {
-                            preferredPhy = connectRequest.getPreferredPhy();
-                        }
-                        final int finalPreferredPhy = preferredPhy;
-                        log(Log.DEBUG, () ->
-                                "gatt = device.connectGatt(autoConnect = true, TRANSPORT_LE, "
-                                        + ParserUtils.phyMaskToString(finalPreferredPhy) + ")");
-                        bluetoothGatt = device.connectGatt(context, true, gattCallback,
-                                BluetoothDevice.TRANSPORT_LE, preferredPhy, handler);
+						int preferredPhy = PhyRequest.PHY_LE_1M_MASK;
+						if(connectRequest != null) {
+							preferredPhy = connectRequest.getPreferredPhy();
+						}
+						final int finalPreferredPhy = preferredPhy;
+						log(Log.DEBUG, () ->
+								"gatt = device.connectGatt(autoConnect = true, TRANSPORT_LE, "
+										+ ParserUtils.phyMaskToString(finalPreferredPhy) + ")");
+						bluetoothGatt = device.connectGatt(context, true, gattCallback,
+								BluetoothDevice.TRANSPORT_LE, preferredPhy, handler);
 					} else {
 						// Instead, the gatt.connect() method will be used to reconnect to the same device.
 						// This method forces autoConnect = true (except on Android 14) even if the gatt was
-                        // created with this flag set to false.
+						// created with this flag set to false.
 						log(Log.DEBUG, () -> "gatt.connect()");
 						bluetoothGatt.connect();
 					}
@@ -3260,7 +3260,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	}
 
 	private void assign(@NonNull final BluetoothGattDescriptor descriptor,
-					    @NonNull final byte[] value) {
+						@NonNull final byte[] value) {
 		final boolean isShared = descriptorValues == null || !descriptorValues.containsKey(descriptor);
 		if (isShared) {
 			descriptor.setValue(value);
