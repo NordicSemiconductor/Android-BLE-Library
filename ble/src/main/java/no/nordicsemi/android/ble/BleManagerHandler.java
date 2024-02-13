@@ -969,7 +969,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
 				log(Log.DEBUG, () ->
 						"gatt.writeDescriptor(00002902-0000-1000-8000-00805f9b34fb, value=0x00-00)");
-				return gatt.writeDescriptor(descriptor, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) == BluetoothStatusCodes.SUCCESS;
+				return gatt.writeDescriptor(descriptor, BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE) == BluetoothStatusCodes.SUCCESS;
 			} else {
 				log(Log.DEBUG, () -> "descriptor.setValue(0x00-00)");
 				descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
