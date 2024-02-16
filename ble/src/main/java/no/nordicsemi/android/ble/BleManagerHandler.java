@@ -935,7 +935,12 @@ abstract class BleManagerHandler extends RequestHandler {
 		final BluetoothGattDescriptor descriptor = getCccd(characteristic, BluetoothGattCharacteristic.PROPERTY_NOTIFY);
 		if (descriptor != null) {
 			log(Log.DEBUG, () -> "gatt.setCharacteristicNotification(" + characteristic.getUuid() + ", true)");
-			gatt.setCharacteristicNotification(characteristic, true);
+			try {
+				gatt.setCharacteristicNotification(characteristic, true);
+			} catch (final SecurityException e) {
+				log(Log.ERROR, e::getLocalizedMessage);
+				return false;
+			}
 
 			log(Log.VERBOSE, () -> "Enabling notifications for " + characteristic.getUuid());
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -965,7 +970,12 @@ abstract class BleManagerHandler extends RequestHandler {
 				BluetoothGattCharacteristic.PROPERTY_NOTIFY | BluetoothGattCharacteristic.PROPERTY_INDICATE);
 		if (descriptor != null) {
 			log(Log.DEBUG, () -> "gatt.setCharacteristicNotification(" + characteristic.getUuid() + ", false)");
-			gatt.setCharacteristicNotification(characteristic, false);
+			try {
+				gatt.setCharacteristicNotification(characteristic, false);
+			} catch (final SecurityException e) {
+				log(Log.ERROR, e::getLocalizedMessage);
+				return false;
+			}
 
 			log(Log.VERBOSE, () -> "Disabling notifications and indications for " + characteristic.getUuid());
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -994,7 +1004,12 @@ abstract class BleManagerHandler extends RequestHandler {
 		final BluetoothGattDescriptor descriptor = getCccd(characteristic, BluetoothGattCharacteristic.PROPERTY_INDICATE);
 		if (descriptor != null) {
 			log(Log.DEBUG, () -> "gatt.setCharacteristicNotification(" + characteristic.getUuid() + ", true)");
-			gatt.setCharacteristicNotification(characteristic, true);
+			try {
+				gatt.setCharacteristicNotification(characteristic, true);
+			} catch (final SecurityException e) {
+				log(Log.ERROR, e::getLocalizedMessage);
+				return false;
+			}
 
 			log(Log.VERBOSE, () -> "Enabling indications for " + characteristic.getUuid());
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
