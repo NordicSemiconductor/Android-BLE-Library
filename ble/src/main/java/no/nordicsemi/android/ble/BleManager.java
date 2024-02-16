@@ -1986,6 +1986,9 @@ public abstract class BleManager implements ILogger {
 	 * <p>
 	 * The returned request must be either enqueued using {@link Request#enqueue()} for
 	 * asynchronous use, or awaited using await() in synchronous execution.
+	 * <p>
+	 * Starting from version 2.7.3 the maximum packet size is 512 bytes, even if the MTU is set to
+	 * 517. See: <a href="https://github.com/NordicSemiconductor/Android-BLE-Library/issues/541">#541</a>.
 	 *
 	 * @return The request.
 	 */
