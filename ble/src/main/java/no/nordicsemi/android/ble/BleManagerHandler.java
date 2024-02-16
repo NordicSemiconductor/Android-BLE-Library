@@ -740,6 +740,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		ready = false;
 
 		final BleServerManager serverManager = this.serverManager;
+		final BluetoothDevice bluetoothDevice = this.bluetoothDevice;
 		if (serverManager != null && bluetoothDevice != null) {
 			log(Log.VERBOSE, () -> "Cancelling server connection...");
 			log(Log.DEBUG, () -> "server.cancelConnection(device)");

@@ -185,8 +185,9 @@ public abstract class BleServerManager implements ILogger {
 	 * @param device The device to cancel connection to.
 	 */
 	final void cancelConnection(@NonNull final BluetoothDevice device) {
-		if (Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
-				context.checkCallingOrSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED) {
+		if (server != null &&
+				(Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
+				context.checkCallingOrSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED)) {
 			server.cancelConnection(device);
 		}
 	}
