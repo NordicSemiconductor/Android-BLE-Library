@@ -173,6 +173,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	 * The current MTU (Maximum Transfer Unit). The maximum number of bytes that can be sent in
 	 * a single packet is MTU-3.
 	 */
+	@IntRange(from = 23, to = 515)
 	private int mtu = 23;
 	/**
 	 * Current connection parameters. Those values are only available starting from Android Oreo.
@@ -1731,13 +1732,14 @@ abstract class BleManagerHandler extends RequestHandler {
 	/**
 	 * Returns the current MTU (Maximum Transfer Unit).
 	 */
+	@IntRange(from = 23, to = 515)
 	final int getMtu() {
 		return mtu;
 	}
 
 	final void overrideMtu(@IntRange(from = 23, to = 517) final int mtu) {
 		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
-			this.mtu = mtu;
+			this.mtu = Math.min(515, mtu);
 		}
 	}
 
@@ -2042,7 +2044,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	 */
 	@Deprecated
 	protected void onMtuChanged(@NonNull final BluetoothGatt gatt,
-								@IntRange(from = 23, to = 517) final int mtu) {
+								@IntRange(from = 23, to = 515) final int mtu) {
 		// do nothing
 	}
 
@@ -2695,10 +2697,10 @@ abstract class BleManagerHandler extends RequestHandler {
 								 final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, () -> "MTU changed to: " + mtu);
-				BleManagerHandler.this.mtu = mtu;
-				BleManagerHandler.this.onMtuChanged(gatt, mtu);
+				BleManagerHandler.this.mtu = Math.min(515, mtu);
+				BleManagerHandler.this.onMtuChanged(gatt, BleManagerHandler.this.mtu);
 				if (request instanceof MtuRequest) {
-					((MtuRequest) request).notifyMtuChanged(gatt.getDevice(), mtu);
+					((MtuRequest) request).notifyMtuChanged(gatt.getDevice(), BleManagerHandler.this.mtu);
 					request.notifySuccess(gatt.getDevice());
 				}
 			} else {
@@ -3183,7 +3185,7 @@ abstract class BleManagerHandler extends RequestHandler {
 							@NonNull final BluetoothDevice device,
 							final int mtu) {
 		log(Log.INFO, () -> "[Server] MTU changed to: " + mtu);
-		BleManagerHandler.this.mtu = mtu;
+		BleManagerHandler.this.mtu = Math.min(515, mtu);
 		nextRequest(checkCondition());
 	}
 
