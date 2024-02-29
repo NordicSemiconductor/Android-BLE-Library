@@ -689,15 +689,22 @@ abstract class BleManagerHandler extends RequestHandler {
 		// when retrying to create a connection.
 		if (connectRequest == null)
 			return false;
+
 		final boolean shouldAutoConnect = connectRequest.shouldAutoConnect();
+		final boolean autoConnect;
+		if (shouldAutoConnect) {
+			// If shouldAutoConnectCreateDirectConnectionFirst() returns true, the first connection
+			// will always be done with autoConnect = false to make the connection quick.
+			// If the shouldAutoConnect() method returned true, the manager will automatically try
+			// to reconnect to this device on link loss.
+			initialConnection = connectRequest.shouldAutoConnectCreateDirectConnectionFirst();
+			autoConnect = !initialConnection;
+		} else {
+			autoConnect = false;
+		}
 		// We will receive Link Loss events only when the device is connected with autoConnect=true.
 		userDisconnected = !shouldAutoConnect;
-		// The first connection will always be done with autoConnect = false to make the connection quick.
-		// If the shouldAutoConnect() method returned true, the manager will automatically try to
-		// reconnect to this device on link loss.
-		if (shouldAutoConnect) {
-			initialConnection = true;
-		}
+
 		bluetoothDevice = device;
 		log(Log.VERBOSE, () -> connectRequest.isFirstAttempt() ? "Connecting..." : "Retrying...");
 		connectionState = BluetoothGatt.STATE_CONNECTING;
@@ -708,29 +715,29 @@ abstract class BleManagerHandler extends RequestHandler {
 			// connectRequest will never be null here.
 			final int preferredPhy = connectRequest.getPreferredPhy();
 			log(Log.DEBUG, () ->
-					"gatt = device.connectGatt(autoConnect = false, TRANSPORT_LE, "
+					"gatt = device.connectGatt(autoConnect = " + autoConnect + ", TRANSPORT_LE, "
 							+ ParserUtils.phyMaskToString(preferredPhy) + ")");
 
-			bluetoothGatt = device.connectGatt(context, false, gattCallback,
+			bluetoothGatt = device.connectGatt(context, autoConnect, gattCallback,
 					BluetoothDevice.TRANSPORT_LE, preferredPhy, handler);
 		} else if (Build.VERSION.SDK_INT == Build.VERSION_CODES.O) {
 			// connectRequest will never be null here.
 			final int preferredPhy = connectRequest.getPreferredPhy();
 			log(Log.DEBUG, () ->
-					"gatt = device.connectGatt(autoConnect = false, TRANSPORT_LE, "
+					"gatt = device.connectGatt(autoConnect = " + autoConnect + ", TRANSPORT_LE, "
 							+ ParserUtils.phyMaskToString(preferredPhy) + ")");
 			// A variant of connectGatt with Handled can't be used here.
 			// Check https://github.com/NordicSemiconductor/Android-BLE-Library/issues/54
 			// This bug specifically occurs in SDK 26 and is fixed in SDK 27
-			bluetoothGatt = device.connectGatt(context, false, gattCallback,
+			bluetoothGatt = device.connectGatt(context, autoConnect, gattCallback,
 					BluetoothDevice.TRANSPORT_LE, preferredPhy/*, handler*/);
 		} else if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-			log(Log.DEBUG, () -> "gatt = device.connectGatt(autoConnect = false, TRANSPORT_LE)");
-			bluetoothGatt = device.connectGatt(context, false, gattCallback,
+			log(Log.DEBUG, () -> "gatt = device.connectGatt(autoConnect = " + autoConnect + ", TRANSPORT_LE)");
+			bluetoothGatt = device.connectGatt(context, autoConnect, gattCallback,
 					BluetoothDevice.TRANSPORT_LE);
 		} else {
-			log(Log.DEBUG, () -> "gatt = device.connectGatt(autoConnect = false)");
-			bluetoothGatt = device.connectGatt(context, false, gattCallback);
+			log(Log.DEBUG, () -> "gatt = device.connectGatt(autoConnect = " + autoConnect + ")");
+			bluetoothGatt = device.connectGatt(context, autoConnect, gattCallback);
 		}
 		return true;
 	}

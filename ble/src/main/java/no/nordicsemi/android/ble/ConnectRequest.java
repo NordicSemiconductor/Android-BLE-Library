@@ -60,6 +60,7 @@ public class ConnectRequest extends TimeoutableRequest {
 	@IntRange(from = 0)
 	private int delay = 0;
 	private boolean autoConnect = false;
+	private boolean autoConnectCreateDirectConnectionFirst = true;
 
 	ConnectRequest(@NonNull final Type type, @NonNull final BluetoothDevice device) {
 		super(type);
@@ -209,6 +210,12 @@ public class ConnectRequest extends TimeoutableRequest {
 		return this;
 	}
 
+	public ConnectRequest useAutoConnect(final boolean autoConnect, final boolean createDirectConnectionFirst) {
+		this.autoConnect = autoConnect;
+		this.autoConnectCreateDirectConnectionFirst = createDirectConnectionFirst;
+		return this;
+	}
+
 	/**
 	 * Sets the preferred PHY used for connection. The value should be a bitmask composed of
 	 * {@link PhyRequest#PHY_LE_1M_MASK}, {@link PhyRequest#PHY_LE_2M_MASK} or
@@ -292,5 +299,9 @@ public class ConnectRequest extends TimeoutableRequest {
 
 	boolean shouldAutoConnect() {
 		return autoConnect;
+	}
+
+	boolean shouldAutoConnectCreateDirectConnectionFirst() {
+		return autoConnectCreateDirectConnectionFirst;
 	}
 }
