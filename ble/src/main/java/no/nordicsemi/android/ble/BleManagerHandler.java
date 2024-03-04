@@ -706,10 +706,12 @@ abstract class BleManagerHandler extends RequestHandler {
 		userDisconnected = !shouldAutoConnect;
 
 		bluetoothDevice = device;
-		log(Log.VERBOSE, () -> connectRequest.isFirstAttempt() ? "Connecting..." : "Retrying...");
-		connectionState = BluetoothGatt.STATE_CONNECTING;
-		postCallback(c -> c.onDeviceConnecting(device));
-		postConnectionStateChange(o -> o.onDeviceConnecting(device));
+		if (!autoConnect) {
+			log(Log.VERBOSE, () -> connectRequest.isFirstAttempt() ? "Connecting..." : "Retrying...");
+			connectionState = BluetoothGatt.STATE_CONNECTING;
+			postCallback(c -> c.onDeviceConnecting(device));
+			postConnectionStateChange(o -> o.onDeviceConnecting(device));
+		}
 		connectionTime = SystemClock.elapsedRealtime();
 		if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
 			// connectRequest will never be null here.
