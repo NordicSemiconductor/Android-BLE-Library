@@ -741,6 +741,10 @@ abstract class BleManagerHandler extends RequestHandler {
 			log(Log.DEBUG, () -> "gatt = device.connectGatt(autoConnect = " + autoConnect + ")");
 			bluetoothGatt = device.connectGatt(context, autoConnect, gattCallback);
 		}
+
+		if (autoConnect && this.connectRequest != null) {
+			this.connectRequest.notifySuccess(device);
+		}
 		return true;
 	}
 
