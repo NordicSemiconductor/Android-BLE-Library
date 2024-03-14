@@ -744,6 +744,7 @@ abstract class BleManagerHandler extends RequestHandler {
 
 		if (autoConnect && this.connectRequest != null) {
 			this.connectRequest.notifySuccess(device);
+			this.connectRequest = null;
 		}
 		return true;
 	}
