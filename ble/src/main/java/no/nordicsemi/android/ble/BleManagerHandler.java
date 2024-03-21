@@ -1295,7 +1295,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			log(Log.VERBOSE, () -> "Aborting reliable write...");
 			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
 				log(Log.DEBUG, () -> "gatt.abortReliableWrite()");
-				gatt.abortReliableWrite(); // todo maybe here too?
+				gatt.abortReliableWrite();
 			} else {
 				log(Log.DEBUG, () -> "gatt.abortReliableWrite(device)");
 				gatt.abortReliableWrite(gatt.getDevice());
