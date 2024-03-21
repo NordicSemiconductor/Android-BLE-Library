@@ -943,19 +943,24 @@ abstract class BleManagerHandler extends RequestHandler {
 			}
 
 			log(Log.VERBOSE, () -> "Enabling notifications for " + characteristic.getUuid());
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-				log(Log.DEBUG, () ->
-						"gatt.writeDescriptor(00002902-0000-1000-8000-00805f9b34fb, value=0x01-00)");
-				return gatt.writeDescriptor(descriptor, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) == BluetoothStatusCodes.SUCCESS;
-			} else {
-				log(Log.DEBUG, () -> "descriptor.setValue(0x01-00)");
-				descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
-				log(Log.DEBUG, () -> "gatt.writeDescriptor(00002902-0000-1000-8000-00805f9b34fb)");
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-					return gatt.writeDescriptor(descriptor);
+			try {
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+					log(Log.DEBUG, () ->
+							"gatt.writeDescriptor(00002902-0000-1000-8000-00805f9b34fb, value=0x01-00)");
+					return gatt.writeDescriptor(descriptor, BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE) == BluetoothStatusCodes.SUCCESS;
 				} else {
-					return internalWriteDescriptorWorkaround(descriptor);
+					log(Log.DEBUG, () -> "descriptor.setValue(0x01-00)");
+					descriptor.setValue(BluetoothGattDescriptor.ENABLE_NOTIFICATION_VALUE);
+					log(Log.DEBUG, () -> "gatt.writeDescriptor(00002902-0000-1000-8000-00805f9b34fb)");
+					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+						return gatt.writeDescriptor(descriptor);
+					} else {
+						return internalWriteDescriptorWorkaround(descriptor);
+					}
 				}
+			} catch (final SecurityException e) {
+				log(Log.ERROR, e::getLocalizedMessage);
+				return false;
 			}
 		}
 		return false;
@@ -978,19 +983,24 @@ abstract class BleManagerHandler extends RequestHandler {
 			}
 
 			log(Log.VERBOSE, () -> "Disabling notifications and indications for " + characteristic.getUuid());
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-				log(Log.DEBUG, () ->
-						"gatt.writeDescriptor(00002902-0000-1000-8000-00805f9b34fb, value=0x00-00)");
-				return gatt.writeDescriptor(descriptor, BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE) == BluetoothStatusCodes.SUCCESS;
-			} else {
-				log(Log.DEBUG, () -> "descriptor.setValue(0x00-00)");
-				descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
-				log(Log.DEBUG, () -> "gatt.writeDescriptor(00002902-0000-1000-8000-00805f9b34fb)");
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-					return gatt.writeDescriptor(descriptor);
+			try {
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+					log(Log.DEBUG, () ->
+							"gatt.writeDescriptor(00002902-0000-1000-8000-00805f9b34fb, value=0x00-00)");
+					return gatt.writeDescriptor(descriptor, BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE) == BluetoothStatusCodes.SUCCESS;
 				} else {
-					return internalWriteDescriptorWorkaround(descriptor);
+					log(Log.DEBUG, () -> "descriptor.setValue(0x00-00)");
+					descriptor.setValue(BluetoothGattDescriptor.DISABLE_NOTIFICATION_VALUE);
+					log(Log.DEBUG, () -> "gatt.writeDescriptor(00002902-0000-1000-8000-00805f9b34fb)");
+					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+						return gatt.writeDescriptor(descriptor);
+					} else {
+						return internalWriteDescriptorWorkaround(descriptor);
+					}
 				}
+			} catch (final SecurityException e) {
+				log(Log.ERROR, e::getLocalizedMessage);
+				return false;
 			}
 		}
 		return false;
@@ -1012,19 +1022,24 @@ abstract class BleManagerHandler extends RequestHandler {
 			}
 
 			log(Log.VERBOSE, () -> "Enabling indications for " + characteristic.getUuid());
-			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-				log(Log.DEBUG, () ->
-						"gatt.writeDescriptor(00002902-0000-1000-8000-00805f9b34fb, value=0x02-00)");
-				return gatt.writeDescriptor(descriptor, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE) == BluetoothStatusCodes.SUCCESS;
-			} else {
-				log(Log.DEBUG, () -> "descriptor.setValue(0x02-00)");
-				descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
-				log(Log.DEBUG, () -> "gatt.writeDescriptor(00002902-0000-1000-8000-00805f9b34fb)");
-				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-					return gatt.writeDescriptor(descriptor);
+			try {
+				if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+					log(Log.DEBUG, () ->
+							"gatt.writeDescriptor(00002902-0000-1000-8000-00805f9b34fb, value=0x02-00)");
+					return gatt.writeDescriptor(descriptor, BluetoothGattDescriptor.ENABLE_INDICATION_VALUE) == BluetoothStatusCodes.SUCCESS;
 				} else {
-					return internalWriteDescriptorWorkaround(descriptor);
+					log(Log.DEBUG, () -> "descriptor.setValue(0x02-00)");
+					descriptor.setValue(BluetoothGattDescriptor.ENABLE_INDICATION_VALUE);
+					log(Log.DEBUG, () -> "gatt.writeDescriptor(00002902-0000-1000-8000-00805f9b34fb)");
+					if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+						return gatt.writeDescriptor(descriptor);
+					} else {
+						return internalWriteDescriptorWorkaround(descriptor);
+					}
 				}
+			} catch (final SecurityException e) {
+				log(Log.ERROR, e::getLocalizedMessage);
+				return false;
 			}
 		}
 		return false;
@@ -1242,7 +1257,12 @@ abstract class BleManagerHandler extends RequestHandler {
 
 		log(Log.VERBOSE, () -> "Beginning reliable write...");
 		log(Log.DEBUG, () -> "gatt.beginReliableWrite()");
-		return reliableWriteInProgress = gatt.beginReliableWrite();
+		try {
+			return reliableWriteInProgress = gatt.beginReliableWrite();
+		} catch (final SecurityException e) {
+			log(Log.ERROR, e::getLocalizedMessage);
+			return false;
+		}
 	}
 
 	private boolean internalExecuteReliableWrite() {
@@ -1255,7 +1275,12 @@ abstract class BleManagerHandler extends RequestHandler {
 
 		log(Log.VERBOSE, () -> "Executing reliable write...");
 		log(Log.DEBUG, () -> "gatt.executeReliableWrite()");
-		return gatt.executeReliableWrite();
+		try {
+			return gatt.executeReliableWrite();
+		} catch (final SecurityException e) {
+			log(Log.ERROR, e::getLocalizedMessage);
+			return false;
+		}
 	}
 
 	private boolean internalAbortReliableWrite() {
@@ -1266,15 +1291,20 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (!reliableWriteInProgress)
 			return false;
 
-		log(Log.VERBOSE, () -> "Aborting reliable write...");
-		if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-			log(Log.DEBUG, () -> "gatt.abortReliableWrite()");
-			gatt.abortReliableWrite();
-		} else {
-			log(Log.DEBUG, () -> "gatt.abortReliableWrite(device)");
-			gatt.abortReliableWrite(gatt.getDevice());
+		try {
+			log(Log.VERBOSE, () -> "Aborting reliable write...");
+			if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+				log(Log.DEBUG, () -> "gatt.abortReliableWrite()");
+				gatt.abortReliableWrite(); // todo maybe here too?
+			} else {
+				log(Log.DEBUG, () -> "gatt.abortReliableWrite(device)");
+				gatt.abortReliableWrite(gatt.getDevice());
+			}
+			return true;
+		} catch (final SecurityException e) {
+			log(Log.ERROR, e::getLocalizedMessage);
+			return false;
 		}
-		return true;
 	}
 
 	@Deprecated
