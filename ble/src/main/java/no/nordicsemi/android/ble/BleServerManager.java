@@ -182,9 +182,11 @@ public abstract class BleServerManager implements ILogger {
 	 * <p>
 	 * As we're not calling {@link BluetoothGattServer#connect(BluetoothDevice, boolean)}, cancelling
 	 * the connection should not be required. On the other hand, perhaps we should call connect(..).
+	 * Can also be called in onDeviceConnectedToServer to refuse a device connection without accepting it first.
+	 * If you already have a managed connection and want to disconnect, you can use the disconnect request on the connection.
 	 * @param device The device to cancel connection to.
 	 */
-	final void cancelConnection(@NonNull final BluetoothDevice device) {
+	protected final void cancelConnection(@NonNull final BluetoothDevice device) {
 		if (server != null &&
 				(Build.VERSION.SDK_INT < Build.VERSION_CODES.S ||
 				context.checkCallingOrSelfPermission(Manifest.permission.BLUETOOTH_CONNECT) == PackageManager.PERMISSION_GRANTED)) {
