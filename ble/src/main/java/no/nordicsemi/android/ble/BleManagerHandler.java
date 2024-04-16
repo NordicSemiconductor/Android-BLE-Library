@@ -2217,7 +2217,15 @@ abstract class BleManagerHandler extends RequestHandler {
 
 					if (cr != null && cr.shouldAutoConnect() && initialConnection
 							&& gatt.getDevice().getBondState() == BluetoothDevice.BOND_BONDED) {
-						log(Log.DEBUG, () -> "autoConnect = false called failed; retrying with autoConnect = true");
+						log(Log.DEBUG, () -> "autoConnect = false called failed; retrying with autoConnect = true" + (connected ? "; reset connected to false" : ""));
+
+						// fix：https://github.com/NordicSemiconductor/Android-BLE-Library/issues/497
+						// if DISCONNECTED is received between connect and initialize, need to reset connected to make internalConnect work
+						if (connected) {
+							connected = false;
+							connectionState = BluetoothGatt.STATE_DISCONNECTED;
+						}
+
 						post(() -> internalConnect(gatt.getDevice(), cr));
 						return;
 					}
