@@ -337,7 +337,7 @@ abstract class BleManagerHandler extends RequestHandler {
 						postCallback(c -> c.onBondingFailed(device));
 						postBondingStateChange(o -> o.onBondingFailed(device));
 						log(Log.WARN, () -> "Bonding failed");
-						if (request != null && request.type == Request.Type.CREATE_BOND) {
+						if (request != null && (request.type == Request.Type.CREATE_BOND || request.type == Request.Type.ENSURE_BOND)) {
 							request.notifyFail(device, FailCallback.REASON_REQUEST_FAILED);
 							request = null;
 						}
@@ -389,7 +389,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					log(Log.INFO, () -> "Device bonded");
 					postCallback(c -> c.onBonded(device));
 					postBondingStateChange(o -> o.onBonded(device));
-					if (request != null && request.type == Request.Type.CREATE_BOND) {
+					if (request != null && (request.type == Request.Type.CREATE_BOND || request.type == Request.Type.ENSURE_BOND)) {
 						request.notifySuccess(device);
 						request = null;
 						break;
