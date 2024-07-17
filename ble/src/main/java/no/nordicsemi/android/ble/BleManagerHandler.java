@@ -2286,6 +2286,12 @@ abstract class BleManagerHandler extends RequestHandler {
 
 					// Reset flag, so the next Connect could be enqueued.
 					operationInProgress = false;
+
+					// return because Request.Type.REMOVE_BOND not handled
+					if (r != null && r.type == Request.Type.REMOVE_BOND) {
+						return;
+					}
+
 					// Try to reconnect if the initial connection was lost because of a link loss,
 					// and shouldAutoConnect() returned true during connection attempt.
 					// This time it will set the autoConnect flag to true (gatt.connect() forces
