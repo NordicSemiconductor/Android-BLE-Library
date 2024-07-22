@@ -4,9 +4,13 @@
 
 An Android library that solves a lot of Android's Bluetooth Low Energy problems.
 
-> **Warning**
+> [!Note]
+> We're working on a new version of Bluetooth LE library, which eventually will replace this one:
+> [Kotlin BLE Library / version 2.0](https://github.com/NordicSemiconductor/Kotlin-BLE-Library/tree/version/2.0).
+> Mind, that version 2 is not backward compatible version 1 or with this library.
 >
-> This library is getting replaced by our new [Kotlin BLE Library](https://github.com/NordicSemiconductor/Kotlin-BLE-Library).
+> Currently, the library is in the early development stage. It is not recommended for production use,
+> but we encourage you to try it out and provide feedback.
 >
 > The new library offers the following improvements over this one:
 >  * 100% Kotlin code
