@@ -11,6 +11,7 @@ import no.nordicsemi.android.ble.data.Data
 import no.nordicsemi.android.ble.exception.*
 import no.nordicsemi.android.ble.response.ReadResponse
 import no.nordicsemi.android.ble.response.WriteResponse
+import kotlin.coroutines.cancellation.CancellationException
 import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
@@ -240,12 +241,14 @@ suspend fun WaitForValueChangedRequest.suspend(): Data  = suspendCancellableCoro
 		.invalid { continuation.resumeWithException(InvalidRequestException(this)) }
 		.fail { _, status ->
 			val exception = when (status) {
-				FailCallback.REASON_CANCELLED -> return@fail
+				FailCallback.REASON_CANCELLED -> CancellationException("Request cancelled.")
 				FailCallback.REASON_BLUETOOTH_DISABLED -> BluetoothDisabledException()
 				FailCallback.REASON_DEVICE_DISCONNECTED -> DeviceDisconnectedException()
 				else -> RequestFailedException(this, status)
 			}
-			continuation.resumeWithException(exception)
+            if (continuation.isActive) {
+                continuation.resumeWithException(exception)
+            }
 		}
 		.done { continuation.resume(data!!) }
 		// .then is called after both .done and .fail
@@ -325,12 +328,14 @@ suspend fun WaitForReadRequest.suspend(): Data  = suspendCancellableCoroutine { 
 		.invalid { continuation.resumeWithException(InvalidRequestException(this)) }
 		.fail { _, status ->
 			val exception = when (status) {
-				FailCallback.REASON_CANCELLED -> return@fail
+				FailCallback.REASON_CANCELLED -> CancellationException("Request cancelled.")
 				FailCallback.REASON_BLUETOOTH_DISABLED -> BluetoothDisabledException()
 				FailCallback.REASON_DEVICE_DISCONNECTED -> DeviceDisconnectedException()
 				else -> RequestFailedException(this, status)
 			}
-			continuation.resumeWithException(exception)
+            if (continuation.isActive) {
+                continuation.resumeWithException(exception)
+            }
 		}
 		.done { continuation.resume(data!!) }
 		// .then is called after both .done and .fail
@@ -394,12 +399,14 @@ private suspend fun TimeoutableRequest.suspendCancellable() = suspendCancellable
 		.invalid { continuation.resumeWithException(InvalidRequestException(this)) }
 		.fail { _, status ->
 			val exception = when (status) {
-				FailCallback.REASON_CANCELLED -> return@fail
+				FailCallback.REASON_CANCELLED -> CancellationException("Request cancelled.")
 				FailCallback.REASON_BLUETOOTH_DISABLED -> BluetoothDisabledException()
 				FailCallback.REASON_DEVICE_DISCONNECTED -> DeviceDisconnectedException()
 				else -> RequestFailedException(this, status)
 			}
-			continuation.resumeWithException(exception)
+            if (continuation.isActive) {
+			    continuation.resumeWithException(exception)
+            }
 		}
 		.done { continuation.resume(Unit) }
 		// .then is called after both .done and .fail
