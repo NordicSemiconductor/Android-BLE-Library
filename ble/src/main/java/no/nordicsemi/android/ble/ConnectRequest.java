@@ -60,6 +60,7 @@ public class ConnectRequest extends TimeoutableRequest {
 	@IntRange(from = 0)
 	private int delay = 0;
 	private boolean autoConnect = false;
+	private boolean autoConnectCreateDirectConnectionFirst = true;
 
 	ConnectRequest(@NonNull final Type type, @NonNull final BluetoothDevice device) {
 		super(type);
@@ -210,6 +211,47 @@ public class ConnectRequest extends TimeoutableRequest {
 	}
 
 	/**
+	 * Sets whether to connect to the remote device just once (autoConnect == false) or to add
+	 * the address to white list of devices that will be automatically connect as soon as they
+	 * become available (autoConnect == true). In the latter case, if Bluetooth adapter is enabled,
+	 * Android scans periodically for devices from the white list and, if an advertising packet
+	 * is received from such, it tries to connect to it.
+	 * When the connection is lost, the system will keep trying to reconnect to
+	 * it. If method is called with autoConnect set to true, and the connection to the device is
+	 * lost, the {@link BleManagerCallbacks#onLinkLossOccurred(BluetoothDevice)} callback is
+	 * called instead of {@link BleManagerCallbacks#onDeviceDisconnected(BluetoothDevice)}.
+	 * <p>
+	 * This feature works much better on newer Android phone models and may have issues on older
+	 * phones.
+	 * <p>
+	 * This method should only be used with bonded devices, as otherwise the device may change
+	 * it's address. It will however work also with non-bonded devices with private static address.
+	 * A connection attempt to a non-bonded device with private resolvable address will fail.
+	 * <p>
+	 * If createDirectConnectionFirst is set to true, the first connection to a device will always be
+	 * created with autoConnect flag to false
+	 * (see {@link BluetoothDevice#connectGatt(Context, boolean, BluetoothGattCallback)}). This is
+	 * to make it quick as the user most probably waits for a quick response. If autoConnect is
+	 * used (true), the following connections will be done using {@link BluetoothGatt#connect()},
+	 * which forces the autoConnect parameter to true.
+	 * If autoConnect is used (true) and createDirectConnectionFirst is set to false, the connection
+	 * to a device will be created with autoConnect flag to true from the start.
+	 *
+	 * @param autoConnect                 true to use autoConnect feature.
+	 * @param createDirectConnectionFirst If true, the first connection is always done with autoConnect
+	 *                                    parameter equal to false, to make it faster and allow to timeout
+	 *                                    if the device is unreachable.
+	 *                                    If false, the connection to a device will be created with
+	 *                                    autoConnect flag to true from the start.
+	 * @return The request.
+	 */
+	public ConnectRequest useAutoConnect(final boolean autoConnect, final boolean createDirectConnectionFirst) {
+		this.autoConnect = autoConnect;
+		this.autoConnectCreateDirectConnectionFirst = createDirectConnectionFirst;
+		return this;
+	}
+
+	/**
 	 * Sets the preferred PHY used for connection. The value should be a bitmask composed of
 	 * {@link PhyRequest#PHY_LE_1M_MASK}, {@link PhyRequest#PHY_LE_2M_MASK} or
 	 * {@link PhyRequest#PHY_LE_CODED_MASK}.
@@ -292,5 +334,9 @@ public class ConnectRequest extends TimeoutableRequest {
 
 	boolean shouldAutoConnect() {
 		return autoConnect;
+	}
+
+	boolean shouldAutoConnectCreateDirectConnectionFirst() {
+		return autoConnectCreateDirectConnectionFirst;
 	}
 }
