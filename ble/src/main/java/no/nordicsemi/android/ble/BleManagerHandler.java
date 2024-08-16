@@ -2229,8 +2229,7 @@ abstract class BleManagerHandler extends RequestHandler {
 						return;
 					}
 
-					if (cr != null && cr.shouldAutoConnect() && initialConnection
-							&& gatt.getDevice().getBondState() == BluetoothDevice.BOND_BONDED) {
+					if (cr != null && cr.shouldAutoConnect() && initialConnection) {
 						log(Log.DEBUG, () -> "autoConnect = false called failed; retrying with autoConnect = true" + (connected ? "; reset connected to false" : ""));
 
 						// fix：https://github.com/NordicSemiconductor/Android-BLE-Library/issues/497
