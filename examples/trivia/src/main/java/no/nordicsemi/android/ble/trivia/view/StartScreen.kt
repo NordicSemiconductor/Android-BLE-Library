@@ -10,7 +10,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import no.nordicsemi.android.ble.trivia.R
-import no.nordicsemi.android.common.theme.view.NordicAppBar
+import no.nordicsemi.android.common.ui.view.NordicAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -20,7 +20,7 @@ fun StartScreen(
 ) {
     Column {
         NordicAppBar(
-            text = stringResource(id = R.string.welcome_message)
+            title = { Text(text = stringResource(id = R.string.welcome_message)) },
         )
 
         Column(
