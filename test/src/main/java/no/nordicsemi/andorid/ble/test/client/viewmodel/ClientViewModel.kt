@@ -51,12 +51,12 @@ class ClientViewModel @Inject constructor(
                 .apply {
                     connectDevice(device)
                     // Start testing tasks after client connection
-                    clientTaskPerformer.startTasks()
                     clientTaskPerformer.testCases
                         .onEach {
                             it.forEach { tc -> updateTestList(tc) }
                         }
                         .launchIn(viewModelScope)
+                    clientTaskPerformer.startTasks()
                 }
         }
     }
