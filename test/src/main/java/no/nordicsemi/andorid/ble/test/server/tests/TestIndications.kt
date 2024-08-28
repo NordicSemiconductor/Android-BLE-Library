@@ -9,16 +9,19 @@ import no.nordicsemi.andorid.ble.test.spec.Requests
 import no.nordicsemi.android.ble.WriteRequest
 import no.nordicsemi.android.ble.ktx.suspend
 
+/**
+ * Waits until the indication is enabled and sends an Indication response. It utilizes the [WriteRequest.split] callback
+ * to chunk the data into multiple packets, if the data cannot be sent in a single write operation.
+ */
 class TestIndications(
     private val serverConnection: ServerConnection,
 ) : TaskManager {
-    /**
-     * Waits until the indication is enabled and sends an Indication response. It utilizes the [WriteRequest.split] callback
-     * to chunk the data into multiple packets, if the data cannot be sent in a single write operation.
-     */
+
     override suspend fun start() {
-        serverConnection.testWaiUntilIndicationEnabled(Requests.readRequestInTrigger)
-        serverConnection.testSendIndication(Requests.indicationRequest)
+        serverConnection
+            .testWaiUntilIndicationEnabled(Requests.readRequestInTrigger)
+        serverConnection
+            .testSendIndication(Requests.indicationRequest)
             .split(FlagBasedPacketSplitter())
             .suspend()
     }

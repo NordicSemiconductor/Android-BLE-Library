@@ -9,14 +9,14 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
+/**
+ * Observe the data written to the given characteristics and [HeaderBasedPacketMerger] to
+ * efficiently merge and process the data received from the remote device.
+ */
 class TestWriteWithHeaderMerger(
     private val serverConnection: ServerConnection,
 ) : TaskManager {
 
-    /**
-     * Observe the data written to the given characteristics and [HeaderBasedPacketMerger] to
-     * efficiently merge and process the data received from the remote device.
-     */
     override suspend fun start() = suspendCoroutine { continuation ->
         serverConnection.testWriteCallback()
             .merge(HeaderBasedPacketMerger())

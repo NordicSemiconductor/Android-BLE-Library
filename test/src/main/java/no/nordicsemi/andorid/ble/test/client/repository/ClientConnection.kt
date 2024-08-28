@@ -89,11 +89,11 @@ class ClientConnection @Inject constructor(
      * Two requests [BleManager.setWriteCallback], [BleManager.readCharacteristic] have been added and
      * when both requests are enqueued successfully, reliable write process will start automatically.
      */
-    fun testReliableWrite(reliableRequest: ByteArray) {
+    suspend fun testReliableWrite(reliableRequest: ByteArray) {
         beginReliableWrite()
             .add(writeCharacteristic(reliableCharacteristics, reliableRequest, WRITE_TYPE_DEFAULT))
             .add(readCharacteristic(readCharacteristics))
-            .enqueue()
+            .suspend()
     }
 
     /**
@@ -125,30 +125,29 @@ class ClientConnection @Inject constructor(
 
     /**
      *  Wait for Notification [BleManager.waitForNotification]. It waits until the notification is sent
-     *  from the remote device. Once notification is received, then [WaitForReadRequest.then] it will
-     *  disable notification [BleManager.disableNotifications] request for the given characteristics.
+     *  from the remote device.
      */
     fun testWaitForNotification(): WaitForValueChangedRequest {
         return waitForNotification(characteristic)
-            .then { disableNotifications(characteristic)}
     }
 
     /**
      * Sends the read request to the given characteristic [BleManager.readCharacteristic].
      */
-      fun testReadCharacteristics(): ReadRequest {
+    fun testReadCharacteristics(): ReadRequest {
         return readCharacteristic(readCharacteristics)
     }
 
     /**
-     * It initiates the atomic request queue [BleManager.beginAtomicRequestQueue] and it will execute the requests in the queue in the order.
+     * It initiates the atomic request queue [BleManager.beginAtomicRequestQueue] and it will execute
+     * the requests in the queue in the order.
      * The method has two requests and they will execute together. The method is particularly useful
      * when the user wants to execute multiple requests simultaneously and ensure they are executed together.
      */
     fun testBeginAtomicRequestQueue(request: ByteArray): RequestQueue {
         return beginAtomicRequestQueue()
+            .add(writeCharacteristic(characteristic, request, WRITE_TYPE_DEFAULT))
             .add(readCharacteristic(readCharacteristics))
-            .before { writeCharacteristic(characteristic, request, WRITE_TYPE_DEFAULT) }
     }
 
     /**

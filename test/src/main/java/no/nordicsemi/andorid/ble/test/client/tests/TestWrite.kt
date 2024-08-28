@@ -6,16 +6,19 @@ import no.nordicsemi.andorid.ble.test.spec.Callbacks.WRITE_CHARACTERISTICS
 import no.nordicsemi.andorid.ble.test.spec.Requests.writeRequest
 import no.nordicsemi.android.ble.ktx.suspend
 
+/**
+ * Writes the characteristics to the remote device.
+ */
 class TestWrite(
     private val clientConnection: ClientConnection
 ) : TaskManager {
-    // Start the task
+
     override suspend fun start() {
-        clientConnection.testWrite(writeRequest)
+        clientConnection
+            .testWrite(writeRequest)
             .suspend()
     }
 
-    // Return task name
     override fun taskName(): String {
         return WRITE_CHARACTERISTICS
     }
