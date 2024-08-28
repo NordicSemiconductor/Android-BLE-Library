@@ -105,6 +105,7 @@ class ServerConnection @Inject constructor(
     */
     fun testWriteCallback(): ValueChangedCallback {
         return setWriteCallback(serverCharacteristics)
+            .with { _, data -> Log.i(TAG, "Data writtenL: $data") }
     }
 
    /**
