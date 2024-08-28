@@ -8,15 +8,18 @@ import no.nordicsemi.andorid.ble.test.spec.Requests.splitterRequest
 import no.nordicsemi.android.ble.WriteRequest
 import no.nordicsemi.android.ble.ktx.suspend
 
+/**
+ * Writes the request data to the given characteristics.
+ * It utilizes the  [WriteRequest.split] callback with [FlagBasedPacketSplitter]
+ * to chunk the data into multiple packets, if the data cannot be sent in a single write operation.
+ */
 class TestWriteWithFlagBasedSplitter(
     private val clientConnection: ClientConnection
 ) : TaskManager {
-    /**
-     * Writes the request data to the given characteristics. It utilizes the  [WriteRequest.split] callback with [FlagBasedPacketSplitter]
-     * to chunk the data into multiple packets, if the data cannot be sent in a single write operation.
-     */
+
     override suspend fun start() {
-        clientConnection.testWrite(splitterRequest)
+        clientConnection
+            .testWrite(splitterRequest)
             .split(FlagBasedPacketSplitter())
             .suspend()
     }

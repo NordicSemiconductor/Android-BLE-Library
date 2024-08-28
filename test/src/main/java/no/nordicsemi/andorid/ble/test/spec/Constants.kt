@@ -41,23 +41,21 @@ object Flags {
 }
 
 object Callbacks {
-    const val WRITE_CHARACTERISTICS = "Write Characteristics"
-    const val RELIABLE_WRITE = "Begin Reliable Write"
-    const val ATOMIC_REQUEST_QUEUE = "Begin Atomic Request Queue"
-    const val WRITE_CALLBACK = "Write Callback"
+    const val WRITE_CHARACTERISTICS = "Writing Characteristic"
+    const val RELIABLE_WRITE = "Reliable Write"
+    const val ATOMIC_REQUEST_QUEUE = "Atomic Request Queue"
+    const val WRITE_CALLBACK = "Setting Write callback"
+    const val ENABLE_INDICATION = "Enabling Indications"
+    const val WAIT_FOR_INDICATION_CALLBACK = "Waiting for Indication"
+    const val WAIT_UNTIL_INDICATION_ENABLED = "Waiting until Indications enabled"
+    const val SEND_INDICATION = "Sending indication"
+    const val ENABLE_NOTIFICATION = "Enabling Notifications"
+    const val WAIT_FOR_NOTIFICATION_CALLBACK = "Waiting for notification"
+    const val WAIT_UNTIL_NOTIFICATION_ENABLED = "Waiting until Notifications enabled"
+    const val SEND_NOTIFICATION = "Sending Notifications"
 
-    const val ENABLE_INDICATION = "Enable Indication"
-    const val WAIT_FOR_INDICATION_CALLBACK = "Wait for Indication"
-    const val WAIT_UNTIL_INDICATION_ENABLED = "Wait Until Indication Enabled"
-    const val SEND_INDICATION = "Send Indication"
-
-    const val ENABLE_NOTIFICATION = "Enable Notification"
-    const val WAIT_FOR_NOTIFICATION_CALLBACK = "Wait for Notification"
-    const val WAIT_UNTIL_NOTIFICATION_ENABLED = "Wait Until Notification Enabled"
-    const val SEND_NOTIFICATION = "Send Notification"
-
-    const val READ_CHA = "Set Characteristics for read operation"
-    const val READ_CHARACTERISTICS = "Read Characteristics"
+    const val READ_CHA = "Reading Characteristic"
+    const val SET_CHARACTERISTIC_VALUE = "Setting Characteristic value"
 }
 
 object Connections {

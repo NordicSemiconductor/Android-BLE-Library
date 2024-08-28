@@ -8,19 +8,23 @@ import no.nordicsemi.andorid.ble.test.spec.HeaderBasedPacketSplitter
 import no.nordicsemi.andorid.ble.test.spec.Requests
 import no.nordicsemi.andorid.ble.test.spec.Requests.sendNotificationInThenCallback
 import no.nordicsemi.android.ble.WriteRequest
+import no.nordicsemi.android.ble.ktx.suspend
 
+/**
+ * Waits until the notification is enabled and sends a Notification response. It utilizes the [WriteRequest.split] callback
+ * to chunk the data into multiple packets, if the data cannot be sent in a single write operation.
+ */
 class TestNotification(
     private val serverConnection: ServerConnection,
 ) : TaskManager {
-    /**
-     * Waits until the notification is enabled and sends a Notification response. It utilizes the [WriteRequest.split] callback
-     * to chunk the data into multiple packets, if the data cannot be sent in a single write operation.
-     */
+
     override suspend fun start() {
-        serverConnection.testWaitNotificationEnabled(sendNotificationInThenCallback)
-        serverConnection.testSendNotification(Requests.notificationRequest)
+        serverConnection
+            .testWaitNotificationEnabled(sendNotificationInThenCallback)
+        serverConnection
+            .testSendNotification(Requests.notificationRequest)
             .split(HeaderBasedPacketSplitter())
-            .enqueue()
+            .suspend()
     }
 
     override fun taskName(): String {

@@ -11,16 +11,17 @@ import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 import kotlin.coroutines.suspendCoroutine
 
+/**
+ * Observes the value changes on the give characteristics and [FlagBasedPacketMerger] to
+ * efficiently merge and process the data sent from the remote device.
+ * It also utilizes the [ValueChangedCallback.with] to monitor the size of the data and log
+ * respective messages accordingly.
+ */
 class TestWriteWithFlagMerger(
     private val serverConnection: ServerConnection,
 ) : TaskManager {
     private val TAG = "WithCallBack"
 
-    /**
-     * Observes the value changes on the give characteristics and [FlagBasedPacketMerger] to
-     * efficiently merge and process the data sent from the remote device.
-     * It also utilizes the [ValueChangedCallback.with] to monitor the size of the data and log respective messages accordingly.
-     */
     override suspend fun start() = suspendCoroutine { continuation ->
         serverConnection.testWriteCallback()
             .merge(FlagBasedPacketMerger())

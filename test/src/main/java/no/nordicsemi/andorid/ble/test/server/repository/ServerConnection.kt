@@ -105,14 +105,15 @@ class ServerConnection @Inject constructor(
     */
     fun testWriteCallback(): ValueChangedCallback {
         return setWriteCallback(serverCharacteristics)
+            .with { _, data -> Log.i(TAG, "Data writtenL: $data") }
     }
 
    /**
     * Waits until the Indication is enabled by the remote device [BleManager.waitUntilIndicationsEnabled].
     */
-    fun testWaiUntilIndicationEnabled(readRequestInTrigger: ByteArray) {
-       waitUntilIndicationsEnabled(indicationCharacteristics).enqueue()
-       setCharacteristicValue(readCharacteristics, readRequestInTrigger).enqueue()
+    suspend fun testWaiUntilIndicationEnabled(readRequestInTrigger: ByteArray) {
+        waitUntilIndicationsEnabled(indicationCharacteristics).suspend()
+        setCharacteristicValue(readCharacteristics, readRequestInTrigger).suspend()
     }
 
     /**
@@ -130,13 +131,15 @@ class ServerConnection @Inject constructor(
      */
     suspend fun testWaitNotificationEnabled(request: ByteArray) {
         waitUntilNotificationsEnabled(serverCharacteristics)
-          .then {
-                sendNotification(serverCharacteristics, request)
-                    .split(HeaderBasedPacketSplitter())
-                    .done {scope.launch { _testCase.emit(TestCase(SEND_NOTIFICATION, true)) } }
-                    .fail { _, _ ->
-                        scope.launch {_testCase.emit(TestCase(SEND_NOTIFICATION,false))}}
-                    .enqueue()
+            .suspend()
+
+        sendNotification(serverCharacteristics, request)
+            .split(HeaderBasedPacketSplitter())
+            .done {
+                scope.launch { _testCase.emit(TestCase(SEND_NOTIFICATION, true)) }
+            }
+            .fail { _, _ ->
+                scope.launch {_testCase.emit(TestCase(SEND_NOTIFICATION,false))}
             }
             .suspend()
     }
@@ -151,24 +154,25 @@ class ServerConnection @Inject constructor(
     /**
      * Handles values changes in the [BleManager.beginReliableWrite] procedure initiated by the remote device.
      */
-    fun testReliableWriteCallback(secondReliableRequest: ByteArray) {
-        setWriteCallback(reliableCharacteristics)
-        waitForRead(readCharacteristics, secondReliableRequest).enqueue()
+    suspend fun testReliableWriteCallback(secondReliableRequest: ByteArray) {
+        waitForWrite(reliableCharacteristics).suspend()
+        waitForRead(readCharacteristics, secondReliableRequest).suspend()
     }
 
     /**
-     * Facilitates the transfer of data by setting the specified data to the readable characteristic using [BleManager.setCharacteristicValue].
+     * Facilitates the transfer of data by setting the specified data to the readable
+     * characteristic using [BleManager.setCharacteristicValue].
      */
-    fun testSetReadCharacteristics(request: ByteArray) {
-        setCharacteristicValue(readCharacteristics, request).enqueue()
+    suspend fun testSetReadCharacteristics(request: ByteArray) {
+        setCharacteristicValue(readCharacteristics, request).suspend()
     }
 
     /**
      * Handles values changes in the [BleManager.beginAtomicRequestQueue] procedure initiated by the remote device.
      */
-    fun testBeginAtomicRequestQueue(atomicRequest: ByteArray) {
-        waitForWrite(serverCharacteristics).enqueue()
-        waitForRead(readCharacteristics, atomicRequest).enqueue()
+    suspend fun testBeginAtomicRequestQueue(atomicRequest: ByteArray) {
+        waitForWrite(serverCharacteristics).suspend()
+        waitForRead(readCharacteristics, atomicRequest).suspend()
     }
 
     /**

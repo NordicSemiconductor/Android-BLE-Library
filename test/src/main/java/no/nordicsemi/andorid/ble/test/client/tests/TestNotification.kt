@@ -6,21 +6,24 @@ import no.nordicsemi.andorid.ble.test.spec.Callbacks
 import no.nordicsemi.andorid.ble.test.spec.HeaderBasedPacketMerger
 import no.nordicsemi.android.ble.ktx.suspend
 
+/**
+ * Waits until a notification is received and [HeaderBasedPacketMerger]
+ * efficiently merges and processes the data received from the remote device.
+ */
 class TestNotification(
     private val clientConnection: ClientConnection
 ) : TaskManager {
-    /**
-     * Enable Notification and waits until notification response is received and [HeaderBasedPacketMerger] to
-     * efficiently merge and process the data received from the remote device.
-     */
+
     override suspend fun start() {
-        clientConnection.testEnableNotification().suspend()
-        clientConnection.testWaitForNotification()
+        clientConnection
+            .testWaitForNotification()
             .merge(HeaderBasedPacketMerger())
+            .trigger(
+                clientConnection.testEnableNotification()
+            )
             .suspend()
     }
 
-    // Return task name
     override fun taskName(): String {
         val indications = listOf(
             Callbacks.ENABLE_NOTIFICATION,

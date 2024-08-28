@@ -7,21 +7,24 @@ import no.nordicsemi.andorid.ble.test.spec.Callbacks.ENABLE_INDICATION
 import no.nordicsemi.andorid.ble.test.spec.FlagBasedPacketMerger
 import no.nordicsemi.android.ble.ktx.suspend
 
+/**
+ * Waits until an indication is received and [FlagBasedPacketMerger]
+ * efficiently merges and processes the data received from the remote device.
+ */
 class TestIndication(
     private val clientConnection: ClientConnection
 ) : TaskManager {
-    /**
-     * Enables Indication and waits until indication response is received and [FlagBasedPacketMerger] to
-     * efficiently merge and process the data received from the remote device.
-     */
+
     override suspend fun start() {
-        clientConnection.testEnableIndication().suspend()
-        clientConnection.testWaitForIndication()
+        clientConnection
+            .testWaitForIndication()
             .merge(FlagBasedPacketMerger())
+            .trigger(
+                clientConnection.testEnableIndication()
+            )
             .suspend()
     }
 
-    // Return task name
     override fun taskName(): String {
         val indications = listOf(
             ENABLE_INDICATION,

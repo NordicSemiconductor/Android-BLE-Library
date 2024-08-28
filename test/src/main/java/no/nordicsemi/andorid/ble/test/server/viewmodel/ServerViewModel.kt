@@ -66,12 +66,12 @@ class ServerViewModel @Inject constructor(
                                 connectDevice(device)
                                 stopAdvertising()
                                 // Start the testing tasks after server connection
-                                serverTaskPerformer.startTasks()
                                 serverTaskPerformer.testCases
                                     .onEach {
                                         it.forEach { tc -> updateTestList(tc) }
                                     }
                                     .launchIn(viewModelScope)
+                                serverTaskPerformer.startTasks()
                             }
                     }
 

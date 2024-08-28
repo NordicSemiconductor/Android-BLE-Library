@@ -18,9 +18,9 @@ class ServerTaskPerformer @Inject constructor(
         tasks.forEach {
             try {
                 it.start()
-                _testCases.value = _testCases.value + listOf(TestCase(it.taskName(), true))
+                _testCases.value += listOf(TestCase(it.taskName(), true))
             } catch (e: Exception) {
-                _testCases.value = _testCases.value + listOf(TestCase(it.taskName(), false))
+                _testCases.value += listOf(TestCase(it.taskName(), false))
             }
         }
     }
