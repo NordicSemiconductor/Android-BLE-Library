@@ -1451,7 +1451,9 @@ abstract class BleManagerHandler extends RequestHandler {
 		if (callback == null) {
 			callback = new ValueChangedCallback(this);
 			if (attribute != null) {
-				valueChangedCallbacks.put(attribute, callback);
+				synchronized (valueChangedCallbacks) {
+					valueChangedCallbacks.put(attribute, callback);
+				}
 			}
 		} else if (bluetoothDevice != null) {
 			callback.notifyClosed();
@@ -1466,9 +1468,11 @@ abstract class BleManagerHandler extends RequestHandler {
 	 * @param attribute attribute to unbind the callback from.
 	 */
 	void removeValueChangedCallback(@Nullable final Object attribute) {
-		final ValueChangedCallback callback = valueChangedCallbacks.remove(attribute);
-		if (callback != null) {
-			callback.notifyClosed();
+		synchronized (valueChangedCallbacks) {
+			final ValueChangedCallback callback = valueChangedCallbacks.remove(attribute);
+			if (callback != null) {
+				callback.notifyClosed();
+			}
 		}
 	}
 
@@ -1976,10 +1980,12 @@ abstract class BleManagerHandler extends RequestHandler {
 			// automatically.
 			// This may be only called when the shouldAutoConnect() method returned true.
 		}
-		for (final ValueChangedCallback callback : valueChangedCallbacks.values()) {
-			callback.notifyClosed();
+		synchronized (valueChangedCallbacks) {
+			for (final ValueChangedCallback callback : valueChangedCallbacks.values()) {
+				callback.notifyClosed();
+			}
+			valueChangedCallbacks.clear();
 		}
-		valueChangedCallbacks.clear();
 		dataProviders.clear();
 		batteryLevelNotificationCallback = null;
 		batteryValue = -1;
