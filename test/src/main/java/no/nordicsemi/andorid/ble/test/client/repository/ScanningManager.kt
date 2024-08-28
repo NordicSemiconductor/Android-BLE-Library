@@ -28,10 +28,15 @@ class ScanningManager @Inject constructor(
     suspend fun scanningForServer(): BluetoothDevice = suspendCancellableCoroutine { continuation ->
 
         val callback = object : ScanCallback() {
+            var found = false
 
             override fun onScanResult(callbackType: Int, result: ScanResult?) {
+                if (found) return
                 result
-                    ?.let { continuation.resume(it.device) {} }
+                    ?.let {
+                        found = true
+                        continuation.resume(it.device) {}
+                    }
                     .also { bluetoothLeScanner.stopScan(this) }
             }
 
