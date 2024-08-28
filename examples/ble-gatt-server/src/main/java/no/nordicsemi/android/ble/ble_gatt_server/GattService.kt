@@ -34,6 +34,7 @@ import android.os.Binder
 import android.os.IBinder
 import android.util.Log
 import androidx.core.app.NotificationCompat
+import androidx.core.content.ContextCompat
 import no.nordicsemi.android.ble.BleManager
 import no.nordicsemi.android.ble.BleServerManager
 import no.nordicsemi.android.ble.observer.ServerObserver
@@ -111,7 +112,9 @@ class GattService : Service() {
                 }
             }
         }
-        registerReceiver(bluetoothObserver, IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED))
+        ContextCompat.registerReceiver(this,
+            bluetoothObserver, IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED),
+            ContextCompat.RECEIVER_EXPORTED)
 
         // Startup BLE if we have it
 

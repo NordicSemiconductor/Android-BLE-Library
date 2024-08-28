@@ -47,6 +47,8 @@ import androidx.annotation.RequiresApi;
 import androidx.annotation.RequiresPermission;
 import androidx.annotation.RestrictTo;
 import androidx.annotation.StringRes;
+import androidx.core.content.ContextCompat;
+
 import no.nordicsemi.android.ble.annotation.ConnectionPriority;
 import no.nordicsemi.android.ble.annotation.ConnectionState;
 import no.nordicsemi.android.ble.annotation.LogPriority;
@@ -178,9 +180,10 @@ public abstract class BleManager implements ILogger {
 		this.requestHandler = getGattCallback();
 		this.requestHandler.init(this, handler);
 
-		context.registerReceiver(mPairingRequestBroadcastReceiver,
+		ContextCompat.registerReceiver(context, mPairingRequestBroadcastReceiver,
 				// BluetoothDevice.ACTION_PAIRING_REQUEST
-				new IntentFilter("android.bluetooth.device.action.PAIRING_REQUEST"));
+				new IntentFilter("android.bluetooth.device.action.PAIRING_REQUEST"),
+				ContextCompat.RECEIVER_EXPORTED);
 	}
 
 	/**

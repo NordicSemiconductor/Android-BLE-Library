@@ -33,6 +33,7 @@ android {
 
 dependencies {
     api 'androidx.annotation:annotation:1.8.2'
+    implementation 'androidx.core:core:1.13.1'
 
     testImplementation 'junit:junit:4.13.2'
 }
