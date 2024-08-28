@@ -29,6 +29,7 @@ import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
 import androidx.annotation.RequiresPermission;
+import androidx.core.content.ContextCompat;
 
 import java.lang.reflect.Method;
 import java.security.InvalidParameterException;
@@ -677,10 +678,10 @@ abstract class BleManagerHandler extends RequestHandler {
 			} else {
 				if (connectRequest != null) {
 					// Register bonding broadcast receiver
-					context.registerReceiver(bluetoothStateBroadcastReceiver,
-							new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED));
-					context.registerReceiver(mBondingBroadcastReceiver,
-							new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED));
+					ContextCompat.registerReceiver(context, bluetoothStateBroadcastReceiver,
+							new IntentFilter(BluetoothAdapter.ACTION_STATE_CHANGED), ContextCompat.RECEIVER_EXPORTED);
+					ContextCompat.registerReceiver(context, mBondingBroadcastReceiver,
+							new IntentFilter(BluetoothDevice.ACTION_BOND_STATE_CHANGED), ContextCompat.RECEIVER_EXPORTED);
 				}
 			}
 		}
