@@ -3,6 +3,7 @@ package no.nordicsemi.android.ble.trivia.client
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Text
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Modifier
@@ -18,7 +19,7 @@ import no.nordicsemi.android.ble.trivia.server.view.ResultView
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.common.permissions.ble.RequireBluetooth
 import no.nordicsemi.android.common.permissions.ble.RequireLocation
-import no.nordicsemi.android.common.theme.view.NordicAppBar
+import no.nordicsemi.android.common.ui.view.NordicAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -28,9 +29,13 @@ fun ClientScreen(
     Column {
         var playersName by rememberSaveable { mutableStateOf("") }
         NordicAppBar(
-            text = when (playersName.isNotEmpty()) {
-                true -> stringResource(id = R.string.good_luck_player, playersName)
-                else -> stringResource(id = R.string.good_luck_player, "")
+            title = {
+                Text(
+                    text = when (playersName.isNotEmpty()) {
+                        true -> stringResource(id = R.string.good_luck_player, playersName)
+                        else -> stringResource(id = R.string.good_luck_player, "")
+                    }
+                )
             },
             onNavigationButtonClick = onNavigationUp
         )

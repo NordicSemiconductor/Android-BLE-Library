@@ -2,6 +2,7 @@ package no.nordicsemi.andorid.ble.test.client.view
 
 import androidx.compose.foundation.layout.Column
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.ui.res.stringResource
@@ -14,13 +15,15 @@ import no.nordicsemi.andorid.ble.test.server.view.ResultView
 import no.nordicsemi.android.ble.ktx.state.ConnectionState
 import no.nordicsemi.android.common.permissions.ble.RequireBluetooth
 import no.nordicsemi.android.common.permissions.ble.RequireLocation
-import no.nordicsemi.android.common.theme.view.NordicAppBar
+import no.nordicsemi.android.common.ui.view.NordicAppBar
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun ClientScreen() {
     Column {
-        NordicAppBar(text = stringResource(id = R.string.scanner))
+        NordicAppBar(
+            title = { Text(text = stringResource(id = R.string.scanner)) }
+        )
         RequireBluetooth {
             RequireLocation {
                 val clientViewModel: ClientViewModel = hiltViewModel()
