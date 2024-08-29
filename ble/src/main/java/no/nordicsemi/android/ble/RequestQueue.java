@@ -22,6 +22,7 @@
 
 package no.nordicsemi.android.ble;
 
+import android.bluetooth.BluetoothDevice;
 import android.os.Handler;
 
 import androidx.annotation.IntRange;
@@ -171,6 +172,9 @@ public class RequestQueue extends TimeoutableRequest {
 	 * Cancels all the enqueued operations that were not executed yet.
 	 * The one currently executed will be cancelled, if it is {@link TimeoutableRequest}.
 	 * <p>
+	 * Cancelled operations will NOT be notified with {@link FailCallback#REASON_CANCELLED},
+	 * they will be just removed from the queue.
+	 * <p>
 	 * It is safe to call this method in {@link Request#done(SuccessCallback)} or
 	 * {@link Request#fail(FailCallback)} callback;
 	 */
@@ -209,5 +213,22 @@ public class RequestQueue extends TimeoutableRequest {
 	 */
 	void cancelQueue() {
 		requests.clear();
+	}
+
+	/**
+	 * Clears the queue, but first notifies all remaining tasks about cancellation.
+	 * @param device the connected device.
+	 */
+	void notifyAndCancelQueue(final @NonNull BluetoothDevice device) {
+		for (final Request request : requests) {
+			request.notifyFail(device, FailCallback.REASON_CANCELLED);
+		}
+		cancelQueue();
+	}
+
+	@Override
+	void notifyFail(@NonNull BluetoothDevice device, int status) {
+		super.notifyFail(device, status);
+		notifyAndCancelQueue(device);
 	}
 }

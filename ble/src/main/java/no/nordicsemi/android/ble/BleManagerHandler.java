@@ -261,8 +261,7 @@ abstract class BleManagerHandler extends RequestHandler {
 							&& previousState != BluetoothAdapter.STATE_OFF) {
 						// No more calls are possible
 						operationInProgress = true;
-						taskQueue.clear();
-						initQueue = null;
+						emptyTasks(FailCallback.REASON_BLUETOOTH_DISABLED);
 						ready = false;
 
 						final BluetoothDevice device = bluetoothDevice;
@@ -546,8 +545,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			// Setting this flag to false would allow to enqueue a new request before the
 			// current one ends processing. The following line should not be uncommented.
 			// mGattCallback.operationInProgress = false;
-			taskQueue.clear();
-			initQueue = null;
+			emptyTasks(FailCallback.REASON_DEVICE_DISCONNECTED);
 			initialization = false;
 			bluetoothDevice = null;
 			connected = false;
@@ -559,6 +557,37 @@ abstract class BleManagerHandler extends RequestHandler {
 				postConnectionStateChange(o -> o.onDeviceDisconnected(oldBluetoothDevice, ConnectionObserver.REASON_SUCCESS));
 			}
 		}
+	}
+
+	/**
+	 * This method clears the task queues and notifies removed requests of cancellation.
+	 * @param status the reason of cancellation.
+	 */
+	private void emptyTasks(final int status) {
+		final BluetoothDevice oldBluetoothDevice = bluetoothDevice;
+		if (initQueue != null) {
+			for (final Request task : initQueue) {
+				if (oldBluetoothDevice != null)
+					task.notifyFail(oldBluetoothDevice, status);
+				else
+					task.notifyInvalidRequest();
+			}
+			initQueue = null;
+		}
+		for (final Request task : taskQueue) {
+			if (oldBluetoothDevice != null) {
+				if (status == FailCallback.REASON_BLUETOOTH_DISABLED ||
+						task.characteristic != null ||
+						task.descriptor != null) {
+					task.notifyFail(oldBluetoothDevice, status);
+				} else {
+					task.notifyFail(oldBluetoothDevice, FailCallback.REASON_CANCELLED);
+				}
+			} else {
+				task.notifyInvalidRequest();
+			}
+		}
+		taskQueue.clear();
 	}
 
 	public BluetoothDevice getBluetoothDevice() {
@@ -776,7 +805,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			log(Log.DEBUG, () -> "gatt.disconnect()");
 			gatt.disconnect();
 			if (wasConnected)
-				return true;
+				return;
 
 			// If the device wasn't connected, there will be no callback after calling
 			// gatt.disconnect(), the connection attempt will be stopped.
@@ -1618,8 +1647,7 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	@Override
 	final void cancelQueue() {
-		taskQueue.clear();
-		initQueue = null;
+		emptyTasks(FailCallback.REASON_CANCELLED);
 		initialization = false;
 
 		final BluetoothDevice device = bluetoothDevice;
@@ -1655,7 +1683,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			// Cancelling a Reliable Write request requires sending Abort command.
 			// Instead of notifying failure, we will remove all enqueued tasks and
 			// let the nextRequest to sent Abort command.
-			requestQueue.cancelQueue();
+			requestQueue.notifyAndCancelQueue(device);
 		} else if (requestQueue != null) {
 			requestQueue.notifyFail(device, FailCallback.REASON_CANCELLED);
 			requestQueue = null;
@@ -2251,8 +2279,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					}
 
 					operationInProgress = true; // no more calls are possible
-					taskQueue.clear();
-					initQueue = null;
+					emptyTasks(FailCallback.REASON_DEVICE_DISCONNECTED);
 					ready = false;
 
 					// Store the current value of the connected and deviceNotSupported flags...
@@ -2447,8 +2474,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			manager.onServicesInvalidated();
 			onDeviceDisconnected();
 			// Clear queues, services are no longer valid.
-			taskQueue.clear();
-			initQueue = null;
+			emptyTasks(FailCallback.REASON_NULL_ATTRIBUTE);
 			// And discover services again
 			serviceDiscoveryRequested = true;
 			servicesDiscovered = false;
@@ -2525,7 +2551,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					final boolean valid = wr.notifyPacketSent(gatt.getDevice(), characteristic.getValue());
 					if (!valid && requestQueue instanceof ReliableWriteRequest) {
 						wr.notifyFail(gatt.getDevice(), FailCallback.REASON_VALIDATION);
-						requestQueue.cancelQueue();
+						requestQueue.notifyAndCancelQueue(gatt.getDevice());
 					} else if (wr.hasMore()) {
 						enqueueFirst(wr);
 					} else {
@@ -2549,7 +2575,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					request.notifyFail(gatt.getDevice(), status);
 					// Automatically abort Reliable Write when write error happen
 					if (requestQueue instanceof ReliableWriteRequest)
-						requestQueue.cancelQueue();
+						requestQueue.notifyAndCancelQueue(gatt.getDevice());
 				}
 				awaitingRequest = null;
 				onError(gatt.getDevice(), ERROR_WRITE_CHARACTERISTIC, status);
@@ -2649,7 +2675,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					final boolean valid = wr.notifyPacketSent(gatt.getDevice(), data);
 					if (!valid && requestQueue instanceof ReliableWriteRequest) {
 						wr.notifyFail(gatt.getDevice(), FailCallback.REASON_VALIDATION);
-						requestQueue.cancelQueue();
+						requestQueue.notifyAndCancelQueue(gatt.getDevice());
 					} else if (wr.hasMore()) {
 						enqueueFirst(wr);
 					} else {
@@ -2673,7 +2699,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					request.notifyFail(gatt.getDevice(), status);
 					// Automatically abort Reliable Write when write error happen
 					if (requestQueue instanceof ReliableWriteRequest)
-						requestQueue.cancelQueue();
+						requestQueue.notifyAndCancelQueue(gatt.getDevice());
 				}
 				awaitingRequest = null;
 				onError(gatt.getDevice(), ERROR_WRITE_DESCRIPTOR, status);
@@ -2707,8 +2733,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					manager.onServicesInvalidated();
 					onDeviceDisconnected();
 					// Clear queues, services are no longer valid.
-					taskQueue.clear();
-					initQueue = null;
+					emptyTasks(FailCallback.REASON_NULL_ATTRIBUTE);
 					serviceDiscoveryRequested = true;
 					log(Log.VERBOSE, () -> "Discovering Services...");
 					log(Log.DEBUG, () -> "gatt.discoverServices()");
@@ -3826,8 +3851,7 @@ abstract class BleManagerHandler extends RequestHandler {
 							awaitingRequest.notifyFail(bluetoothDevice, FailCallback.REASON_NULL_ATTRIBUTE);
 							awaitingRequest = null;
 						}
-						taskQueue.clear();
-						initQueue = null;
+						emptyTasks(FailCallback.REASON_NULL_ATTRIBUTE);
 						final BluetoothGatt bluetoothGatt = this.bluetoothGatt;
 						if (connected && bluetoothGatt != null) {
 							// Invalidate all services and characteristics
