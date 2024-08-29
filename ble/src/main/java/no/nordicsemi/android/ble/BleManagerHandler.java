@@ -779,7 +779,7 @@ abstract class BleManagerHandler extends RequestHandler {
 		return true;
 	}
 
-	private boolean internalDisconnect(final int reason) {
+	private void internalDisconnect(final int reason) {
 		userDisconnected = true;
 		initialConnection = false;
 		ready = false;
@@ -825,7 +825,6 @@ abstract class BleManagerHandler extends RequestHandler {
 				r.notifyInvalidRequest();
 		}
 		nextRequest(true);
-		return true;
 	}
 
 	@RequiresPermission(Manifest.permission.BLUETOOTH_ADMIN)
@@ -3589,6 +3588,10 @@ abstract class BleManagerHandler extends RequestHandler {
 			}
 		}
 
+		// At this point the bluetoothDevice is either null, and the request is a ConnectRequest,
+		// or not a null.
+		assert bluetoothDevice != null || request.type == Request.Type.CONNECT;
+
 		switch (request.type) {
 			case CONNECT: {
 				//noinspection DataFlowIssue
@@ -3599,7 +3602,10 @@ abstract class BleManagerHandler extends RequestHandler {
 				break;
 			}
 			case DISCONNECT: {
-				result = internalDisconnect(ConnectionObserver.REASON_SUCCESS);
+				internalDisconnect(ConnectionObserver.REASON_SUCCESS);
+				// If a disconnect request failed, it has already been notified at this point,
+				// therefore result is a success (true).
+				result = true;
 				break;
 			}
 			case ENSURE_BOND: {
