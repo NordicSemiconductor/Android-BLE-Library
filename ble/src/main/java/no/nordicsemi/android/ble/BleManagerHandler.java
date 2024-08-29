@@ -584,8 +584,8 @@ abstract class BleManagerHandler extends RequestHandler {
 					task.notifyFail(oldBluetoothDevice, FailCallback.REASON_CANCELLED);
 				}
 			} else {
-                task.notifyInvalidRequest();
-            }
+				task.notifyInvalidRequest();
+			}
 		}
 		taskQueue.clear();
 	}
