@@ -805,7 +805,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			log(Log.DEBUG, () -> "gatt.disconnect()");
 			gatt.disconnect();
 			if (wasConnected)
-				return true;
+				return;
 
 			// If the device wasn't connected, there will be no callback after calling
 			// gatt.disconnect(), the connection attempt will be stopped.
@@ -1683,7 +1683,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			// Cancelling a Reliable Write request requires sending Abort command.
 			// Instead of notifying failure, we will remove all enqueued tasks and
 			// let the nextRequest to sent Abort command.
-			requestQueue.cancelQueue();
+			requestQueue.notifyAndCancelQueue(device);
 		} else if (requestQueue != null) {
 			requestQueue.notifyFail(device, FailCallback.REASON_CANCELLED);
 			requestQueue = null;
@@ -2551,7 +2551,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					final boolean valid = wr.notifyPacketSent(gatt.getDevice(), characteristic.getValue());
 					if (!valid && requestQueue instanceof ReliableWriteRequest) {
 						wr.notifyFail(gatt.getDevice(), FailCallback.REASON_VALIDATION);
-						requestQueue.cancelQueue();
+						requestQueue.notifyAndCancelQueue(gatt.getDevice());
 					} else if (wr.hasMore()) {
 						enqueueFirst(wr);
 					} else {
@@ -2575,7 +2575,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					request.notifyFail(gatt.getDevice(), status);
 					// Automatically abort Reliable Write when write error happen
 					if (requestQueue instanceof ReliableWriteRequest)
-						requestQueue.cancelQueue();
+						requestQueue.notifyAndCancelQueue(gatt.getDevice());
 				}
 				awaitingRequest = null;
 				onError(gatt.getDevice(), ERROR_WRITE_CHARACTERISTIC, status);
@@ -2675,7 +2675,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					final boolean valid = wr.notifyPacketSent(gatt.getDevice(), data);
 					if (!valid && requestQueue instanceof ReliableWriteRequest) {
 						wr.notifyFail(gatt.getDevice(), FailCallback.REASON_VALIDATION);
-						requestQueue.cancelQueue();
+						requestQueue.notifyAndCancelQueue(gatt.getDevice());
 					} else if (wr.hasMore()) {
 						enqueueFirst(wr);
 					} else {
@@ -2699,7 +2699,7 @@ abstract class BleManagerHandler extends RequestHandler {
 					request.notifyFail(gatt.getDevice(), status);
 					// Automatically abort Reliable Write when write error happen
 					if (requestQueue instanceof ReliableWriteRequest)
-						requestQueue.cancelQueue();
+						requestQueue.notifyAndCancelQueue(gatt.getDevice());
 				}
 				awaitingRequest = null;
 				onError(gatt.getDevice(), ERROR_WRITE_DESCRIPTOR, status);
