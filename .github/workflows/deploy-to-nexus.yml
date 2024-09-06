@@ -20,7 +20,7 @@ jobs:
           # The following env variables are used by gradle/publish-root.gradle
           OSSR_USERNAME: ${{ secrets.OSSR_USERNAME }}
           OSSR_PASSWORD: ${{ secrets.OSSR_PASSWORD }}
-          SONATYPE_STATING_PROFILE_ID: ${{ secrets.SONATYPE_STATING_PROFILE_ID }}
+          SONATYPE_STAGING_PROFILE_ID: ${{ secrets.SONATYPE_STAGING_PROFILE_ID }}
         # The script generates sec.gpg file that is required by gradle/publish-module.gradle
         # and starts :deployNexus lane using fastlane.
         run: |
