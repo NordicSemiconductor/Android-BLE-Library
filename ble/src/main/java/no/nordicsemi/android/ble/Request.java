@@ -100,8 +100,8 @@ public abstract class Request {
 		SLEEP,
 	}
 
-	protected RequestHandler requestHandler;
-	protected CallbackHandler handler;
+	RequestHandler requestHandler;
+	CallbackHandler handler;
 
 	final ConditionVariable syncLock;
 	final Type type;
