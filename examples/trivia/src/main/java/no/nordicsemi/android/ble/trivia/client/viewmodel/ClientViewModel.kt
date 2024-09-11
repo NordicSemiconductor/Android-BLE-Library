@@ -12,13 +12,12 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.launchIn
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
-import no.nordicsemi.android.ble.ktx.state.ConnectionState
+import no.nordicsemi.android.ble.ktx.stateAsFlow
 import no.nordicsemi.android.ble.trivia.client.data.ClientViewState
 import no.nordicsemi.android.ble.trivia.client.repository.ClientConnection
 import no.nordicsemi.android.ble.trivia.client.repository.ScannerRepository
 import no.nordicsemi.android.ble.trivia.server.viewmodel.Timer
 import no.nordicsemi.android.ble.trivia.server.viewmodel.TimerViewModel
-import no.nordicsemi.android.ble.ktx.stateAsFlow
 import javax.inject.Inject
 
 @HiltViewModel
@@ -47,7 +46,7 @@ class ClientViewModel @Inject constructor(
                     error
                         .onEach { _clientState.value = _clientState.value.copy(nameResult = it) }
                         .launchIn(viewModelScope)
-                     userJoined
+                    userJoined
                         .onEach { _clientState.value = _clientState.value.copy(userJoined = it) }
                         .launchIn(viewModelScope)
                     question
