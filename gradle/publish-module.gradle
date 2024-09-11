@@ -5,7 +5,7 @@ apply from: rootProject.file("gradle/git-tag-version.gradle")
 group = GROUP
 version = getVersionNameFromTags()
 
-task androidSourcesJar(type: Jar) {
+tasks.register('androidSourcesJar', Jar) {
     from android.sourceSets.main.java.srcDirs
 }
 
