@@ -30,17 +30,10 @@ class HeaderBasedPacketMerger: DataMerger {
         if (index == 0) {
             expectedSize = buffer.short.toInt()
         }
-        if ((receivedDataSize-2) == expectedSize) {
-            ByteArray(buffer.remaining())
-                .apply { buffer.get(this) }
-                .also { output.write(it) }
-                .let { return true }
-        } else {
-            ByteArray(buffer.remaining())
-                .apply { buffer.get(this) }
-                .also { output.write(it) }
-                .let { return false }
-        }
+        ByteArray(buffer.remaining())
+            .apply { buffer.get(this) }
+            .also { output.write(it) }
+        return receivedDataSize - 2 == expectedSize
     }
 
 }
