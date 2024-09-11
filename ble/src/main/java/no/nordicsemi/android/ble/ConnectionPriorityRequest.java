@@ -25,6 +25,7 @@ package no.nordicsemi.android.ble;
 import android.bluetooth.BluetoothDevice;
 import android.os.Build;
 import android.os.Handler;
+import android.util.Log;
 
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
@@ -191,8 +192,14 @@ public final class ConnectionPriorityRequest extends SimpleValueRequest<Connecti
 										 @IntRange(from = 6, to = 3200) final int interval,
 										 @IntRange(from = 0, to = 499) final int latency,
 										 @IntRange(from = 10, to = 3200) final int timeout) {
-		if (valueCallback != null)
-			valueCallback.onConnectionUpdated(device, interval, latency, timeout);
+		handler.post(() -> {
+			if (valueCallback != null)
+				try {
+					valueCallback.onConnectionUpdated(device, interval, latency, timeout);
+				} catch (final Throwable t) {
+					Log.e(TAG, "Exception in Value callback", t);
+				}
+		});
 	}
 
 	@ConnectionPriority
