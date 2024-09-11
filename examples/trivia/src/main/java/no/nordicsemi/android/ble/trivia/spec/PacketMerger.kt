@@ -24,6 +24,10 @@ class PacketMerger : DataMerger {
         if (lastPacket == null)
             return false
 
+        if (index == 0) {
+            receivedDataSize = 0
+        }
+
         val buffer = ByteBuffer.wrap(lastPacket)
         receivedDataSize += buffer.remaining()
 
@@ -33,7 +37,7 @@ class PacketMerger : DataMerger {
         ByteArray(buffer.remaining())
             .apply { buffer.get(this) }
             .also { output.write(it) }
-        return receivedDataSize - 2 == expectedSize
+        return receivedDataSize - 2 >= expectedSize
     }
 
 }
