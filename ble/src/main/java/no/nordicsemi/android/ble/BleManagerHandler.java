@@ -1671,18 +1671,18 @@ abstract class BleManagerHandler extends RequestHandler {
 			return;
 
 		log(Log.WARN, () -> "Request cancelled");
-		if (request instanceof TimeoutableRequest) {
-			request.notifyFail(device, FailCallback.REASON_CANCELLED);
+		if (request instanceof final TimeoutableRequest r) {
+			r.notifyFail(device, FailCallback.REASON_CANCELLED);
 		}
 		if (awaitingRequest != null) {
 			awaitingRequest.notifyFail(device, FailCallback.REASON_CANCELLED);
 			awaitingRequest = null;
 		}
-		if (requestQueue instanceof ReliableWriteRequest) {
+		if (requestQueue instanceof final ReliableWriteRequest rwr) {
 			// Cancelling a Reliable Write request requires sending Abort command.
 			// Instead of notifying failure, we will remove all enqueued tasks and
 			// let the nextRequest to sent Abort command.
-			requestQueue.notifyAndCancelQueue(device);
+			rwr.notifyAndCancelQueue(device);
 		} else if (requestQueue != null) {
 			requestQueue.notifyFail(device, FailCallback.REASON_CANCELLED);
 			requestQueue = null;
@@ -1692,13 +1692,13 @@ abstract class BleManagerHandler extends RequestHandler {
 
 	@Override
 	final void onRequestTimeout(@NonNull final BluetoothDevice device, @NonNull final TimeoutableRequest tr) {
-		if (tr instanceof SleepRequest) {
-			tr.notifySuccess(device);
+		if (tr instanceof final SleepRequest sr) {
+			sr.notifySuccess(device);
 		} else {
 			log(Log.WARN, () -> "Request timed out");
 		}
-		if (request instanceof TimeoutableRequest) {
-			request.notifyFail(device, FailCallback.REASON_TIMEOUT);
+		if (request instanceof final TimeoutableRequest r) {
+			r.notifyFail(device, FailCallback.REASON_TIMEOUT);
 		}
 		if (awaitingRequest != null) {
 			awaitingRequest.notifyFail(device, FailCallback.REASON_TIMEOUT);
@@ -2523,8 +2523,8 @@ abstract class BleManagerHandler extends RequestHandler {
 				return;
 			} else {
 				Log.e(TAG, "onCharacteristicRead error " + status);
-				if (request instanceof ReadRequest) {
-					request.notifyFail(gatt.getDevice(), status);
+				if (request instanceof final ReadRequest rr) {
+					rr.notifyFail(gatt.getDevice(), status);
 				}
 				awaitingRequest = null;
 				onError(gatt.getDevice(), ERROR_READ_CHARACTERISTIC, status);
@@ -2548,9 +2548,9 @@ abstract class BleManagerHandler extends RequestHandler {
 					// This method also compares the data written with the data received in the callback
 					// if the write type is WRITE_TYPE_DEFAULT.
 					final boolean valid = wr.notifyPacketSent(gatt.getDevice(), characteristic.getValue());
-					if (!valid && requestQueue instanceof ReliableWriteRequest) {
+					if (!valid && requestQueue instanceof final ReliableWriteRequest rwr) {
 						wr.notifyFail(gatt.getDevice(), FailCallback.REASON_VALIDATION);
-						requestQueue.notifyAndCancelQueue(gatt.getDevice());
+						rwr.notifyAndCancelQueue(gatt.getDevice());
 					} else if (wr.hasMore()) {
 						enqueueFirst(wr);
 					} else {
@@ -2570,11 +2570,11 @@ abstract class BleManagerHandler extends RequestHandler {
 				return;
 			} else {
 				Log.e(TAG, "onCharacteristicWrite error " + status);
-				if (request instanceof WriteRequest) {
-					request.notifyFail(gatt.getDevice(), status);
+				if (request instanceof final WriteRequest wr) {
+					wr.notifyFail(gatt.getDevice(), status);
 					// Automatically abort Reliable Write when write error happen
-					if (requestQueue instanceof ReliableWriteRequest)
-						requestQueue.notifyAndCancelQueue(gatt.getDevice());
+					if (requestQueue instanceof final ReliableWriteRequest rwr)
+						rwr.notifyAndCancelQueue(gatt.getDevice());
 				}
 				awaitingRequest = null;
 				onError(gatt.getDevice(), ERROR_WRITE_CHARACTERISTIC, status);
@@ -2615,13 +2615,12 @@ abstract class BleManagerHandler extends RequestHandler {
 						", value: " + ParserUtils.parse(data));
 
 				BleManagerHandler.this.onDescriptorRead(gatt, descriptor);
-				if (request instanceof ReadRequest) {
-					final ReadRequest request = (ReadRequest) BleManagerHandler.this.request;
-					request.notifyValueChanged(gatt.getDevice(), data);
-					if (request.hasMore()) {
-						enqueueFirst(request);
+				if (request instanceof final ReadRequest rr) {
+					rr.notifyValueChanged(gatt.getDevice(), data);
+					if (rr.hasMore()) {
+						enqueueFirst(rr);
 					} else {
-						request.notifySuccess(gatt.getDevice());
+						rr.notifySuccess(gatt.getDevice());
 					}
 				}
 			} else if (status == BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION
@@ -2637,8 +2636,8 @@ abstract class BleManagerHandler extends RequestHandler {
 				return;
 			} else {
 				Log.e(TAG, "onDescriptorRead error " + status);
-				if (request instanceof ReadRequest) {
-					request.notifyFail(gatt.getDevice(), status);
+				if (request instanceof final ReadRequest rr) {
+					rr.notifyFail(gatt.getDevice(), status);
 				}
 				awaitingRequest = null;
 				onError(gatt.getDevice(), ERROR_READ_DESCRIPTOR, status);
@@ -2672,9 +2671,9 @@ abstract class BleManagerHandler extends RequestHandler {
 				}
 				if (request instanceof final WriteRequest wr) {
 					final boolean valid = wr.notifyPacketSent(gatt.getDevice(), data);
-					if (!valid && requestQueue instanceof ReliableWriteRequest) {
+					if (!valid && requestQueue instanceof final ReliableWriteRequest rwr) {
 						wr.notifyFail(gatt.getDevice(), FailCallback.REASON_VALIDATION);
-						requestQueue.notifyAndCancelQueue(gatt.getDevice());
+						rwr.notifyAndCancelQueue(gatt.getDevice());
 					} else if (wr.hasMore()) {
 						enqueueFirst(wr);
 					} else {
@@ -2694,11 +2693,11 @@ abstract class BleManagerHandler extends RequestHandler {
 				return;
 			} else {
 				Log.e(TAG, "onDescriptorWrite error " + status);
-				if (request instanceof WriteRequest) {
-					request.notifyFail(gatt.getDevice(), status);
+				if (request instanceof final WriteRequest wr) {
+					wr.notifyFail(gatt.getDevice(), status);
 					// Automatically abort Reliable Write when write error happen
-					if (requestQueue instanceof ReliableWriteRequest)
-						requestQueue.notifyAndCancelQueue(gatt.getDevice());
+					if (requestQueue instanceof final ReliableWriteRequest rwr)
+						rwr.notifyAndCancelQueue(gatt.getDevice());
 				}
 				awaitingRequest = null;
 				onError(gatt.getDevice(), ERROR_WRITE_DESCRIPTOR, status);
@@ -2803,14 +2802,14 @@ abstract class BleManagerHandler extends RequestHandler {
 				log(Log.INFO, () -> "MTU changed to: " + mtu);
 				BleManagerHandler.this.mtu = Math.min(515, mtu);
 				BleManagerHandler.this.onMtuChanged(gatt, BleManagerHandler.this.mtu);
-				if (request instanceof MtuRequest) {
-					((MtuRequest) request).notifyMtuChanged(gatt.getDevice(), BleManagerHandler.this.mtu);
-					request.notifySuccess(gatt.getDevice());
+				if (request instanceof final MtuRequest mr) {
+					mr.notifyMtuChanged(gatt.getDevice(), BleManagerHandler.this.mtu);
+					mr.notifySuccess(gatt.getDevice());
 				}
 			} else {
 				Log.e(TAG, "onMtuChanged error: " + status + ", mtu: " + mtu);
-				if (request instanceof MtuRequest) {
-					request.notifyFail(gatt.getDevice(), status);
+				if (request instanceof final MtuRequest mr) {
+					mr.notifyFail(gatt.getDevice(), status);
 					awaitingRequest = null;
 				}
 				onError(gatt.getDevice(), ERROR_MTU_REQUEST, status);
@@ -2862,10 +2861,9 @@ abstract class BleManagerHandler extends RequestHandler {
 					cpuc.onConnectionUpdated(gatt.getDevice(), interval, latency, timeout);
 				}
 				// This callback may be called af any time, also when some other request is executed
-				if (request instanceof ConnectionPriorityRequest) {
-					((ConnectionPriorityRequest) request)
-							.notifyConnectionPriorityChanged(gatt.getDevice(), interval, latency, timeout);
-					request.notifySuccess(gatt.getDevice());
+				if (request instanceof final ConnectionPriorityRequest cpr) {
+					cpr.notifyConnectionPriorityChanged(gatt.getDevice(), interval, latency, timeout);
+					cpr.notifySuccess(gatt.getDevice());
 				}
 			} else if (status == 0x3b) { // HCI_ERR_UNACCEPT_CONN_INTERVAL
 				Log.e(TAG, "onConnectionUpdated received status: Unacceptable connection interval, " +
@@ -2876,8 +2874,8 @@ abstract class BleManagerHandler extends RequestHandler {
 						"latency: " + latency + ", timeout: " + (timeout * 10) + "ms)");
 
 				// This callback may be called af any time, also when some other request is executed
-				if (request instanceof ConnectionPriorityRequest) {
-					request.notifyFail(gatt.getDevice(), status);
+				if (request instanceof final ConnectionPriorityRequest cpr) {
+					cpr.notifyFail(gatt.getDevice(), status);
 					awaitingRequest = null;
 				}
 			} else {
@@ -2889,8 +2887,8 @@ abstract class BleManagerHandler extends RequestHandler {
 						"latency: " + latency + ", timeout: " + (timeout * 10) + "ms)");
 
 				// This callback may be called af any time, also when some other request is executed
-				if (request instanceof ConnectionPriorityRequest) {
-					request.notifyFail(gatt.getDevice(), status);
+				if (request instanceof final ConnectionPriorityRequest cpr) {
+					cpr.notifyFail(gatt.getDevice(), status);
 					awaitingRequest = null;
 				}
 				postCallback(c -> c.onError(gatt.getDevice(), ERROR_CONNECTION_PRIORITY_REQUEST, status));
@@ -2911,14 +2909,14 @@ abstract class BleManagerHandler extends RequestHandler {
 				log(Log.INFO, () ->
 						"PHY updated (TX: " + ParserUtils.phyToString(txPhy) +
 						", RX: " + ParserUtils.phyToString(rxPhy) + ")");
-				if (request instanceof PhyRequest) {
-					((PhyRequest) request).notifyPhyChanged(gatt.getDevice(), txPhy, rxPhy);
-					request.notifySuccess(gatt.getDevice());
+				if (request instanceof final PhyRequest pr) {
+					pr.notifyPhyChanged(gatt.getDevice(), txPhy, rxPhy);
+					pr.notifySuccess(gatt.getDevice());
 				}
 			} else {
 				log(Log.WARN, () -> "PHY updated failed with status " + status);
-				if (request instanceof PhyRequest) {
-					request.notifyFail(gatt.getDevice(), status);
+				if (request instanceof final PhyRequest pr) {
+					pr.notifyFail(gatt.getDevice(), status);
 					awaitingRequest = null;
 				}
 				postCallback(c -> c.onError(gatt.getDevice(), ERROR_PHY_UPDATE, status));
@@ -2939,14 +2937,14 @@ abstract class BleManagerHandler extends RequestHandler {
 				log(Log.INFO, () ->
 						"PHY read (TX: " + ParserUtils.phyToString(txPhy) +
 						", RX: " + ParserUtils.phyToString(rxPhy) + ")");
-				if (request instanceof PhyRequest) {
-					((PhyRequest) request).notifyPhyChanged(gatt.getDevice(), txPhy, rxPhy);
+				if (request instanceof final PhyRequest pr) {
+					pr.notifyPhyChanged(gatt.getDevice(), txPhy, rxPhy);
 					request.notifySuccess(gatt.getDevice());
 				}
 			} else {
 				log(Log.WARN, () -> "PHY read failed with status " + status);
-				if (request instanceof PhyRequest) {
-					request.notifyFail(gatt.getDevice(), status);
+				if (request instanceof final PhyRequest pr) {
+					pr.notifyFail(gatt.getDevice(), status);
 				}
 				awaitingRequest = null;
 				postCallback(c -> c.onError(gatt.getDevice(), ERROR_READ_PHY, status));
@@ -2961,14 +2959,14 @@ abstract class BleManagerHandler extends RequestHandler {
 									 final int status) {
 			if (status == BluetoothGatt.GATT_SUCCESS) {
 				log(Log.INFO, () -> "Remote RSSI received: " + rssi + " dBm");
-				if (request instanceof ReadRssiRequest) {
-					((ReadRssiRequest) request).notifyRssiRead(gatt.getDevice(), rssi);
-					request.notifySuccess(gatt.getDevice());
+				if (request instanceof final ReadRssiRequest rrr) {
+					rrr.notifyRssiRead(gatt.getDevice(), rssi);
+					rrr.notifySuccess(gatt.getDevice());
 				}
 			} else {
 				log(Log.WARN, () -> "Reading remote RSSI failed with status " + status);
-				if (request instanceof ReadRssiRequest) {
-					request.notifyFail(gatt.getDevice(), status);
+				if (request instanceof final ReadRssiRequest rrr) {
+					rrr.notifyFail(gatt.getDevice(), status);
 				}
 				awaitingRequest = null;
 				postCallback(c -> c.onError(gatt.getDevice(), ERROR_READ_RSSI, status));
@@ -3274,8 +3272,8 @@ abstract class BleManagerHandler extends RequestHandler {
 			notifyNotificationSent(device);
 		} else {
 			Log.e(TAG, "onNotificationSent error " + status);
-			if (request instanceof WriteRequest) {
-				request.notifyFail(device, status);
+			if (request instanceof final WriteRequest wr) {
+				wr.notifyFail(device, status);
 			}
 			awaitingRequest = null;
 			onError(device, ERROR_NOTIFY, status);
