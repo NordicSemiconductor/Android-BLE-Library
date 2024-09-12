@@ -53,23 +53,23 @@ dependencies {
     implementation project(path: ':ble-ktx')
 
     // Dagger and Hilt
-    implementation 'com.google.dagger:hilt-android:2.51.1'
-    kapt 'com.google.dagger:hilt-compiler:2.51.1'
+    implementation 'com.google.dagger:hilt-android:2.52'
+    kapt 'com.google.dagger:hilt-compiler:2.52'
     implementation 'androidx.hilt:hilt-navigation-compose:1.2.0'
     kapt 'androidx.hilt:hilt-compiler:1.2.0'
 
     // Nordic theme
-    implementation 'no.nordicsemi.android.common:ui:2.0.0'
-    implementation 'no.nordicsemi.android.common:theme:2.0.0'
-    implementation 'no.nordicsemi.android.common:permissions-ble:2.0.0'
-    implementation 'no.nordicsemi.android.common:navigation:2.0.0'
+    implementation 'no.nordicsemi.android.common:ui:2.1.0'
+    implementation 'no.nordicsemi.android.common:theme:2.1.0'
+    implementation 'no.nordicsemi.android.common:permissions-ble:2.1.0'
+    implementation 'no.nordicsemi.android.common:navigation:2.1.0'
 
     // Jetpack Compose bom
-    implementation platform('androidx.compose:compose-bom:2024.08.00')
+    implementation platform('androidx.compose:compose-bom:2024.09.01')
 
     // Text, color, Surface
     implementation "androidx.compose.material3:material3"
-    implementation 'androidx.activity:activity-compose:1.9.1'
+    implementation 'androidx.activity:activity-compose:1.9.2'
     implementation "androidx.compose.runtime:runtime-livedata"
 
     // To show Preview
