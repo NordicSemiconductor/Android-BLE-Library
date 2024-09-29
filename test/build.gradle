@@ -57,12 +57,12 @@ dependencies {
     implementation 'com.github.jeziellago:compose-markdown:0.4.1'
 
     // Jetpack Compose bom
-    implementation platform('androidx.compose:compose-bom:2024.09.01')
+    implementation platform('androidx.compose:compose-bom:2024.09.02')
 
     // Text, Color, Surface
     implementation 'androidx.compose.material3:material3'
     implementation 'androidx.activity:activity-compose:1.9.2'
-    implementation "androidx.lifecycle:lifecycle-runtime-compose:2.8.5"
+    implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.8.6'
 
     // Preview
     debugImplementation "androidx.compose.ui:ui-tooling"
