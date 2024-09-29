@@ -65,7 +65,7 @@ dependencies {
     implementation 'no.nordicsemi.android.common:navigation:2.1.0'
 
     // Jetpack Compose bom
-    implementation platform('androidx.compose:compose-bom:2024.09.01')
+    implementation platform('androidx.compose:compose-bom:2024.09.02')
 
     // Text, color, Surface
     implementation "androidx.compose.material3:material3"
@@ -79,13 +79,13 @@ dependencies {
     // Retrofit
     implementation 'com.squareup.retrofit2:retrofit:2.11.0'
     implementation 'com.squareup.retrofit2:converter-moshi:2.11.0'
-    implementation 'com.squareup.okhttp3:okhttp:4.10.0'
+    implementation 'com.squareup.okhttp3:okhttp:4.12.0'
     // https://square.github.io/okhttp/changelog/
-    implementation 'com.squareup.okhttp3:logging-interceptor:4.10.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:4.12.0'
 
     // parse JSON
-    implementation'com.squareup.moshi:moshi-kotlin:1.14.0'
+    implementation 'com.squareup.moshi:moshi-kotlin:1.15.1'
     // Note: Switching to KSP doesn't work with hilt 2.47 and 2.48:
     //       https://github.com/google/dagger/issues/3965
-    kapt 'com.squareup.moshi:moshi-kotlin-codegen:1.14.0'
+    kapt 'com.squareup.moshi:moshi-kotlin-codegen:1.15.1'
 }
