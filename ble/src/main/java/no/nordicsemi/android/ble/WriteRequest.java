@@ -47,7 +47,7 @@ import no.nordicsemi.android.ble.data.DataSplitter;
 import no.nordicsemi.android.ble.data.DefaultMtuSplitter;
 
 @SuppressWarnings({"unused", "WeakerAccess"})
-public final class WriteRequest extends SimpleValueRequest<DataSentCallback> implements Operation {
+public final class WriteRequest extends TimeoutableValueRequest<DataSentCallback> implements Operation {
 	private final static DataSplitter MTU_SPLITTER = new DefaultMtuSplitter();
 
 	private WriteProgressCallback progressCallback;
@@ -310,7 +310,7 @@ public final class WriteRequest extends SimpleValueRequest<DataSentCallback> imp
 	 * @return True if not all data were sent, false if the request is complete.
 	 */
 	boolean hasMore() {
-		return !complete;
+		return !complete && !cancelled && !finished;
 	}
 
 	/**
