@@ -57,7 +57,7 @@ dependencies {
     implementation 'com.github.jeziellago:compose-markdown:0.4.1'
 
     // Jetpack Compose bom
-    implementation platform('androidx.compose:compose-bom:2024.09.02')
+    implementation platform('androidx.compose:compose-bom:2024.09.03')
 
     // Text, Color, Surface
     implementation 'androidx.compose.material3:material3'
