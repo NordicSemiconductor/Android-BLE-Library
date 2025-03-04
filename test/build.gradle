@@ -8,12 +8,12 @@ plugins {
 
 android {
     namespace 'no.nordicsemi.andorid.ble.test'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId "no.nordicsemi.andorid.ble.test"
         minSdk 21
-        targetSdk 34
+        targetSdk 35
         versionCode 1
         versionName "1.0"
 
