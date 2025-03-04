@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace 'no.nordicsemi.android.ble.ble_gatt_client'
-    compileSdk 34
+    compileSdk 35
 
     defaultConfig {
         applicationId "no.nordicsemi.android.ble.ble_gatt_client"
         minSdk 27
-        targetSdk 34
+        targetSdk 35
         versionCode 1
         versionName "1.0"
 
@@ -39,9 +39,9 @@ android {
 }
 
 dependencies {
-    implementation 'androidx.core:core-ktx:1.13.1'
+    implementation 'androidx.core:core-ktx:1.15.0'
     implementation 'androidx.appcompat:appcompat:1.7.0'
-    implementation 'androidx.constraintlayout:constraintlayout:2.1.4'
+    implementation 'androidx.constraintlayout:constraintlayout:2.2.1'
 
     implementation project(':ble-ktx')
 
