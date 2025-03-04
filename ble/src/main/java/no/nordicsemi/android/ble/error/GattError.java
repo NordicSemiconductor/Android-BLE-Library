@@ -84,6 +84,8 @@ public class GattError {
 	public static final int GATT_NOT_ENCRYPTED = 0x008e;
 	// https://developer.android.com/reference/android/bluetooth/BluetoothGatt#GATT_CONNECTION_CONGESTED
 	public static final int GATT_CONGESTED = 0x008f;
+	// https://developer.android.com/reference/android/bluetooth/BluetoothGatt#GATT_CONNECTION_TIMEOUT
+	public static final int GATT_TIMEOUT = 0x0093;
 	public static final int GATT_CCCD_CFG_ERROR = 0x00FD;
 	public static final int GATT_PROCEDURE_IN_PROGRESS = 0x00FE;
 	public static final int GATT_VALUE_OUT_OF_RANGE = 0x00FF;
@@ -157,6 +159,7 @@ public class GattError {
 			case GATT_ENCRYPTED_NO_MITM -> "GATT ENCRYPTED NO MITM";
 			case GATT_NOT_ENCRYPTED -> "GATT NOT ENCRYPTED";
 			case GATT_CONGESTED -> "GATT CONGESTED";
+			case GATT_TIMEOUT -> "GATT TIMEOUT";
 			case GATT_CCCD_CFG_ERROR -> "GATT CCCD CFG ERROR";
 			case GATT_PROCEDURE_IN_PROGRESS -> "GATT PROCEDURE IN PROGRESS";
 			case GATT_VALUE_OUT_OF_RANGE -> "GATT VALUE OUT OF RANGE";
