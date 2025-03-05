@@ -93,7 +93,7 @@ abstract class BleManagerHandler extends RequestHandler {
 	private boolean initialization;
 
 	/**
-	 * A time after which receiving 133 error is considered a timeout, instead of a
+	 * A time after which receiving 133 or 147 error is considered a timeout, instead of a
 	 * different reason.
 	 * A {@link BluetoothDevice#connectGatt(Context, boolean, BluetoothGattCallback)} call will
 	 * fail after 30 seconds if the device won't be found until then. Other errors happen much
@@ -2329,7 +2329,7 @@ abstract class BleManagerHandler extends RequestHandler {
 							reason = FailCallback.REASON_DEVICE_NOT_SUPPORTED;
 						else if (status == BluetoothGatt.GATT_SUCCESS)
 							reason = FailCallback.REASON_DEVICE_DISCONNECTED;
-						else if (status == GattError.GATT_ERROR && timeout)
+						else if ((status == GattError.GATT_ERROR || status == GattError.GATT_TIMEOUT) && timeout)
 							reason = FailCallback.REASON_TIMEOUT;
 						else
 							reason = status;
