@@ -111,6 +111,8 @@ public class GattError {
 			case GATT_CONN_LMP_TIMEOUT -> "GATT CONN LMP TIMEOUT";
 			case GATT_CONN_CANCEL -> "GATT CONN CANCEL ";
 			case GATT_ERROR -> "GATT ERROR"; // Device not reachable
+			case GATT_TIMEOUT -> "GATT TIMEOUT"; // Device not reachable, new Error added in Android 15
+			case GATT_PAIRING_WITH_UNIT_KEY_NOT_SUPPORTED -> "GATT PAIRING WITH UNIT KEY NOT SUPPORTED";
 			default -> "UNKNOWN (" + error + ")";
 		};
 	}
