@@ -42,22 +42,31 @@ public class GattError {
 	public static final int GATT_ERROR = 0x0085; // Device not reachable
 
 	public static final int GATT_INVALID_HANDLE = 0x0001;
+	// https://developer.android.com/reference/android/bluetooth/BluetoothGatt#GATT_READ_NOT_PERMITTED
 	public static final int GATT_READ_NOT_PERMIT = 0x0002;
+	// https://developer.android.com/reference/android/bluetooth/BluetoothGatt#GATT_WRITE_NOT_PERMITTED
 	public static final int GATT_WRITE_NOT_PERMIT = 0x0003;
 	public static final int GATT_INVALID_PDU = 0x0004;
+	// https://developer.android.com/reference/android/bluetooth/BluetoothGatt#GATT_INSUFFICIENT_AUTHENTICATION
 	public static final int GATT_INSUF_AUTHENTICATION = 0x0005;
+	// https://developer.android.com/reference/android/bluetooth/BluetoothGatt#GATT_REQUEST_NOT_SUPPORTED
 	public static final int GATT_REQ_NOT_SUPPORTED = 0x0006;
+	// https://developer.android.com/reference/android/bluetooth/BluetoothGatt#GATT_INVALID_OFFSET
 	public static final int GATT_INVALID_OFFSET = 0x0007;
+	// https://developer.android.com/reference/android/bluetooth/BluetoothGatt#GATT_INSUFFICIENT_AUTHORIZATION
 	public static final int GATT_INSUF_AUTHORIZATION = 0x0008;
 	public static final int GATT_PREPARE_Q_FULL = 0x0009;
 	public static final int GATT_NOT_FOUND = 0x000a;
 	public static final int GATT_NOT_LONG = 0x000b;
 	public static final int GATT_INSUF_KEY_SIZE = 0x000c;
+	// https://developer.android.com/reference/android/bluetooth/BluetoothGatt#GATT_INVALID_ATTRIBUTE_LENGTH
 	public static final int GATT_INVALID_ATTR_LEN = 0x000d;
 	public static final int GATT_ERR_UNLIKELY = 0x000e;
+	// https://developer.android.com/reference/android/bluetooth/BluetoothGatt#GATT_INSUFFICIENT_ENCRYPTION
 	public static final int GATT_INSUF_ENCRYPTION = 0x000f;
 	public static final int GATT_UNSUPPORT_GRP_TYPE = 0x0010;
 	public static final int GATT_INSUF_RESOURCE = 0x0011;
+	public static final int GATT_PAIRING_WITH_UNIT_KEY_NOT_SUPPORTED = 0x0029;
 	public static final int GATT_CONTROLLER_BUSY = 0x003A;
 	public static final int GATT_UNACCEPT_CONN_INTERVAL = 0x003B;
 	public static final int GATT_ILLEGAL_PARAMETER = 0x0087;
@@ -74,7 +83,10 @@ public class GattError {
 	public static final int GATT_SERVICE_STARTED = 0x008c;
 	public static final int GATT_ENCRYPTED_NO_MITM = 0x008d;
 	public static final int GATT_NOT_ENCRYPTED = 0x008e;
+	// https://developer.android.com/reference/android/bluetooth/BluetoothGatt#GATT_CONNECTION_CONGESTED
 	public static final int GATT_CONGESTED = 0x008f;
+	// https://developer.android.com/reference/android/bluetooth/BluetoothGatt#GATT_CONNECTION_TIMEOUT
+	public static final int GATT_TIMEOUT = 0x0093;
 	public static final int GATT_CCCD_CFG_ERROR = 0x00FD;
 	public static final int GATT_PROCEDURE_IN_PROGRESS = 0x00FE;
 	public static final int GATT_VALUE_OUT_OF_RANGE = 0x00FF;
@@ -99,6 +111,8 @@ public class GattError {
 			case GATT_CONN_LMP_TIMEOUT -> "GATT CONN LMP TIMEOUT";
 			case GATT_CONN_CANCEL -> "GATT CONN CANCEL ";
 			case GATT_ERROR -> "GATT ERROR"; // Device not reachable
+			case GATT_TIMEOUT -> "GATT TIMEOUT"; // Device not reachable, new Error added in Android 15
+			case GATT_PAIRING_WITH_UNIT_KEY_NOT_SUPPORTED -> "GATT PAIRING WITH UNIT KEY NOT SUPPORTED";
 			default -> "UNKNOWN (" + error + ")";
 		};
 	}
@@ -129,6 +143,7 @@ public class GattError {
 			case GATT_INSUF_ENCRYPTION -> "GATT INSUF ENCRYPTION";
 			case GATT_UNSUPPORT_GRP_TYPE -> "GATT UNSUPPORT GRP TYPE";
 			case GATT_INSUF_RESOURCE -> "GATT INSUF RESOURCE";
+			case GATT_PAIRING_WITH_UNIT_KEY_NOT_SUPPORTED -> "GATT PAIRING WITH UNIT KEY NOT SUPPORTED";
 			case GATT_CONN_LMP_TIMEOUT -> "GATT CONN LMP TIMEOUT";
 			case GATT_CONTROLLER_BUSY -> "GATT CONTROLLER BUSY";
 			case GATT_UNACCEPT_CONN_INTERVAL -> "GATT UNACCEPT CONN INTERVAL";
@@ -148,6 +163,7 @@ public class GattError {
 			case GATT_ENCRYPTED_NO_MITM -> "GATT ENCRYPTED NO MITM";
 			case GATT_NOT_ENCRYPTED -> "GATT NOT ENCRYPTED";
 			case GATT_CONGESTED -> "GATT CONGESTED";
+			case GATT_TIMEOUT -> "GATT TIMEOUT";
 			case GATT_CCCD_CFG_ERROR -> "GATT CCCD CFG ERROR";
 			case GATT_PROCEDURE_IN_PROGRESS -> "GATT PROCEDURE IN PROGRESS";
 			case GATT_VALUE_OUT_OF_RANGE -> "GATT VALUE OUT OF RANGE";
