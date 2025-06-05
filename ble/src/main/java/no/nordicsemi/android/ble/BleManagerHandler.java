@@ -697,6 +697,9 @@ abstract class BleManagerHandler extends RequestHandler {
 							preferredPhy = connectRequest.getPreferredPhy();
 						}
 						final int finalPreferredPhy = preferredPhy;
+						var gatt = bluetoothGatt;
+						log(Log.DEBUG, () -> "gatt.close()");
+						gatt.close();
 						log(Log.DEBUG, () ->
 								"gatt = device.connectGatt(autoConnect = true, TRANSPORT_LE, "
 										+ ParserUtils.phyMaskToString(finalPreferredPhy) + ")");
