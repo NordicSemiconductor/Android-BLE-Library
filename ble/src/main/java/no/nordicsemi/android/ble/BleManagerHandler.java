@@ -810,7 +810,11 @@ abstract class BleManagerHandler extends RequestHandler {
 				postConnectionStateChange(o -> o.onDeviceDisconnecting(device));
 			}
 			log(Log.DEBUG, () -> "gatt.disconnect()");
-			gatt.disconnect();
+			try {
+				gatt.disconnect();
+			} catch (final SecurityException e) {
+				log(Log.ERROR, e::getLocalizedMessage);
+			}
 			if (wasConnected)
 				return;
 
