@@ -13,6 +13,7 @@ nexusPublishing {
 
     repositories {
         sonatype {
+            nexusUrl.set(uri("https://ossrh-staging-api.central.sonatype.com/service/local/"))
             stagingProfileId = System.env.SONATYPE_STAGING_PROFILE_ID
             username = System.env.OSSR_USERNAME
             password = System.env.OSSR_PASSWORD
