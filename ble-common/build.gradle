@@ -4,11 +4,11 @@ plugins {
 
 android {
     namespace 'no.nordicsemi.android.ble.common'
-    compileSdk 35
+    compileSdk 36
 
     defaultConfig {
         minSdk 18
-        targetSdk 35
+        targetSdk 36
     }
 
     buildTypes {
