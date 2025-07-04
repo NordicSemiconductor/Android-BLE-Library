@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id 'com.android.application'
     id 'kotlin-android'
@@ -5,12 +7,12 @@ plugins {
 
 android {
     namespace 'no.nordicsemi.android.ble.ble_gatt_client'
-    compileSdk 35
+    compileSdk 36
 
     defaultConfig {
         applicationId "no.nordicsemi.android.ble.ble_gatt_client"
         minSdk 27
-        targetSdk 35
+        targetSdk 36
         versionCode 1
         versionName "1.0"
 
@@ -33,8 +35,10 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+    kotlin {
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_17
+        }
     }
 }
 

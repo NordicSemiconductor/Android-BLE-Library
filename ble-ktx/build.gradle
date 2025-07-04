@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id 'com.android.library'
     id 'kotlin-android'
@@ -5,11 +7,11 @@ plugins {
 
 android {
     namespace 'no.nordicsemi.android.ble.ktx'
-    compileSdk 35
+    compileSdk 36
 
     defaultConfig {
         minSdk 18
-        targetSdk 35
+        targetSdk 36
     }
 
     buildTypes {
@@ -31,14 +33,16 @@ android {
         targetCompatibility JavaVersion.VERSION_17
     }
 
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+    kotlin {
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_17
+        }
     }
 }
 
 dependencies {
     api project(':ble')
-    api 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.1'
+    api 'org.jetbrains.kotlinx:kotlinx-coroutines-android:1.10.2'
 }
 
 // === Maven Central configuration ===
