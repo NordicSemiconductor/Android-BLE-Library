@@ -5,6 +5,10 @@
 ### AndroidStudio ###
 # Covers files to be ignored for android development using Android Studio.
 
+keystore
+keystore.encrypted
+sec.gpg
+
 # Built application files
 *.apk
 *.ap_
