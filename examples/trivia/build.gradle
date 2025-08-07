@@ -12,7 +12,7 @@ plugins {
 
 android {
     namespace 'no.nordicsemi.android.ble.trivia'
-    compileSdk 36
+    compileSdkVersion 36
 
     defaultConfig {
         applicationId "no.nordicsemi.android.ble.trivia"
@@ -57,19 +57,19 @@ dependencies {
     implementation project(path: ':ble-ktx')
 
     // Dagger and Hilt
-    implementation 'com.google.dagger:hilt-android:2.56.2'
-    kapt 'com.google.dagger:hilt-compiler:2.56.2'
+    implementation 'com.google.dagger:hilt-android:2.57'
+    kapt 'com.google.dagger:hilt-compiler:2.57'
     implementation 'androidx.hilt:hilt-navigation-compose:1.2.0'
     kapt 'androidx.hilt:hilt-compiler:1.2.0'
 
     // Nordic theme
-    implementation 'no.nordicsemi.android.common:ui:2.4.0'
-    implementation 'no.nordicsemi.android.common:theme:2.4.0'
-    implementation 'no.nordicsemi.android.common:permissions-ble:2.4.0'
-    implementation 'no.nordicsemi.android.common:navigation:2.4.0'
+    implementation 'no.nordicsemi.android.common:ui:2.5.1'
+    implementation 'no.nordicsemi.android.common:theme:2.5.1'
+    implementation 'no.nordicsemi.android.common:permissions-ble:2.5.1'
+    implementation 'no.nordicsemi.android.common:navigation:2.5.1'
 
     // Jetpack Compose bom
-    implementation platform('androidx.compose:compose-bom:2025.06.01')
+    implementation platform('androidx.compose:compose-bom:2025.07.00')
 
     // Text, color, Surface
     implementation "androidx.compose.material3:material3"
@@ -83,9 +83,9 @@ dependencies {
     // Retrofit
     implementation 'com.squareup.retrofit2:retrofit:3.0.0'
     implementation 'com.squareup.retrofit2:converter-moshi:3.0.0'
-    implementation 'com.squareup.okhttp3:okhttp:5.0.0'
+    implementation 'com.squareup.okhttp3:okhttp:5.1.0'
     // https://square.github.io/okhttp/changelog/
-    implementation 'com.squareup.okhttp3:logging-interceptor:5.0.0'
+    implementation 'com.squareup.okhttp3:logging-interceptor:5.1.0'
 
     // parse JSON
     implementation 'com.squareup.moshi:moshi-kotlin:1.15.2'
