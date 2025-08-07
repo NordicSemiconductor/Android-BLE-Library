@@ -9,6 +9,7 @@ import kotlinx.coroutines.ExperimentalCoroutinesApi
 import kotlinx.coroutines.suspendCancellableCoroutine
 import no.nordicsemi.andorid.ble.test.spec.Characteristics.UUID_SERVICE_DEVICE
 import javax.inject.Inject
+import kotlin.coroutines.resume
 import kotlin.coroutines.resumeWithException
 
 @OptIn(ExperimentalCoroutinesApi::class)
@@ -35,7 +36,7 @@ class ScanningManager @Inject constructor(
                 result
                     ?.let {
                         found = true
-                        continuation.resume(it.device) {}
+                        continuation.resume(it.device)
                     }
                     .also { bluetoothLeScanner.stopScan(this) }
             }

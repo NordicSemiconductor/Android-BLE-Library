@@ -1,3 +1,5 @@
+import org.jetbrains.kotlin.gradle.dsl.JvmTarget
+
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
@@ -8,12 +10,12 @@ plugins {
 
 android {
     namespace 'no.nordicsemi.andorid.ble.test'
-    compileSdk 35
+    compileSdkVersion 36
 
     defaultConfig {
         applicationId "no.nordicsemi.andorid.ble.test"
         minSdk 21
-        targetSdk 35
+        targetSdk 36
         versionCode 1
         versionName "1.0"
 
@@ -33,8 +35,10 @@ android {
         sourceCompatibility JavaVersion.VERSION_17
         targetCompatibility JavaVersion.VERSION_17
     }
-    kotlinOptions {
-        jvmTarget = JavaVersion.VERSION_17.toString()
+    kotlin {
+        compilerOptions {
+            jvmTarget = JvmTarget.JVM_17
+        }
     }
     buildFeatures {
         compose true
@@ -49,28 +53,26 @@ android {
 dependencies {
     implementation project(path: ':ble-ktx')
     // Nordic theme
-    implementation "no.nordicsemi.android.common:ui:2.4.0"
-    implementation "no.nordicsemi.android.common:theme:2.4.0"
-    implementation 'no.nordicsemi.android.common:permissions-ble:2.4.0'
-    implementation 'no.nordicsemi.android.common:navigation:2.4.0'
-
-    implementation 'com.github.jeziellago:compose-markdown:0.4.1'
+    implementation "no.nordicsemi.android.common:ui:2.5.1"
+    implementation "no.nordicsemi.android.common:theme:2.5.1"
+    implementation 'no.nordicsemi.android.common:permissions-ble:2.5.1'
+    implementation 'no.nordicsemi.android.common:navigation:2.5.1'
 
     // Jetpack Compose bom
-    implementation platform('androidx.compose:compose-bom:2025.06.00')
+    implementation platform('androidx.compose:compose-bom:2025.07.00')
 
     // Text, Color, Surface
     implementation 'androidx.compose.material3:material3'
     implementation 'androidx.activity:activity-compose:1.10.1'
-    implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.9.1'
+    implementation 'androidx.lifecycle:lifecycle-runtime-compose:2.9.2'
 
     // Preview
     debugImplementation "androidx.compose.ui:ui-tooling"
     implementation "androidx.compose.ui:ui-tooling-preview"
 
     // Dagger and Hilt
-    implementation 'com.google.dagger:hilt-android:2.56.2'
-    kapt 'com.google.dagger:hilt-compiler:2.56.2'
+    implementation 'com.google.dagger:hilt-android:2.57'
+    kapt 'com.google.dagger:hilt-compiler:2.57'
     implementation 'androidx.hilt:hilt-navigation-compose:1.2.0'
     kapt 'androidx.hilt:hilt-compiler:1.2.0'
 

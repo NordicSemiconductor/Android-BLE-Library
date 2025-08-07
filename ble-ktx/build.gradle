@@ -7,7 +7,7 @@ plugins {
 
 android {
     namespace 'no.nordicsemi.android.ble.ktx'
-    compileSdk 36
+    compileSdkVersion 36
 
     defaultConfig {
         minSdk 18

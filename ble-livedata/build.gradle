@@ -4,7 +4,7 @@ plugins {
 
 android {
     namespace 'no.nordicsemi.android.ble.livedata'
-    compileSdk 36
+    compileSdkVersion 36
 
     defaultConfig {
         minSdk 18
@@ -35,7 +35,7 @@ dependencies {
     api project(':ble')
 
     // https://developer.android.com/jetpack/androidx/releases/lifecycle
-    api 'androidx.lifecycle:lifecycle-livedata:2.9.1'
+    api 'androidx.lifecycle:lifecycle-livedata:2.9.2'
 }
 
 // === Maven Central configuration ===
