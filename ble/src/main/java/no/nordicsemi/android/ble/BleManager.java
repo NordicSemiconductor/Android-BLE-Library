@@ -298,10 +298,12 @@ public abstract class BleManager implements ILogger {
 	}
 
 	/**
-	 * Closes and releases resources. This method will be called automatically after
-	 * calling {@link #disconnect()}. When the device disconnected with link loss and
+	 * Closes and releases resources. When the device disconnected with link loss and
 	 * {@link ConnectRequest#shouldAutoConnect()} returned true you have to call this method to
-	 * close the connection.
+	 * close the connection. If you intend to reuse this instance for multiple connections,
+     * do not call this method after {@link #disconnect()}. If you are done with this instance,
+	 * call this method from the {@link #disconnect()} completion handler, e.g.
+     * <code>disconnect().then { close() }</code>.
 	 */
 	public void close() {
 		try {
