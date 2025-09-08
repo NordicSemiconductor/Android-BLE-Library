@@ -2524,13 +2524,9 @@ abstract class BleManagerHandler extends RequestHandler {
 						rr.notifySuccess(gatt.getDevice());
 					}
 				}
-			} else if (status == 137 /* GATT AUTH FAIL */) {
-				// Bonding failed or was cancelled.
-				Log.w(TAG, "Reading failed with status " + status);
-				// The bond state receiver will fail the request. Stop here.
-				return;
 			} else if (status == BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION
-					|| status == 8 /* GATT INSUF AUTHORIZATION */) {
+					|| status == 8 /* GATT INSUF AUTHORIZATION */
+					|| status == 137 /* GATT AUTH FAIL */) {
 				// This is called when bonding attempt failed, but the app is still trying to read.
 				// We need to cancel the request here, as bonding won't start.
 				log(Log.WARN, () -> "Authentication required (" + status + ")");
@@ -2578,13 +2574,9 @@ abstract class BleManagerHandler extends RequestHandler {
 						wr.notifySuccess(gatt.getDevice());
 					}
 				}
-			} else if (status == 137 /* GATT AUTH FAIL */) {
-				// This never happens for Write operations, for some reason.
-				Log.w(TAG, "Writing failed with status " + status);
-				// The bond state receiver will fail the request. Stop here.
-				return;
 			} else if (status == BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION
-					|| status == 8 /* GATT INSUF AUTHORIZATION */) {
+					|| status == 8 /* GATT INSUF AUTHORIZATION */
+					|| status == 137 /* GATT AUTH FAIL */) {
 				// This is called when bonding attempt failed, but the app is still trying to write.
 				// We need to cancel the request here, as bonding won't start.
 				log(Log.WARN, () -> "Authentication required (" + status + ")");
@@ -2595,6 +2587,9 @@ abstract class BleManagerHandler extends RequestHandler {
 				}
 				if (request instanceof final WriteRequest wr) {
 					wr.notifyFail(gatt.getDevice(), status);
+					// Automatically abort Reliable Write when write error happen
+					if (requestQueue instanceof final ReliableWriteRequest rwr)
+						rwr.notifyAndCancelQueue(gatt.getDevice());
 				}
 			} else {
 				Log.e(TAG, "onCharacteristicWrite error " + status + ", bond state: " + gatt.getDevice().getBondState());
@@ -2658,13 +2653,9 @@ abstract class BleManagerHandler extends RequestHandler {
 						rr.notifySuccess(gatt.getDevice());
 					}
 				}
-			} else if (status == 137 /* GATT AUTH FAIL */) {
-				// Bonding failed or was cancelled.
-				Log.w(TAG, "Reading descriptor failed with status " + status);
-				// The bond state receiver will fail the request. Stop here.
-				return;
 			} else if (status == BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION
-					|| status == 8 /* GATT INSUF AUTHORIZATION */) {
+					|| status == 8 /* GATT INSUF AUTHORIZATION */
+					|| status == 137 /* GATT AUTH FAIL */) {
 				// This is called when bonding attempt failed, but the app is still trying to read.
 				// We need to cancel the request here, as bonding won't start.
 				log(Log.WARN, () -> "Authentication required (" + status + ")");
@@ -2722,13 +2713,9 @@ abstract class BleManagerHandler extends RequestHandler {
 						wr.notifySuccess(gatt.getDevice());
 					}
 				}
-			} else if (status == 137 /* GATT AUTH FAIL */) {
-				// This never happens for Write operations, for some reason.
-				Log.w(TAG, "Writing descriptor failed with status " + status);
-				// The bond state receiver will fail the request. Stop here.
-				return;
 			} else if (status == BluetoothGatt.GATT_INSUFFICIENT_AUTHENTICATION
-					|| status == 8 /* GATT INSUF AUTHORIZATION */) {
+					|| status == 8 /* GATT INSUF AUTHORIZATION */
+					|| status == 137 /* GATT AUTH FAIL */) {
 				// This is called when bonding attempt failed, but the app is still trying to write.
 				// We need to cancel the request here, as bonding won't start.
 				log(Log.WARN, () -> "Authentication required (" + status + ")");
@@ -2739,6 +2726,9 @@ abstract class BleManagerHandler extends RequestHandler {
 				}
 				if (request instanceof final WriteRequest wr) {
 					wr.notifyFail(gatt.getDevice(), status);
+					// Automatically abort Reliable Write when write error happen
+					if (requestQueue instanceof final ReliableWriteRequest rwr)
+						rwr.notifyAndCancelQueue(gatt.getDevice());
 				}
 			} else {
 				Log.e(TAG, "onDescriptorWrite error " + status + ", bond state: " + gatt.getDevice().getBondState());
