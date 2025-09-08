@@ -49,7 +49,7 @@ public interface ConnectionObserver {
 	 * Android will try to reconnect automatically.
 	 */
 	int REASON_LINK_LOSS = 3;
-	/** The device does not hav required services. */
+	/** The device does not have required services. */
 	int REASON_NOT_SUPPORTED = 4;
 	/** Connection attempt was cancelled. */
 	int REASON_CANCELLED = 5;
