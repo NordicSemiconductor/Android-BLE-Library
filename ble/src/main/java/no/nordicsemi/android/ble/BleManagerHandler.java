@@ -181,6 +181,11 @@ abstract class BleManagerHandler extends RequestHandler {
 	 */
 	private int interval, latency, timeout;
 	/**
+	 * Samsung S8 with Android 9 fails to reconnect to devices requesting PHY LE 2M just after
+	 * connection. Workaround would be to disable PHY LE 2M on the device side.
+	 */
+	private boolean earlyPhyLe2MRequest;
+	/**
 	 * Last received battery value or -1 if value wasn't received.
 	 *
 	 * @deprecated Battery value should be kept in the profile manager instead. See BatteryManager
@@ -753,6 +758,7 @@ abstract class BleManagerHandler extends RequestHandler {
 			postConnectionStateChange(o -> o.onDeviceConnecting(device));
 		}
 		connectionTime = SystemClock.elapsedRealtime();
+		earlyPhyLe2MRequest = false;
 		if (Build.VERSION.SDK_INT > Build.VERSION_CODES.O) {
 			// connectRequest will never be null here.
 			final int preferredPhy = connectRequest.getPreferredPhy();
@@ -2301,7 +2307,10 @@ abstract class BleManagerHandler extends RequestHandler {
 					// ...because the next method sets them to false.
 
 					// notifyDeviceDisconnected(...) may call close()
-					if (timeout) {
+
+					if (status == GattError.GATT_CONN_TIMEOUT && earlyPhyLe2MRequest) {
+						notifyDeviceDisconnected(gatt.getDevice(), ConnectionObserver.REASON_UNSUPPORTED_CONFIGURATION);
+					} else if (timeout) {
 						notifyDeviceDisconnected(gatt.getDevice(), ConnectionObserver.REASON_TIMEOUT);
 					} else if (notSupported) {
 						notifyDeviceDisconnected(gatt.getDevice(), ConnectionObserver.REASON_NOT_SUPPORTED);
@@ -2332,7 +2341,9 @@ abstract class BleManagerHandler extends RequestHandler {
 					}
 					if (cr != null) {
 						int reason;
-						if (notSupported)
+						if (status == GattError.GATT_CONN_TIMEOUT && earlyPhyLe2MRequest)
+							reason = FailCallback.REASON_UNSUPPORTED_CONFIGURATION;
+						else if (notSupported)
 							reason = FailCallback.REASON_DEVICE_NOT_SUPPORTED;
 						else if (status == BluetoothGatt.GATT_SUCCESS)
 							reason = FailCallback.REASON_DEVICE_DISCONNECTED;
@@ -2948,6 +2959,9 @@ abstract class BleManagerHandler extends RequestHandler {
 				log(Log.INFO, () ->
 						"PHY updated (TX: " + ParserUtils.phyToString(txPhy) +
 						", RX: " + ParserUtils.phyToString(rxPhy) + ")");
+				// Samsung S8 fails to reconnect when PHY LE 2M request is sent before service discovery.
+				earlyPhyLe2MRequest = earlyPhyLe2MRequest ||
+						(txPhy == BluetoothDevice.PHY_LE_2M && !servicesDiscovered);
 				if (request instanceof final PhyRequest pr) {
 					pr.notifyPhyChanged(gatt.getDevice(), txPhy, rxPhy);
 					pr.notifySuccess(gatt.getDevice());
