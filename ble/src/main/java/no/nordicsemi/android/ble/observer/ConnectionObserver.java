@@ -49,7 +49,7 @@ public interface ConnectionObserver {
 	 * Android will try to reconnect automatically.
 	 */
 	int REASON_LINK_LOSS = 3;
-	/** The device does not hav required services. */
+	/** The device does not have required services. */
 	int REASON_NOT_SUPPORTED = 4;
 	/** Connection attempt was cancelled. */
 	int REASON_CANCELLED = 5;
@@ -58,6 +58,17 @@ public interface ConnectionObserver {
 	 * or doesn't respond for another reason.
 	 */
 	int REASON_TIMEOUT = 10;
+	/**
+	 * The Android device is unable to reconnect to the peripheral because of internal failure.
+	 * Most probably it cannot respond properly to PHY LE 2M update procedure, causing the
+	 * remote device to terminate the connection.
+	 * <p>
+	 * Try disabling PHY LE 2M on the peripheral side, or update the Android version.
+	 * If that's not possible, the connection to your device may not work on the given
+	 * Android device at all. If the device is bonded, try removing bonding and connect,
+	 * but this seems to fix the problem only before a new bond is created.
+	 */
+	int REASON_UNSUPPORTED_CONFIGURATION = 11;
 
 	/**
 	 * Called when the Android device started connecting to given device.
