@@ -1,11 +1,10 @@
 ext.getVersionCodeFromTags = { ->
     try {
-        def code = new ByteArrayOutputStream()
-        exec {
-            commandLine 'git', 'tag', '--list'
-            standardOutput = code
-        }
-        return 14 + code.toString().split("\n").size()
+        def listOfTags = providers
+                .exec { commandLine 'git', 'tag', '--list' }
+                .standardOutput
+                .asText.get()
+        return 2 + listOfTags.split("\n").size()
     }
     catch (ignored) {
         return -1
@@ -14,14 +13,15 @@ ext.getVersionCodeFromTags = { ->
 
 ext.getVersionNameFromTags = { ->
     try {
-        def stdout = new ByteArrayOutputStream()
-        exec {
-            commandLine 'git', 'describe', '--tags', '--abbrev=0'
-            standardOutput = stdout
-        }
-        return stdout.toString().trim().split("%")[0]
+        def version = providers
+                .exec { commandLine 'git', 'describe', '--tags', '--abbrev=0' }
+                .standardOutput
+                .asText.get().trim()
+        // Version may have % to add additional information
+        return version.split("%")[0]
     }
     catch (ignored) {
+        ignored.printStackTrace()
         return null
     }
 }
