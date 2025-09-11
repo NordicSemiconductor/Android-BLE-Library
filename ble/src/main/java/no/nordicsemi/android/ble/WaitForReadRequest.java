@@ -9,6 +9,7 @@ import android.util.Log;
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.DataSentCallback;
@@ -77,6 +78,13 @@ public final class WaitForReadRequest extends AwaitingRequest<DataSentCallback> 
 	@Override
 	public WaitForReadRequest setHandler(@Nullable final Handler handler) {
 		super.setHandler(handler);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public WaitForReadRequest timeout(@IntRange(from = 0) final long timeout) {
+		super.timeout(timeout);
 		return this;
 	}
 
