@@ -29,11 +29,12 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.os.Handler;
 import android.util.Log;
 
-import java.util.Arrays;
-
 import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
+import java.util.Arrays;
+
 import no.nordicsemi.android.ble.annotation.WriteType;
 import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
@@ -108,6 +109,13 @@ public final class WriteRequest extends TimeoutableValueRequest<DataSentCallback
 	@Override
 	public WriteRequest setHandler(@Nullable final Handler handler) {
 		super.setHandler(handler);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public WriteRequest timeout(@IntRange(from = 0) final long timeout) {
+		super.timeout(timeout);
 		return this;
 	}
 

@@ -29,8 +29,10 @@ import android.bluetooth.BluetoothGattDescriptor;
 import android.os.Handler;
 import android.util.Log;
 
+import androidx.annotation.IntRange;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
+
 import no.nordicsemi.android.ble.callback.AfterCallback;
 import no.nordicsemi.android.ble.callback.BeforeCallback;
 import no.nordicsemi.android.ble.callback.DataReceivedCallback;
@@ -83,6 +85,13 @@ public final class ReadRequest extends TimeoutableValueRequest<DataReceivedCallb
 	@Override
 	public ReadRequest setHandler(@Nullable final Handler handler) {
 		super.setHandler(handler);
+		return this;
+	}
+
+	@NonNull
+	@Override
+	public ReadRequest timeout(@IntRange(from = 0) final long timeout) {
+		super.timeout(timeout);
 		return this;
 	}
 
