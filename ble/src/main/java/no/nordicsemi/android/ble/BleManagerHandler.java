@@ -2268,17 +2268,20 @@ abstract class BleManagerHandler extends RequestHandler {
 						if (delay > 0)
 							log(Log.DEBUG, () -> "wait(" + delay + ")");
 						postDelayed(() -> {
-							internalConnect(gatt.getDevice(), cr);
-							// If ConnectRequest was cancelled during wait(200) in internalConnect(),
-							// the gatt will be null, but the state is still CONNECTING.
-							// We need to notify observers about cancellation.
-							if (bluetoothGatt == null) {
-								connectionState = BluetoothGatt.STATE_DISCONNECTED;
-								log(Log.INFO, () -> "Disconnected");
-								postCallback(c -> c.onDeviceDisconnected(gatt.getDevice()));
-								postConnectionStateChange(o -> o.onDeviceFailedToConnect(gatt.getDevice(), ConnectionObserver.REASON_CANCELLED));
-								onDeviceDisconnected();
-							}
+                            // fix: check if cr is not changed after delay
+                            if(cr == connectRequest) {
+                                internalConnect(gatt.getDevice(), cr);
+                                // If ConnectRequest was cancelled during wait(200) in internalConnect(),
+                                // the gatt will be null, but the state is still CONNECTING.
+                                // We need to notify observers about cancellation.
+                                if (bluetoothGatt == null) {
+                                    connectionState = BluetoothGatt.STATE_DISCONNECTED;
+                                    log(Log.INFO, () -> "Disconnected");
+                                    postCallback(c -> c.onDeviceDisconnected(gatt.getDevice()));
+                                    postConnectionStateChange(o -> o.onDeviceFailedToConnect(gatt.getDevice(), ConnectionObserver.REASON_CANCELLED));
+                                    onDeviceDisconnected();
+                                }
+                            }
 						}, delay);
 						return;
 					}
