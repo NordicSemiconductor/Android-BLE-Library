@@ -318,12 +318,10 @@ public abstract class BleManager implements ILogger {
 	 * <code>disconnect().then { close() }</code>.
 	 */
 	public void close() {
-		if (isPairingSupported()) {
-			try {
-				context.unregisterReceiver(mPairingRequestBroadcastReceiver);
-			} catch (final Exception e) {
-				// The receiver must have been already unregistered before.
-			}
+		try {
+			context.unregisterReceiver(mPairingRequestBroadcastReceiver);
+		} catch (final Exception e) {
+			// The receiver must have been already unregistered before.
 		}
 		if (serverManager != null) {
 			serverManager.removeManager(this);
