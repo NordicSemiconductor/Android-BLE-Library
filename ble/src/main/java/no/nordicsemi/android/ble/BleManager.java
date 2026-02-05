@@ -180,10 +180,12 @@ public abstract class BleManager implements ILogger {
 		this.requestHandler = getGattCallback();
 		this.requestHandler.init(this, handler);
 
-		ContextCompat.registerReceiver(context, mPairingRequestBroadcastReceiver,
-				// BluetoothDevice.ACTION_PAIRING_REQUEST
-				new IntentFilter("android.bluetooth.device.action.PAIRING_REQUEST"),
-				ContextCompat.RECEIVER_EXPORTED);
+		if (isPairingSupported()) {
+			ContextCompat.registerReceiver(context, mPairingRequestBroadcastReceiver,
+					// BluetoothDevice.ACTION_PAIRING_REQUEST
+					new IntentFilter("android.bluetooth.device.action.PAIRING_REQUEST"),
+					ContextCompat.RECEIVER_EXPORTED);
+		}
 	}
 
 	/**
@@ -252,6 +254,16 @@ public abstract class BleManager implements ILogger {
 	}
 
 	/**
+	 * This method should return <code>true</code> if your want to be able to pair with
+	 * the gatt device. If you return false, the pairing request BroadcastReceiver will
+	 * not be registered.
+	 */
+	protected boolean isPairingSupported() {
+		// Don't call super.isPairingSupported() when overriding this method.
+		return true;
+	}
+
+	/**
 	 * In this method the manager should get references to server characteristics and descriptors
 	 * that will use. The method is called after the service discovery of a remote device has
 	 * finished and {@link #isRequiredServiceSupported(BluetoothGatt)} returned true.
@@ -301,9 +313,9 @@ public abstract class BleManager implements ILogger {
 	 * Closes and releases resources. When the device disconnected with link loss and
 	 * {@link ConnectRequest#shouldAutoConnect()} returned true you have to call this method to
 	 * close the connection. If you intend to reuse this instance for multiple connections,
-     * do not call this method after {@link #disconnect()}. If you are done with this instance,
+	 * do not call this method after {@link #disconnect()}. If you are done with this instance,
 	 * call this method from the {@link #disconnect()} completion handler, e.g.
-     * <code>disconnect().then { close() }</code>.
+	 * <code>disconnect().then { close() }</code>.
 	 */
 	public void close() {
 		try {
